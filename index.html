@@ -103,7 +103,21 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
 .bamt{font-size:13px;font-weight:800;color:var(--g1);margin-left:auto;flex-shrink:0}
 
 /* COMMENT */
-.cmt{margin-top:10px;padding:9px 12px;background:rgba(10,46,26,0.05);border-left:3px solid var(--g2);border-radius:0 8px 8px 0;font-size:12px;color:#444;line-height:1.7}
+.cmt{margin-top:10px;padding:9px 12px;background:rgba(10,46,26,0.05);border-left:3px solid var(--g2);border-radius:0 8px 8px 0;font-size:12px;color:#444;line-height:1.7;white-space:pre-line}
+
+/* RESULT BANNER */
+.result-banner{margin:8px 10px;padding:10px 14px;background:var(--card);border-radius:10px;border:1px solid var(--border)}
+.result-banner.hit{border-color:#27ae60}
+.rb-title{font-size:11px;font-weight:700;color:var(--sub);margin-bottom:4px}
+.rb-stats{font-size:14px;font-weight:800;color:var(--g1)}
+.rb-roi{font-size:12px;color:var(--sub);margin-top:2px}
+
+/* LOADING / ERROR */
+.loading{text-align:center;padding:60px 20px;color:var(--sub)}
+.loading-spin{font-size:36px;animation:spin 1s linear infinite;display:inline-block;margin-bottom:12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.error-box{margin:16px;padding:16px;background:#fff3f3;border:1px solid #e74c3c;border-radius:10px;font-size:13px;color:#c0392b;line-height:1.6}
+.error-box a{color:var(--g1);font-weight:700}
 
 /* BOTTOM BAR */
 .btm{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--g1);padding:10px 20px calc(10px + env(safe-area-inset-bottom,0px));display:flex;justify-content:space-around;z-index:200;border-top:1px solid rgba(255,255,255,0.1)}
@@ -114,6 +128,9 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
 /* PWA HINT */
 .pwa{background:rgba(201,168,76,0.12);border:1px solid var(--gold);border-radius:10px;margin:8px 10px;padding:9px 14px;font-size:12px;color:#5a4010;display:flex;align-items:center;gap:8px}
 .pwa button{margin-left:auto;background:var(--gold);color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0}
+
+/* RELOAD BTN */
+.reload-btn{display:block;margin:8px 10px;padding:10px;background:var(--g1);color:var(--gold2);border:none;border-radius:10px;font-size:13px;font-weight:700;width:calc(100% - 20px);cursor:pointer;letter-spacing:1px}
 </style>
 </head>
 <body>
@@ -124,7 +141,7 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
     <div class="hdr-sub">AI RACING PREDICTION</div>
   </div>
   <div class="hdr-right">
-    <div class="hdr-date" id="hdate">---</div>
+    <div class="hdr-date" id="hdate">読込中...</div>
     <div class="hdr-venues" id="hvenues">---</div>
   </div>
 </div>
@@ -141,6 +158,7 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
   <button onclick="this.parentElement.style.display='none'">✕</button>
 </div>
 
+<div id="result-area"></div>
 <div class="summary" id="summary"></div>
 <div class="list" id="race-list"></div>
 
@@ -151,318 +169,177 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
 </div>
 
 <script>
-// ═══════════════════════════════════════════════
-// データ（来週: Driveから自動読込に変更予定）
-// ═══════════════════════════════════════════════
-const D = {
-  date:'4月5日(土)',
-  venues:['中山','阪神'],
-  bias:{txt:'内外:フラット ペース:-0.3 時計:遅め',tag:'時計遅め'},
-  stats:{invest:4800,rec:6,roi:180},
-  races:{
-    '中山':[
-      {r:1,name:'3歳未勝利',dist:'1200mダ',time:'10:05',rec:false,
-       honmei:{n:4,name:'メイショウアカリ',odds:5.2,score:4.9,style:'先行'},
-       horses:[
-         {n:1,name:'シルバーバレット',odds:12.3,score:4.6,pop:4,style:'先行'},
-         {n:2,name:'タイキトレジャー',odds:8.5,score:4.7,pop:3,style:'逃げ'},
-         {n:3,name:'ジュンオルレアン',odds:74.4,score:4.4,pop:12,style:'差し'},
-         {n:4,name:'メイショウアカリ',odds:5.2,score:4.9,pop:1,style:'先行'},
-         {n:5,name:'クインズサファイア',odds:6.8,score:4.5,pop:2,style:'差し'},
-       ],
-       bets:[
-         {tag:'fuku',label:'複勝',horse:'#4 メイショウアカリ',est:'推定1.8倍',amt:'¥300'},
-         {tag:'tan',label:'単勝',horse:'#2 タイキトレジャー',est:'8.5倍',amt:'¥200'},
-       ],
-       cmt:'1番人気メイショウアカリの複勝が安定。単勝は逃げ馬タイキトレジャーの粘り込み狙い。未勝利戦は力上位馬から入るのが基本。'},
-      {r:2,name:'3歳未勝利',dist:'1800mダ',time:'10:35',rec:false,
-       honmei:{n:7,name:'ドウドウファイト',odds:5.8,score:4.8,style:'先行'},
-       horses:[
-         {n:3,name:'アサヒクリスタル',odds:4.2,score:4.6,pop:1,style:'逃げ'},
-         {n:7,name:'ドウドウファイト',odds:5.8,score:4.8,pop:2,style:'先行'},
-         {n:11,name:'スターキャプテン',odds:15.2,score:4.5,pop:6,style:'差し'},
-       ],
-       bets:[
-         {tag:'fuku',label:'複勝',horse:'#3 アサヒクリスタル',est:'推定1.6倍',amt:'¥300'},
-         {tag:'wide',label:'ワイド',horse:'#3-#7',est:'推定3.5倍',amt:'¥200'},
-       ],
-       cmt:'逃げ馬アサヒクリスタルと先行ドウドウファイトのワンツー想定。ワイドで安定的に。'},
-      {r:3,name:'3歳未勝利',dist:'1200mダ',time:'11:05',rec:false,
-       honmei:{n:2,name:'ヴィラロボス',odds:12.3,score:4.7,style:'差し'},
-       horses:[
-         {n:1,name:'タケルフォルテ',odds:3.5,score:4.5,pop:1,style:'逃げ'},
-         {n:2,name:'ヴィラロボス',odds:12.3,score:4.7,pop:6,style:'差し'},
-         {n:8,name:'ルビーサファイア',odds:7.2,score:4.4,pop:3,style:'先行'},
-       ],
-       bets:[
-         {tag:'fuku',label:'複勝',horse:'#1 タケルフォルテ',est:'推定1.5倍',amt:'¥300'},
-       ],
-       cmt:'1番人気タケルフォルテの複勝が堅実。ダート短距離は逃げ先行有利。'},
-      {r:4,name:'4歳上未勝利',dist:'2000m芝',time:'11:35',rec:true,conf:62,
-       honmei:{n:9,name:'プラウドヘリテージ',odds:17.9,score:6.3,style:'差し'},
-       horses:[
-         {n:3,name:'メイショウゲキリン',odds:3.2,score:5.4,pop:1,style:'逃げ'},
-         {n:5,name:'サクラアンビシャス',odds:8.1,score:5.5,pop:4,style:'先行'},
-         {n:9,name:'プラウドヘリテージ',odds:17.9,score:6.3,pop:10,style:'差し'},
-         {n:13,name:'ゴールデンステップ',odds:8.9,score:5.8,pop:5,style:'差し'},
-       ],
-       bets:[
-         {tag:'fuku',label:'複勝',horse:'#9 プラウドヘリテージ',est:'推定5.0倍',amt:'¥500'},
-         {tag:'tan',label:'単勝',horse:'#9 プラウドヘリテージ',est:'17.9倍',amt:'¥300'},
-       ],
-       cmt:'メイショウゲキリンが逃げる平均ペース想定。プラウドヘリテージは差し脚質で展開向く。ハーツクライ産駒で距離延長歓迎。10番人気の能力1位が狙い目。'},
-      {r:5,name:'3歳未勝利',dist:'1600m芝',time:'12:05',rec:false,
-       honmei:{n:6,name:'スコアレジーナ',odds:22.1,score:4.8,style:'差し'},
-       horses:[
-         {n:2,name:'アライバルホープ',odds:4.5,score:4.6,pop:1,style:'先行'},
-         {n:6,name:'スコアレジーナ',odds:22.1,score:4.8,pop:8,style:'差し'},
-         {n:9,name:'ゴールドハート',odds:6.2,score:4.5,pop:2,style:'先行'},
-       ],
-       bets:[
-         {tag:'fuku',label:'複勝',horse:'#2 アライバルホープ',est:'推定1.7倍',amt:'¥300'},
-       ],
-       cmt:'1番人気アライバルホープの複勝。スロー必至でスコアレジーナの差しが届かない展開読み。'},
-      {r:6,name:'3歳未勝利',dist:'1800mダ',time:'12:35',rec:true,conf:58,
-       honmei:{n:12,name:'ジェイエルトランプ',odds:12.6,score:5.5,style:'差し'},
-       horses:[
-         {n:1,name:'アカネイロ',odds:6.2,score:5.1,pop:3,style:'先行'},
-         {n:6,name:'マルカシオン',odds:4.1,score:5.2,pop:2,style:'逃げ'},
-         {n:11,name:'マツリダシリウス',odds:28.5,score:5.0,pop:9,style:'追込'},
-         {n:12,name:'ジェイエルトランプ',odds:12.6,score:5.5,pop:6,style:'差し'},
-       ],
-       bets:[
-         {tag:'fuku',label:'複勝',horse:'#12 ジェイエルトランプ',est:'推定3.5倍',amt:'¥500'},
-         {tag:'tan',label:'単勝',horse:'#12 ジェイエルトランプ',est:'12.6倍',amt:'¥300'},
-       ],
-       cmt:'逃げ馬不在スローペース想定。差し有利の展開でジェイエルトランプが台頭。エピファネイア産駒で距離適性◎。'},
-      {r:7,name:'4歳上1勝クラス',dist:'2000m芝',time:'13:05',rec:false,
-       honmei:{n:5,name:'マイネルイグザルト',odds:48.9,score:4.9,style:'先行'},
-       horses:[
-         {n:3,name:'ライジングスター',odds:5.5,score:4.7,pop:2,style:'先行'},
-         {n:5,name:'マイネルイグザルト',odds:48.9,score:4.9,pop:11,style:'先行'},
-         {n:8,name:'タマモスペシャル',odds:4.2,score:4.8,pop:1,style:'逃げ'},
-       ],
-       bets:[
-         {tag:'fuku',label:'複勝',horse:'#8 タマモスペシャル',est:'推定1.6倍',amt:'¥300'},
-       ],
-       cmt:'タマモスペシャルの逃げ切り狙い。1勝クラスは実力差が小さく1番人気複勝が安定。'},
-      {r:8,name:'4歳上1勝クラス',dist:'1800mダ',time:'13:35',rec:false,
-       honmei:{n:3,name:'ノアヴィヴァーチェ',odds:11.8,score:4.8,style:'先行'},
-       horses:[
-         {n:2,name:'サクラヴィクトリア',odds:4.8,score:4.6,pop:1,style:'逃げ'},
-         {n:3,name:'ノアヴィヴァーチェ',odds:11.8,score:4.8,pop:6,style:'先行'},
-         {n:7,name:'エイシンブルース',odds:6.3,score:4.5,pop:2,style:'差し'},
-       ],
-       bets:[
-         {tag:'fuku',label:'複勝',horse:'#2 サクラヴィクトリア',est:'推定1.7倍',amt:'¥300'},
-         {tag:'wide',label:'ワイド',horse:'#2-#3',est:'推定3.2倍',amt:'¥200'},
-       ],
-       cmt:'逃げ馬サクラヴィクトリアと先行ノアヴィヴァーチェのワンツー想定。ワイドが妙味。'},
-      {r:9,name:'山吹賞',dist:'2200m芝',time:'14:05',rec:false,
-       honmei:{n:8,name:'イモータリス',odds:7.9,score:5.0,style:'差し'},
-       horses:[
-         {n:4,name:'レイオブライト',odds:3.8,score:4.9,pop:1,style:'先行'},
-         {n:8,name:'イモータリス',odds:7.9,score:5.0,pop:6,style:'差し'},
-         {n:11,name:'ブルースカイ',odds:12.5,score:4.7,pop:5,style:'差し'},
-       ],
-       bets:[
-         {tag:'fuku',label:'複勝',horse:'#4 レイオブライト',est:'推定1.8倍',amt:'¥300'},
-       ],
-       cmt:'長距離はペース読みが難しい。1番人気レイオブライトの複勝で安定狙い。'},
-      {r:10,name:'千葉日報杯',dist:'1800mダ',time:'14:35',rec:false,
-       honmei:{n:6,name:'ウインアルドーレ',odds:11.9,score:5.0,style:'先行'},
-       horses:[
-         {n:3,name:'サンライズジョーカー',odds:5.2,score:4.8,pop:2,style:'逃げ'},
-         {n:6,name:'ウインアルドーレ',odds:11.9,score:5.0,pop:6,style:'先行'},
-         {n:10,name:'グランドマスター',odds:4.1,score:4.9,pop:1,style:'差し'},
-       ],
-       bets:[
-         {tag:'fuku',label:'複勝',horse:'#10 グランドマスター',est:'推定1.6倍',amt:'¥300'},
-       ],
-       cmt:'1番人気グランドマスターの複勝。差し馬有利の展開でスコア通りの決着想定。'},
-      {r:11,name:'ダービー卿CT',dist:'1600m芝G3',time:'15:35',rec:true,conf:78,
-       honmei:{n:10,name:'ケイアイセナ',odds:11.4,score:6.3,style:'差し'},
-       horses:[
-         {n:1,name:'トゥードジボン',odds:15.2,score:5.6,pop:7,style:'先行'},
-         {n:5,name:'ニホンピロキーフ',odds:4.8,score:5.8,pop:2,style:'差し'},
-         {n:8,name:'ルージュスタニング',odds:3.5,score:5.9,pop:1,style:'差し'},
-         {n:9,name:'エエヤン',odds:89.2,score:4.8,pop:16,style:'追込'},
-         {n:10,name:'ケイアイセナ',odds:11.4,score:6.3,pop:5,style:'差し'},
-         {n:14,name:'ダノンスコーピオン',odds:6.2,score:5.7,pop:3,style:'先行'},
-       ],
-       bets:[
-         {tag:'fuku',label:'複勝',horse:'#10 ケイアイセナ',est:'推定3.2倍',amt:'¥500'},
-         {tag:'tan',label:'単勝',horse:'#10 ケイアイセナ',est:'11.4倍',amt:'¥300'},
-       ],
-       cmt:'逃げ馬不在スロー想定で差し有利。ケイアイセナはモーリス産駒マイル適性◎。5番人気の能力1位が狙い目。16頭立て多頭数注意。'},
-      {r:12,name:'4歳上2勝クラス',dist:'1200mダ',time:'16:05',rec:true,conf:55,
-       honmei:{n:13,name:'キョウエイカンフ',odds:6.9,score:5.2,style:'先行'},
-       horses:[
-         {n:1,name:'テイエムサウスダン',odds:3.1,score:5.0,pop:1,style:'逃げ'},
-         {n:7,name:'サンライズウルス',odds:5.5,score:4.9,pop:2,style:'先行'},
-         {n:12,name:'コパノヴィンセント',odds:32.9,score:4.7,pop:10,style:'差し'},
-         {n:13,name:'キョウエイカンフ',odds:6.9,score:5.2,pop:3,style:'先行'},
-       ],
-       bets:[
-         {tag:'fuku',label:'複勝',horse:'#13 キョウエイカンフ',est:'推定1.9倍',amt:'¥500'},
-         {tag:'tan',label:'単勝',horse:'#13 キョウエイカンフ',est:'6.9倍',amt:'¥300'},
-       ],
-       cmt:'ヘニーヒューズ産駒でダート短距離◎。先行有利な展開想定。16頭立て多頭数注意。'},
-    ],
-    '阪神':[
-      {r:1,name:'3歳未勝利',dist:'1800mダ',time:'10:10',rec:false,
-       honmei:{n:5,name:'ザタイムハズカム',odds:9.6,score:4.7,style:'先行'},
-       horses:[
-         {n:3,name:'カイザーウィン',odds:4.2,score:4.5,pop:1,style:'逃げ'},
-         {n:5,name:'ザタイムハズカム',odds:9.6,score:4.7,pop:3,style:'先行'},
-       ],
-       bets:[{tag:'fuku',label:'複勝',horse:'#3 カイザーウィン',est:'推定1.6倍',amt:'¥300'}],
-       cmt:'逃げ馬カイザーウィン複勝。阪神ダート1800は逃げ先行有利。'},
-      {r:2,name:'3歳未勝利',dist:'1400mダ',time:'10:40',rec:false,
-       honmei:{n:8,name:'グレイイメル',odds:50.7,score:4.6,style:'差し'},
-       horses:[
-         {n:4,name:'ブライトウィング',odds:5.1,score:4.5,pop:1,style:'先行'},
-         {n:8,name:'グレイイメル',odds:50.7,score:4.6,pop:11,style:'差し'},
-       ],
-       bets:[{tag:'fuku',label:'複勝',horse:'#4 ブライトウィング',est:'推定1.7倍',amt:'¥300'}],
-       cmt:'1番人気ブライトウィングの複勝が安定。ダート短距離は先行有利。'},
-      {r:3,name:'3歳未勝利',dist:'1800mダ',time:'11:10',rec:false,
-       honmei:{n:6,name:'メエメエ',odds:46.4,score:4.6,style:'追込'},
-       horses:[
-         {n:2,name:'シャイニースター',odds:3.8,score:4.5,pop:1,style:'先行'},
-         {n:6,name:'メエメエ',odds:46.4,score:4.6,pop:10,style:'追込'},
-       ],
-       bets:[{tag:'fuku',label:'複勝',horse:'#2 シャイニースター',est:'推定1.6倍',amt:'¥300'}],
-       cmt:'1番人気シャイニースターの逃げ粘りを期待。複勝で堅実に。'},
-      {r:4,name:'3歳未勝利',dist:'1400m芝',time:'11:40',rec:false,
-       honmei:{n:9,name:'サンエンジェルス',odds:20.1,score:4.7,style:'差し'},
-       horses:[
-         {n:3,name:'ルミエール',odds:4.5,score:4.5,pop:1,style:'先行'},
-         {n:9,name:'サンエンジェルス',odds:20.1,score:4.7,pop:9,style:'差し'},
-       ],
-       bets:[{tag:'fuku',label:'複勝',horse:'#3 ルミエール',est:'推定1.7倍',amt:'¥300'}],
-       cmt:'1番人気ルミエールの複勝。芝短距離は先行有利。'},
-      {r:5,name:'3歳未勝利',dist:'1800m芝',time:'12:10',rec:false,
-       honmei:{n:7,name:'リノルアナ',odds:26.5,score:4.7,style:'差し'},
-       horses:[
-         {n:4,name:'スプリングライト',odds:4.8,score:4.6,pop:1,style:'先行'},
-         {n:7,name:'リノルアナ',odds:26.5,score:4.7,pop:8,style:'差し'},
-       ],
-       bets:[{tag:'fuku',label:'複勝',horse:'#4 スプリングライト',est:'推定1.7倍',amt:'¥300'}],
-       cmt:'1番人気スプリングライトの複勝。中距離は能力差が出やすい。'},
-      {r:6,name:'4歳上1勝クラス',dist:'1200mダ',time:'12:40',rec:false,
-       honmei:{n:11,name:'シュネーグロッケン',odds:15.4,score:4.8,style:'差し'},
-       horses:[
-         {n:5,name:'タイキブラスター',odds:4.2,score:4.6,pop:1,style:'逃げ'},
-         {n:11,name:'シュネーグロッケン',odds:15.4,score:4.8,pop:8,style:'差し'},
-       ],
-       bets:[{tag:'fuku',label:'複勝',horse:'#5 タイキブラスター',est:'推定1.6倍',amt:'¥300'}],
-       cmt:'逃げ馬タイキブラスターの複勝。ダート短距離は逃げが断然有利。'},
-      {r:7,name:'4歳上1勝クラス',dist:'1800mダ',time:'13:10',rec:true,conf:61,
-       honmei:{n:2,name:'グリプトグラフィ',odds:18.1,score:5.4,style:'差し'},
-       horses:[
-         {n:1,name:'アカツキロットリー',odds:69.6,score:4.2,pop:13,style:'追込'},
-         {n:2,name:'グリプトグラフィ',odds:18.1,score:5.4,pop:7,style:'差し'},
-         {n:5,name:'タマモブラックタイ',odds:5.2,score:5.0,pop:2,style:'先行'},
-         {n:8,name:'レヴァンテ',odds:3.8,score:5.1,pop:1,style:'逃げ'},
-       ],
-       bets:[
-         {tag:'fuku',label:'複勝',horse:'#2 グリプトグラフィ',est:'推定5.1倍',amt:'¥500'},
-         {tag:'tan',label:'単勝',horse:'#2 グリプトグラフィ',est:'18.1倍',amt:'¥300'},
-       ],
-       cmt:'逃げ不在スロー想定。差し台頭の展開。グリプトグラフィはキタサンブラック産駒でピーク期。7番人気の能力1位が狙い目。'},
-      {r:8,name:'4歳上2勝クラス',dist:'1200m芝',time:'13:40',rec:true,conf:64,
-       honmei:{n:5,name:'ミロワール',odds:13.6,score:5.8,style:'逃げ'},
-       horses:[
-         {n:3,name:'ブリーズオンチーク',odds:16.9,score:5.4,pop:8,style:'差し'},
-         {n:4,name:'エイシンビジョン',odds:4.2,score:5.3,pop:2,style:'先行'},
-         {n:5,name:'ミロワール',odds:13.6,score:5.8,pop:7,style:'逃げ'},
-         {n:7,name:'サクラトゥジュール',odds:3.1,score:5.5,pop:1,style:'差し'},
-       ],
-       bets:[
-         {tag:'fuku',label:'複勝',horse:'#5 ミロワール',est:'推定3.8倍',amt:'¥500'},
-         {tag:'tan',label:'単勝',horse:'#5 ミロワール',est:'13.6倍',amt:'¥300'},
-       ],
-       cmt:'ミロワール自身が逃げる展開。ロードカナロア産駒で芝短距離◎。スロー逃げ切りに期待。7番人気の能力1位が狙い目。'},
-      {r:9,name:'アザレア賞',dist:'2400m芝',time:'14:10',rec:false,
-       honmei:{n:4,name:'ヘルメスギャング',odds:50.9,score:4.9,style:'差し'},
-       horses:[
-         {n:2,name:'サトノグレイス',odds:3.5,score:4.8,pop:1,style:'先行'},
-         {n:4,name:'ヘルメスギャング',odds:50.9,score:4.9,pop:9,style:'差し'},
-       ],
-       bets:[{tag:'fuku',label:'複勝',horse:'#2 サトノグレイス',est:'推定1.7倍',amt:'¥300'}],
-       cmt:'長距離戦は能力馬から。1番人気サトノグレイスの複勝が安定。'},
-      {r:10,name:'ポラリスS',dist:'1400mダ',time:'14:45',rec:false,
-       honmei:{n:12,name:'クロジシジョー',odds:27.6,score:5.1,style:'差し'},
-       horses:[
-         {n:3,name:'サンライズホープ',odds:3.5,score:5.0,pop:1,style:'先行'},
-         {n:12,name:'クロジシジョー',odds:27.6,score:5.1,pop:12,style:'差し'},
-       ],
-       bets:[{tag:'fuku',label:'複勝',horse:'#3 サンライズホープ',est:'推定1.6倍',amt:'¥300'}],
-       cmt:'1番人気サンライズホープの複勝。先行有利の展開で逃げ切り濃厚。'},
-      {r:11,name:'チャーチルダウンズC',dist:'1600m芝',time:'15:25',rec:false,
-       honmei:{n:9,name:'ストームサンダー',odds:69.9,score:4.8,style:'追込'},
-       horses:[
-         {n:6,name:'マジックムーン',odds:4.1,score:4.7,pop:1,style:'先行'},
-         {n:9,name:'ストームサンダー',odds:69.9,score:4.8,pop:12,style:'追込'},
-       ],
-       bets:[{tag:'fuku',label:'複勝',horse:'#6 マジックムーン',est:'推定1.6倍',amt:'¥300'}],
-       cmt:'1番人気マジックムーンの複勝。マイル戦は先行有利。'},
-      {r:12,name:'4歳上2勝クラス',dist:'1400mダ',time:'16:00',rec:false,
-       honmei:{n:7,name:'メイケイレイン',odds:13.1,score:4.9,style:'差し'},
-       horses:[
-         {n:4,name:'ゴールドラッシュ',odds:4.8,score:4.8,pop:1,style:'先行'},
-         {n:7,name:'メイケイレイン',odds:13.1,score:4.9,pop:6,style:'差し'},
-       ],
-       bets:[{tag:'fuku',label:'複勝',horse:'#4 ゴールドラッシュ',est:'推定1.7倍',amt:'¥300'}],
-       cmt:'1番人気ゴールドラッシュの複勝。ダート短距離は先行有利。'},
-    ]
-  }
-};
+// ═══════════════════════════════════════════════════════════
+// ★ 設定: GoogleドライブのファイルIDをここに入力
+// ═══════════════════════════════════════════════════════════
+// 手順:
+//   1. ColabがDriveに保存する prediction_latest.json を右クリック
+//   2. 「共有」→「リンクを知っている全員」に変更
+//   3. リンクの「/d/XXXXXX/view」のXXXXXX部分をコピー
+//   4. 下記 FILE_ID に貼り付け
+const FILE_ID = '13PcHYduEYRKljXYAQV5A2ApQeBfhvDqm';
 
-// ═══════════════════════════════════════════════
-// アプリロジック
-// ═══════════════════════════════════════════════
-let venue = D.venues[0];
+// ─── データ取得 ─────────────────────────────────────────────
+// GoogleドライブのCORSプロキシ経由でJSONを取得
+const DATA_URL = FILE_ID === 'YOUR_GOOGLE_DRIVE_FILE_ID_HERE'
+  ? null  // 未設定時はデモデータを使用
+  : `https://drive.google.com/uc?export=download&id=${FILE_ID}`;
+
+// ─── グローバル状態 ─────────────────────────────────────────
+let D    = null;
+let venue = null;
 const opened = {};
 
-function popClass(pop){
-  if(pop===1) return 'pop1';
-  if(pop===2) return 'pop2';
-  if(pop===3) return 'pop3';
-  return 'popn';
+// ─── データロード ────────────────────────────────────────────
+async function loadData() {
+  document.getElementById('race-list').innerHTML = `
+    <div class="loading">
+      <div class="loading-spin">🏇</div>
+      <div>予想データを読み込み中...</div>
+    </div>`;
+
+  if (!DATA_URL) {
+    // FILE_ID未設定時: デモメッセージ
+    document.getElementById('race-list').innerHTML = `
+      <div class="error-box">
+        📋 <strong>初期設定が必要です</strong><br><br>
+        このアプリはColabが生成したJSONを読み込みます。<br><br>
+        <strong>手順:</strong><br>
+        1. ColabでKEIBA_金曜_v3（または日曜_v3）を実行<br>
+        2. Driveの <code>keiba_ai/app/prediction_latest.json</code> を共有<br>
+        3. このHTMLの <code>FILE_ID</code> にIDを入力して保存<br><br>
+        設定後、ページを再読み込みしてください。
+      </div>`;
+    document.getElementById('hdate').textContent = '未設定';
+    return;
+  }
+
+  try {
+    const res  = await fetch(DATA_URL);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    D = await res.json();
+    initApp();
+  } catch(e) {
+    document.getElementById('race-list').innerHTML = `
+      <div class="error-box">
+        ⚠️ <strong>データ読み込みエラー</strong><br><br>
+        ${e.message}<br><br>
+        <strong>確認事項:</strong><br>
+        • DriveのJSONファイルが「リンクを知っている全員」に共有されているか<br>
+        • FILE_IDが正しいか<br>
+        • Colabで予想生成セルを実行済みか<br><br>
+        <button class="reload-btn" onclick="loadData()" style="margin:8px 0 0">再読み込み</button>
+      </div>`;
+    document.getElementById('hdate').textContent = 'エラー';
+  }
 }
 
-function sbar(score){
-  const p = Math.round(score/10*100);
-  return `<span class="sbar"><span class="sbg"><span class="sfl" style="width:${p}%"></span></span><span style="font-size:10px;color:var(--sub)">${score.toFixed(1)}</span></span>`;
-}
+// ─── アプリ初期化 ────────────────────────────────────────────
+function initApp() {
+  // ヘッダー
+  document.getElementById('hdate').textContent    = D.date || '---';
+  document.getElementById('hvenues').textContent  = (D.venues||[]).join(' · ');
+  document.getElementById('bias-txt').textContent = D.bias?.txt || 'フラット';
+  document.getElementById('bias-tag').textContent = D.bias?.tag || '-';
 
-function toggle(k){
-  opened[k]=!opened[k];
+  // ボトムバー
+  document.getElementById('b-inv').textContent = '¥'+(D.stats?.invest||0).toLocaleString();
+  document.getElementById('b-rec').textContent = (D.stats?.rec||0)+'R';
+  document.getElementById('b-roi').textContent = '~'+(D.stats?.roi||0)+'%';
+
+  // 結果バナー（夜のセル10実行後）
+  const resultArea = document.getElementById('result-area');
+  if (D.result) {
+    const r = D.result;
+    const roi = r.roi || 0;
+    const isPlus = r.recovered >= r.invested;
+    resultArea.innerHTML = `
+      <div class="result-banner ${isPlus?'hit':''}">
+        <div class="rb-title">📊 本日の結果</div>
+        <div class="rb-stats">的中: ${r.hit}/${r.total}点　回収: ¥${(r.recovered||0).toLocaleString()}</div>
+        <div class="rb-roi">投資: ¥${(r.invested||0).toLocaleString()}　ROI: ${roi}%</div>
+      </div>`;
+  } else {
+    resultArea.innerHTML = '';
+  }
+
+  // サマリー
+  const allRaces = Object.values(D.races||{}).flat();
+  const recCount = allRaces.filter(r=>r.rec).length;
+  document.getElementById('summary').innerHTML = `
+    <div class="sum-card"><div class="sum-label">推奨レース</div><div class="sum-val gold">${recCount}R</div></div>
+    <div class="sum-card"><div class="sum-label">全会場</div><div class="sum-val">${(D.venues||[]).length}場</div></div>
+    <div class="sum-card"><div class="sum-label">推定投資</div><div class="sum-val">¥${(D.stats?.invest||0).toLocaleString()}</div></div>`;
+
+  // 会場タブ
+  const tabs = document.getElementById('tabs');
+  tabs.innerHTML = '';
+  (D.venues||[]).forEach((v,i) => {
+    const btn = document.createElement('button');
+    btn.className = 'tab'+(i===0?' on':'');
+    btn.textContent = v;
+    btn.onclick = () => switchVenue(v, btn);
+    tabs.appendChild(btn);
+  });
+
+  // 最初の会場を表示
+  venue = (D.venues||[])[0] || null;
   render();
+
+  // iOS PWAヒント
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  if (isIOS && !window.navigator.standalone) {
+    document.getElementById('pwa-hint').style.display = 'flex';
+  }
 }
 
-function switchVenue(v,btn){
-  venue=v;
+// ─── 会場切替 ────────────────────────────────────────────────
+function switchVenue(v, btn) {
+  venue = v;
   document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
   btn.classList.add('on');
   render();
 }
 
-function render(){
-  const races = D.races[venue]||[];
-  let html='';
-  for(const race of races){
-    const k = venue+race.r;
+// ─── レースカード描画 ────────────────────────────────────────
+function popClass(pop) {
+  if (pop===1) return 'pop1';
+  if (pop===2) return 'pop2';
+  if (pop===3) return 'pop3';
+  return 'popn';
+}
+
+function sbar(score) {
+  const p = Math.round(score/10*100);
+  return `<span class="sbar"><span class="sbg"><span class="sfl" style="width:${p}%"></span></span><span style="font-size:10px;color:var(--sub)">${score.toFixed(1)}</span></span>`;
+}
+
+function toggle(k) {
+  opened[k] = !opened[k];
+  render();
+}
+
+function render() {
+  if (!D) return;
+  const races = (D.races||{})[venue] || [];
+  if (!races.length) {
+    document.getElementById('race-list').innerHTML =
+      `<div style="text-align:center;padding:40px;color:var(--sub)">この会場のデータがありません</div>`;
+    return;
+  }
+
+  let html = '';
+  for (const race of races) {
+    const k      = venue + race.r;
     const isOpen = opened[k];
-    const isRec = race.rec;
+    const isRec  = race.rec;
+
     html += `<div class="rc${isRec?' rec':''}">
       <div class="rc-head" onclick="toggle('${k}')">
         <div class="rc-num">${race.r}</div>
         <div class="rc-info">
           <div class="rc-name">${race.name}</div>
-          <div class="rc-meta">${race.dist} · ${race.time}発走</div>
+          <div class="rc-meta">${race.dist}</div>
         </div>
         <div class="rc-right">
           ${isRec?`<span class="conf">AI ${race.conf}%</span><span class="rec-lbl">★推奨</span>`:''}
@@ -470,22 +347,22 @@ function render(){
         </div>
       </div>`;
 
-    if(race.honmei){
-      html+=`<div class="hstrip" onclick="toggle('${k}')">
+    if (race.honmei) {
+      html += `<div class="hstrip" onclick="toggle('${k}')">
         <span class="hbadge">◎本命</span>
         <span class="hname">#${race.honmei.n} ${race.honmei.name}</span>
         <span class="hodds">${race.honmei.odds}倍 / ${race.honmei.style}</span>
       </div>`;
     }
 
-    if(isOpen){
-      html+=`<div class="detail open"><div class="det-inner">
+    if (isOpen) {
+      html += `<div class="detail open"><div class="det-inner">
         <div class="sec">出走馬・スコア</div>
         <table class="htbl">
           <tr><th>馬番</th><th>馬名</th><th>人気</th><th>オッズ</th><th>スコア</th><th>脚質</th></tr>`;
-      for(const h of race.horses){
-        const isH = race.honmei && h.n===race.honmei.n;
-        html+=`<tr${isH?' class="hl"':''}>
+      for (const h of (race.horses||[])) {
+        const isH = race.honmei && h.n === race.honmei.n;
+        html += `<tr${isH?' class="hl"':''}>
           <td>${isH?'◎':''}${h.n}</td>
           <td>${h.name}</td>
           <td><span class="popbadge ${popClass(h.pop)}">${h.pop}番人気</span></td>
@@ -494,62 +371,25 @@ function render(){
           <td>${h.style}</td>
         </tr>`;
       }
-      html+=`</table>
+      html += `</table>
         <div class="bets"><div class="sec" style="margin-top:12px">買い目</div>`;
-      for(const b of race.bets){
-        html+=`<div class="bet">
+      for (const b of (race.bets||[])) {
+        html += `<div class="bet">
           <span class="btype ${b.tag}">${b.label}</span>
           <span class="bhorse">${b.horse}</span>
           <span class="best">${b.est}</span>
           <span class="bamt">${b.amt}</span>
         </div>`;
       }
-      html+=`</div><div class="cmt">${race.cmt}</div></div></div>`;
+      html += `</div><div class="cmt">${(race.cmt||'').replace(/</g,'&lt;')}</div></div></div>`;
     }
-    html+=`</div>`;
+    html += `</div>`;
   }
-  document.getElementById('race-list').innerHTML=html;
+  document.getElementById('race-list').innerHTML = html;
 }
 
-function init(){
-  document.getElementById('hdate').textContent = D.date;
-  document.getElementById('hvenues').textContent = D.venues.join(' · ');
-  document.getElementById('bias-txt').textContent = D.bias.txt;
-  document.getElementById('bias-tag').textContent = D.bias.tag;
-  document.getElementById('b-inv').textContent = '¥'+D.stats.invest.toLocaleString();
-  document.getElementById('b-rec').textContent = D.stats.rec+'R';
-  document.getElementById('b-roi').textContent = '~'+D.stats.roi+'%';
-
-  // サマリーカード
-  const recCount = Object.values(D.races).flat().filter(r=>r.rec).length;
-  const allCount = Object.values(D.races).flat().length;
-  document.getElementById('summary').innerHTML=`
-    <div class="sum-card"><div class="sum-label">全レース</div><div class="sum-val">${allCount}R</div></div>
-    <div class="sum-card"><div class="sum-label">推奨レース</div><div class="sum-val gold">${recCount}R</div></div>
-    <div class="sum-card"><div class="sum-label">推定投資</div><div class="sum-val">¥${D.stats.invest.toLocaleString()}</div></div>
-  `;
-
-  // 会場タブ（動的生成・3会場対応）
-  const tabs = document.getElementById('tabs');
-  tabs.innerHTML='';
-  D.venues.forEach((v,i)=>{
-    const btn=document.createElement('button');
-    btn.className='tab'+(i===0?' on':'');
-    btn.textContent=v;
-    btn.onclick=()=>switchVenue(v,btn);
-    tabs.appendChild(btn);
-  });
-
-  // iOS PWAヒント
-  const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
-  if(isIOS && !window.navigator.standalone){
-    document.getElementById('pwa-hint').style.display='flex';
-  }
-
-  render();
-}
-
-init();
+// ─── 起動 ────────────────────────────────────────────────────
+loadData();
 </script>
 </body>
 </html>
