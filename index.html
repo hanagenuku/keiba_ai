@@ -181,9 +181,8 @@ const FILE_ID = '13PcHYduEYRKljXYAQV5A2ApQeBfhvDqm';
 
 // ─── データ取得 ─────────────────────────────────────────────
 // GoogleドライブのCORSプロキシ経由でJSONを取得
-const DATA_URL = FILE_ID === 'YOUR_GOOGLE_DRIVE_FILE_ID_HERE'
-  ? null  // 未設定時はデモデータを使用
-  : `https://drive.google.com/uc?export=download&id=${FILE_ID}`;
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbz1M4YReK7NHrtJUKMBrMjRiuvFSIhTbokiZz3ZPad3RUhkktD4-QqEu8xVlDf754Mw/exec';
+const DATA_URL = GAS_URL;  // GAS経由でCORS問題を回避
 
 // ─── グローバル状態 ─────────────────────────────────────────
 let D    = null;
