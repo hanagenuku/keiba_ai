@@ -7,7 +7,6 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="KEIBA-AI">
 <meta name="theme-color" content="#0a2e1a">
-<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%230a2e1a'/><text y='70' x='10' font-size='60'>🏇</text></svg>">
 <title>KEIBA-AI</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -15,9 +14,8 @@
   --g1:#0a2e1a;--g2:#1a5c34;--g3:#2d8a52;
   --gold:#c9a84c;--gold2:#e8c87a;
   --red:#c0392b;--blue:#1a5276;
-  --bg:#f2efe8;--card:#fff;
+  --bg:#f4f1eb;--card:#fff;
   --text:#1a1a1a;--sub:#777;--border:#e0dbd0;
-  --rec-border:#c9a84c;
 }
 body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;max-width:430px;margin:0 auto;position:relative}
 
@@ -34,7 +32,7 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
 .bias-txt{font-size:11px;color:rgba(255,255,255,0.75)}
 .bias-tag{background:var(--gold);color:#fff;font-size:10px;font-weight:700;padding:2px 10px;border-radius:10px}
 
-/* VENUE TABS */
+/* TABS */
 .tabs{background:var(--card);border-bottom:1px solid var(--border);padding:8px 12px;display:flex;gap:8px;overflow-x:auto;position:sticky;top:56px;z-index:199;-webkit-overflow-scrolling:touch}
 .tabs::-webkit-scrollbar{display:none}
 .tab{padding:7px 22px;border-radius:20px;border:1.5px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;background:transparent;color:var(--sub);white-space:nowrap;transition:all .15s;flex-shrink:0}
@@ -59,37 +57,52 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
 .rc-info{flex:1;min-width:0}
 .rc-name{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rc-meta{font-size:11px;color:var(--sub);margin-top:2px}
-.rc-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0}
+.rc-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
+
+/* 波乱度バッジ */
+.chaos-badge{font-size:10px;font-weight:800;padding:2px 8px;border-radius:6px;letter-spacing:1px}
+.chaos-A{background:#c0392b;color:#fff}
+.chaos-B{background:#e67e22;color:#fff}
+.chaos-C{background:#2980b9;color:#fff}
+.chaos-D{background:#27ae60;color:#fff}
+.chaos-{background:#aaa;color:#fff}
 .conf{background:var(--gold);color:#fff;font-size:11px;font-weight:800;padding:3px 9px;border-radius:8px}
 .rec-lbl{font-size:10px;color:var(--gold);font-weight:700}
 .arr{font-size:11px;color:var(--sub);transition:transform .2s;display:inline-block}
 .arr.open{transform:rotate(180deg)}
 
-/* HONMEI STRIP */
-.hstrip{padding:0 14px 10px;display:flex;align-items:center;gap:8px;cursor:pointer}
-.hbadge{background:var(--red);color:#fff;font-size:10px;font-weight:800;padding:2px 8px;border-radius:4px;flex-shrink:0}
-.hname{font-size:13px;font-weight:700}
-.hodds{font-size:12px;color:var(--sub);margin-left:auto}
-
 /* DETAIL */
 .detail{display:none;border-top:1px solid var(--border)}
 .detail.open{display:block}
-.det-inner{padding:12px 14px;background:#faf8f3}
-.sec{font-size:9px;font-weight:700;color:var(--sub);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+.det-inner{padding:10px 12px;background:#faf8f3}
+.sec{font-size:9px;font-weight:700;color:var(--sub);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
 
-/* HORSE TABLE */
+/* ==============================
+   HORSE TABLE（新デザイン）
+   ============================== */
 .htbl{width:100%;font-size:11px;border-collapse:collapse}
-.htbl th{color:var(--sub);font-weight:600;padding:3px 4px;text-align:left;border-bottom:1px solid var(--border);font-size:10px}
-.htbl td{padding:6px 4px;border-bottom:1px solid #f0ece4;vertical-align:middle}
-.htbl tr.hl td{background:rgba(201,168,76,0.07);font-weight:700}
-.sbar{display:inline-flex;align-items:center;gap:4px}
-.sbg{width:36px;height:5px;background:#e8e4dc;border-radius:3px;overflow:hidden;flex-shrink:0}
-.sfl{height:100%;border-radius:3px;background:var(--gold)}
-.popbadge{font-size:9px;padding:1px 5px;border-radius:3px;font-weight:700}
-.pop1{background:#c0392b;color:#fff}
-.pop2{background:#e67e22;color:#fff}
-.pop3{background:#f39c12;color:#fff}
-.popn{background:#eee;color:#666}
+.htbl th{
+  font-weight:700;padding:4px 3px;text-align:center;
+  border-bottom:2px solid #ddd;font-size:10px;
+  color:#fff;background:var(--g1);
+}
+.htbl th.col-name{text-align:left;background:#2d6a4f}
+.htbl th.col-rl{background:#e67e22}
+.htbl th.col-cl{background:#8e44ad}
+.htbl th.col-mark{background:#555}
+.htbl td{padding:5px 3px;border-bottom:1px solid #f0ece4;vertical-align:middle;text-align:center}
+.htbl td.col-name{text-align:left;font-weight:600;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.htbl tr.hl td{background:rgba(201,168,76,0.10);font-weight:700}
+.htbl td.col-rl{font-weight:800;color:#c0450a}
+.htbl td.col-cl{font-weight:800;color:#7d29b5}
+.htbl td.pct{color:var(--g2);font-weight:600}
+.htbl td.pct-hi{color:#c0392b;font-weight:800}
+
+/* 特記マーク */
+.mark{display:inline-block;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:800;line-height:1.5}
+.mark-推{background:#8e44ad;color:#fff}
+.mark-高{background:#27ae60;color:#fff}
+.mark-穴{background:#e67e22;color:#fff}
 
 /* BETS */
 .bets{margin-top:10px}
@@ -98,6 +111,9 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
 .btype.fuku{background:var(--g2)}
 .btype.tan{background:var(--red)}
 .btype.wide{background:var(--blue)}
+.btype.umaren{background:#6c3483}
+.btype.sanfuku{background:#117a65}
+.btype.santan{background:#b7950b}
 .bhorse{font-size:12px;font-weight:600;flex:1}
 .best{font-size:10px;color:var(--sub)}
 .bamt{font-size:13px;font-weight:800;color:var(--g1);margin-left:auto;flex-shrink:0}
@@ -105,7 +121,7 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
 /* COMMENT */
 .cmt{margin-top:10px;padding:9px 12px;background:rgba(10,46,26,0.05);border-left:3px solid var(--g2);border-radius:0 8px 8px 0;font-size:12px;color:#444;line-height:1.7;white-space:pre-line}
 
-/* RESULT BANNER */
+/* RESULT */
 .result-banner{margin:8px 10px;padding:10px 14px;background:var(--card);border-radius:10px;border:1px solid var(--border)}
 .result-banner.hit{border-color:#27ae60}
 .rb-title{font-size:11px;font-weight:700;color:var(--sub);margin-bottom:4px}
@@ -117,7 +133,6 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
 .loading-spin{font-size:36px;animation:spin 1s linear infinite;display:inline-block;margin-bottom:12px}
 @keyframes spin{to{transform:rotate(360deg)}}
 .error-box{margin:16px;padding:16px;background:#fff3f3;border:1px solid #e74c3c;border-radius:10px;font-size:13px;color:#c0392b;line-height:1.6}
-.error-box a{color:var(--g1);font-weight:700}
 
 /* BOTTOM BAR */
 .btm{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--g1);padding:10px 20px calc(10px + env(safe-area-inset-bottom,0px));display:flex;justify-content:space-around;z-index:200;border-top:1px solid rgba(255,255,255,0.1)}
@@ -125,12 +140,11 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
 .btm-lbl{font-size:9px;color:rgba(255,255,255,0.6);letter-spacing:1px;text-transform:uppercase}
 .btm-val{font-size:15px;font-weight:900;color:var(--gold2)}
 
-/* PWA HINT */
+.reload-btn{display:block;margin:8px 10px;padding:10px;background:var(--g1);color:var(--gold2);border:none;border-radius:10px;font-size:13px;font-weight:700;width:calc(100% - 20px);cursor:pointer;letter-spacing:1px}
+
+/* PWA */
 .pwa{background:rgba(201,168,76,0.12);border:1px solid var(--gold);border-radius:10px;margin:8px 10px;padding:9px 14px;font-size:12px;color:#5a4010;display:flex;align-items:center;gap:8px}
 .pwa button{margin-left:auto;background:var(--gold);color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0}
-
-/* RELOAD BTN */
-.reload-btn{display:block;margin:8px 10px;padding:10px;background:var(--g1);color:var(--gold2);border:none;border-radius:10px;font-size:13px;font-weight:700;width:calc(100% - 20px);cursor:pointer;letter-spacing:1px}
 </style>
 </head>
 <body>
@@ -141,20 +155,20 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
     <div class="hdr-sub">AI RACING PREDICTION</div>
   </div>
   <div class="hdr-right">
-    <div class="hdr-date" id="hdate">読込中...</div>
+    <div class="hdr-date" id="hdate">読み込み中...</div>
     <div class="hdr-venues" id="hvenues">---</div>
   </div>
 </div>
 
 <div class="bias">
-  <span class="bias-txt" id="bias-txt">バイアス読込中...</span>
+  <span class="bias-txt" id="bias-txt">バイアス読み込み中...</span>
   <span class="bias-tag" id="bias-tag">-</span>
 </div>
 
 <div class="tabs" id="tabs"></div>
 
 <div id="pwa-hint" style="display:none" class="pwa">
-  <span>📱 ホーム画面に追加して使えます（Safari→共有→ホーム画面に追加）</span>
+  <span>📱 ホーム画面に追加すると便利です（Safari→共有→ホーム画面に追加）</span>
   <button onclick="this.parentElement.style.display='none'">✕</button>
 </div>
 
@@ -163,58 +177,40 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
 <div class="list" id="race-list"></div>
 
 <div class="btm">
-  <div class="btm-item"><div class="btm-lbl">推定投資</div><div class="btm-val" id="b-inv">-</div></div>
+  <div class="btm-item"><div class="btm-lbl">総投資額</div><div class="btm-val" id="b-inv">-</div></div>
   <div class="btm-item"><div class="btm-lbl">推奨レース</div><div class="btm-val" id="b-rec">-</div></div>
-  <div class="btm-item"><div class="btm-lbl">ROI予測</div><div class="btm-val" id="b-roi">-</div></div>
+  <div class="btm-item"><div class="btm-lbl">ROI推計</div><div class="btm-val" id="b-roi">-</div></div>
 </div>
 
 <script>
-// ═══════════════════════════════════════════════════════════
-// ★ 設定: GoogleドライブのファイルIDをここに入力
-// ═══════════════════════════════════════════════════════════
-// 手順:
-//   1. ColabがDriveに保存する prediction_latest.json を右クリック
-//   2. 「共有」→「リンクを知っている全員」に変更
-//   3. リンクの「/d/XXXXXX/view」のXXXXXX部分をコピー
-//   4. 下記 FILE_ID に貼り付け
+// ★ Google DriveのファイルIDをここに設定
 const FILE_ID = '13PcHYduEYRKljXYAQV5A2ApQeBfhvDqm';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbz1M4YReK7NHrtJUKMBrMjiuvFSIhTbokiZz3ZPad3RUkktD4-QqEu8xVlDf754Mw/exec';
+const DATA_URL = GAS_URL;
 
-// ─── データ取得 ─────────────────────────────────────────────
-// GoogleドライブのCORSプロキシ経由でJSONを取得
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbz1M4YReK7NHrtJUKMBrMjRiuvFSIhTbokiZz3ZPad3RUhkktD4-QqEu8xVlDf754Mw/exec';
-const DATA_URL = GAS_URL;  // GAS経由でCORS問題を回避
-
-// ─── グローバル状態 ─────────────────────────────────────────
-let D    = null;
-let venue = null;
+let D = null, venue = null;
 const opened = {};
 
-// ─── データロード ────────────────────────────────────────────
 async function loadData() {
   document.getElementById('race-list').innerHTML = `
     <div class="loading">
       <div class="loading-spin">🏇</div>
-      <div>予想データを読み込み中...</div>
+      <div>予測データを読み込み中...</div>
     </div>`;
-
   if (!DATA_URL) {
-    // FILE_ID未設定時: デモメッセージ
     document.getElementById('race-list').innerHTML = `
       <div class="error-box">
-        📋 <strong>初期設定が必要です</strong><br><br>
-        このアプリはColabが生成したJSONを読み込みます。<br><br>
+        📋 <strong>設定が必要です</strong><br><br>
+        このアプリはColabが保存したJSONを読み込みます。<br><br>
         <strong>手順:</strong><br>
-        1. ColabでKEIBA_金曜_v3（または日曜_v3）を実行<br>
-        2. Driveの <code>keiba_ai/app/prediction_latest.json</code> を共有<br>
-        3. このHTMLの <code>FILE_ID</code> にIDを入力して保存<br><br>
-        設定後、ページを再読み込みしてください。
+        1. ColaboでKEIBA_金曜/土日_v5を実行<br>
+        2. DriveのJSONのリンク「/d/XXXXXX/view」のXXXXXXをコピー<br>
+        3. 上の FILE_ID に貼り付け
       </div>`;
-    document.getElementById('hdate').textContent = '未設定';
     return;
   }
-
   try {
-    const res  = await fetch(DATA_URL);
+    const res = await fetch(DATA_URL);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     D = await res.json();
     initApp();
@@ -224,53 +220,46 @@ async function loadData() {
         ⚠️ <strong>データ読み込みエラー</strong><br><br>
         ${e.message}<br><br>
         <strong>確認事項:</strong><br>
-        • DriveのJSONファイルが「リンクを知っている全員」に共有されているか<br>
-        • FILE_IDが正しいか<br>
-        • Colabで予想生成セルを実行済みか<br><br>
+        ・DriveのJSONファイルが「リンクを知っている全員」に共有されているか<br>
+        ・FILE_IDが正しいか<br>
+        ・Colabで最近ノートブックを実行したか<br><br>
         <button class="reload-btn" onclick="loadData()" style="margin:8px 0 0">再読み込み</button>
       </div>`;
     document.getElementById('hdate').textContent = 'エラー';
   }
 }
 
-// ─── アプリ初期化 ────────────────────────────────────────────
 function initApp() {
-  // ヘッダー
   document.getElementById('hdate').textContent    = D.date || '---';
   document.getElementById('hvenues').textContent  = (D.venues||[]).join(' · ');
   document.getElementById('bias-txt').textContent = D.bias?.txt || 'フラット';
   document.getElementById('bias-tag').textContent = D.bias?.tag || '-';
-
-  // ボトムバー
   document.getElementById('b-inv').textContent = '¥'+(D.stats?.invest||0).toLocaleString();
   document.getElementById('b-rec').textContent = (D.stats?.rec||0)+'R';
   document.getElementById('b-roi').textContent = '~'+(D.stats?.roi||0)+'%';
 
-  // 結果バナー（夜のセル10実行後）
+  // 結果バナー
   const resultArea = document.getElementById('result-area');
   if (D.result) {
     const r = D.result;
-    const roi = r.roi || 0;
     const isPlus = r.recovered >= r.invested;
     resultArea.innerHTML = `
       <div class="result-banner ${isPlus?'hit':''}">
-        <div class="rb-title">📊 本日の結果</div>
+        <div class="rb-title">📊 前日の結果</div>
         <div class="rb-stats">的中: ${r.hit}/${r.total}点　回収: ¥${(r.recovered||0).toLocaleString()}</div>
-        <div class="rb-roi">投資: ¥${(r.invested||0).toLocaleString()}　ROI: ${roi}%</div>
+        <div class="rb-roi">投資: ¥${(r.invested||0).toLocaleString()}　ROI: ${r.roi}%</div>
       </div>`;
-  } else {
-    resultArea.innerHTML = '';
-  }
+  } else { resultArea.innerHTML = ''; }
 
   // サマリー
   const allRaces = Object.values(D.races||{}).flat();
   const recCount = allRaces.filter(r=>r.rec).length;
   document.getElementById('summary').innerHTML = `
     <div class="sum-card"><div class="sum-label">推奨レース</div><div class="sum-val gold">${recCount}R</div></div>
-    <div class="sum-card"><div class="sum-label">全会場</div><div class="sum-val">${(D.venues||[]).length}場</div></div>
-    <div class="sum-card"><div class="sum-label">推定投資</div><div class="sum-val">¥${(D.stats?.invest||0).toLocaleString()}</div></div>`;
+    <div class="sum-card"><div class="sum-label">開催場数</div><div class="sum-val">${(D.venues||[]).length}場</div></div>
+    <div class="sum-card"><div class="sum-label">総投資額</div><div class="sum-val">¥${(D.stats?.invest||0).toLocaleString()}</div></div>`;
 
-  // 会場タブ
+  // タブ
   const tabs = document.getElementById('tabs');
   tabs.innerHTML = '';
   (D.venues||[]).forEach((v,i) => {
@@ -281,18 +270,15 @@ function initApp() {
     tabs.appendChild(btn);
   });
 
-  // 最初の会場を表示
   venue = (D.venues||[])[0] || null;
   render();
 
-  // iOS PWAヒント
   const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
   if (isIOS && !window.navigator.standalone) {
     document.getElementById('pwa-hint').style.display = 'flex';
   }
 }
 
-// ─── 会場切替 ────────────────────────────────────────────────
 function switchVenue(v, btn) {
   venue = v;
   document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
@@ -300,7 +286,6 @@ function switchVenue(v, btn) {
   render();
 }
 
-// ─── レースカード描画 ────────────────────────────────────────
 function popClass(pop) {
   if (pop===1) return 'pop1';
   if (pop===2) return 'pop2';
@@ -308,14 +293,14 @@ function popClass(pop) {
   return 'popn';
 }
 
-function sbar(score) {
-  const p = Math.round(score/10*100);
-  return `<span class="sbar"><span class="sbg"><span class="sfl" style="width:${p}%"></span></span><span style="font-size:10px;color:var(--sub)">${score.toFixed(1)}</span></span>`;
-}
-
 function toggle(k) {
   opened[k] = !opened[k];
   render();
+}
+
+function markBadge(m) {
+  if (!m) return '';
+  return `<span class="mark mark-${m}">${m}</span>`;
 }
 
 function render() {
@@ -323,7 +308,7 @@ function render() {
   const races = (D.races||{})[venue] || [];
   if (!races.length) {
     document.getElementById('race-list').innerHTML =
-      `<div style="text-align:center;padding:40px;color:var(--sub)">この会場のデータがありません</div>`;
+      `<div style="text-align:center;padding:40px;color:var(--sub)">このレース場のデータがありません</div>`;
     return;
   }
 
@@ -332,6 +317,7 @@ function render() {
     const k      = venue + race.r;
     const isOpen = opened[k];
     const isRec  = race.rec;
+    const chaos  = race.chaos_label || '';
 
     html += `<div class="rc${isRec?' rec':''}">
       <div class="rc-head" onclick="toggle('${k}')">
@@ -341,54 +327,79 @@ function render() {
           <div class="rc-meta">${race.dist}</div>
         </div>
         <div class="rc-right">
-          ${isRec?`<span class="conf">AI ${race.conf}%</span><span class="rec-lbl">★推奨</span>`:''}
+          ${chaos ? `<span class="chaos-badge chaos-${chaos}">波乱${chaos}</span>` : ''}
+          ${isRec ? `<span class="conf">AI ${race.conf}%</span><span class="rec-lbl">☆推奨</span>` : ''}
           <span class="arr${isOpen?' open':''}">▼</span>
         </div>
       </div>`;
 
-    if (race.honmei) {
-      html += `<div class="hstrip" onclick="toggle('${k}')">
-        <span class="hbadge">◎本命</span>
-        <span class="hname">#${race.honmei.n} ${race.honmei.name}</span>
-        <span class="hodds">${race.honmei.odds}倍 / ${race.honmei.style}</span>
-      </div>`;
-    }
-
     if (isOpen) {
       html += `<div class="detail open"><div class="det-inner">
-        <div class="sec">出走馬・スコア</div>
+        <div class="sec">出走馬・AI評価</div>
         <table class="htbl">
-          <tr><th>馬番</th><th>馬名</th><th>人気</th><th>オッズ</th><th>スコア</th><th>脚質</th></tr>`;
+          <tr>
+            <th style="width:24px">番</th>
+            <th class="col-name">馬名</th>
+            <th class="col-mark" style="width:28px">特記</th>
+            <th class="col-rl" style="width:26px">RL</th>
+            <th class="col-cl" style="width:26px">CL</th>
+            <th style="width:36px">勝率</th>
+            <th style="width:36px">連対率</th>
+            <th style="width:36px">複勝率</th>
+          </tr>`;
+
       for (const h of (race.horses||[])) {
-        const isH = race.honmei && h.n === race.honmei.n;
+        const isH  = race.honmei && h.n === race.honmei.n;
+        const rlStr = h.rl_rank && h.rl_rank<99 ? h.rl_rank : '-';
+        const clStr = h.cl_rank && h.cl_rank<99 ? h.cl_rank : '-';
+        const tanStr  = h.tan_pct  != null ? `${h.tan_pct}%`  : '-';
+        const renStr  = h.ren_pct  != null ? `${h.ren_pct}%`  : '-';
+        const fukuStr = h.fuku_pct != null ? `${h.fuku_pct}%` : '-';
+        const fukuHi  = h.fuku_pct != null && h.fuku_pct >= 38;
         html += `<tr${isH?' class="hl"':''}>
-          <td>${isH?'◎':''}${h.n}</td>
-          <td>${h.name}</td>
-          <td><span class="popbadge ${popClass(h.pop)}">${h.pop}番人気</span></td>
-          <td>${h.odds}倍</td>
-          <td>${sbar(h.score)}</td>
-          <td>${h.style}</td>
+          <td>${h.n}</td>
+          <td class="col-name">${h.name}</td>
+          <td>${markBadge(h.mark)}</td>
+          <td class="col-rl">${rlStr}</td>
+          <td class="col-cl">${clStr}</td>
+          <td>${tanStr}</td>
+          <td>${renStr}</td>
+          <td class="${fukuHi?'pct-hi':'pct'}">${fukuStr}</td>
         </tr>`;
       }
-      html += `</table>
-        <div class="bets"><div class="sec" style="margin-top:12px">買い目</div>`;
-      for (const b of (race.bets||[])) {
-        html += `<div class="bet">
-          <span class="btype ${b.tag}">${b.label}</span>
-          <span class="bhorse">${b.horse}</span>
-          <span class="best">${b.est}</span>
-          <span class="bamt">${b.amt}</span>
-        </div>`;
+      html += `</table>`;
+
+      // 買い目（現行のまま）
+      if ((race.bets||[]).length > 0) {
+        html += `<div class="bets"><div class="sec" style="margin-top:12px">買い目</div>`;
+        const TAG_MAP = {
+          '複勝':'fuku','単勝':'tan','ワイド':'wide',
+          '馬連':'umaren','三連複':'sanfuku','三連単':'santan'
+        };
+        for (const b of race.bets) {
+          const tagClass = b.tag || TAG_MAP[b.label] || 'fuku';
+          html += `<div class="bet">
+            <span class="btype ${tagClass}">${b.label}</span>
+            <span class="bhorse">${b.horse}</span>
+            <span class="best">${b.est}</span>
+            <span class="bamt">${b.amt}</span>
+          </div>`;
+        }
+        html += `</div>`;
       }
-      html += `</div><div class="cmt">${(race.cmt||'').replace(/</g,'&lt;')}</div></div></div>`;
+
+      if (race.cmt) {
+        html += `<div class="cmt">${(race.cmt||'').replace(/</g,'&lt;')}</div>`;
+      }
+      html += `</div></div>`;
     }
     html += `</div>`;
   }
   document.getElementById('race-list').innerHTML = html;
 }
 
-// ─── 起動 ────────────────────────────────────────────────────
 loadData();
 </script>
 </body>
 </html>
+
