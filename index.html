@@ -185,8 +185,12 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
 <script>
 // ★ Google DriveのファイルIDをここに設定
 const FILE_ID = '13PcHYduEYRKljXYAQV5A2ApQeBfhvDqm';
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbz1M4YReK7NHrtJUKMBrMjRiuvFSIhTbokiZz3ZPad3RUhkktD4-QqEu8xVlDf754Mw/exec';
-  
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbz1M4YReK7NHrtJUKMBrMjiuvFSIhTbokiZz3ZPad3RUkktD4-QqEu8xVlDf754Mw/exec';
+const DATA_URL = GAS_URL;
+
+let D = null, venue = null;
+const opened = {};
+
 async function loadData() {
   document.getElementById('race-list').innerHTML = `
     <div class="loading">
