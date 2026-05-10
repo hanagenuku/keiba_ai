@@ -7,49 +7,38 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="KEIBA-AI">
 <meta name="theme-color" content="#0a2e1a">
-<title>KEIBA-AI</title>
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%230a2e1a'/><text y='70' x='10' font-size='60'>🏇</text></svg>">
+<title>KEIBA-AI v5</title><!-- build:20260510-1251 -->
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
   --g1:#0a2e1a;--g2:#1a5c34;--g3:#2d8a52;
   --gold:#c9a84c;--gold2:#e8c87a;
   --red:#c0392b;--blue:#1a5276;
-  --bg:#f4f1eb;--card:#fff;
+  --bg:#f2efe8;--card:#fff;
   --text:#1a1a1a;--sub:#777;--border:#e0dbd0;
 }
 body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;max-width:430px;margin:0 auto;position:relative}
-
-/* HEADER */
 .hdr{background:var(--g1);padding:calc(env(safe-area-inset-top,0px) + 10px) 16px 10px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200}
 .hdr-logo{font-size:22px;font-weight:900;letter-spacing:3px;color:var(--gold2)}
 .hdr-sub{font-size:9px;color:rgba(255,255,255,0.5);letter-spacing:2px;margin-top:1px}
 .hdr-right{text-align:right}
 .hdr-date{font-size:12px;color:rgba(255,255,255,0.85);font-weight:600}
 .hdr-venues{font-size:10px;color:var(--gold);margin-top:2px}
-
-/* BIAS BAR */
 .bias{background:var(--g2);padding:5px 16px;display:flex;justify-content:space-between;align-items:center}
 .bias-txt{font-size:11px;color:rgba(255,255,255,0.75)}
 .bias-tag{background:var(--gold);color:#fff;font-size:10px;font-weight:700;padding:2px 10px;border-radius:10px}
-
-/* TABS */
 .tabs{background:var(--card);border-bottom:1px solid var(--border);padding:8px 12px;display:flex;gap:8px;overflow-x:auto;position:sticky;top:56px;z-index:199;-webkit-overflow-scrolling:touch}
 .tabs::-webkit-scrollbar{display:none}
 .tab{padding:7px 22px;border-radius:20px;border:1.5px solid var(--border);font-size:13px;font-weight:700;cursor:pointer;background:transparent;color:var(--sub);white-space:nowrap;transition:all .15s;flex-shrink:0}
 .tab.on{background:var(--g1);color:#fff;border-color:var(--g1)}
-
-/* SUMMARY */
 .summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:10px 10px 4px}
 .sum-card{background:var(--card);border-radius:10px;border:1px solid var(--border);padding:8px 10px;text-align:center}
 .sum-label{font-size:9px;color:var(--sub);font-weight:600;letter-spacing:1px;text-transform:uppercase}
 .sum-val{font-size:16px;font-weight:900;color:var(--g1);margin-top:2px}
 .sum-val.gold{color:var(--gold)}
-
-/* RACE LIST */
 .list{padding:8px 10px 90px}
-
-/* RACE CARD */
-.rc{background:var(--card);border-radius:12px;border:1px solid var(--border);margin-bottom:8px;overflow:hidden;transition:box-shadow .15s}
+.rc{background:var(--card);border-radius:12px;border:1px solid var(--border);margin-bottom:8px;overflow:hidden}
 .rc.rec{border:2px solid var(--gold)}
 .rc-head{padding:10px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
 .rc-num{width:32px;height:32px;border-radius:50%;background:#f0ede6;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:var(--sub);flex-shrink:0}
@@ -57,209 +46,133 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
 .rc-info{flex:1;min-width:0}
 .rc-name{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rc-meta{font-size:11px;color:var(--sub);margin-top:2px}
-.rc-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
-
-/* 波乱度バッジ */
-.chaos-badge{font-size:10px;font-weight:800;padding:2px 8px;border-radius:6px;letter-spacing:1px}
-.chaos-A{background:#c0392b;color:#fff}
-.chaos-B{background:#e67e22;color:#fff}
-.chaos-C{background:#2980b9;color:#fff}
-.chaos-D{background:#27ae60;color:#fff}
-.chaos-{background:#aaa;color:#fff}
+.rc-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0}
 .conf{background:var(--gold);color:#fff;font-size:11px;font-weight:800;padding:3px 9px;border-radius:8px}
 .rec-lbl{font-size:10px;color:var(--gold);font-weight:700}
 .arr{font-size:11px;color:var(--sub);transition:transform .2s;display:inline-block}
 .arr.open{transform:rotate(180deg)}
-
-/* DETAIL */
+.hstrip{padding:0 14px 10px;display:flex;align-items:center;gap:8px;cursor:pointer}
+.hbadge{background:var(--red);color:#fff;font-size:10px;font-weight:800;padding:2px 8px;border-radius:4px;flex-shrink:0}
+.hname{font-size:13px;font-weight:700}
+.hodds{font-size:12px;color:var(--sub);margin-left:auto}
 .detail{display:none;border-top:1px solid var(--border)}
 .detail.open{display:block}
-.det-inner{padding:10px 12px;background:#faf8f3}
-.sec{font-size:9px;font-weight:700;color:var(--sub);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
-
-/* ==============================
-   HORSE TABLE（新デザイン）
-   ============================== */
+.det-inner{padding:12px 14px;background:#faf8f3}
+.sec{font-size:9px;font-weight:700;color:var(--sub);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+/* ★ 新テーブル */
 .htbl{width:100%;font-size:11px;border-collapse:collapse}
-.htbl th{
-  font-weight:700;padding:4px 3px;text-align:center;
-  border-bottom:2px solid #ddd;font-size:10px;
-  color:#fff;background:var(--g1);
-}
+.htbl th{font-weight:700;padding:4px 3px;text-align:center;border-bottom:2px solid #ddd;font-size:10px;color:#fff;background:var(--g1)}
 .htbl th.col-name{text-align:left;background:#2d6a4f}
 .htbl th.col-rl{background:#e67e22}
 .htbl th.col-cl{background:#8e44ad}
-.htbl th.col-mark{background:#555}
+.htbl th.col-mk{background:#555;width:26px}
 .htbl td{padding:5px 3px;border-bottom:1px solid #f0ece4;vertical-align:middle;text-align:center}
-.htbl td.col-name{text-align:left;font-weight:600;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.htbl td.col-name{text-align:left;font-weight:600;max-width:75px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .htbl tr.hl td{background:rgba(201,168,76,0.10);font-weight:700}
 .htbl td.col-rl{font-weight:800;color:#c0450a}
 .htbl td.col-cl{font-weight:800;color:#7d29b5}
-.htbl td.pct{color:var(--g2);font-weight:600}
-.htbl td.pct-hi{color:#c0392b;font-weight:800}
-
-/* 特記マーク */
-.mark{display:inline-block;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:800;line-height:1.5}
-.mark-推{background:#8e44ad;color:#fff}
-.mark-高{background:#27ae60;color:#fff}
-.mark-穴{background:#e67e22;color:#fff}
-
-/* BETS */
+.htbl td.phi{color:#c0392b;font-weight:800}
+.htbl td.plo{color:var(--g2);font-weight:600}
+.mk{display:inline-block;padding:1px 4px;border-radius:3px;font-size:9px;font-weight:800;line-height:1.5}
+.mk-推{background:#8e44ad;color:#fff}
+.mk-高{background:#27ae60;color:#fff}
+.mk-穴{background:#e67e22;color:#fff}
+/* ベット・コメント */
 .bets{margin-top:10px}
 .bet{display:flex;align-items:center;gap:6px;padding:7px 10px;background:#fff;border-radius:8px;margin-bottom:4px;border:1px solid var(--border)}
 .btype{font-size:10px;font-weight:800;color:#fff;padding:2px 7px;border-radius:4px;flex-shrink:0}
-.btype.fuku{background:var(--g2)}
-.btype.tan{background:var(--red)}
-.btype.wide{background:var(--blue)}
-.btype.umaren{background:#6c3483}
-.btype.sanfuku{background:#117a65}
-.btype.santan{background:#b7950b}
+.btype.fuku{background:var(--g2)}.btype.tan{background:var(--red)}.btype.wide{background:var(--blue)}
+.btype.umaren{background:#6c3483}.btype.sanfuku{background:#117a65}.btype.santan{background:#b7950b}
 .bhorse{font-size:12px;font-weight:600;flex:1}
 .best{font-size:10px;color:var(--sub)}
 .bamt{font-size:13px;font-weight:800;color:var(--g1);margin-left:auto;flex-shrink:0}
-
-/* COMMENT */
 .cmt{margin-top:10px;padding:9px 12px;background:rgba(10,46,26,0.05);border-left:3px solid var(--g2);border-radius:0 8px 8px 0;font-size:12px;color:#444;line-height:1.7;white-space:pre-line}
-
-/* RESULT */
 .result-banner{margin:8px 10px;padding:10px 14px;background:var(--card);border-radius:10px;border:1px solid var(--border)}
 .result-banner.hit{border-color:#27ae60}
 .rb-title{font-size:11px;font-weight:700;color:var(--sub);margin-bottom:4px}
 .rb-stats{font-size:14px;font-weight:800;color:var(--g1)}
 .rb-roi{font-size:12px;color:var(--sub);margin-top:2px}
-
-/* LOADING / ERROR */
 .loading{text-align:center;padding:60px 20px;color:var(--sub)}
 .loading-spin{font-size:36px;animation:spin 1s linear infinite;display:inline-block;margin-bottom:12px}
 @keyframes spin{to{transform:rotate(360deg)}}
 .error-box{margin:16px;padding:16px;background:#fff3f3;border:1px solid #e74c3c;border-radius:10px;font-size:13px;color:#c0392b;line-height:1.6}
-
-/* BOTTOM BAR */
 .btm{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--g1);padding:10px 20px calc(10px + env(safe-area-inset-bottom,0px));display:flex;justify-content:space-around;z-index:200;border-top:1px solid rgba(255,255,255,0.1)}
 .btm-item{text-align:center}
 .btm-lbl{font-size:9px;color:rgba(255,255,255,0.6);letter-spacing:1px;text-transform:uppercase}
 .btm-val{font-size:15px;font-weight:900;color:var(--gold2)}
-
 .reload-btn{display:block;margin:8px 10px;padding:10px;background:var(--g1);color:var(--gold2);border:none;border-radius:10px;font-size:13px;font-weight:700;width:calc(100% - 20px);cursor:pointer;letter-spacing:1px}
-
-/* PWA */
 .pwa{background:rgba(201,168,76,0.12);border:1px solid var(--gold);border-radius:10px;margin:8px 10px;padding:9px 14px;font-size:12px;color:#5a4010;display:flex;align-items:center;gap:8px}
 .pwa button{margin-left:auto;background:var(--gold);color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0}
 </style>
 </head>
 <body>
-
 <div class="hdr">
-  <div>
-    <div class="hdr-logo">KEIBA-AI</div>
-    <div class="hdr-sub">AI RACING PREDICTION</div>
-  </div>
-  <div class="hdr-right">
-    <div class="hdr-date" id="hdate">読み込み中...</div>
-    <div class="hdr-venues" id="hvenues">---</div>
-  </div>
+  <div><div class="hdr-logo">KEIBA-AI</div><div class="hdr-sub">AI RACING PREDICTION</div></div>
+  <div class="hdr-right"><div class="hdr-date" id="hdate">読込中...</div><div class="hdr-venues" id="hvenues">---</div></div>
 </div>
-
-<div class="bias">
-  <span class="bias-txt" id="bias-txt">バイアス読み込み中...</span>
-  <span class="bias-tag" id="bias-tag">-</span>
-</div>
-
+<div class="bias"><span class="bias-txt" id="bias-txt">バイアス読込中...</span><span class="bias-tag" id="bias-tag">-</span></div>
 <div class="tabs" id="tabs"></div>
-
 <div id="pwa-hint" style="display:none" class="pwa">
-  <span>📱 ホーム画面に追加すると便利です（Safari→共有→ホーム画面に追加）</span>
+  <span>📱 ホーム画面に追加して使えます（Safari→共有→ホーム画面に追加）</span>
   <button onclick="this.parentElement.style.display='none'">✕</button>
 </div>
-
 <div id="result-area"></div>
 <div class="summary" id="summary"></div>
 <div class="list" id="race-list"></div>
-
 <div class="btm">
-  <div class="btm-item"><div class="btm-lbl">総投資額</div><div class="btm-val" id="b-inv">-</div></div>
+  <div class="btm-item"><div class="btm-lbl">推定投資</div><div class="btm-val" id="b-inv">-</div></div>
   <div class="btm-item"><div class="btm-lbl">推奨レース</div><div class="btm-val" id="b-rec">-</div></div>
-  <div class="btm-item"><div class="btm-lbl">ROI推計</div><div class="btm-val" id="b-roi">-</div></div>
+  <div class="btm-item"><div class="btm-lbl">ROI予測</div><div class="btm-val" id="b-roi">-</div></div>
 </div>
-
 <script>
-// ★ Google DriveのファイルIDをここに設定
 const FILE_ID = '13PcHYduEYRKljXYAQV5A2ApQeBfhvDqm';
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbz1M4YReK7NHrtJUKMBrMjiuvFSIhTbokiZz3ZPad3RUkktD4-QqEu8xVlDf754Mw/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbz1M4YReK7NHrtJUKMBrMjRiuvFSIhTbokiZz3ZPad3RUhkktD4-QqEu8xVlDf754Mw/exec';
 const DATA_URL = GAS_URL;
-
-let D = null, venue = null;
+let D = null;
+let venue = null;
 const opened = {};
 
 async function loadData() {
-  document.getElementById('race-list').innerHTML = `
-    <div class="loading">
-      <div class="loading-spin">🏇</div>
-      <div>予測データを読み込み中...</div>
-    </div>`;
-  if (!DATA_URL) {
-    document.getElementById('race-list').innerHTML = `
-      <div class="error-box">
-        📋 <strong>設定が必要です</strong><br><br>
-        このアプリはColabが保存したJSONを読み込みます。<br><br>
-        <strong>手順:</strong><br>
-        1. ColaboでKEIBA_金曜/土日_v5を実行<br>
-        2. DriveのJSONのリンク「/d/XXXXXX/view」のXXXXXXをコピー<br>
-        3. 上の FILE_ID に貼り付け
-      </div>`;
-    return;
-  }
+  document.getElementById('race-list').innerHTML = '<div class="loading"><div class="loading-spin">🏇</div><div>予想データを読み込み中...</div></div>';
+  if (!DATA_URL) { document.getElementById('hdate').textContent='未設定'; return; }
   try {
-    const res = await fetch(DATA_URL);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    D = await res.json();
+    // まずGAS URLを直接試みる
+    let loaded = false;
+    try {
+      const res = await fetch(DATA_URL);
+      if (res.ok) { D = await res.json(); loaded = true; }
+    } catch(_){}
+    // 直接失敗した場合はCORSプロキシ経由
+    if (!loaded) {
+      const proxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(DATA_URL);
+      const res2 = await fetch(proxy);
+      if (!res2.ok) throw new Error('HTTP ' + res2.status);
+      const j = await res2.json();
+      D = JSON.parse(j.contents);
+    }
     initApp();
   } catch(e) {
-    document.getElementById('race-list').innerHTML = `
-      <div class="error-box">
-        ⚠️ <strong>データ読み込みエラー</strong><br><br>
-        ${e.message}<br><br>
-        <strong>確認事項:</strong><br>
-        ・DriveのJSONファイルが「リンクを知っている全員」に共有されているか<br>
-        ・FILE_IDが正しいか<br>
-        ・Colabで最近ノートブックを実行したか<br><br>
-        <button class="reload-btn" onclick="loadData()" style="margin:8px 0 0">再読み込み</button>
-      </div>`;
+    document.getElementById('race-list').innerHTML = '<div class="error-box">⚠️ <strong>データ読み込みエラー</strong><br><br>' + e.message + '<br><br><strong>確認事項:</strong><br>• DriveのJSONが「リンクを知っている全員」に共有されているか<br>• Colabで予想生成を実行済みか<br><br><button class="reload-btn" onclick="loadData()" style="margin:8px 0 0">再読み込み</button></div>';
     document.getElementById('hdate').textContent = 'エラー';
   }
 }
 
 function initApp() {
-  document.getElementById('hdate').textContent    = D.date || '---';
-  document.getElementById('hvenues').textContent  = (D.venues||[]).join(' · ');
+  document.getElementById('hdate').textContent = D.date || '---';
+  document.getElementById('hvenues').textContent = (D.venues||[]).join(' · ');
   document.getElementById('bias-txt').textContent = D.bias?.txt || 'フラット';
   document.getElementById('bias-tag').textContent = D.bias?.tag || '-';
   document.getElementById('b-inv').textContent = '¥'+(D.stats?.invest||0).toLocaleString();
   document.getElementById('b-rec').textContent = (D.stats?.rec||0)+'R';
   document.getElementById('b-roi').textContent = '~'+(D.stats?.roi||0)+'%';
-
-  // 結果バナー
-  const resultArea = document.getElementById('result-area');
+  const ra = document.getElementById('result-area');
   if (D.result) {
     const r = D.result;
-    const isPlus = r.recovered >= r.invested;
-    resultArea.innerHTML = `
-      <div class="result-banner ${isPlus?'hit':''}">
-        <div class="rb-title">📊 前日の結果</div>
-        <div class="rb-stats">的中: ${r.hit}/${r.total}点　回収: ¥${(r.recovered||0).toLocaleString()}</div>
-        <div class="rb-roi">投資: ¥${(r.invested||0).toLocaleString()}　ROI: ${r.roi}%</div>
-      </div>`;
-  } else { resultArea.innerHTML = ''; }
-
-  // サマリー
+    ra.innerHTML = '<div class="result-banner '+(r.recovered>=r.invested?'hit':'')+'"><div class="rb-title">📊 前日の結果</div><div class="rb-stats">的中: '+r.hit+'/'+r.total+'点　回収: ¥'+(r.recovered||0).toLocaleString()+'</div><div class="rb-roi">投資: ¥'+(r.invested||0).toLocaleString()+'　ROI: '+r.roi+'%</div></div>';
+  } else { ra.innerHTML=''; }
   const allRaces = Object.values(D.races||{}).flat();
   const recCount = allRaces.filter(r=>r.rec).length;
-  document.getElementById('summary').innerHTML = `
-    <div class="sum-card"><div class="sum-label">推奨レース</div><div class="sum-val gold">${recCount}R</div></div>
-    <div class="sum-card"><div class="sum-label">開催場数</div><div class="sum-val">${(D.venues||[]).length}場</div></div>
-    <div class="sum-card"><div class="sum-label">総投資額</div><div class="sum-val">¥${(D.stats?.invest||0).toLocaleString()}</div></div>`;
-
-  // タブ
+  document.getElementById('summary').innerHTML = '<div class="sum-card"><div class="sum-label">推奨レース</div><div class="sum-val gold">'+recCount+'R</div></div><div class="sum-card"><div class="sum-label">全会場</div><div class="sum-val">'+(D.venues||[]).length+'場</div></div><div class="sum-card"><div class="sum-label">推定投資</div><div class="sum-val">¥'+(D.stats?.invest||0).toLocaleString()+'</div></div>';
   const tabs = document.getElementById('tabs');
   tabs.innerHTML = '';
   (D.venues||[]).forEach((v,i) => {
@@ -269,14 +182,10 @@ function initApp() {
     btn.onclick = () => switchVenue(v, btn);
     tabs.appendChild(btn);
   });
-
   venue = (D.venues||[])[0] || null;
   render();
-
-  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  if (isIOS && !window.navigator.standalone) {
+  if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !window.navigator.standalone)
     document.getElementById('pwa-hint').style.display = 'flex';
-  }
 }
 
 function switchVenue(v, btn) {
@@ -286,114 +195,47 @@ function switchVenue(v, btn) {
   render();
 }
 
-function popClass(pop) {
-  if (pop===1) return 'pop1';
-  if (pop===2) return 'pop2';
-  if (pop===3) return 'pop3';
-  return 'popn';
-}
+function toggle(k) { opened[k]=!opened[k]; render(); }
 
-function toggle(k) {
-  opened[k] = !opened[k];
-  render();
-}
-
-function markBadge(m) {
+function mkBadge(m) {
   if (!m) return '';
-  return `<span class="mark mark-${m}">${m}</span>`;
+  return '<span class="mk mk-'+m+'">'+m+'</span>';
 }
 
 function render() {
   if (!D) return;
   const races = (D.races||{})[venue] || [];
-  if (!races.length) {
-    document.getElementById('race-list').innerHTML =
-      `<div style="text-align:center;padding:40px;color:var(--sub)">このレース場のデータがありません</div>`;
-    return;
-  }
-
+  if (!races.length) { document.getElementById('race-list').innerHTML='<div style="text-align:center;padding:40px;color:var(--sub)">この会場のデータがありません</div>'; return; }
   let html = '';
   for (const race of races) {
-    const k      = venue + race.r;
+    const k = venue+race.r;
     const isOpen = opened[k];
-    const isRec  = race.rec;
-    const chaos  = race.chaos_label || '';
-
-    html += `<div class="rc${isRec?' rec':''}">
-      <div class="rc-head" onclick="toggle('${k}')">
-        <div class="rc-num">${race.r}</div>
-        <div class="rc-info">
-          <div class="rc-name">${race.name}</div>
-          <div class="rc-meta">${race.dist}</div>
-        </div>
-        <div class="rc-right">
-          ${chaos ? `<span class="chaos-badge chaos-${chaos}">波乱${chaos}</span>` : ''}
-          ${isRec ? `<span class="conf">AI ${race.conf}%</span><span class="rec-lbl">☆推奨</span>` : ''}
-          <span class="arr${isOpen?' open':''}">▼</span>
-        </div>
-      </div>`;
-
-    if (isOpen) {
-      html += `<div class="detail open"><div class="det-inner">
-        <div class="sec">出走馬・AI評価</div>
-        <table class="htbl">
-          <tr>
-            <th style="width:24px">番</th>
-            <th class="col-name">馬名</th>
-            <th class="col-mark" style="width:28px">特記</th>
-            <th class="col-rl" style="width:26px">RL</th>
-            <th class="col-cl" style="width:26px">CL</th>
-            <th style="width:36px">勝率</th>
-            <th style="width:36px">連対率</th>
-            <th style="width:36px">複勝率</th>
-          </tr>`;
-
-      for (const h of (race.horses||[])) {
-        const isH  = race.honmei && h.n === race.honmei.n;
-        const rlStr = h.rl_rank && h.rl_rank<99 ? h.rl_rank : '-';
-        const clStr = h.cl_rank && h.cl_rank<99 ? h.cl_rank : '-';
-        const tanStr  = h.tan_pct  != null ? `${h.tan_pct}%`  : '-';
-        const renStr  = h.ren_pct  != null ? `${h.ren_pct}%`  : '-';
-        const fukuStr = h.fuku_pct != null ? `${h.fuku_pct}%` : '-';
-        const fukuHi  = h.fuku_pct != null && h.fuku_pct >= 38;
-        html += `<tr${isH?' class="hl"':''}>
-          <td>${h.n}</td>
-          <td class="col-name">${h.name}</td>
-          <td>${markBadge(h.mark)}</td>
-          <td class="col-rl">${rlStr}</td>
-          <td class="col-cl">${clStr}</td>
-          <td>${tanStr}</td>
-          <td>${renStr}</td>
-          <td class="${fukuHi?'pct-hi':'pct'}">${fukuStr}</td>
-        </tr>`;
-      }
-      html += `</table>`;
-
-      // 買い目（現行のまま）
-      if ((race.bets||[]).length > 0) {
-        html += `<div class="bets"><div class="sec" style="margin-top:12px">買い目</div>`;
-        const TAG_MAP = {
-          '複勝':'fuku','単勝':'tan','ワイド':'wide',
-          '馬連':'umaren','三連複':'sanfuku','三連単':'santan'
-        };
-        for (const b of race.bets) {
-          const tagClass = b.tag || TAG_MAP[b.label] || 'fuku';
-          html += `<div class="bet">
-            <span class="btype ${tagClass}">${b.label}</span>
-            <span class="bhorse">${b.horse}</span>
-            <span class="best">${b.est}</span>
-            <span class="bamt">${b.amt}</span>
-          </div>`;
-        }
-        html += `</div>`;
-      }
-
-      if (race.cmt) {
-        html += `<div class="cmt">${(race.cmt||'').replace(/</g,'&lt;')}</div>`;
-      }
-      html += `</div></div>`;
+    const isRec = race.rec;
+    const TAG_MAP = {'複勝':'fuku','単勝':'tan','ワイド':'wide','馬連':'umaren','三連複':'sanfuku','三連単':'santan'};
+    html += '<div class="rc'+(isRec?' rec':'')+'"><div class="rc-head" onclick="toggle(\''+k+'\')"><div class="rc-num">'+race.r+'</div><div class="rc-info"><div class="rc-name">'+race.name+'</div><div class="rc-meta">'+race.dist+'</div></div><div class="rc-right">'+(isRec?'<span class="conf">AI '+race.conf+'%</span><span class="rec-lbl">★推奨</span>':'')+'<span class="arr'+(isOpen?' open':'')+'">▼</span></div></div>';
+    if (race.honmei) {
+      html += '<div class="hstrip" onclick="toggle(\''+k+'\')"><span class="hbadge">◎本命</span><span class="hname">#'+race.honmei.n+' '+race.honmei.name+'</span><span class="hodds">'+race.honmei.odds+'倍 / '+race.honmei.style+'</span></div>';
     }
-    html += `</div>`;
+    if (isOpen) {
+      html += '<div class="detail open"><div class="det-inner"><div class="sec">出走馬・AI評価</div><table class="htbl"><tr><th style="width:22px">番</th><th class="col-name">馬名</th><th class="col-mk">特記</th><th class="col-rl" style="width:24px">RL</th><th class="col-cl" style="width:24px">CL</th><th style="width:34px">勝率</th><th style="width:34px">連対率</th><th style="width:34px">複勝率</th></tr>';
+      for (const h of (race.horses||[])) {
+        const isH = race.honmei && h.n === race.honmei.n;
+        const rl = h.rl_rank && h.rl_rank<99 ? h.rl_rank : '-';
+        const cl = h.cl_rank && h.cl_rank<99 ? h.cl_rank : '-';
+        const tan = h.tan_pct != null ? h.tan_pct+'%' : (h.score ? (h.score*3.5).toFixed(1)+'%' : '-');
+        const ren = h.ren_pct != null ? h.ren_pct+'%' : '-';
+        const fuku = h.fuku_pct != null ? h.fuku_pct+'%' : (h.score ? Math.min(88,h.score*11).toFixed(1)+'%' : '-');
+        const hi = h.fuku_pct != null && h.fuku_pct >= 38;
+        html += '<tr'+(isH?' class="hl"':'')+'><td>'+(isH?'◎':'')+h.n+'</td><td class="col-name">'+h.name+'</td><td>'+mkBadge(h.mark)+'</td><td class="col-rl">'+rl+'</td><td class="col-cl">'+cl+'</td><td>'+tan+'</td><td>'+ren+'</td><td class="'+(hi?'phi':'plo')+'">'+fuku+'</td></tr>';
+      }
+      html += '</table><div class="bets"><div class="sec" style="margin-top:12px">買い目</div>';
+      for (const b of (race.bets||[])) {
+        const tc = b.tag || TAG_MAP[b.label] || 'fuku';
+        html += '<div class="bet"><span class="btype '+tc+'">'+b.label+'</span><span class="bhorse">'+b.horse+'</span><span class="best">'+b.est+'</span><span class="bamt">'+b.amt+'</span></div>';
+      }
+      html += '</div><div class="cmt">'+(race.cmt||'').replace(/</g,'&lt;')+'</div></div></div>';
+    }
+    html += '</div>';
   }
   document.getElementById('race-list').innerHTML = html;
 }
