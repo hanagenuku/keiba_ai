@@ -576,6 +576,17 @@ def calc_features_for_xgb(h, race):
     return feats
 
 
+def calc_fukusho_prob(win_prob, num_horses):
+    """複勝確率を推定する（ソフトマックスで正規化済みの勝ち確率を受け取ること）。
+
+    ソフトマックス正規化後: avg horse win_prob = 1/n, fuku_prob = 3/n = win_prob*3。
+    強い本命でも上限0.80（現実的な複勝率の天井）。
+    p*3 のキャップを 0.95 → 0.80 に下げ、過大評価を抑制。
+    """
+    p = max(0.0, min(1.0, win_prob))
+    return round(min(0.80, p * 3.0), 4)
+
+
 def calc_chaos_score(race, scored):
     """レースの混戦度を0〜1で返す"""
     if not scored:
@@ -725,14 +736,25 @@ def calc_all(race, bias_data=None):
         h['total'] = round(
             h['total'] * (1 - RELATIVE_WEIGHT) + rel * RELATIVE_WEIGHT + pace_bonus, 2
         )
-        prob = 1 / (1 + math.exp(-(h['total'] - 5.5) * .8))
-        if _CALIBRATOR is not None:
-            prob = float(_CALIBRATOR.transform([prob])[0])
-        h['win_prob'] = prob
 
-    s = sum(x['win_prob'] for x in out)
+    # Softmax: race-relative win probabilities that sum to 1 across the field.
+    # Replaces per-horse sigmoid which gave ~0.5 to every horse regardless of field size.
+    all_totals = [h['total'] for h in out]
+    max_t = max(all_totals)
+    exp_scores = [math.exp((t - max_t) * 0.8) for t in all_totals]
+    sum_exp = sum(exp_scores)
+    for h, e in zip(out, exp_scores):
+        h['win_prob'] = round(e / sum_exp, 6)
+
+    if _CALIBRATOR is not None:
+        # Calibrator shifts individual probabilities; renormalize to keep sum=1
+        probs_cal = [float(_CALIBRATOR.transform([h['win_prob']])[0]) for h in out]
+        s_cal = sum(probs_cal) or 1.0
+        for h, p in zip(out, probs_cal):
+            h['win_prob'] = round(p / s_cal, 6)
+
     for x in out:
-        x['pn']      = x['win_prob'] / s if s > 0 else 1 / n
+        x['pn']      = x['win_prob']
         x['pop_gap'] = round(x['win_prob'] - x['market_prob'], 4)
 
     return sorted(out, key=lambda x: x['total'], reverse=True)
