@@ -580,7 +580,18 @@ def f_blood(h, race):
 
 
 def f_jockey(h, race):
-    return min(10, max(0, h.get('jockey_rate', 0.15) / 0.30 * 10))
+    rate = h.get('jockey_rate', 0.15)
+    base = rate / 0.30 * 10
+
+    # 市場乖離補正: 騎手実力がオッズに織り込まれていない部分だけを評価する
+    # 有名騎手が低オッズ馬に乗る場合 → 市場が既に評価済み → 補正を下げる
+    # 実力騎手が高オッズ馬に乗る場合 → 市場が未評価   → 補正を上げる
+    win_odds = h.get('win_odds') or 10.0
+    market_prob = 1.0 / max(win_odds, 1.1)
+    gap = rate - market_prob          # 正=市場未評価の実力、負=市場が過大評価
+    adjustment = gap * 8.0            # 0.10差 → ±0.8点
+
+    return min(10, max(0, base + adjustment))
 
 
 def f_trainer(h):
