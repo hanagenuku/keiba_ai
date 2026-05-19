@@ -577,14 +577,85 @@ def calc_features_for_xgb(h, race):
 
 
 def calc_fukusho_prob(win_prob, num_horses):
-    """複勝確率を推定する（ソフトマックスで正規化済みの勝ち確率を受け取ること）。
-
-    ソフトマックス正規化後: avg horse win_prob = 1/n, fuku_prob = 3/n = win_prob*3。
-    強い本命でも上限0.80（現実的な複勝率の天井）。
-    p*3 のキャップを 0.95 → 0.80 に下げ、過大評価を抑制。
-    """
+    """後方互換用。calc_harville_probs 移行後はこちらは使わない。"""
     p = max(0.0, min(1.0, win_prob))
     return round(min(0.80, p * 3.0), 4)
+
+
+def calc_harville_probs(win_probs):
+    """Harville公式でtop2/top3確率を計算する。
+
+    win_probs: ソフトマックスで正規化済みの確率リスト（和が1）
+    Returns  : [(top2_prob, top3_prob), ...] — 各馬のtop2/top3確率
+
+    計算量: O(n²) for top2, O(n³) for top3。n=18でも数百マイクロ秒。
+    """
+    n = len(win_probs)
+    ps = [max(1e-9, float(p)) for p in win_probs]
+
+    # P(i in top2) = P(i 1st) + sum_{j≠i} p_j * p_i / (1-p_j)
+    top2 = []
+    for i in range(n):
+        v = ps[i]
+        for j in range(n):
+            if j == i:
+                continue
+            dj = 1.0 - ps[j]
+            if dj > 1e-9:
+                v += ps[j] * ps[i] / dj
+        top2.append(min(1.0, v))
+
+    if n < 3:
+        return list(zip(top2, top2))
+
+    # P(i in top3) = P(i in top2)
+    #   + sum_{j≠i} sum_{k≠i,k≠j} p_j*(p_k/(1-p_j))*(p_i/(1-p_j-p_k))
+    top3 = []
+    for i in range(n):
+        v = top2[i]
+        for j in range(n):
+            if j == i:
+                continue
+            dj = 1.0 - ps[j]
+            if dj < 1e-9:
+                continue
+            for k in range(n):
+                if k == i or k == j:
+                    continue
+                djk = 1.0 - ps[j] - ps[k]
+                if djk < 1e-9:
+                    continue
+                v += ps[j] * (ps[k] / dj) * (ps[i] / djk)
+        top3.append(min(1.0, v))
+
+    return list(zip(top2, top3))
+
+
+def harville_pair_prob(p_i, p_j):
+    """P(i と j が両方top2に入る確率) — ワイド・馬連のEV計算用。
+
+    = p_i * p_j/(1-p_i) + p_j * p_i/(1-p_j)
+    """
+    di = max(1e-9, 1.0 - p_i)
+    dj = max(1e-9, 1.0 - p_j)
+    return round(min(1.0, p_i * p_j / di + p_j * p_i / dj), 6)
+
+
+def harville_trio_prob(p_i, p_j, p_k):
+    """P(i, j, k がすべてtop3に入る確率) — 三連複のEV計算用。
+
+    全6通りの着順を Harville公式で合算。
+    """
+    ps = [p_i, p_j, p_k]
+    # 3!=6 permutations of (0,1,2)
+    perms = [(0,1,2),(0,2,1),(1,0,2),(1,2,0),(2,0,1),(2,1,0)]
+    total = 0.0
+    for a, b, c in perms:
+        pa, pb, pc = ps[a], ps[b], ps[c]
+        da  = max(1e-9, 1.0 - pa)
+        dab = max(1e-9, 1.0 - pa - pb)
+        total += pa * (pb / da) * (pc / dab)
+    return round(min(1.0, total), 6)
 
 
 def calc_chaos_score(race, scored):
@@ -752,6 +823,13 @@ def calc_all(race, bias_data=None):
         s_cal = sum(probs_cal) or 1.0
         for h, p in zip(out, probs_cal):
             h['win_prob'] = round(p / s_cal, 6)
+
+    # Harville: top2/top3 per-horse probabilities from win_prob
+    win_ps = [h['win_prob'] for h in out]
+    harville = calc_harville_probs(win_ps)
+    for h, (t2, t3) in zip(out, harville):
+        h['top2_prob'] = round(t2, 6)
+        h['top3_prob'] = round(t3, 6)
 
     for x in out:
         x['pn']      = x['win_prob']
