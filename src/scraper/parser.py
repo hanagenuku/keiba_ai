@@ -150,20 +150,56 @@ def parse_horse(cells, rc, surf):
             if m:
                 odds = float(m.group(1))
                 break
-        sire = None
+
+        # 性齢から年齢を取得（例: 牡4 → 4）
+        age = 4
+        for t in tx:
+            m = re.match(r'^[牡牝騸セ](\d)$', t.strip())
+            if m:
+                age = int(m.group(1))
+                break
+
+        # 斤量（例: 57.0）
+        weight_load = 56.0
+        for t in tx:
+            m = re.match(r'^(5\d\.\d)$', t.strip())
+            if m:
+                weight_load = float(m.group(1))
+                break
+
+        # 騎手・調教師（馬名以外の日本語リンクを順番に取得）
+        jp_links = []
         for col_idx in range(len(cells)):
-            links = cells[col_idx].find_all('a')
-            for a in links:
+            for a in cells[col_idx].find_all('a'):
                 txt = a.get_text(strip=True)
                 if txt != name and re.search(r'[゠-ヿ一-鿿]', txt) and len(txt) >= 2:
-                    sire = txt
-                    break
-            if sire:
+                    jp_links.append(txt)
+        jockey  = jp_links[0] if jp_links else ''
+        trainer = jp_links[1] if len(jp_links) >= 2 else ''
+
+        # 父名（リンクなし・カタカナ3文字以上のテキストセル）
+        sire = ''
+        for col_idx in range(max(name_col + 2, 3), len(cells)):
+            if cells[col_idx].find('a'):
+                continue
+            txt = re.sub(r'[\s　]+', '', tx[col_idx])
+            if (len(txt) >= 3
+                    and re.search(r'[゠-ヿ一-鿿ァ-ン]{3,}', txt)
+                    and not re.match(r'^[牡牝騸セ]\d', txt)
+                    and not re.match(r'^\d', txt)
+                    and not re.search(r'\(\s*[+-]?\d', txt)
+                    and txt != name):
+                sire = txt
                 break
+
         return {
             'num': umaban,
             'name': name,
             'win_odds': odds,
+            'age': age,
+            'weight_load': weight_load,
+            'jockey': jockey,
+            'trainer': trainer,
             'sire': sire,
             'racecourse': rc,
             'surface': surf,
