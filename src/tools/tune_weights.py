@@ -152,7 +152,7 @@ def load_training_data(base_dir):
                        SUM(CASE WHEN place=1 THEN 1 ELSE 0 END) AS wins
                 FROM horse_history
                 WHERE jockey IS NOT NULL AND jockey != ''
-                GROUP BY jockey HAVING COUNT(*) >= 10
+                GROUP BY jockey HAVING COUNT(*) >= 3
             """).fetchall()
             jdict = {(r['jockey'], '', ''): r['wins'] / r['runs'] for r in rows}
 
@@ -162,7 +162,7 @@ def load_training_data(base_dir):
                        SUM(CASE WHEN place=1 THEN 1 ELSE 0 END) AS wins
                 FROM horse_history
                 WHERE trainer IS NOT NULL AND trainer != ''
-                GROUP BY trainer HAVING COUNT(*) >= 10
+                GROUP BY trainer HAVING COUNT(*) >= 3
             """).fetchall()
             tdict = {r['trainer']: r['wins'] / r['runs'] for r in rows}
 
