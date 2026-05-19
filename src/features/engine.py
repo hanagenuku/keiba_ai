@@ -6,7 +6,7 @@ import math
 import os
 import pickle
 
-from src.utils.config import POST_BIAS
+from src.utils.config import POST_BIAS, POST_BIAS_BY_ZONE
 
 # ── グローバルコンテキスト（init_engine()で設定） ─────────────────
 _XGB_FUKUSHO_MODEL = None
@@ -19,16 +19,19 @@ _W                 = {
 }
 _horse_dist_dict   = {}
 _horse_course_dict = {}
+_horse_venue_dist_dict = {}  # (name, venue, dist_zone, surface) → {出走, 勝率, 複勝率}
+_post_zone_bias        = {}  # (venue, dist_zone) → float  正=内枠有利, 負=外枠有利
 
 
 def init_engine(base_dir,
                 xgb_model=None, xgb_feature_cols=None,
                 calibrator=None, pace_model=None,
                 weights=None,
-                horse_dist_dict=None, horse_course_dict=None):
+                horse_dist_dict=None, horse_course_dict=None,
+                horse_venue_dist_dict=None):
     """エンジンのグローバル変数を設定する。ノートブックのセル4で呼ぶ"""
     global _XGB_FUKUSHO_MODEL, _XGB_FEATURE_COLS, _CALIBRATOR, _PACE_MODEL
-    global _W, _horse_dist_dict, _horse_course_dict
+    global _W, _horse_dist_dict, _horse_course_dict, _horse_venue_dist_dict, _post_zone_bias
 
     if xgb_model is not None:
         _XGB_FUKUSHO_MODEL = xgb_model
@@ -79,8 +82,138 @@ def init_engine(base_dir,
         with open(f'{base_dir}/data/horse_course_dict.pkl', 'rb') as f:
             _horse_course_dict = pickle.load(f)
 
+    if horse_venue_dist_dict is not None:
+        _horse_venue_dist_dict = horse_venue_dist_dict
+    elif os.path.exists(f'{base_dir}/data/horse_venue_dist_dict.pkl'):
+        with open(f'{base_dir}/data/horse_venue_dist_dict.pkl', 'rb') as f:
+            _horse_venue_dist_dict = pickle.load(f)
+
+    if os.path.exists(f'{base_dir}/data/post_zone_bias.pkl'):
+        with open(f'{base_dir}/data/post_zone_bias.pkl', 'rb') as f:
+            _post_zone_bias = pickle.load(f)
+
+    # pkl未作成の場合はDBから自動構築
+    if not _horse_dist_dict or not _horse_venue_dist_dict or not _post_zone_bias:
+        _build_horse_dicts(base_dir)
+
     xgb_ok = _XGB_FUKUSHO_MODEL is not None
-    print(f'✅ 特徴量エンジン初期化完了 (XGB:{xgb_ok}, Cal:{_CALIBRATOR is not None})')
+    print(f'✅ 特徴量エンジン初期化完了 (XGB:{xgb_ok}, Cal:{_CALIBRATOR is not None}, '
+          f'馬別統計:{len(_horse_dist_dict)}件, 枠バイアス:{len(_post_zone_bias)}件)')
+
+
+def _build_horse_dicts(base_dir):
+    """history.db / keiba.db から馬別統計・枠順バイアスを構築してpklに保存する。"""
+    import sqlite3
+    from collections import defaultdict
+
+    global _horse_dist_dict, _horse_course_dict, _horse_venue_dist_dict, _post_zone_bias
+
+    db_path = None
+    for name in ['history.db', 'keiba.db']:
+        p = os.path.join(base_dir, 'data', name)
+        if os.path.exists(p):
+            db_path = p
+            break
+    if not db_path:
+        return
+
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    tables = {r[0] for r in conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table'").fetchall()}
+
+    if 'horse_history' not in tables:
+        conn.close()
+        return
+
+    rows = conn.execute("""
+        SELECT hh.horse_name, hh.distance, hh.surface, hh.racecourse,
+               hh.place, hh.horse_num,
+               (SELECT COUNT(*) FROM horse_history hh2
+                WHERE hh2.race_id = hh.race_id) AS finishers
+        FROM horse_history hh
+        WHERE hh.place IS NOT NULL AND hh.distance IS NOT NULL
+    """).fetchall()
+    conn.close()
+
+    dist_stat  = defaultdict(lambda: {'出走': 0, '1着': 0, '複勝': 0})
+    course_stat = defaultdict(lambda: {'出走': 0, '1着': 0, '複勝': 0})
+    vd_stat    = defaultdict(lambda: {'出走': 0, '1着': 0, '複勝': 0})
+    post_stat  = defaultdict(lambda: {'i_w': 0, 'i_n': 0, 'o_w': 0, 'o_n': 0})
+
+    for r in rows:
+        try:
+            name     = r['horse_name'] or ''
+            dist     = int(r['distance'] or 1600)
+            surf     = r['surface'] or '芝'
+            rc       = r['racecourse'] or ''
+            place    = int(r['place'] or 99)
+            hnum     = int(r['horse_num'] or 8)
+            zone     = dist_zone_label(dist)
+            is_win   = 1 if place == 1 else 0
+            is_fuku  = 1 if place <= 3 else 0
+
+            dist_stat[(name, zone)]['出走']  += 1
+            dist_stat[(name, zone)]['1着']   += is_win
+            dist_stat[(name, zone)]['複勝']  += is_fuku
+
+            course_stat[(name, rc, surf)]['出走'] += 1
+            course_stat[(name, rc, surf)]['1着']  += is_win
+            course_stat[(name, rc, surf)]['複勝'] += is_fuku
+
+            vd_stat[(name, rc, zone, surf)]['出走'] += 1
+            vd_stat[(name, rc, zone, surf)]['1着']  += is_win
+            vd_stat[(name, rc, zone, surf)]['複勝'] += is_fuku
+
+            pk = (rc, zone)
+            if hnum <= 4:
+                post_stat[pk]['i_n'] += 1
+                post_stat[pk]['i_w'] += is_win
+            else:
+                post_stat[pk]['o_n'] += 1
+                post_stat[pk]['o_w'] += is_win
+        except Exception:
+            pass
+
+    def _make_dict(stat):
+        out = {}
+        for k, v in stat.items():
+            if v['出走'] > 0:
+                out[k] = {
+                    '出走':  v['出走'],
+                    '勝率':  round(v['1着'] / v['出走'], 4),
+                    '複勝率': round(v['複勝'] / v['出走'], 4),
+                }
+        return out
+
+    new_dist   = _make_dict(dist_stat)
+    new_course = _make_dict(course_stat)
+    new_vd     = _make_dict(vd_stat)
+
+    new_post_bias = {}
+    for (rc, zone), v in post_stat.items():
+        if v['i_n'] >= 10 and v['o_n'] >= 10:
+            i_rate = v['i_w'] / v['i_n']
+            o_rate = v['o_w'] / v['o_n']
+            new_post_bias[(rc, zone)] = round((i_rate - o_rate) * 20, 3)
+
+    data_dir = os.path.join(base_dir, 'data')
+    os.makedirs(data_dir, exist_ok=True)
+    for fname, obj in [
+        ('horse_dist_dict.pkl',       new_dist),
+        ('horse_course_dict.pkl',     new_course),
+        ('horse_venue_dist_dict.pkl', new_vd),
+        ('post_zone_bias.pkl',        new_post_bias),
+    ]:
+        with open(os.path.join(data_dir, fname), 'wb') as f:
+            pickle.dump(obj, f)
+
+    _horse_dist_dict       = new_dist
+    _horse_course_dict     = new_course
+    _horse_venue_dist_dict = new_vd
+    _post_zone_bias        = new_post_bias
+    print(f'  [統計構築] 距離:{len(new_dist)}件 コース:{len(new_course)}件 '
+          f'距離×会場:{len(new_vd)}件 枠バイアス:{len(new_post_bias)}件')
 
 
 # ── 血統DB ────────────────────────────────────────────────────
@@ -295,6 +428,8 @@ def f_dist_v2(h, race):
     surf = race.get('surface', '芝')
     zone = dist_zone_label(dist)
     scores = []
+
+    # 1. 距離帯別成績
     dist_rec = _horse_dist_dict.get((name, zone))
     if dist_rec and dist_rec['出走'] >= 3:
         conf = min(1.0, dist_rec['出走'] / 10)
@@ -304,12 +439,21 @@ def f_dist_v2(h, race):
         b = h.get('best_distance', c)
         d = abs(c - b)
         scores.append(10 if d == 0 else 8.5 if d <= 200 else 7 if d <= 400 else 5 if d <= 600 else 3)
+
+    # 2. 競馬場×芝ダート別成績
     course_rec = _horse_course_dict.get((name, rc, surf))
     if course_rec and course_rec['出走'] >= 3:
         conf = min(1.0, course_rec['出走'] / 10)
         scores.append(min(10, max(0, course_rec['複勝率'] / 0.35 * 6)) * conf + 5.0 * (1 - conf))
     else:
         scores.append(5.0)
+
+    # 3. 競馬場×距離帯×芝ダート別成績（組み合わせ適性）
+    vd_rec = _horse_venue_dist_dict.get((name, rc, zone, surf))
+    if vd_rec and vd_rec['出走'] >= 3:
+        conf = min(1.0, vd_rec['出走'] / 8)
+        scores.append(min(10, max(0, vd_rec['複勝率'] / 0.35 * 6)) * conf + 5.0 * (1 - conf))
+
     return round(sum(scores) / len(scores), 2)
 
 
@@ -346,10 +490,22 @@ def f_weight(h):
 
 
 def f_post(h, race):
-    p  = h.get('post_position', 8)
-    n  = race.get('num_horses', 16)
-    bv = POST_BIAS.get(race.get('racecourse', ''), 0)
-    return max(0, min(10, 5.0 + bv * ((p - 1) / max(n - 1, 1) - 0.5) * 4))
+    p    = h.get('post_position', 8)
+    n    = race.get('num_horses', 16)
+    rc   = race.get('racecourse', '')
+    dist = race.get('distance', 1600)
+    zone = dist_zone_label(dist)
+    pos_ratio = (p - 1) / max(n - 1, 1)  # 0=内枠, 1=外枠
+
+    # 優先度: データ実績 > 距離帯別設定値 > 競馬場単体設定値
+    # 正=内枠有利, 負=外枠有利
+    bv = _post_zone_bias.get((rc, zone))
+    if bv is None:
+        bv = POST_BIAS_BY_ZONE.get(rc, {}).get(zone)
+    if bv is None:
+        bv = -POST_BIAS.get(rc, 0)  # 旧設定は外枠正値なので符号反転
+
+    return max(0, min(10, 5.0 - bv * (pos_ratio - 0.5) * 4))
 
 
 def f_bias(h, race, bias_data):
@@ -415,6 +571,27 @@ def analyze_career(h, race):
             comments.append('🔄 ' + direction + '転向 ★血統的に向き(' + sire + ') 注目')
         else:
             comments.append('🔄 ' + direction + '転向（血統適性やや低め）')
+
+    # 前走からの間隔分析
+    prev_date = prev.get('date', '')
+    curr_date = race.get('date', '')
+    if prev_date and curr_date:
+        try:
+            from datetime import datetime
+            d0 = datetime.strptime(str(prev_date)[:10], '%Y-%m-%d')
+            d1 = datetime.strptime(str(curr_date)[:10], '%Y-%m-%d')
+            interval = (d1 - d0).days
+            if interval <= 14:
+                flags['short_interval'] = True
+                comments.append(f'⚡ 連闘・中2週以内（{interval}日）')
+            elif interval >= 90:
+                flags['long_layoff'] = True
+                comments.append(f'💤 長期休養明け（{interval}日）')
+            elif 21 <= interval <= 35:
+                flags['good_interval'] = True
+        except Exception:
+            pass
+
     return {'flags': flags, 'comments': comments}
 
 
@@ -428,6 +605,9 @@ def apply_career_flags(total, career):
         adj += 0.5
     elif flags.get('surface_change'):
         adj -= 0.3
+    if flags.get('short_interval'):  adj -= 0.3
+    if flags.get('long_layoff'):     adj -= 0.4
+    if flags.get('good_interval'):   adj += 0.2
     return round(total + adj, 2)
 
 
