@@ -19,50 +19,13 @@ import os
 import pickle
 import sys
 
+from src.models.calibration import (  # noqa: F401  後方互換のため再エクスポート
+    IsotonicCalibrator,
+    PlattCalibrator,
+    save_calibrator,
+)
+
 WEIGHT_KEYS = ['pace', 'recent', 'jockey', 'trainer', 'blood', 'distance', 'post', 'bias', 'weight']
-
-
-class PlattCalibrator:
-    """P_cal = sigmoid(A * p + B) — A<0 のとき単調増加になる。"""
-
-    def __init__(self, A, B):
-        self.A = A
-        self.B = B
-
-    def transform(self, probs):
-        return [1.0 / (1.0 + math.exp(self.A * p + self.B)) for p in probs]
-
-    def __repr__(self):
-        return f'PlattCalibrator(A={self.A:.4f}, B={self.B:.4f})'
-
-
-class IsotonicCalibrator:
-    """単調増加を保証するノンパラメトリックキャリブレーター。"""
-
-    def __init__(self, x_bins, y_vals):
-        self.x_bins = x_bins   # sorted calibration input breakpoints
-        self.y_vals = y_vals   # corresponding calibrated output
-
-    def transform(self, probs):
-        out = []
-        for p in probs:
-            # 線形補間
-            if p <= self.x_bins[0]:
-                out.append(self.y_vals[0])
-            elif p >= self.x_bins[-1]:
-                out.append(self.y_vals[-1])
-            else:
-                for i in range(len(self.x_bins) - 1):
-                    if self.x_bins[i] <= p < self.x_bins[i + 1]:
-                        t = (p - self.x_bins[i]) / (self.x_bins[i + 1] - self.x_bins[i])
-                        out.append(self.y_vals[i] * (1 - t) + self.y_vals[i + 1] * t)
-                        break
-                else:
-                    out.append(self.y_vals[-1])
-        return out
-
-    def __repr__(self):
-        return f'IsotonicCalibrator({len(self.x_bins)} breakpoints)'
 
 
 def _load_weights(base_dir):
@@ -263,10 +226,7 @@ def run_calibration(base_dir, method='isotonic', verbose=True):
             print(f'  {bx:>10.4f}  {by:>8.4f}  {cal_x:>8.4f}  {n:>6d}  {bar}')
 
     # 保存
-    out_path = os.path.join(base_dir, 'data', 'calibrator.pkl')
-    os.makedirs(os.path.dirname(out_path), exist_ok=True)
-    with open(out_path, 'wb') as f:
-        pickle.dump(cal, f)
+    out_path = save_calibrator(cal, base_dir)
     print(f'\n✅ 保存完了: {out_path}')
 
     return cal
