@@ -20,35 +20,54 @@ def run_analysis(base_dir, verbose=True):
     Returns:
         dict: 各種指標
     """
-    db_path = os.path.join(base_dir, 'data', 'keiba.db')
-    if not os.path.exists(db_path):
-        print(f'❌ DB not found: {db_path}')
+    # keiba.db または history.db を検索
+    db_path = None
+    for name in ['keiba.db', 'history.db']:
+        p = os.path.join(base_dir, 'data', name)
+        if os.path.exists(p):
+            db_path = p
+            break
+    if not db_path:
+        print('⚠ DBが見つかりません。土日/金曜ノートブックで予測を実行した後に再実行してください。')
         return {}
 
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
 
-    # bet_simulation テーブルから ai_prob / odds を取得
-    sim_rows = conn.execute("""
-        SELECT bs.ai_prob, bs.odds_est, bs.is_hit, bs.payout, bs.bet_type,
-               bs.num_horses, bs.ev
-        FROM bet_simulation bs
-        WHERE bs.ai_prob > 0 AND bs.odds_est > 1.0 AND bs.is_hit >= 0
-    """).fetchall()
+    tables = {r[0] for r in conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table'").fetchall()}
 
-    if not sim_rows:
-        # bets テーブルにフォールバック
-        sim_rows = conn.execute("""
-            SELECT b.ev as ev, b.odds_est, b.is_hit, b.payout, b.bet_type,
-                   0 as num_horses, b.ev as ev
-            FROM bets b
-            WHERE b.is_hit >= 0
-        """).fetchall()
+    sim_rows = []
+
+    if 'bet_simulation' in tables:
+        try:
+            sim_rows = conn.execute("""
+                SELECT bs.ai_prob, bs.odds_est, bs.is_hit, bs.payout, bs.bet_type,
+                       bs.num_horses, bs.ev
+                FROM bet_simulation bs
+                WHERE bs.ai_prob > 0 AND bs.odds_est > 1.0 AND bs.is_hit >= 0
+            """).fetchall()
+        except Exception:
+            pass
+
+    if not sim_rows and 'bets' in tables:
+        try:
+            cols = {r[1] for r in conn.execute("PRAGMA table_info(bets)").fetchall()}
+            ev_expr = 'b.ev' if 'ev' in cols else '0.0'
+            ai_expr = 'b.ai_prob' if 'ai_prob' in cols else ev_expr
+            sim_rows = conn.execute(f"""
+                SELECT {ai_expr} as ai_prob, b.odds_est, b.is_hit, b.payout,
+                       b.bet_type, 0 as num_horses, {ev_expr} as ev
+                FROM bets b
+                WHERE b.is_hit >= 0
+            """).fetchall()
+        except Exception:
+            pass
 
     conn.close()
 
     if not sim_rows:
-        print('⚠ 分析対象データなし (bet_simulation / bets が空)')
+        print('⚠ 分析対象データなし。土日/金曜ノートブックで予測・結果取得を実行した後に再実行してください。')
         return {}
 
     rows = [dict(r) for r in sim_rows]
