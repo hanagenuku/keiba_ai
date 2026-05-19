@@ -95,6 +95,82 @@ def save_bets_db(date_str, race_id, bets, base_dir=None, db_path=None):
     conn.close()
 
 
+def save_history_db(all_results, base_dir=None, db_path=None):
+    """レース結果を history.db の horse_history / race_history に追記する。
+
+    毎週末の結果取得後に呼ぶことで学習データが自動蓄積される。
+    race_id が既に存在する場合は INSERT OR IGNORE でスキップ。
+    """
+    path = db_path or get_history_db_path(base_dir)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    conn = sqlite3.connect(path)
+    conn.executescript('''
+        CREATE TABLE IF NOT EXISTS race_history (
+            race_id   TEXT PRIMARY KEY,
+            date      TEXT,
+            racecourse TEXT,
+            distance  INTEGER,
+            surface   TEXT,
+            first_3f  REAL
+        );
+        CREATE TABLE IF NOT EXISTS horse_history (
+            id           INTEGER PRIMARY KEY AUTOINCREMENT,
+            race_id      TEXT,
+            date         TEXT,
+            racecourse   TEXT,
+            horse_name   TEXT,
+            horse_num    INTEGER,
+            place        INTEGER,
+            running_style TEXT,
+            agari3f      REAL,
+            jockey       TEXT,
+            trainer      TEXT,
+            corner_3     INTEGER,
+            distance     INTEGER,
+            surface      TEXT
+        );
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_horse_history_uniq
+            ON horse_history (race_id, horse_num);
+    ''')
+
+    new_races = 0
+    new_horses = 0
+    for r in all_results:
+        race_id = r.get('race_id', '')
+        if not race_id:
+            continue
+        # race_id から日付を復元（形式: YYYYMMDD_XX_NN）
+        raw_date = race_id.split('_')[0]
+        date_str = f'{raw_date[:4]}-{raw_date[4:6]}-{raw_date[6:8]}' if len(raw_date) == 8 else raw_date
+
+        cur = conn.execute(
+            'INSERT OR IGNORE INTO race_history (race_id,date,racecourse,distance,surface,first_3f) VALUES (?,?,?,?,?,?)',
+            (race_id, date_str, r.get('racecourse', ''),
+             r.get('distance', 0), r.get('surface', ''), None),
+        )
+        new_races += cur.rowcount
+
+        for h in r.get('finishers', []):
+            cur2 = conn.execute(
+                '''INSERT OR IGNORE INTO horse_history
+                   (race_id,date,racecourse,horse_name,horse_num,place,
+                    running_style,agari3f,jockey,trainer,corner_3,distance,surface)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)''',
+                (race_id, date_str, r.get('racecourse', ''),
+                 h.get('name', ''), h.get('num', 0), h.get('place', 99),
+                 h.get('running_style', ''), h.get('agari3f', 0.0),
+                 h.get('jockey', ''), h.get('trainer', ''),
+                 None,
+                 h.get('distance', r.get('distance', 0)),
+                 h.get('surface', r.get('surface', ''))),
+            )
+            new_horses += cur2.rowcount
+
+    conn.commit()
+    conn.close()
+    print(f'📚 history.db に追記: {new_races}レース / {new_horses}頭 (重複スキップ済み)')
+
+
 def update_bet_results(race_id, results, base_dir=None, db_path=None):
     """レース結果でbetsテーブルのis_hit/payoutを更新"""
     path = db_path or get_db_path(base_dir)
