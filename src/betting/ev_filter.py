@@ -4,11 +4,7 @@ EVフィルタ：予想候補レースの厳選ロジック。
 """
 from src.betting.make_bets import calc_ev
 from src.features.engine import calc_all, calc_chaos_score
-
-VENUE_ORDER = {
-    '中山': 0, '東京': 1, '阪神': 2, '京都': 3, '中京': 4,
-    '新潟': 5, '福島': 6, '小倉': 7, '札幌': 8, '函館': 9,
-}
+from src.utils.config import VENUE_ORDER
 
 EV_THRESHOLD = 1.05
 ODDS_MIN     = 1.3
