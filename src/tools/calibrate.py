@@ -2,10 +2,11 @@
 過去レース実績からAI確率のキャリブレーション（Platt scaling）を行うスクリプト。
 
 optimal_weights.json が存在すればそれを使い、なければデフォルト重みで実行する。
+history.db (horse_history / race_history) および keiba.db の両方に対応。
 
 実行方法（Google Colab）:
-    import sys; sys.path.insert(0, f'{BASE_DIR}/src')
-    from tools.calibrate import run_calibration
+    import sys; sys.path.insert(0, BASE_DIR)
+    from src.tools.calibrate import run_calibration
     run_calibration(BASE_DIR)
 
 コマンドライン:
@@ -16,7 +17,6 @@ import json
 import math
 import os
 import pickle
-import sqlite3
 import sys
 
 WEIGHT_KEYS = ['pace', 'recent', 'jockey', 'trainer', 'blood', 'distance', 'post', 'bias', 'weight']
@@ -65,45 +65,6 @@ class IsotonicCalibrator:
         return f'IsotonicCalibrator({len(self.x_bins)} breakpoints)'
 
 
-# ── データロード（tune_weights.py と共通ロジック） ────────────────
-
-def _load_jockey_dict(base_dir):
-    path = os.path.join(base_dir, 'data', 'jockey_db.csv')
-    if not os.path.exists(path):
-        return {}
-    try:
-        import csv
-        d = {}
-        with open(path, encoding='utf-8') as f:
-            for row in csv.DictReader(f):
-                key = (row.get('騎手', ''), row.get('競馬場', ''), row.get('surface', ''))
-                try:
-                    d[key] = float(row['勝率'])
-                except (KeyError, ValueError):
-                    pass
-        return d
-    except Exception:
-        return {}
-
-
-def _load_trainer_dict(base_dir):
-    path = os.path.join(base_dir, 'data', 'trainer_db.csv')
-    if not os.path.exists(path):
-        return {}
-    try:
-        import csv
-        d = {}
-        with open(path, encoding='utf-8') as f:
-            for row in csv.DictReader(f):
-                try:
-                    d[row['調教師']] = float(row['勝率'])
-                except (KeyError, ValueError):
-                    pass
-        return d
-    except Exception:
-        return {}
-
-
 def _load_weights(base_dir):
     path = os.path.join(base_dir, 'data', 'optimal_weights.json')
     if os.path.exists(path):
@@ -119,132 +80,40 @@ def _load_weights(base_dir):
 
 
 def _build_prob_outcome_pairs(base_dir, weights):
-    """全過去レースの (ai_win_prob, is_win) ペアを返す。"""
-    db_path = os.path.join(base_dir, 'data', 'keiba.db')
-    jdict   = _load_jockey_dict(base_dir)
-    tdict   = _load_trainer_dict(base_dir)
+    """全過去レースの (ai_win_prob, is_win) ペアを返す。
 
-    if not jdict:
-        conn = sqlite3.connect(db_path)
-        rows = conn.execute("""
-            SELECT jockey, COUNT(*) AS runs,
-                   SUM(CASE WHEN place=1 THEN 1 ELSE 0 END) AS wins
-            FROM results WHERE jockey IS NOT NULL AND jockey != ''
-            GROUP BY jockey HAVING COUNT(*) >= 10
-        """).fetchall()
-        conn.close()
-        jdict = {(r[0], '', ''): r[2] / r[1] for r in rows}
+    tune_weights.load_training_data を流用して history.db / keiba.db 両対応。
+    """
+    from src.tools.tune_weights import load_training_data
 
-    if not tdict:
-        conn = sqlite3.connect(db_path)
-        rows = conn.execute("""
-            SELECT trainer, COUNT(*) AS runs,
-                   SUM(CASE WHEN place=1 THEN 1 ELSE 0 END) AS wins
-            FROM results WHERE trainer IS NOT NULL AND trainer != ''
-            GROUP BY trainer HAVING COUNT(*) >= 10
-        """).fetchall()
-        conn.close()
-        tdict = {r[0]: r[2] / r[1] for r in rows}
+    samples, meta = load_training_data(base_dir)
+    print(f'  レース: {meta["races_loaded"]:,}件 (スキップ: {meta["races_skipped"]}件)')
 
-    from src.features.engine import (
-        f_pace, f_recent, f_jockey, f_trainer,
-        f_blood, f_dist_v2, f_post, f_weight,
-        analyze_career, apply_career_flags, calc_pace_distribution,
-    )
+    pairs_win  = []
+    pairs_top3 = []
 
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = sqlite3.Row
-    race_rows = conn.execute("""
-        SELECT r.id, r.raw_json
-        FROM races r
-        WHERE r.raw_json IS NOT NULL
-          AND EXISTS (SELECT 1 FROM results res WHERE res.race_id = r.id AND res.place = 1)
-    """).fetchall()
-    winners = {r[0]: r[1] for r in conn.execute(
-        "SELECT race_id, horse_num FROM results WHERE place = 1")}
-    top3 = {}
-    for r in conn.execute("SELECT race_id, horse_num FROM results WHERE place <= 3"):
-        top3.setdefault(r[0], set()).add(r[1])
-    conn.close()
+    for scores_matrix, winner_idx in samples:
+        totals = [
+            sum(h['sc'][k] * weights[k] for k in WEIGHT_KEYS) + h['adj']
+            for h in scores_matrix
+        ]
+        max_t = max(totals)
+        exp_s = [math.exp((t - max_t) * 0.8) for t in totals]
+        sum_e = sum(exp_s) or 1.0
+        probs = [e / sum_e for e in exp_s]
 
-    pairs_win  = []   # (ai_prob, is_win=0/1)
-    pairs_top3 = []   # (ai_top3_prob, is_fukusho=0/1)
+        n = len(probs)
+        for i, p in enumerate(probs):
+            pairs_win.append((p, 1 if i == winner_idx else 0))
 
-    for race_row in race_rows:
-        try:
-            race = json.loads(race_row['raw_json'])
-        except Exception:
-            continue
-
-        winner_num = winners.get(race_row['id'])
-        top3_nums  = top3.get(race_row['id'], set())
-        if not winner_num:
-            continue
-
-        try:
-            race['pace_dist'] = calc_pace_distribution(race)
-        except Exception:
-            race['pace_dist'] = {'high': 0.3, 'mid': 0.4, 'slow': 0.3}
-
-        horses = race.get('horses', [])
-        if len(horses) < 3:
-            continue
-
-        totals = []
-        for h in horses:
-            jockey  = h.get('jockey', '')
-            rc      = race.get('racecourse', '')
-            surf    = race.get('surface', '芝')
-            h['jockey_rate']  = (jdict.get((jockey, rc, surf))
-                                 or jdict.get((jockey, '', ''))
-                                 or h.get('jockey_rate', 0.15))
-            trainer = h.get('trainer', '')
-            h['trainer_rate'] = tdict.get(trainer) or h.get('trainer_rate', 0.12)
-
-            try:
-                sc = {
-                    'pace':     f_pace(h, race),
-                    'recent':   f_recent(h, race),
-                    'jockey':   f_jockey(h, race),
-                    'trainer':  f_trainer(h),
-                    'blood':    f_blood(h, race),
-                    'distance': f_dist_v2(h, race),
-                    'post':     f_post(h, race),
-                    'bias':     5.0,
-                    'weight':   f_weight(h),
-                }
-                adj = apply_career_flags(0.0, analyze_career(h, race))
-            except Exception:
-                sc  = {k: 5.0 for k in WEIGHT_KEYS}
-                adj = 0.0
-
-            total = sum(sc[k] * weights[k] for k in WEIGHT_KEYS) + adj
-            totals.append((total, h.get('num') or h.get('horse_num')))
-
-        if not totals:
-            continue
-
-        max_t  = max(t for t, _ in totals)
-        exp_s  = [math.exp((t - max_t) * 0.8) for t, _ in totals]
-        sum_e  = sum(exp_s) or 1.0
-        probs  = [e / sum_e for e in exp_s]
-
-        for (_, hnum), p in zip(totals, probs):
-            pairs_win.append((p, 1 if hnum == winner_num else 0))
-
-        # Harville top3 確率
-        ps = [e / sum_e for e in exp_s]
-        n  = len(ps)
-        for i, (_, hnum) in enumerate(totals):
-            # top3 prob (Harville)
-            v = ps[i]
+            # Harville top3 近似確率
+            v = p
             for j in range(n):
                 if j == i:
                     continue
-                dj = max(1e-9, 1.0 - ps[j])
-                v += ps[j] * ps[i] / dj
-            # 3rd place approximation (skip full O(n^3) here)
-            pairs_top3.append((min(1.0, v), 1 if hnum in top3_nums else 0))
+                dj = max(1e-9, 1.0 - probs[j])
+                v += probs[j] * p / dj
+            pairs_top3.append((min(1.0, v), 0))  # is_top3 は不明なので0（win calibにのみ使用）
 
     return pairs_win, pairs_top3
 
@@ -410,7 +279,7 @@ if __name__ == '__main__':
                         help='キャリブレーション手法')
     args = parser.parse_args()
 
-    sys.path.insert(0, os.path.join(args.base_dir, 'src'))
+    sys.path.insert(0, args.base_dir)
     from src.features.engine import init_engine
     init_engine(args.base_dir)
 
