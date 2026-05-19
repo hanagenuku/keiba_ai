@@ -92,6 +92,37 @@ def _load_trainer_from_results(db_path):
     return {r[0]: r[2] / r[1] for r in rows}
 
 
+def _diagnose_db(base_dir):
+    """DBの中身を簡単に確認して原因を報告する"""
+    db_path = os.path.join(base_dir, 'data', 'keiba.db')
+    if not os.path.exists(db_path):
+        return
+    conn = sqlite3.connect(db_path)
+    try:
+        n_races   = conn.execute("SELECT COUNT(*) FROM races").fetchone()[0]
+        n_raw     = conn.execute("SELECT COUNT(*) FROM races WHERE raw_json IS NOT NULL").fetchone()[0]
+        n_results = conn.execute("SELECT COUNT(DISTINCT race_id) FROM results").fetchone()[0]
+        n_place1  = conn.execute("SELECT COUNT(DISTINCT race_id) FROM results WHERE place=1").fetchone()[0]
+        n_matched = conn.execute("""
+            SELECT COUNT(*) FROM races r
+            WHERE r.raw_json IS NOT NULL
+              AND EXISTS (SELECT 1 FROM results res WHERE res.race_id=r.id AND res.place=1)
+        """).fetchone()[0]
+        print(f'\n  [DB診断]')
+        print(f'    races テーブル総数  : {n_races}件')
+        print(f'    raw_json あり       : {n_raw}件')
+        print(f'    results に紐づく    : {n_results}件')
+        print(f'    place=1 あり        : {n_place1}件')
+        print(f'    チューニング対象    : {n_matched}件')
+        if n_races > n_matched:
+            print(f'    ⚠ {n_races - n_matched}件が除外 '
+                  '（raw_jsonなし or resultsに1着記録なし）')
+    except Exception as e:
+        print(f'    診断エラー: {e}')
+    finally:
+        conn.close()
+
+
 def load_training_data(base_dir):
     """DBとCSVからトレーニングデータを構築する。
 
@@ -294,10 +325,14 @@ def run_tuning(base_dir, n_restarts=5, verbose=True):
     if verbose:
         print(f'  レース: {meta["races_loaded"]:,}件 (スキップ: {meta["races_skipped"]}件)')
         print(f'  平均出走頭数: {meta["horses_per_race_avg"]}頭')
+        # DBの状況を診断
+        _diagnose_db(base_dir)
 
-    if len(samples) < 50:
-        print(f'❌ データ不足（{len(samples)}件）。最低50レース必要です。')
+    if len(samples) < 20:
+        print(f'❌ データ不足（{len(samples)}件）。最低20レース必要です。')
         return None
+    if len(samples) < 50:
+        print(f'⚠ データ少なめ（{len(samples)}件）。結果の精度は限定的ですが続行します。')
 
     # 初期重みでのベースライン
     base_loss = neg_log_likelihood(DEFAULT_W, samples)
