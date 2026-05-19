@@ -112,6 +112,9 @@ def _parse_shutuba(soup, racecourse, race_num, date, place_code, hist_db_path):
             return None
         info['horses'] = horses
         info['num_horses'] = len(horses)
+        # 脚質カウント（calc_pace_distribution が使う）
+        info['escape_count'] = sum(1 for h in horses if h.get('running_style') == '逃げ')
+        info['front_count']  = sum(1 for h in horses if h.get('running_style') == '先行')
         return info
     except Exception:
         return None
@@ -120,16 +123,20 @@ def _parse_shutuba(soup, racecourse, race_num, date, place_code, hist_db_path):
 def _infer_running_style(horse_name, hist):
     if not hist:
         return '差し'
+    # 履歴に running_style が記録されていればそれを多数決で使う
+    from collections import Counter
+    styles = [h.get('running_style') for h in hist
+              if h.get('running_style') and h.get('running_style') != '']
+    if styles:
+        return Counter(styles).most_common(1)[0][0]
+    # corner_3 フォールバック
     corner_3_list = [h.get('corner_3') for h in hist if h.get('corner_3') is not None]
     if not corner_3_list:
         return '差し'
     avg = sum(corner_3_list) / len(corner_3_list)
-    if avg <= 1.5:
-        return '逃げ'
-    if avg <= 3.0:
-        return '先行'
-    if avg <= 6.0:
-        return '差し'
+    if avg <= 1.5:  return '逃げ'
+    if avg <= 3.0:  return '先行'
+    if avg <= 6.0:  return '差し'
     return '追込'
 
 

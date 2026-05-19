@@ -393,10 +393,42 @@ def f_recent(h, race):
     return max(0, min(10, sc))
 
 
+# 距離帯別ペース×脚質スコア（短距離は逃げ優位が小さく、長距離は大きい）
 PACE_STYLE_SCORE = {
-    'high': {'逃げ': -2, '先行': -1, '差し': +3, '追込': +4},
-    'mid':  {'逃げ': +1, '先行': +2, '差し': +1, '追込':  0},
-    'slow': {'逃げ': +4, '先行': +3, '差し': -1, '追込': -2},
+    '短距離': {
+        'high': {'逃げ': -1, '先行':  0, '差し': +2, '追込': +3},
+        'mid':  {'逃げ': +2, '先行': +3, '差し': +1, '追込':  0},
+        'slow': {'逃げ': +4, '先行': +3, '差し': -1, '追込': -2},
+    },
+    'マイル': {
+        'high': {'逃げ': -2, '先行': -1, '差し': +3, '追込': +4},
+        'mid':  {'逃げ': +1, '先行': +2, '差し': +1, '追込':  0},
+        'slow': {'逃げ': +4, '先行': +3, '差し': -1, '追込': -2},
+    },
+    '中距離': {
+        'high': {'逃げ': -3, '先行': -2, '差し': +3, '追込': +4},
+        'mid':  {'逃げ': +1, '先行': +2, '差し': +1, '追込':  0},
+        'slow': {'逃げ': +3, '先行': +3, '差し':  0, '追込': -1},
+    },
+    '長距離': {
+        'high': {'逃げ': -4, '先行': -3, '差し': +3, '追込': +5},
+        'mid':  {'逃げ':  0, '先行': +2, '差し': +2, '追込': +1},
+        'slow': {'逃げ': +2, '先行': +3, '差し': +1, '追込':  0},
+    },
+}
+
+# コース別ペース傾向（正=先行有利傾向=スローペースになりやすい、負=差し有利傾向）
+VENUE_PACE_TENDENCY = {
+    '中山': {'短距離': +0.05, 'マイル': +0.10, '中距離': +0.15, '長距離': +0.20},
+    '小倉': {'短距離': +0.08, 'マイル': +0.10, '中距離': +0.12, '長距離': +0.08},
+    '阪神': {'短距離': +0.05, 'マイル': +0.05, '中距離': +0.08, '長距離': +0.03},
+    '福島': {'短距離': +0.05, 'マイル': +0.08, '中距離': +0.10, '長距離': +0.05},
+    '函館': {'短距離': +0.05, 'マイル': +0.08, '中距離': +0.08, '長距離': +0.05},
+    '札幌': {'短距離': +0.03, 'マイル': +0.05, '中距離': +0.05, '長距離': +0.03},
+    '東京': {'短距離': -0.03, 'マイル': -0.08, '中距離': -0.10, '長距離': -0.05},
+    '新潟': {'短距離': -0.05, 'マイル': -0.10, '中距離': -0.08, '長距離': -0.05},
+    '京都': {'短距離': +0.00, 'マイル': +0.00, '中距離': +0.00, '長距離': +0.05},
+    '中京': {'短距離': +0.00, 'マイル': -0.03, '中距離': -0.05, '長距離': -0.05},
 }
 
 
@@ -444,6 +476,15 @@ def calc_pace_distribution(race):
         p_high = max(0.10, min(0.60, fp * 1.5))
         p_slow = max(0.10, min(0.60, (0.20 - fp) * 2))
     p_mid = max(0.05, 1.0 - p_high - p_slow)
+
+    # コース別ペース傾向を加味（正=スローペース傾向）
+    venue    = race.get('racecourse', '')
+    zone     = dist_zone_label(race.get('distance', 1600))
+    tendency = VENUE_PACE_TENDENCY.get(venue, {}).get(zone, 0.0)
+    p_slow = max(0.05, p_slow + tendency)
+    p_high = max(0.05, p_high - tendency)
+    p_mid  = max(0.05, 1.0 - p_high - p_slow)
+
     total = p_high + p_mid + p_slow
     return {
         'high': round(p_high / total, 3),
@@ -454,15 +495,30 @@ def calc_pace_distribution(race):
 
 def f_pace(h, race):
     style = h.get('running_style', '差し')
-    pace_dist = calc_pace_distribution(race)
-    ev = (pace_dist['high'] * PACE_STYLE_SCORE['high'].get(style, 0) +
-          pace_dist['mid']  * PACE_STYLE_SCORE['mid'].get(style, 0) +
-          pace_dist['slow'] * PACE_STYLE_SCORE['slow'].get(style, 0))
-    if style in ('逃げ', '先行') and h.get('post_position', 8) > 10 and race.get('num_horses', 16) >= 14:
-        ev -= 0.5
-    esc_count = race.get('escape_count', 1)
-    if style == '逃げ' and esc_count >= 3:
-        ev -= (esc_count - 2) * 0.3
+    dist  = race.get('distance', 1600)
+    zone  = dist_zone_label(dist)
+    # race['pace_dist'] が既に計算済みなら再利用
+    pace_dist = race.get('pace_dist') or calc_pace_distribution(race)
+    zone_scores = PACE_STYLE_SCORE.get(zone, PACE_STYLE_SCORE['マイル'])
+    ev = (pace_dist['high'] * zone_scores['high'].get(style, 0) +
+          pace_dist['mid']  * zone_scores['mid'].get(style, 0) +
+          pace_dist['slow'] * zone_scores['slow'].get(style, 0))
+
+    # 先行・逃げの外枠ペナルティ（頭数比例）
+    n   = race.get('num_horses', 16)
+    pos = h.get('post_position', 8)
+    if style in ('逃げ', '先行') and n >= 14 and pos >= n * 0.65:
+        ev -= 0.8
+    elif style in ('逃げ', '先行') and n >= 10 and pos >= n * 0.75:
+        ev -= 0.4
+
+    # 逃げ多頭ペナルティ（競り合い激化）
+    esc_count = race.get('escape_count', 0)
+    if style == '逃げ' and esc_count >= 2:
+        ev -= (esc_count - 1) * 0.5
+    elif style == '先行' and esc_count >= 3:
+        ev -= (esc_count - 2) * 0.2
+
     score = (ev + 4) / 8 * 10
     return max(0, min(10, score))
 
