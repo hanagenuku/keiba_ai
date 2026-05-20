@@ -197,6 +197,7 @@ rollback(BASE_DIR, version=1)
 - PATをユーザーから取得（毎セッション必要）
 - 開発ブランチ: `claude/review-drive-document-ZehuT`
 - mainへの反映は明示的に指示があった場合のみ
+- **ローカルgitリポジトリは使用しない**（家PC・会社PCともにローカルcloneは不要。GitHubはClaude CodeのWebまたはデスクトップ版経由でのみ操作する）
 
 ---
 
