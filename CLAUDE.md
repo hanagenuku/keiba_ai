@@ -5,8 +5,8 @@ JRA競馬AI予想システム。Google Colab + Google Drive で運用。
 
 ## リポジトリ
 - GitHub: `hanagenuku/keiba_ai`
-- 開発ブランチ: `claude/review-drive-document-ZehuT`
-- 本番ブランチ: `main`（Colabの強制アップデートセルはmainから取得）
+- 運用ブランチ: `main`（すべての変更はmainに直接push。Colabの強制アップデートセルもmainから取得）
+- 旧開発ブランチ: `claude/review-drive-document-ZehuT`（現在は使用していない）
 
 ## Colabノートブック構成
 | ファイル | 用途 |
@@ -159,7 +159,7 @@ rollback(BASE_DIR, version=1)
 | 騎手DBが20件のみ（重み0.01のまま） | 中 | save_history_dbで蓄積すれば自然解消 |
 | bet_simulationのai_probが旧データで0 | 低 | 新データ蓄積で自然解消 |
 | analyze_divergenceのバケット分析が機能していない | 低 | 上記に依存 |
-| ノートブック側のmake_bets等をsrc/bettingからimportするよう更新 | 中 | 現状はノートブック内にも旧定義が残存 |
+| Driveの土日・金曜ノートのセル5（特徴量エンジン）を手動差し替え | 中 | GitHub版は完了済み。Drive版のみ未対応 |
 
 ## 毎週の運用フロー
 1. **金曜夜**: KEIBA_金曜ノートブック実行（翌週レース確認）
