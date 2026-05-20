@@ -76,7 +76,7 @@ def run_analysis(base_dir, verbose=True):
     # ── 1. 全体指標 ───────────────────────────────────────────────
     hits      = sum(1 for r in rows if r['is_hit'] == 1)
     paid      = sum(r['payout'] for r in rows if r['is_hit'] == 1)
-    invested  = total * 100
+    invested  = sum(r.get('amount', 100) for r in rows)
     roi       = paid / invested if invested > 0 else 0.0
     hit_rate  = hits / total
 
@@ -108,7 +108,7 @@ def run_analysis(base_dir, verbose=True):
             br     = bucket_data[b]
             b_hit  = sum(1 for r in br if r['is_hit'] == 1) / len(br)
             b_ai   = sum(r.get('ai_prob', 0) for r in br) / len(br)
-            b_roi  = sum(r['payout'] for r in br if r['is_hit'] == 1) / (len(br) * 100)
+            b_roi  = sum(r['payout'] for r in br if r['is_hit'] == 1) / max(sum(r.get('amount', 100) for r in br), 1)
             calib  = '✅' if abs(b_ai - b_hit) < 0.03 else '⚠' if abs(b_ai - b_hit) < 0.07 else '❌'
             print(f'  {b:>8s}  {len(br):>5d}  {b_hit:>8.3f}  {b_ai:>10.4f}  {b_roi:>7.3f}  {calib}')
 
@@ -143,7 +143,7 @@ def run_analysis(base_dir, verbose=True):
                 continue
             br    = ratio_data[b]
             b_hit = sum(1 for r in br if r['is_hit'] == 1) / len(br)
-            b_roi = sum(r['payout'] for r in br if r['is_hit'] == 1) / (len(br) * 100)
+            b_roi = sum(r['payout'] for r in br if r['is_hit'] == 1) / max(sum(r.get('amount', 100) for r in br), 1)
             mark  = '🎯' if b_roi > 1.05 else '➖' if b_roi > 0.9 else '💸'
             print(f'  {b:>26s}  {len(br):>5d}  {b_hit:>6.3f}  {b_roi:>7.3f}  {mark}')
 
@@ -157,7 +157,7 @@ def run_analysis(base_dir, verbose=True):
         print('\n【券種別 ROI】')
         for t, tr in sorted(type_data.items(), key=lambda x: -len(x[1])):
             t_hit = sum(1 for r in tr if r['is_hit'] == 1) / len(tr)
-            t_roi = sum(r['payout'] for r in tr if r['is_hit'] == 1) / (len(tr) * 100)
+            t_roi = sum(r['payout'] for r in tr if r['is_hit'] == 1) / max(sum(r.get('amount', 100) for r in tr), 1)
             bar   = '█' * int(t_roi * 20)
             print(f'  {t:>5s}: 的中率 {t_hit:.3f}, ROI {t_roi:.3f}  {bar}')
 
@@ -184,7 +184,7 @@ def run_analysis(base_dir, verbose=True):
                 continue
             br    = ev_data[b]
             b_hit = sum(1 for r in br if r['is_hit'] == 1) / len(br)
-            b_roi = sum(r['payout'] for r in br if r['is_hit'] == 1) / (len(br) * 100)
+            b_roi = sum(r['payout'] for r in br if r['is_hit'] == 1) / max(sum(r.get('amount', 100) for r in br), 1)
             mark  = '✅' if b_roi > 1.0 else '❌'
             print(f'  {b:>12s}  {len(br):>5d}  {b_hit:>6.3f}  {b_roi:>7.3f}  {mark}')
 
