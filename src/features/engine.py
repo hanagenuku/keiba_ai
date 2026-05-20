@@ -7,6 +7,7 @@ import os
 import pickle
 
 from src.utils.config import POST_BIAS, POST_BIAS_BY_ZONE
+from src.models.predict import softmax_probs, calibrate_and_renormalize
 
 # ── グローバルコンテキスト（init_engine()で設定） ─────────────────
 _XGB_FUKUSHO_MODEL = None
@@ -1114,21 +1115,11 @@ def calc_all(race, bias_data=None):
             h['total'] * (1 - RELATIVE_WEIGHT) + rel * RELATIVE_WEIGHT + pace_bonus, 2
         )
 
-    # Softmax: race-relative win probabilities that sum to 1 across the field.
-    # Replaces per-horse sigmoid which gave ~0.5 to every horse regardless of field size.
     all_totals = [h['total'] for h in out]
-    max_t = max(all_totals)
-    exp_scores = [math.exp((t - max_t) * 0.8) for t in all_totals]
-    sum_exp = sum(exp_scores)
-    for h, e in zip(out, exp_scores):
-        h['win_prob'] = round(e / sum_exp, 6)
-
-    if _CALIBRATOR is not None:
-        # Calibrator shifts individual probabilities; renormalize to keep sum=1
-        probs_cal = [float(_CALIBRATOR.transform([h['win_prob']])[0]) for h in out]
-        s_cal = sum(probs_cal) or 1.0
-        for h, p in zip(out, probs_cal):
-            h['win_prob'] = round(p / s_cal, 6)
+    win_probs = softmax_probs(all_totals, temperature=0.8)
+    win_probs = calibrate_and_renormalize(win_probs, _CALIBRATOR)
+    for h, p in zip(out, win_probs):
+        h['win_prob'] = round(p, 6)
 
     # Harville: top2/top3 per-horse probabilities from win_prob
     win_ps = [h['win_prob'] for h in out]
