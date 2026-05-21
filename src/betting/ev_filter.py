@@ -6,10 +6,10 @@ from src.betting.make_bets import calc_ev
 from src.features.engine import calc_all, calc_chaos_score
 from src.utils.config import VENUE_ORDER
 
-EV_THRESHOLD = 1.05
+EV_THRESHOLD = 1.10
 ODDS_MIN     = 1.3
 ODDS_MAX     = 20.0
-WIN_PROB_MIN = 0.06
+WIN_PROB_MIN = 0.08
 SKIP_CLASSES = ('未勝利', '新馬')
 
 
