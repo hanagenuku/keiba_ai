@@ -191,17 +191,18 @@ rollback(BASE_DIR, version=1)
 3. 将来: 実行時刻によるレース自動選別機能の実装検討
 
 ### history.db 再スクレイピングの実行方法
+**土日ノートのセル11の後（末尾）に追加する。`sess` はセル8で作成済みなので不要。**
+
 ```python
-# Colabセルに貼り付けて実行
+## セル12（任意）: history.db 補完確認
 from src.tools.rescrape_history import run_rescrape, show_rescrape_summary
-
-# 現状確認（補完が必要なレース数を表示）
 show_rescrape_summary(BASE_DIR)
+```
 
-# 実行（自動取得できない古い日付はスキップされる）
+```python
+## セル13（任意）: 補完実行
 result = run_rescrape(BASE_DIR, sess)
-
-# 古い日付も対象にしたい場合はカスタムカレンダーを渡す
+# 古い日付も対象にしたい場合:
 # hist_cal = {"05": [{"kai": "01", "days": ["20250412", ...]}, ...], ...}
 # result = run_rescrape(BASE_DIR, sess, custom_calendar=hist_cal, brute_force=True)
 ```
