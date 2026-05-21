@@ -14,6 +14,9 @@ JRA競馬AI予想システム。Google Colab + Google Drive で運用。
 | `KEIBA_土日_v5_ROI.ipynb` | 土曜朝（出馬表取得・予想）、土曜夜・日曜夜（結果取得・照合） |
 | `KEIBA_金曜_v5_最新.ipynb` | 金曜夜（翌週レース確認・準備） |
 | `KEIBA_チューニング_v1.ipynb` | 月1〜2回：重みチューニング＋キャリブレーション |
+| `KEIBA_過去データ一括取得_v4.ipynb` | 過去データ一括取得専用（GitHubには未push・Drive管理）。pw01skl10でJRA月別カレンダーをBFS収集→月範囲指定で一括スクレイピング。ラップタイム・通過順位も取得。8頭打ち切りバグを修正済み（v4_fixed）。 |
+
+> ⚠ `KEIBA_過去データ一括取得_v4.ipynb` はGitHubに含まれていない。Driveのみで管理。
 
 ## Google Drive パス
 `/content/drive/MyDrive/keiba_ai/`
