@@ -63,6 +63,7 @@ files = [
     'src/tools/tune_weights.py',
     'src/tools/calibrate.py',
     'src/tools/analyze_divergence.py',
+    'src/tools/rescrape_history.py',
     'src/features/engine.py',
     'src/utils/config.py',
     'src/utils/db.py',
@@ -155,7 +156,7 @@ rollback(BASE_DIR, version=1)
 ## 残っている課題
 | 課題 | 深刻度 | 備考 |
 |------|--------|------|
-| history.dbが8頭打ち切り（97%のレースが8頭） | 高 | 再スクレイピングで解消可能だが工数大 |
+| history.dbが8頭打ち切り（97%のレースが8頭） | 高 | rescrape_history.pyを作成済み。JRA側で取得できない古い日付は custom_calendar 手動指定が必要 |
 | 騎手DBが20件のみ（重み0.01のまま） | 中 | save_history_dbで蓄積すれば自然解消 |
 | bet_simulationのai_probが旧データで0 | 低 | 新データ蓄積で自然解消 |
 | analyze_divergenceのバケット分析が機能していない | 低 | 上記に依存 |
@@ -171,7 +172,11 @@ rollback(BASE_DIR, version=1)
 
 ## 現在の作業状況（セッション引き継ぎ用）
 
-### 最終更新: 2026-05-20
+### 最終更新: 2026-05-21
+
+### 完了済み（2026-05-21）
+- `src/tools/rescrape_history.py` 新規作成（history.db 8頭打ち切り補完ツール）
+- EV_THRESHOLD 1.05→1.10、WIN_PROB_MIN 0.06→0.08 に引き上げ済み
 
 ### 完了済み（2026-05-20）
 - ROI計算バグ修正 → analyze_divergence.py・main push済み
@@ -179,16 +184,33 @@ rollback(BASE_DIR, version=1)
 - 日曜結果ノート：`if place > 8: continue` 削除済み（Drive確認済み）
 - 土日ノート・金曜ノート：セル5（特徴量エンジン）→ engine.py importに整理（GitHub push済み）
 - 金曜ノート：セル6末尾にsrc/bettingのimportを追加（GitHub push済み）
-- CLAUDE.md：セッション引き継ぎ用「現在の作業状況」セクション追加
 
 ### 次にやること（優先順）
 1. **週末の実運用**で動作確認（強制アップデートセル → 特徴量エンジンimport → 予想生成）
-2. 将来: 実行時刻によるレース自動選別機能の実装検討
+2. **history.db 再スクレイピング実行**（rescrape_history.pyが完成済み。Colabで実行する）
+3. 将来: 実行時刻によるレース自動選別機能の実装検討
+
+### history.db 再スクレイピングの実行方法
+```python
+# Colabセルに貼り付けて実行
+from src.tools.rescrape_history import run_rescrape, show_rescrape_summary
+
+# 現状確認（補完が必要なレース数を表示）
+show_rescrape_summary(BASE_DIR)
+
+# 実行（自動取得できない古い日付はスキップされる）
+result = run_rescrape(BASE_DIR, sess)
+
+# 古い日付も対象にしたい場合はカスタムカレンダーを渡す
+# hist_cal = {"05": [{"kai": "01", "days": ["20250412", ...]}, ...], ...}
+# result = run_rescrape(BASE_DIR, sess, custom_calendar=hist_cal, brute_force=True)
+```
 
 ### 未解決・保留中
 - 金曜ノートのセル6（buy/betting）：src/bettingのimportはGitHub版のみ追加済み、Drive版は未対応
-- history.dbの8頭打ち切り問題 → 今後の結果蓄積で自然改善（再スクレイピングは保留）
 - 乖離分析バケットが1バケットに集中 → ai_prob=0の旧データが原因、新データ蓄積で自然解消
+- 調教タイム追加：保留（距離・馬場種別の正規化が複雑なため）
+- オッズ変動の追跡：保留（複数回のノート手動実行が必要なため）
 
 ### セッション開始時の確認事項
 - PATをユーザーから取得（毎セッション必要）
