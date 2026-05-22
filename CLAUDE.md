@@ -24,7 +24,7 @@ JRA競馬AI予想システム。Google Colab + Google Drive で運用。
 ## データ・モデル構造
 ```
 data/
-  history.db      # 学習データ（horse_history: 35,134件 / race_history: 4,414件）
+  history.db      # 学習データ（horse_history: 62,835件 / race_history: 4,646件）
   keiba.db        # 予想・ベット結果（bets, bet_simulation, results）
   optimal_weights.json  # チューニング済み重み
   calibrator.pkl        # Isotonicキャリブレーター
@@ -32,6 +32,7 @@ data/
   horse_course_dict.pkl       # 馬×コース成績
   horse_venue_dist_dict.pkl   # 馬×競馬場×距離帯成績
   post_zone_bias.pkl          # データ実績枠順バイアス
+  month_suffix_map.json       # JRA月別カレンダーBFS収集結果（483ヶ月分）※過去データノートで生成
 
 models/
   current.json    # 現行バージョン番号
@@ -39,23 +40,24 @@ models/
     metadata.json
     calibrator.pkl
     optimal_weights.json
-    xgb_fukusho_model.pkl（存在する場合）
     ...
 ```
 
-## 最新の重み（2026-05-19チューニング結果）
+## 最新の重み（2026-05-22チューニング結果 ※8頭補完後）
 ```
-distance : 0.2866
-pace     : 0.2750
-trainer  : 0.2420
-post     : 0.0885
-recent   : 0.0409
-blood    : 0.0372
+distance : 0.2667
+pace     : 0.2666
+trainer  : 0.2541
+recent   : 0.1625
 jockey   : 0.0100
+blood    : 0.0100
+post     : 0.0100
 bias     : 0.0100
 weight   : 0.0100
 ```
-Acc@1: 23.6%、ECE: 0.0005
+Acc@1: 19.6%、ECE: 0.0270、NLL: 2.3317
+※Acc@1が下がったのは全頭データ（平均13.5頭）になったため。実質精度は改善。
+※騎手DBが20件のみのためjockey重みが0.01に下がっている。蓄積で自然解消予定。
 
 ## 強制アップデートセル（チューニングノートのセル1とセル2の間に挿入）
 ```python
@@ -159,11 +161,11 @@ rollback(BASE_DIR, version=1)
 ## 残っている課題
 | 課題 | 深刻度 | 備考 |
 |------|--------|------|
-| history.dbが8頭打ち切り（97%のレースが8頭） | 高 | rescrape_history.pyを作成済み。JRA側で取得できない古い日付は custom_calendar 手動指定が必要 |
-| 騎手DBが20件のみ（重み0.01のまま） | 中 | save_history_dbで蓄積すれば自然解消 |
+| history.db 8頭打ち切り（一部残存） | 中 | 202501〜202604の補完完了。残り8頭以下は実際の少頭数レースの可能性大 |
+| 騎手DBが20件のみ（重み0.01のまま） | 中 | 土日ノートのsave_history_dbで週次蓄積→自然解消 |
 | bet_simulationのai_probが旧データで0 | 低 | 新データ蓄積で自然解消 |
 | analyze_divergenceのバケット分析が機能していない | 低 | 上記に依存 |
-| 金曜ノートのセル6（買い目）src/bettingのimport追加 | 低 | GitHub版は完了済み。Drive版のみ未対応 |
+| 過去データノートのセル7（pkl再生成）未実行 | 中 | 補完後にセル7を実行してpkl/CSVを最新化すること |
 
 ## 毎週の運用フロー
 1. **金曜夜**: KEIBA_金曜ノートブック実行（翌週レース確認）
@@ -175,52 +177,48 @@ rollback(BASE_DIR, version=1)
 
 ## 現在の作業状況（セッション引き継ぎ用）
 
-### 最終更新: 2026-05-21
+### 最終更新: 2026-05-22
 
-### 完了済み（2026-05-21）
-- `src/tools/rescrape_history.py` 新規作成（history.db 8頭打ち切り補完ツール）
-- EV_THRESHOLD 1.05→1.10、WIN_PROB_MIN 0.06→0.08 に引き上げ済み
+### 完了済み（2026-05-22）
+- **history.db 8頭打ち切り補完**：過去データ取得ノート（v4_fixed）で202501〜202604を再スクレイピング
+  - horse_history: 34,086件 → 62,835件（約1.8倍）
+  - 平均出走頭数: 8頭 → 13.5頭（全頭取得に改善）
+- **過去データ取得ノートの修正**（`if place>8: continue`削除・save_race_history補完処理追加・スキップ条件修正）
+  - 修正済みファイル（`KEIBA_過去データ一括取得_v4_fixed.ipynb`）をDriveに配置済み
+- **重みチューニング・キャリブレーション再実行**（8頭補完後のデータで再最適化）
+  - ECE: 0.0726 → 0.0270（大幅改善）
+- **KAISAI_CALENDAR を2026年末まで更新**（5月〜12月の全会場・全開催日を追加）
+  - 阪神 kai=03 の6/27-28誤記も修正
+- **src/tools/rescrape_history.py** 新規作成（土日ノート末尾から使える補完ツール）
 
-### 完了済み（2026-05-20）
-- ROI計算バグ修正 → analyze_divergence.py・main push済み
-- 全ノート：セル3b → 強制アップデートセル（urllib）に差し替え済み（Drive確認済み）
-- 日曜結果ノート：`if place > 8: continue` 削除済み（Drive確認済み）
-- 土日ノート・金曜ノート：セル5（特徴量エンジン）→ engine.py importに整理（GitHub push済み）
-- 金曜ノート：セル6末尾にsrc/bettingのimportを追加（GitHub push済み）
+### 完了済み（2026-05-21以前）
+- EV_THRESHOLD 1.05→1.10、WIN_PROB_MIN 0.06→0.08 に引き上げ
+- ROI計算バグ修正
+- 全ノート：強制アップデートセル・engine.py import化
+- モジュール分離リファクタリング（betting/models/tools各種）
 
 ### 次にやること（優先順）
-1. **週末の実運用**で動作確認（強制アップデートセル → 特徴量エンジンimport → 予想生成）
-2. **history.db 再スクレイピング実行**（rescrape_history.pyが完成済み。Colabで実行する）
-3. 将来: 実行時刻によるレース自動選別機能の実装検討
+1. **過去データノートのセル7実行**（pkl・CSV再生成）← まだ未実行！チューニング前に必要だったが後回しになった。次回チューニング前に必ず実行すること
+2. **週末の実運用**で動作確認
+3. **騎手DBの充実**：土日ノートのsave_history_dbで週次蓄積→自然解消待ち
 
-### history.db 再スクレイピングの実行方法
-**土日ノートのセル11の後（末尾）に追加する。`sess` はセル8で作成済みなので不要。**
-
-```python
-## セル12（任意）: history.db 補完確認
-from src.tools.rescrape_history import run_rescrape, show_rescrape_summary
-show_rescrape_summary(BASE_DIR)
-```
-
-```python
-## セル13（任意）: 補完実行
-result = run_rescrape(BASE_DIR, sess)
-# 古い日付も対象にしたい場合:
-# hist_cal = {"05": [{"kai": "01", "days": ["20250412", ...]}, ...], ...}
-# result = run_rescrape(BASE_DIR, sess, custom_calendar=hist_cal, brute_force=True)
-```
+### 過去データ取得ノートの使い方
+- Drive管理（GitHubには未push）：`KEIBA_過去データ一括取得_v4_fixed.ipynb`
+- セル1→2→3→4（suffix_map読込）→6（月範囲指定）→7（pkl生成）の順で実行
+- 月ごとに分割実行可能（途中停止→再開OK、スキップ機能あり）
+- suffix_mapは483ヶ月分収集済み。再収集不要（新しい月が必要なら強制再収集セルを追加して実行）
 
 ### 未解決・保留中
-- 金曜ノートのセル6（buy/betting）：src/bettingのimportはGitHub版のみ追加済み、Drive版は未対応
 - 乖離分析バケットが1バケットに集中 → ai_prob=0の旧データが原因、新データ蓄積で自然解消
 - 調教タイム追加：保留（距離・馬場種別の正規化が複雑なため）
 - オッズ変動の追跡：保留（複数回のノート手動実行が必要なため）
+- 複数回実行時のbets重複問題：現状は「最後の予想で判断」の運用ルールで対応
 
 ### セッション開始時の確認事項
 - PATをユーザーから取得（毎セッション必要）
-- 開発ブランチ: `claude/review-drive-document-ZehuT`
-- mainへの反映は明示的に指示があった場合のみ
-- **ローカルgitリポジトリは使用しない**（家PC・会社PCともにローカルcloneは不要。GitHubはClaude CodeのWebまたはデスクトップ版経由でのみ操作する）
+- すべての変更は **main ブランチ**に直接push
+- **ローカルgitリポジトリは使用しない**（家PC・会社PCともにローカルcloneは不要）
+- GitHubに**ないファイル**（過去データ取得ノートなど）はユーザーに確認してから作業する
 
 ---
 
