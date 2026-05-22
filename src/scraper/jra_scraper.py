@@ -146,8 +146,8 @@ def get_history_from_db(horse_name, hist_db_path, limit=5):
         conn = sqlite3.connect(hist_db_path)
 
         rows = conn.execute('''
-            SELECT h.race_id, h.date, h.race_name, h.distance, h.surface,
-                   h.place, h.agari3f, h.popularity,
+            SELECT h.race_id, h.date, h.distance, h.surface,
+                   h.place, h.agari3f, h.running_style,
                    h.corner_3, r.first_3f, h.horse_num
             FROM horse_history h
             LEFT JOIN race_history r ON h.race_id = r.race_id
@@ -158,8 +158,8 @@ def get_history_from_db(horse_name, hist_db_path, limit=5):
 
         if not rows and len(horse_name) >= 4:
             rows = conn.execute('''
-                SELECT h.race_id, h.date, h.race_name, h.distance, h.surface,
-                       h.place, h.agari3f, h.popularity,
+                SELECT h.race_id, h.date, h.distance, h.surface,
+                       h.place, h.agari3f, h.running_style,
                        h.corner_3, r.first_3f, h.horse_num
                 FROM horse_history h
                 LEFT JOIN race_history r ON h.race_id = r.race_id
@@ -174,8 +174,8 @@ def get_history_from_db(horse_name, hist_db_path, limit=5):
 
         results = []
         for row in rows:
-            race_id, date, race_name, distance, surface, place, agari3f, \
-                popularity, corner_3, first_3f_val, horse_num_val = row
+            race_id, date, distance, surface, place, agari3f, \
+                running_style_hist, corner_3, first_3f_val, horse_num_val = row
             finishers = conn.execute(
                 'SELECT COUNT(*) FROM horse_history WHERE race_id=?', (race_id,)
             ).fetchone()[0]
@@ -205,7 +205,7 @@ def get_history_from_db(horse_name, hist_db_path, limit=5):
                 'finishers': max(finishers, 1),
                 'distance': distance,
                 'surface': surface,
-                'class': get_class_from_racename(race_name),
+                'class': '1勝クラス',
                 'margin': margin,
                 'agari3f_rank_pct': round(agari3f_rank_pct, 3),
                 'condition': '良',
@@ -214,6 +214,7 @@ def get_history_from_db(horse_name, hist_db_path, limit=5):
                 'first_3f': first_3f_val,
                 'corner_3': corner_3,
                 'race_id': race_id,
+                'running_style': running_style_hist,
             })
         conn.close()
         return results

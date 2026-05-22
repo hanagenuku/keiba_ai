@@ -22,6 +22,8 @@ _horse_dist_dict   = {}
 _horse_course_dict = {}
 _horse_venue_dist_dict = {}  # (name, venue, dist_zone, surface) → {出走, 勝率, 複勝率}
 _post_zone_bias        = {}  # (venue, dist_zone) → float  正=内枠有利, 負=外枠有利
+_jockey_dict           = {}  # (騎手名, 競馬場, surface) → 勝率
+_trainer_dict          = {}  # 調教師名 → 勝率
 
 
 def init_engine(base_dir,
@@ -33,6 +35,7 @@ def init_engine(base_dir,
     """エンジンのグローバル変数を設定する。ノートブックのセル4で呼ぶ"""
     global _XGB_FUKUSHO_MODEL, _XGB_FEATURE_COLS, _CALIBRATOR, _PACE_MODEL
     global _W, _horse_dist_dict, _horse_course_dict, _horse_venue_dist_dict, _post_zone_bias
+    global _jockey_dict, _trainer_dict
 
     if xgb_model is not None:
         _XGB_FUKUSHO_MODEL = xgb_model
@@ -92,6 +95,32 @@ def init_engine(base_dir,
     if os.path.exists(f'{base_dir}/data/post_zone_bias.pkl'):
         with open(f'{base_dir}/data/post_zone_bias.pkl', 'rb') as f:
             _post_zone_bias = pickle.load(f)
+
+    import csv as _csv
+    jockey_csv = os.path.join(base_dir, 'data', 'jockey_db.csv')
+    if os.path.exists(jockey_csv):
+        try:
+            with open(jockey_csv, encoding='utf-8') as f:
+                for row in _csv.DictReader(f):
+                    key = (row.get('騎手', ''), row.get('競馬場', ''), row.get('surface', ''))
+                    try:
+                        _jockey_dict[key] = float(row['勝率'])
+                    except (KeyError, ValueError):
+                        pass
+        except Exception:
+            pass
+
+    trainer_csv = os.path.join(base_dir, 'data', 'trainer_db.csv')
+    if os.path.exists(trainer_csv):
+        try:
+            with open(trainer_csv, encoding='utf-8') as f:
+                for row in _csv.DictReader(f):
+                    try:
+                        _trainer_dict[row['調教師']] = float(row['勝率'])
+                    except (KeyError, ValueError):
+                        pass
+        except Exception:
+            pass
 
     # pkl未作成の場合はDBから自動構築
     if not _horse_dist_dict or not _horse_venue_dist_dict or not _post_zone_bias:

@@ -128,12 +128,14 @@ def parse_horse(cells, rc, surf):
         if umaban is None:
             return None
         name = None
+        name_col = 1
         for col_idx in range(1, min(5, len(cells))):
             links = cells[col_idx].find_all('a')
             for a in links:
                 txt = a.get_text(strip=True)
                 if txt and re.search(r'[゠-ヿ一-鿿]', txt) and len(txt) >= 2:
                     name = txt
+                    name_col = col_idx
                     break
             if name:
                 break
@@ -141,6 +143,7 @@ def parse_horse(cells, rc, surf):
             for col_idx in range(1, min(5, len(tx))):
                 if re.search(r'[゠-ヿ一-鿿]', tx[col_idx]) and len(tx[col_idx]) >= 2:
                     name = tx[col_idx]
+                    name_col = col_idx
                     break
         if not name:
             return None
@@ -203,6 +206,7 @@ def parse_horse(cells, rc, surf):
             'sire': sire,
             'racecourse': rc,
             'surface': surf,
+            'post_position': umaban,
         }
     except Exception:
         return None
