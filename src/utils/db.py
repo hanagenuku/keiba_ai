@@ -171,6 +171,122 @@ def save_history_db(all_results, base_dir=None, db_path=None):
     print(f'📚 history.db に追記: {new_races}レース / {new_horses}頭 (重複スキップ済み)')
 
 
+def save_results_db(all_results, base_dir=None, db_path=None):
+    """レース結果を keiba.db の results テーブルに保存する。"""
+    path = db_path or get_db_path(base_dir)
+    conn = sqlite3.connect(path)
+    for r in all_results:
+        race_id = r.get('race_id', '')
+        divs = r.get('dividends', {})
+        tp = divs.get('tansho', {}).get('payout', 0)
+        for h in r.get('finishers', [])[:6]:
+            fp = next((f['payout'] for f in divs.get('fukusho', []) if f['num'] == h['num']), 0)
+            exists = conn.execute(
+                'SELECT 1 FROM results WHERE race_id=? AND horse_num=?',
+                (race_id, h['num']),
+            ).fetchone()
+            if exists:
+                continue
+            conn.execute(
+                '''INSERT INTO results
+                   (race_id, place, horse_num, horse_name, running_style,
+                    agari3f, tansho_payout, fukusho_payout)
+                   VALUES (?,?,?,?,?,?,?,?)''',
+                (race_id, h['place'], h['num'], h['name'],
+                 h.get('running_style', ''),
+                 h.get('agari3f', 0),
+                 tp if h['place'] == 1 else 0, fp),
+            )
+    conn.commit()
+    conn.close()
+
+
+def check_and_update_bets(all_results, base_dir=None, db_path=None):
+    """全レース結果でbetsテーブルのis_hit/payoutを更新し照合サマリを返す。
+
+    Args:
+        all_results : fetch_results が返すレース結果リスト（dividends含む）
+
+    Returns:
+        dict: {hit, total, invested, recovered, roi, details}
+    """
+    path = db_path or get_db_path(base_dir)
+    conn = sqlite3.connect(path)
+    conn.row_factory = sqlite3.Row
+
+    # 未照合ベットを取得
+    bets = conn.execute(
+        'SELECT * FROM bets WHERE is_hit=-1'
+    ).fetchall()
+
+    hit = total = invested = recovered = 0
+    details = []
+
+    for bet in bets:
+        race_id  = bet['race_id']
+        bet_type = bet['bet_type']
+        h1       = int(bet['horse_num'])
+        h2       = int(bet['horse_num2'] or 0)
+        amount   = int(bet['amount'])
+
+        result = next((r for r in all_results if r.get('race_id') == race_id), None)
+        if not result:
+            continue
+
+        divs  = result.get('dividends', {})
+        fin   = result.get('finishers', [])
+        top3  = [h['num'] for h in fin[:3]]
+        top1  = top3[0] if top3 else 0
+
+        is_hit = False
+        payout = 0
+
+        if bet_type == '複勝' and h1 in top3:
+            is_hit = True
+            for f in divs.get('fukusho', []):
+                if f['num'] == h1:
+                    payout = int(amount * f['payout'] / 100)
+                    break
+        elif bet_type == '単勝' and h1 == top1:
+            is_hit = True
+            payout = int(amount * divs.get('tansho', {}).get('payout', 0) / 100)
+        elif bet_type == 'ワイド' and h2:
+            for w in divs.get('wide', []):
+                if h1 in w['nums'] and h2 in w['nums']:
+                    is_hit = True
+                    payout = int(amount * w['payout'] / 100)
+                    break
+        elif bet_type in ('馬連', '馬単') and h2:
+            is_hit = (h1 in top3[:2] and h2 in top3[:2])
+            if is_hit:
+                key = 'umaren' if bet_type == '馬連' else 'umatan'
+                payout = int(amount * divs.get(key, {}).get('payout', 0) / 100)
+
+        conn.execute(
+            'UPDATE bets SET is_hit=?, payout=? WHERE id=?',
+            (1 if is_hit else 0, payout, bet['id']),
+        )
+        total    += 1
+        invested += amount
+        recovered += payout
+        if is_hit:
+            hit += 1
+
+        rc   = result.get('racecourse', '')
+        rnum = result.get('race_num', 0)
+        rname = result.get('race_name', '')[:6]
+        mark = '✅' if is_hit else '❌'
+        suffix = f'→¥{payout:,}' if is_hit else '→外れ'
+        details.append(f'  {mark} {rc}R{rnum:02d} {rname} {bet_type}#{h1} ¥{amount:,}{suffix}')
+
+    conn.commit()
+    conn.close()
+
+    roi = recovered / invested * 100 if invested > 0 else 0
+    return {'hit': hit, 'total': total, 'invested': invested,
+            'recovered': recovered, 'roi': roi, 'details': details}
+
+
 def update_bet_results(race_id, results, base_dir=None, db_path=None):
     """レース結果でbetsテーブルのis_hit/payoutを更新"""
     path = db_path or get_db_path(base_dir)
