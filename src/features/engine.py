@@ -97,12 +97,16 @@ def init_engine(base_dir,
             _post_zone_bias = pickle.load(f)
 
     import csv as _csv
+
+    def _norm(s):
+        return (s or '').replace(' ', '').replace('　', '')
+
     jockey_csv = os.path.join(base_dir, 'data', 'jockey_db.csv')
     if os.path.exists(jockey_csv):
         try:
             with open(jockey_csv, encoding='utf-8') as f:
                 for row in _csv.DictReader(f):
-                    key = (row.get('騎手', ''), row.get('競馬場', ''), row.get('surface', ''))
+                    key = (_norm(row.get('騎手', '')), row.get('競馬場', ''), row.get('surface', ''))
                     try:
                         _jockey_dict[key] = float(row['勝率'])
                     except (KeyError, ValueError):
@@ -116,14 +120,24 @@ def init_engine(base_dir,
             with open(trainer_csv, encoding='utf-8') as f:
                 for row in _csv.DictReader(f):
                     try:
-                        _trainer_dict[row['調教師']] = float(row['勝率'])
+                        _trainer_dict[_norm(row['調教師'])] = float(row['勝率'])
                     except (KeyError, ValueError):
                         pass
         except Exception:
             pass
 
-    # pkl未作成の場合はDBから自動構築（jockey_stats_dict.pklがなければ再構築してDBから騎手統計も取得）
+    # pkl未作成 or スペース正規化前の旧pkl → DBから再構築
     jk_pkl = os.path.join(base_dir, 'data', 'jockey_stats_dict.pkl')
+    if os.path.exists(jk_pkl):
+        try:
+            with open(jk_pkl, 'rb') as _f:
+                _jk_test = pickle.load(_f)
+            # キーにスペースが含まれていれば旧データ（正規化前）→ 再構築
+            if any(' ' in k[0] or '　' in k[0]
+                   for k in _jk_test if isinstance(k, tuple) and k and k[0]):
+                os.remove(jk_pkl)
+        except Exception:
+            pass
     if (not _horse_dist_dict or not _horse_venue_dist_dict or not _post_zone_bias
             or not os.path.exists(jk_pkl)):
         _build_horse_dicts(base_dir)
@@ -237,8 +251,9 @@ def _build_horse_dicts(base_dir):
 
     for r in rows_jk:
         try:
-            jn   = r['jockey'] or ''
-            tr   = r['trainer'] or ''
+            # スペース除去で正規化（出馬表と結果ページでスペース有無が異なるため）
+            jn   = (r['jockey']  or '').replace(' ', '').replace('　', '')
+            tr   = (r['trainer'] or '').replace(' ', '').replace('　', '')
             rc   = r['racecourse'] or ''
             surf = r['surface'] or '芝'
             place = int(r['place'] or 99)
@@ -1172,14 +1187,14 @@ def calc_all(race, bias_data=None):
     surf = race.get('surface', '芝')
 
     for h in race['horses']:
-        # 騎手・調教師名から勝率を引く（出馬表から名前が取れた場合）
+        # 騎手・調教師名から勝率を引く。スペース除去で正規化してlookup
         if 'jockey_rate' not in h:
-            jn = h.get('jockey', '')
+            jn = h.get('jockey', '').replace(' ', '').replace('　', '')
             h['jockey_rate'] = (_jockey_dict.get((jn, rc, surf))
                                 or _jockey_dict.get((jn, '', ''))
                                 or 0.15)
         if 'trainer_rate' not in h:
-            tn = h.get('trainer', '')
+            tn = h.get('trainer', '').replace(' ', '').replace('　', '')
             h['trainer_rate'] = _trainer_dict.get(tn, 0.12)
 
         sc = {
