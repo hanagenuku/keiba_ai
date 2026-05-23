@@ -158,18 +158,18 @@ def parse_horse(cells, rc, surf):
                 odds = v
                 break
 
-        # 性齢から年齢を取得（例: 牡4 → 4）
+        # 性齢から年齢を取得（例: 牡4 → 4）。セル内の前後文字を許容
         age = 4
         for t in tx:
-            m = re.match(r'^[牡牝騸セ](\d)$', t.strip())
+            m = re.search(r'[牡牝騸セ](\d)', t)
             if m:
                 age = int(m.group(1))
                 break
 
-        # 斤量（例: 57.0）
+        # 斤量（例: 57.0）。前後文字（kg等）を許容、ただし他の数字に紛れないようガード
         weight_load = 56.0
         for t in tx:
-            m = re.match(r'^(5\d\.\d)$', t.strip())
+            m = re.search(r'(?<!\d)(5\d\.\d)(?!\d)', t)
             if m:
                 weight_load = float(m.group(1))
                 break

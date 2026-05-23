@@ -282,8 +282,9 @@ def parse_result_soup(soup, racecourse, race_num, date, place_code):
             place = int(pm.group(1))
             num_m = re.match(r'^(\d+)$', texts[2].strip())
             num = int(num_m.group(1)) if num_m else 0
+            # 馬名はカタカナ・英字・「・」のみ。性齢の漢字（牡牝騸セ）以降は取らない
             name_m = re.match(
-                r'^([゠-ヿ一-鿿A-Za-z][゠-ヿ一-鿿A-Za-z0-9・]{1,20})',
+                r'^([゠-ヿA-Za-z][゠-ヿA-Za-z0-9・]{1,20})',
                 texts[3].strip(),
             )
             name = name_m.group(1).strip() if name_m else texts[3].strip()[:10]

@@ -1098,6 +1098,66 @@ def auto_comment(cand, bias_data):
             f'{chaos_str}◎{name}(スコア{score:.1f})が最有力。{odds_str}')
 
 
+def diagnose_race(race, bias_data=None):
+    """全馬同確率バグ診断用：レース内の馬データ品質をチェックし問題箇所を列挙する。
+
+    ノートブックから print(diagnose_race(race)) で使用。
+    """
+    horses = race.get('horses', [])
+    n = len(horses)
+    if n == 0:
+        return '⚠ horsesが空'
+
+    hist_ok    = sum(1 for h in horses if h.get('history'))
+    odds_ok    = sum(1 for h in horses if h.get('win_odds') and 1.0 <= h['win_odds'] < 50.0)
+    jockey_ok  = sum(1 for h in horses if h.get('jockey'))
+    trainer_ok = sum(1 for h in horses if h.get('trainer'))
+    sire_ok    = sum(1 for h in horses if h.get('sire'))
+    age_var    = len({h.get('age', 4) for h in horses})
+    wl_var     = len({h.get('weight_load', 56.0) for h in horses})
+    style_var  = len({h.get('running_style', '差し') for h in horses})
+
+    in_dist_dict   = sum(1 for h in horses
+                         if _horse_dist_dict.get((h.get('name', ''),
+                                                  dist_zone_label(race.get('distance', 1600)))))
+    in_jockey_dict = sum(1 for h in horses
+                         if _jockey_dict.get((h.get('jockey', ''), '', ''))
+                         or _jockey_dict.get((h.get('jockey', ''),
+                                              race.get('racecourse', ''),
+                                              race.get('surface', ''))))
+    in_trainer_dict = sum(1 for h in horses if _trainer_dict.get(h.get('trainer', '')))
+
+    lines = [
+        f'━━━ {race.get("race_name", "?")} ({n}頭) 診断 ━━━',
+        f'history取得:       {hist_ok}/{n} 頭  {"❌" if hist_ok < n*0.5 else "✅"}',
+        f'有効オッズ:        {odds_ok}/{n} 頭  {"⚠" if odds_ok == 0 else "✅"}',
+        f'騎手名パース:      {jockey_ok}/{n} 頭  {"❌" if jockey_ok < n*0.8 else "✅"}',
+        f'調教師名パース:    {trainer_ok}/{n} 頭  {"❌" if trainer_ok < n*0.8 else "✅"}',
+        f'父名パース:        {sire_ok}/{n} 頭',
+        f'年齢のユニーク数:  {age_var}  {"❌全馬同じ" if age_var == 1 else "✅"}',
+        f'斤量のユニーク数:  {wl_var}  {"❌全馬同じ" if wl_var == 1 else "✅"}',
+        f'脚質のユニーク数:  {style_var}  {"❌全馬同じ" if style_var == 1 else "✅"}',
+        f'_horse_dist_dictヒット:  {in_dist_dict}/{n} 頭',
+        f'_jockey_dictヒット:      {in_jockey_dict}/{n} 頭',
+        f'_trainer_dictヒット:     {in_trainer_dict}/{n} 頭',
+        f'horse_dist_dict総数:  {len(_horse_dist_dict)}件',
+        f'jockey_dict総数:       {len(_jockey_dict)}件',
+        f'trainer_dict総数:      {len(_trainer_dict)}件',
+        f'bias_data:             {"あり" if bias_data else "なし"}',
+    ]
+    # 先頭3頭のサンプル
+    lines.append('━ 先頭3頭サンプル ━')
+    for h in horses[:3]:
+        lines.append(
+            f'  #{h.get("num", "?")} {h.get("name", "?")} '
+            f'age={h.get("age", "?")} wl={h.get("weight_load", "?")} '
+            f'jockey={h.get("jockey", "")!r} trainer={h.get("trainer", "")!r} '
+            f'sire={h.get("sire", "")!r} odds={h.get("win_odds")} '
+            f'style={h.get("running_style", "?")} hist={len(h.get("history", []))}'
+        )
+    return '\n'.join(lines)
+
+
 def calc_all(race, bias_data=None):
     """全馬スコア計算（XGBoost or 重み合算フォールバック）"""
     out = []
