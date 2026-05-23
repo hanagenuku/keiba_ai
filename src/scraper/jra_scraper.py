@@ -45,6 +45,21 @@ def find_r01_result(base, date, sess):
     return None
 
 
+def _try_fetch_shutuba(sess, base, r, date_str, sx):
+    """指定suffixで出走表ページを取得。(resp, soup) を返す。パラメータエラーの場合はNone, None。"""
+    cn = f'{base}{r:02d}{date_str}/{sx}'
+    resp = sess.post(f'{JRA_BASE}/JRADB/accessD.html',
+                     data={'cname': cn, 'CNAME': cn},
+                     headers=HEADERS, timeout=15)
+    resp.encoding = 'shift_jis'
+    if 'パラメータエラー' in resp.text:
+        return None, None
+    soup = BeautifulSoup(resp.text, 'lxml')
+    if not soup.find_all('table'):
+        return None, None
+    return resp, soup
+
+
 def fetch_races_on_date(sess, target_date, hist_db_path):
     """指定日の全レース出走表を取得"""
     print(f'📡 {target_date} 出走表取得中...')
@@ -62,19 +77,45 @@ def fetch_races_on_date(sess, target_date, hist_db_path):
         print(f'✅ {r01:02X}')
         for r in range(1, 13):
             sx = calc_suffix(r01, r)
-            cn = f'{base}{r:02d}{date_str}/{sx}'
-            resp = sess.post(f'{JRA_BASE}/JRADB/accessD.html',
-                             data={'cname': cn, 'CNAME': cn},
-                             headers=HEADERS, timeout=15)
-            resp.encoding = 'shift_jis'
-            if 'パラメータエラー' in resp.text:
+            _, soup = _try_fetch_shutuba(sess, base, r, date_str, sx)
+
+            # R10以降：suffixが合わない場合は単純式(r-1)*181でも試みる
+            if soup is None and r >= 10:
+                sx_simple = f'{(r01 + (r - 1) * 181) % 256:02X}'
+                if sx_simple != sx:
+                    _, soup2 = _try_fetch_shutuba(sess, base, r, date_str, sx_simple)
+                    if soup2 is not None:
+                        soup = soup2
+                        sx = sx_simple
+
+            if soup is None:
+                print(f'  R{r:02d}: suffix={sx} → パラメータエラー/ページなし')
                 continue
-            soup = BeautifulSoup(resp.text, 'lxml')
-            if not soup.find_all('table'):
-                continue
+
             race = _parse_shutuba(soup, rc, r, date_str, pc, hist_db_path)
             if not race:
+                # 原因を特定するため詳細ログを出力
+                try:
+                    tables = soup.find_all('table')
+                    if tables:
+                        header_text = tables[0].get_text(' ', strip=True)
+                        info_tmp = parse_header(header_text)
+                        if info_tmp.get('surface') == '障害':
+                            print(f'  R{r:02d}: 障害レース → スキップ')
+                        else:
+                            expected = f'{date_str[:4]}-{date_str[4:6]}-{date_str[6:8]}'
+                            got_date = info_tmp.get('date', '?')
+                            if got_date and got_date != expected:
+                                print(f'  R{r:02d}: 日付不一致 expected={expected} got={got_date} (suffix={sx})')
+                            else:
+                                print(f'  R{r:02d}: parse失敗 (馬なし or 例外) suffix={sx}')
+                    else:
+                        print(f'  R{r:02d}: テーブルなし suffix={sx}')
+                except Exception:
+                    print(f'  R{r:02d}: ログ取得中に例外 suffix={sx}')
+                time.sleep(0.3)
                 continue
+
             all_races.append(race)
             print(f'  R{r:02d}: {race.get("race_name", "")} '
                   f'{race.get("num_horses", 0)}頭 '
