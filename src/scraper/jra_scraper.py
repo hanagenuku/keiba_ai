@@ -110,7 +110,7 @@ def _parse_shutuba(soup, racecourse, race_num, date, place_code, hist_db_path):
                 continue
             hist = get_history_from_db(h['name'], hist_db_path)
             h['history'] = hist
-            h['running_style'] = _infer_running_style(h['name'], hist)
+            h['running_style'] = _infer_running_style(h['name'], hist, h.get('post_position'))
             horses.append(h)
         if not horses:
             return None
@@ -124,8 +124,11 @@ def _parse_shutuba(soup, racecourse, race_num, date, place_code, hist_db_path):
         return None
 
 
-def _infer_running_style(horse_name, hist):
+def _infer_running_style(horse_name, hist, post_position=None):
     if not hist:
+        # 枠番を脚質の弱いプロキシとして使用（内枠=先行傾向）
+        if post_position is not None and post_position <= 3:
+            return '先行'
         return '差し'
     # 履歴に running_style が記録されていればそれを多数決で使う
     from collections import Counter

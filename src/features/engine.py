@@ -638,10 +638,12 @@ def f_dist_v2(h, race):
         conf = min(1.0, dist_rec['出走'] / 10)
         scores.append(min(10, max(0, dist_rec['複勝率'] / 0.35 * 6)) * conf + 5.0 * (1 - conf))
     else:
-        c = int(dist)
-        b = h.get('best_distance', c)
-        d = abs(c - b)
-        scores.append(10 if d == 0 else 8.5 if d <= 200 else 7 if d <= 400 else 5 if d <= 600 else 3)
+        b = h.get('best_distance')  # 出馬表から取得できる場合のみ使う
+        if b is not None:
+            d = abs(int(dist) - int(b))
+            scores.append(10 if d == 0 else 8.5 if d <= 200 else 7 if d <= 400 else 5 if d <= 600 else 3)
+        else:
+            scores.append(5.0)  # 距離適性不明：中立値（全馬10.0に固定されるのを防ぐ）
 
     # 2. 競馬場×芝ダート別成績
     course_rec = _horse_course_dict.get((name, rc, surf))
