@@ -1173,6 +1173,30 @@ def diagnose_race(race, bias_data=None):
     return '\n'.join(lines)
 
 
+
+def calc_rl_cl_ranks(scored_horses):
+    """RL/CL の生スコアを計算し、ランクを付与する"""
+    RL_FEATURES = ['recent', 'pace']
+    CL_FEATURES = ['distance', 'post', 'bias', 'jockey', 'blood']
+
+    for h in scored_horses:
+        sc = h['scores']
+        rl_w = {k: _W.get(k, 0) for k in RL_FEATURES}
+        cl_w = {k: _W.get(k, 0) for k in CL_FEATURES}
+        rl_sum = sum(rl_w.values()) or 1
+        cl_sum = sum(cl_w.values()) or 1
+        h['rl_raw'] = sum(sc.get(k, 5.0) * rl_w[k] for k in RL_FEATURES) / rl_sum
+        h['cl_raw'] = sum(sc.get(k, 5.0) * cl_w[k] for k in CL_FEATURES) / cl_sum
+
+    sorted_rl = sorted(scored_horses, key=lambda h: h['rl_raw'], reverse=True)
+    sorted_cl = sorted(scored_horses, key=lambda h: h['cl_raw'], reverse=True)
+    for i, h in enumerate(sorted_rl):
+        h['rl_rank'] = i + 1
+    for i, h in enumerate(sorted_cl):
+        h['cl_rank'] = i + 1
+    return scored_horses
+
+
 def calc_all(race, bias_data=None):
     """全馬スコア計算（XGBoost or 重み合算フォールバック）"""
     out = []
@@ -1309,4 +1333,6 @@ def calc_all(race, bias_data=None):
         x['pn']      = x['win_prob']
         x['pop_gap'] = round(x['win_prob'] - x['market_prob'], 4)
 
-    return sorted(out, key=lambda x: x['total'], reverse=True)
+    out = sorted(out, key=lambda x: x['total'], reverse=True)
+    calc_rl_cl_ranks(out)
+    return out
