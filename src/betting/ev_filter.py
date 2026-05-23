@@ -6,10 +6,10 @@ from src.betting.make_bets import calc_ev
 from src.features.engine import calc_all, calc_chaos_score
 from src.utils.config import VENUE_ORDER
 
-EV_THRESHOLD = 1.10
+EV_THRESHOLD = 1.05
 ODDS_MIN     = 1.3
-ODDS_MAX     = 20.0
-WIN_PROB_MIN = 0.08
+ODDS_MAX     = 30.0
+WIN_PROB_MIN = 0.06
 SKIP_CLASSES = ('未勝利', '新馬')
 
 
@@ -36,7 +36,7 @@ def ability_first_loose(races, bias_data=None, top_n=6):
         if race.get('class', '') in SKIP_CLASSES:
             continue
         gap = top1['total'] - scored[1]['total']
-        if gap < 0.01:
+        if gap < 0.005:
             continue
         win_prob = top1.get('pn', 0)
         if win_prob < WIN_PROB_MIN:

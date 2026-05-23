@@ -1293,7 +1293,7 @@ def calc_all(race, bias_data=None):
         )
 
     all_totals = [h['total'] for h in out]
-    win_probs = softmax_probs(all_totals, temperature=0.8)
+    win_probs = softmax_probs(all_totals, temperature=1.8)
     win_probs = calibrate_and_renormalize(win_probs, _CALIBRATOR)
     for h, p in zip(out, win_probs):
         h['win_prob'] = round(p, 6)
