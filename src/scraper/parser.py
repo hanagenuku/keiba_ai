@@ -41,7 +41,7 @@ def parse_header(text):
         info['distance'] = 0
         info['direction'] = ''
         return info
-    dm = re.search(r'([\d]+)\s*メートル\s*[（(]\s*([芝ダ])[^）)]*([右左])', text)
+    dm = re.search(r'([\d,]+)\s*メートル\s*[（(]\s*([芝ダ])[^）)]*([右左])', text)
     if dm:
         info['distance'] = int(dm.group(1).replace(',', ''))
         info['surface'] = '芝' if dm.group(2) == '芝' else 'ダート'

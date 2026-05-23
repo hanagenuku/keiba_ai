@@ -93,6 +93,10 @@ def _parse_shutuba(soup, racecourse, race_num, date, place_code, hist_db_path):
         info = parse_header(header_text)
         if info.get('surface') == '障害':
             return None
+        # suffixズレ検知: ページの日付が指定日と合わない場合はスキップ
+        expected_date = f'{date[:4]}-{date[4:6]}-{date[6:8]}'
+        if info.get('date') and info['date'] != expected_date:
+            return None
         info['race_num'] = race_num
         info['racecourse'] = racecourse
         info['race_name'] = parse_rname(header_text, race_num)
