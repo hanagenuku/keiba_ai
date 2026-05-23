@@ -135,17 +135,19 @@ const opened = {};
 async function loadData() {
   document.getElementById('race-list').innerHTML = '<div class="loading"><div class="loading-spin">🏇</div><div>予想データを読み込み中...</div></div>';
   if (!DATA_URL) { document.getElementById('hdate').textContent='未設定'; return; }
+  // キャッシュ無効化：タイムスタンプをURLに付与してブラウザキャッシュをバイパス
+  const bustUrl = DATA_URL + (DATA_URL.includes('?') ? '&' : '?') + 't=' + Date.now();
   try {
-    // まずGAS URLを直接試みる
+    // まずGAS URLを直接試みる（no-store でキャッシュ禁止）
     let loaded = false;
     try {
-      const res = await fetch(DATA_URL);
+      const res = await fetch(bustUrl, { cache: 'no-store' });
       if (res.ok) { D = await res.json(); loaded = true; }
     } catch(_){}
     // 直接失敗した場合はCORSプロキシ経由
     if (!loaded) {
-      const proxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(DATA_URL);
-      const res2 = await fetch(proxy);
+      const proxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(bustUrl);
+      const res2 = await fetch(proxy, { cache: 'no-store' });
       if (!res2.ok) throw new Error('HTTP ' + res2.status);
       const j = await res2.json();
       D = JSON.parse(j.contents);
