@@ -125,9 +125,7 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
   <div class="btm-item"><div class="btm-lbl">ROI予測</div><div class="btm-val" id="b-roi">-</div></div>
 </div>
 <script>
-const FILE_ID = '13PcHYduEYRKljXYAQV5A2ApQeBfhvDqm';
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbxfSkcPUseuoKFMfgwmLAntR1EG7-vtyiUxcFVtJf56947G593A31hINoHzLCbZobpe/exec';
-const DATA_URL = GAS_URL;
+const DATA_URL = 'https://hanagenuku.github.io/keiba_ai/data/latest.json';
 let D = null;
 let venue = null;
 const opened = {};
@@ -135,26 +133,14 @@ const opened = {};
 async function loadData() {
   document.getElementById('race-list').innerHTML = '<div class="loading"><div class="loading-spin">🏇</div><div>予想データを読み込み中...</div></div>';
   if (!DATA_URL) { document.getElementById('hdate').textContent='未設定'; return; }
-  // キャッシュ無効化：タイムスタンプをURLに付与してブラウザキャッシュをバイパス
-  const bustUrl = DATA_URL + (DATA_URL.includes('?') ? '&' : '?') + 't=' + Date.now();
+  const bustUrl = DATA_URL + '?t=' + Date.now();
   try {
-    // まずGAS URLを直接試みる（no-store でキャッシュ禁止）
-    let loaded = false;
-    try {
-      const res = await fetch(bustUrl, { cache: 'no-store' });
-      if (res.ok) { D = await res.json(); loaded = true; }
-    } catch(_){}
-    // 直接失敗した場合はCORSプロキシ経由
-    if (!loaded) {
-      const proxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(bustUrl);
-      const res2 = await fetch(proxy, { cache: 'no-store' });
-      if (!res2.ok) throw new Error('HTTP ' + res2.status);
-      const j = await res2.json();
-      D = JSON.parse(j.contents);
-    }
+    const res = await fetch(bustUrl, { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    D = await res.json();
     initApp();
   } catch(e) {
-    document.getElementById('race-list').innerHTML = '<div class="error-box">⚠️ <strong>データ読み込みエラー</strong><br><br>' + e.message + '<br><br><strong>確認事項:</strong><br>• DriveのJSONが「リンクを知っている全員」に共有されているか<br>• Colabで予想生成を実行済みか<br><br><button class="reload-btn" onclick="loadData()" style="margin:8px 0 0">再読み込み</button></div>';
+    document.getElementById('race-list').innerHTML = '<div class="error-box">⚠️ <strong>データ読み込みエラー</strong><br><br>' + e.message + '<br><br><strong>確認事項:</strong><br>• Colabで予想生成を実行済みか<br><br><button class="reload-btn" onclick="loadData()" style="margin:8px 0 0">再読み込み</button></div>';
     document.getElementById('hdate').textContent = 'エラー';
   }
 }
