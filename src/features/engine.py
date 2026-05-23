@@ -122,13 +122,35 @@ def init_engine(base_dir,
         except Exception:
             pass
 
-    # pkl未作成の場合はDBから自動構築
-    if not _horse_dist_dict or not _horse_venue_dist_dict or not _post_zone_bias:
+    # pkl未作成の場合はDBから自動構築（jockey_stats_dict.pklがなければ再構築してDBから騎手統計も取得）
+    jk_pkl = os.path.join(base_dir, 'data', 'jockey_stats_dict.pkl')
+    if (not _horse_dist_dict or not _horse_venue_dist_dict or not _post_zone_bias
+            or not os.path.exists(jk_pkl)):
         _build_horse_dicts(base_dir)
+    else:
+        # pklが存在する場合は読み込んでCSV未登録分を補完
+        tr_pkl = os.path.join(base_dir, 'data', 'trainer_stats_dict.pkl')
+        try:
+            with open(jk_pkl, 'rb') as f:
+                jk_from_pkl = pickle.load(f)
+            for k, v in jk_from_pkl.items():
+                if k not in _jockey_dict:
+                    _jockey_dict[k] = v
+        except Exception:
+            pass
+        try:
+            with open(tr_pkl, 'rb') as f:
+                tr_from_pkl = pickle.load(f)
+            for k, v in tr_from_pkl.items():
+                if k not in _trainer_dict:
+                    _trainer_dict[k] = v
+        except Exception:
+            pass
 
     xgb_ok = _XGB_FUKUSHO_MODEL is not None
     print(f'✅ 特徴量エンジン初期化完了 (XGB:{xgb_ok}, Cal:{_CALIBRATOR is not None}, '
-          f'馬別統計:{len(_horse_dist_dict)}件, 枠バイアス:{len(_post_zone_bias)}件)')
+          f'馬別統計:{len(_horse_dist_dict)}件, 枠バイアス:{len(_post_zone_bias)}件, '
+          f'騎手:{len(_jockey_dict)}件, 調教師:{len(_trainer_dict)}件)')
 
 
 def _build_horse_dicts(base_dir):
@@ -164,12 +186,20 @@ def _build_horse_dicts(base_dir):
         FROM horse_history hh
         WHERE hh.place IS NOT NULL AND hh.distance IS NOT NULL
     """).fetchall()
+
+    rows_jk = conn.execute("""
+        SELECT jockey, trainer, racecourse, surface, place
+        FROM horse_history
+        WHERE place IS NOT NULL
+    """).fetchall()
     conn.close()
 
-    dist_stat  = defaultdict(lambda: {'出走': 0, '1着': 0, '複勝': 0})
-    course_stat = defaultdict(lambda: {'出走': 0, '1着': 0, '複勝': 0})
-    vd_stat    = defaultdict(lambda: {'出走': 0, '1着': 0, '複勝': 0})
-    post_stat  = defaultdict(lambda: {'i_w': 0, 'i_n': 0, 'o_w': 0, 'o_n': 0})
+    dist_stat   = defaultdict(lambda: {'出走': 0, '1着': 0, '複勝': 0})
+    course_stat  = defaultdict(lambda: {'出走': 0, '1着': 0, '複勝': 0})
+    vd_stat      = defaultdict(lambda: {'出走': 0, '1着': 0, '複勝': 0})
+    post_stat    = defaultdict(lambda: {'i_w': 0, 'i_n': 0, 'o_w': 0, 'o_n': 0})
+    jockey_stat  = defaultdict(lambda: {'runs': 0, 'wins': 0})
+    trainer_stat = defaultdict(lambda: {'runs': 0, 'wins': 0})
 
     for r in rows:
         try:
@@ -205,6 +235,25 @@ def _build_horse_dicts(base_dir):
         except Exception:
             pass
 
+    for r in rows_jk:
+        try:
+            jn   = r['jockey'] or ''
+            tr   = r['trainer'] or ''
+            rc   = r['racecourse'] or ''
+            surf = r['surface'] or '芝'
+            place = int(r['place'] or 99)
+            is_win = 1 if place == 1 else 0
+            if jn:
+                jockey_stat[(jn, rc, surf)]['runs'] += 1
+                jockey_stat[(jn, rc, surf)]['wins'] += is_win
+                jockey_stat[(jn, '', '')]['runs']   += 1
+                jockey_stat[(jn, '', '')]['wins']   += is_win
+            if tr:
+                trainer_stat[tr]['runs'] += 1
+                trainer_stat[tr]['wins'] += is_win
+        except Exception:
+            pass
+
     def _make_dict(stat):
         out = {}
         for k, v in stat.items():
@@ -215,6 +264,11 @@ def _build_horse_dicts(base_dir):
                     '複勝率': round(v['複勝'] / v['出走'], 4),
                 }
         return out
+
+    new_jockey_dict  = {k: round(v['wins'] / v['runs'], 4)
+                        for k, v in jockey_stat.items() if v['runs'] >= 10}
+    new_trainer_dict = {k: round(v['wins'] / v['runs'], 4)
+                        for k, v in trainer_stat.items() if v['runs'] >= 10}
 
     new_dist   = _make_dict(dist_stat)
     new_course = _make_dict(course_stat)
@@ -234,6 +288,8 @@ def _build_horse_dicts(base_dir):
         ('horse_course_dict.pkl',     new_course),
         ('horse_venue_dist_dict.pkl', new_vd),
         ('post_zone_bias.pkl',        new_post_bias),
+        ('jockey_stats_dict.pkl',     new_jockey_dict),
+        ('trainer_stats_dict.pkl',    new_trainer_dict),
     ]:
         with open(os.path.join(data_dir, fname), 'wb') as f:
             pickle.dump(obj, f)
@@ -242,8 +298,17 @@ def _build_horse_dicts(base_dir):
     _horse_course_dict     = new_course
     _horse_venue_dist_dict = new_vd
     _post_zone_bias        = new_post_bias
+    # CSV未カバー騎手・調教師を補完（CSV登録済みはそのまま優先）
+    global _jockey_dict, _trainer_dict
+    for k, v in new_jockey_dict.items():
+        if k not in _jockey_dict:
+            _jockey_dict[k] = v
+    for k, v in new_trainer_dict.items():
+        if k not in _trainer_dict:
+            _trainer_dict[k] = v
     print(f'  [統計構築] 距離:{len(new_dist)}件 コース:{len(new_course)}件 '
-          f'距離×会場:{len(new_vd)}件 枠バイアス:{len(new_post_bias)}件')
+          f'距離×会場:{len(new_vd)}件 枠バイアス:{len(new_post_bias)}件 '
+          f'騎手:{len(new_jockey_dict)}件 調教師:{len(new_trainer_dict)}件')
 
 
 # ── 血統DB ────────────────────────────────────────────────────
@@ -388,8 +453,14 @@ def calc_performance_index(last_3f, first_3f=0, corner_pos=8,
 def f_recent(h, race):
     hist = h.get('history', [])
     if not hist:
-        odds = h.get('win_odds') or 10.0
-        return max(1.0, min(8.0, 10.0 - math.log(odds, 2)))
+        odds = h.get('win_odds')
+        # 有効なオッズ（1.0〜49.9）があれば市場情報を使う。斤量値(50-59)は除外
+        if odds and 1.0 <= odds < 50.0:
+            return max(1.0, min(8.0, 10.0 - math.log(odds, 2)))
+        # オッズ不明時は中立値（全馬同値にならないよう斤量・年齢で微調整）
+        age = h.get('age', 4)
+        wl = h.get('weight_load', 56.0) or 56.0
+        return max(4.0, min(6.5, 5.5 - (age - 4) * 0.1 + (56.0 - wl) * 0.05))
     ws = [.75 ** i for i in range(len(hist))]
     tw = sum(ws)
     sc = 0.0

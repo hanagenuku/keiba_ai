@@ -151,7 +151,11 @@ def parse_horse(cells, rc, surf):
         for col_idx in range(len(tx) - 1, -1, -1):
             m = re.search(r'(\d+\.\d)', tx[col_idx])
             if m:
-                odds = float(m.group(1))
+                v = float(m.group(1))
+                # 斤量の範囲（50.0〜59.9）はオッズではないのでスキップ
+                if 50.0 <= v < 60.0:
+                    continue
+                odds = v
                 break
 
         # 性齢から年齢を取得（例: 牡4 → 4）
