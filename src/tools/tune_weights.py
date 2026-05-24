@@ -526,19 +526,20 @@ def run_tuning(base_dir, n_restarts=5, verbose=True):
 
     out_path = os.path.join(base_dir, 'data', 'optimal_weights.json')
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
-    result = {
-        **opt_w,
-        '_meta': {
-            'races':        meta['races_loaded'],
-            'nll':          round(opt_loss, 6),
-            'accuracy_at1': round(opt_acc, 4),
-            'baseline_nll': round(base_loss, 6),
-            'baseline_acc': round(base_acc, 4),
-        },
-    }
     with open(out_path, 'w', encoding='utf-8') as f:
-        json.dump(result, f, ensure_ascii=False, indent=2)
+        json.dump(opt_w, f, ensure_ascii=False, indent=2)
     print(f'\n✅ 保存完了: {out_path}')
+    meta_path = os.path.join(base_dir, 'data', 'optimal_weights_meta.json')
+    meta_result = {
+        'races':        meta['races_loaded'],
+        'nll':          round(opt_loss, 6),
+        'accuracy_at1': round(opt_acc, 4),
+        'baseline_nll': round(base_loss, 6),
+        'baseline_acc': round(base_acc, 4),
+    }
+    with open(meta_path, 'w', encoding='utf-8') as f:
+        json.dump(meta_result, f, ensure_ascii=False, indent=2)
+    print(f'✅ メタ保存完了: {meta_path}')
     return opt_w
 
 
