@@ -26,11 +26,13 @@ _W                 = {
     'bias':     0.02,
     'recent':   0.00,   # 後方互換（旧optimal_weights.jsonに存在する場合）
     'weight':   0.00,
+    'rotation': 0.05,   # Phase 3: 前走メンバーレベル・ローテーション
 }
 _horse_venue_dist_dict = {}  # (name, venue, dist_zone, surface) → {出走, 勝率, 複勝率}
 _post_zone_bias        = {}  # (venue, dist_zone) → float  正=内枠有利, 負=外枠有利
 _jockey_dict           = {}  # (騎手名, 競馬場, surface) → 勝率
 _trainer_dict          = {}  # 調教師名 → 勝率
+_hist_db_path          = None  # Phase 3: DBパス（calc_prev_member_levelで使用）
 
 
 def init_engine(base_dir,
@@ -42,7 +44,8 @@ def init_engine(base_dir,
     """エンジンのグローバル変数を設定する。ノートブックのセル4で呼ぶ"""
     global _XGB_FUKUSHO_MODEL, _XGB_FEATURE_COLS, _CALIBRATOR, _PACE_MODEL
     global _W, _horse_dist_dict, _horse_course_dict, _horse_venue_dist_dict, _post_zone_bias
-    global _jockey_dict, _trainer_dict
+    global _jockey_dict, _trainer_dict, _hist_db_path
+    _hist_db_path = os.path.join(base_dir, 'data', 'history.db')
 
     if xgb_model is not None:
         _XGB_FUKUSHO_MODEL = xgb_model
@@ -83,12 +86,12 @@ def init_engine(base_dir,
         with open(f'{base_dir}/data/optimal_weights.json') as f:
             opt = json.load(f)
         w_keys = ['pace', 'recent', 'rl', 'maturity', 'jockey', 'trainer',
-                  'blood', 'distance', 'post', 'bias', 'weight']
+                  'blood', 'distance', 'post', 'bias', 'weight', 'rotation']
         # Phase 2 のデフォルト値（optimal_weights.json に未登録のキーに適用）
         ph2_defaults = {
             'rl': 0.35, 'maturity': 0.10, 'distance': 0.20, 'pace': 0.15,
             'trainer': 0.08, 'jockey': 0.04, 'blood': 0.03, 'post': 0.03,
-            'bias': 0.02, 'recent': 0.00, 'weight': 0.00,
+            'bias': 0.02, 'recent': 0.00, 'weight': 0.00, 'rotation': 0.05,
         }
         new_w = {k: opt.get(k, ph2_defaults.get(k, 0)) for k in w_keys}
         ws = sum(new_w.values())
@@ -337,7 +340,7 @@ def _build_horse_dicts(base_dir):
     _horse_venue_dist_dict = new_vd
     _post_zone_bias        = new_post_bias
     # CSV未カバー騎手・調教師を補完（CSV登録済みはそのまま優先）
-    global _jockey_dict, _trainer_dict
+    global _jockey_dict, _trainer_dict, _hist_db_path
     for k, v in new_jockey_dict.items():
         if k not in _jockey_dict:
             _jockey_dict[k] = v
@@ -591,6 +594,81 @@ def f_maturity(h, race):
 
     return min(10, total / 1.5)
 
+
+
+# ── Phase 3: ローテーション・メンバーレベル ───────────────────────────
+import sqlite3 as _sqlite3
+
+PREP_RACE_PROFILES = {
+    'オークス': {
+        '桜花賞':        {'level': 5, 'dist_match': 0.3},
+        'フローラS':     {'level': 4, 'dist_match': 0.9},
+        'フローラステークス': {'level': 4, 'dist_match': 0.9},
+        '忘れな草賞':    {'level': 3, 'dist_match': 0.95},
+        'スイートピーS': {'level': 3, 'dist_match': 0.8},
+        'スイートピーステークス': {'level': 3, 'dist_match': 0.8},
+    },
+    '日本ダービー': {
+        '皐月賞':    {'level': 5, 'dist_match': 0.6},
+        '青葉賞':    {'level': 4, 'dist_match': 1.0},
+        '京都新聞杯':{'level': 3, 'dist_match': 0.9},
+    },
+    '天皇賞（春）': {
+        '阪神大賞典':    {'level': 4, 'dist_match': 0.85},
+        '日経賞':        {'level': 4, 'dist_match': 0.80},
+        '天皇賞（秋）':  {'level': 5, 'dist_match': 0.50},
+    },
+    '有馬記念': {
+        'ジャパンカップ': {'level': 5, 'dist_match': 0.80},
+        '天皇賞（秋）':   {'level': 5, 'dist_match': 0.75},
+        '菊花賞':         {'level': 4, 'dist_match': 0.70},
+    },
+}
+
+
+def calc_prev_member_level(prev_race_id):
+    """前走のメンバーレベルを算出（同レース出走馬の上位3頭上がり平均）"""
+    if not prev_race_id or not _hist_db_path:
+        return 5.0
+    try:
+        conn = _sqlite3.connect(_hist_db_path)
+        rows = conn.execute(
+            'SELECT place, agari3f FROM horse_history WHERE race_id=?',
+            (prev_race_id,)
+        ).fetchall()
+        conn.close()
+        if len(rows) < 5:
+            return 5.0
+        top3_agari = [r[1] for r in sorted(rows, key=lambda x: x[0])[:3] if r[1] and r[1] > 0]
+        if not top3_agari:
+            return 5.0
+        avg_top3 = sum(top3_agari) / len(top3_agari)
+        # 33秒台=高レベル(10)、36秒台=低レベル(3)
+        return max(3.0, min(10.0, (36.5 - avg_top3) * 2.5 + 3.0))
+    except Exception:
+        return 5.0
+
+
+def f_rotation(h, race):
+    """前走メンバーレベル・ローテーション適性スコア (0-10)"""
+    hist = h.get('history', [])
+    if not hist:
+        return 5.0
+
+    prev_race_id   = hist[0].get('race_id')
+    member_level   = calc_prev_member_level(prev_race_id)
+
+    # ローテーションボーナス（PREP_RACE_PROFILESに合致する場合）
+    curr_race_name = race.get('race_name', '')
+    prev_race_name = hist[0].get('race_name', '')
+    rot_bonus = 0.0
+    if curr_race_name and prev_race_name:
+        profile = PREP_RACE_PROFILES.get(curr_race_name, {})
+        match = profile.get(prev_race_name)
+        if match:
+            rot_bonus = (match['level'] / 5.0 * 4.0) * match.get('dist_match', 0.8)
+
+    return min(10.0, member_level * 0.7 + rot_bonus * 0.3 + 1.5)
 
 def f_recent(h, race):
     hist = h.get('history', [])
@@ -1277,7 +1355,7 @@ def diagnose_race(race, bias_data=None):
 
 def calc_rl_cl_ranks(scored_horses):
     """RL/CL の生スコアを計算し、ランクを付与する"""
-    RL_FEATURES = ['rl', 'recent', 'pace', 'maturity']
+    RL_FEATURES = ['rl', 'recent', 'pace', 'maturity', 'rotation']
     CL_FEATURES = ['distance', 'post', 'bias', 'jockey', 'blood']
 
     for h in scored_horses:
@@ -1334,6 +1412,7 @@ def calc_all(race, bias_data=None):
             'post':     f_post(h, race),
             'bias':     f_bias(h, race, bias_data),
             'weight':   f_weight(h),
+            'rotation': f_rotation(h, race),
         }
         career = analyze_career(h, race)
 
