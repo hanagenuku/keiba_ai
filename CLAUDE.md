@@ -177,7 +177,34 @@ rollback(BASE_DIR, version=1)
 
 ## 現在の作業状況（セッション引き継ぎ用）
 
-### 最終更新: 2026-05-22
+### 最終更新: 2026-05-25
+
+---
+
+## ⚠️ 重要：設計指針書（必ず読むこと）
+
+**`DESIGN.md`（このリポジトリのルート）に詳細な設計ロードマップがある。**
+Googleドライブにも「keiba_ai 設計方針書（ロードマップ）」として保存済み。
+
+### 設計の核心（要約）
+- RL（レースレベル）＝絶対能力軸、CL（コースレベル）＝適性軸 の2本柱で評価する
+- 市場オッズは特徴量に入れない（過去に議論済み・決定事項）
+- 現在の最大問題：history.dbにrace_class・agari_rank・margin等がない→データ層の拡張が最優先
+
+### 次にやること（優先順）
+1. **Phase 0**：RL/CL分離表示の実装（engine.pyにcalc_rl_cl_ranks()を追加）
+2. **Phase 1**：history.dbスキーマ拡張（race_class, agari_rank, margin, last_3f等を追加）
+3. **過去データノートのセル7実行**（pkl・CSV再生成）← まだ未実行
+
+### 2026-05-25 完了済み
+- **スマホアプリ配信をGAS廃止→GitHub Pages直接配信に変更**
+  - `data/latest.json` をGitHubにプッシュ、index.htmlが直接取得する方式
+  - ノートブックの予想生成セルに `push_to_github(app_data, PAT)` を追加済み
+  - 土日ノート・金曜ノート両方に追加が必要（金曜ノートは `app_data_sat` を使用）
+- **Softmax temperature: 1.3 に調整**（ev_filter.pyのEV_THRESHOLD=1.05, WIN_PROB_MIN=0.06に変更）
+- **DESIGN.md 新規作成**（RL/CLフレームワーク設計指針書）
+
+---
 
 ### 完了済み（2026-05-22）
 - **history.db 8頭打ち切り補完**：過去データ取得ノート（v4_fixed）で202501〜202604を再スクレイピング
