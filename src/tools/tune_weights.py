@@ -16,8 +16,8 @@ import sqlite3
 import sys
 from collections import defaultdict
 
-WEIGHT_KEYS = ['pace', 'recent', 'jockey', 'trainer', 'blood', 'distance', 'post', 'bias', 'weight']
-DEFAULT_W   = [0.25, 0.20, 0.15, 0.10, 0.10, 0.08, 0.06, 0.04, 0.02]
+WEIGHT_KEYS = ['rl', 'distance', 'pace', 'maturity', 'trainer', 'jockey', 'blood', 'post', 'bias', 'rotation', 'recent', 'weight']
+DEFAULT_W   = [0.33, 0.19, 0.14, 0.10, 0.08, 0.04, 0.03, 0.03, 0.02, 0.04, 0.00, 0.00]
 
 
 # ── DBロード ─────────────────────────────────────────────────────
@@ -210,7 +210,8 @@ def load_training_data(base_dir):
 
     # エンジンのスコア関数をインポート
     from src.features.engine import (
-        f_pace, f_recent, f_jockey, f_trainer,
+        f_pace, f_recent, f_rl, f_maturity, f_rotation,
+        f_jockey, f_trainer,
         f_blood, f_dist_v2, f_post, f_weight,
         analyze_career, apply_career_flags,
         calc_pace_distribution,
@@ -318,6 +319,9 @@ def load_training_data(base_dir):
                     sc = {
                         'pace':     f_pace(h, race),
                         'recent':   f_recent(h, race),
+                        'rl':       f_rl(h, race),
+                        'maturity': f_maturity(h, race),
+                        'rotation': f_rotation(h, race),
                         'jockey':   f_jockey(h, race),
                         'trainer':  f_trainer(h),
                         'blood':    f_blood(h, race),
@@ -372,6 +376,9 @@ def load_training_data(base_dir):
                     sc = {
                         'pace':     f_pace(h, race),
                         'recent':   f_recent(h, race),
+                        'rl':       f_rl(h, race),
+                        'maturity': f_maturity(h, race),
+                        'rotation': f_rotation(h, race),
                         'jockey':   f_jockey(h, race),
                         'trainer':  f_trainer(h),
                         'blood':    f_blood(h, race),
