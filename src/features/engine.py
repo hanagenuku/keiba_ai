@@ -708,7 +708,7 @@ PACE_STYLE_SCORE = {
     '長距離': {
         'high': {'逃げ': -4, '先行': -3, '差し': +3, '追込': +5},
         'mid':  {'逃げ':  0, '先行': +2, '差し': +2, '追込': +1},
-        'slow': {'逃げ': +2, '先行': +3, '差し': +1, '追込':  0},
+        'slow': {'逃げ':  0, '先行': +3, '差し': +1, '追込':  0},
     },
 }
 
@@ -853,7 +853,19 @@ def f_dist_v2(h, race):
         conf = min(1.0, vd_rec['出走'] / 8)
         scores.append(min(10, max(0, vd_rec['複勝率'] / 0.35 * 6)) * conf + 5.0 * (1 - conf))
 
-    return round(sum(scores) / len(scores), 2)
+    base_score = round(sum(scores) / len(scores), 2)
+
+    # 長距離初挑戦ペナルティ（2000m以上で過去出走ゼロの場合 -1.0）
+    if zone == '長距離':
+        long_rec  = _horse_dist_dict.get((name, '長距離'))
+        long_runs = long_rec['出走'] if long_rec else 0
+        if long_runs == 0:
+            hist      = h.get('history', [])
+            long_hist = sum(1 for r in hist if (r.get('distance') or 0) >= 2000)
+            if long_hist == 0:
+                base_score = max(0, base_score - 1.0)
+
+    return base_score
 
 
 def f_blood(h, race):
