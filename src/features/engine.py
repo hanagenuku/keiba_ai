@@ -15,11 +15,18 @@ _XGB_FEATURE_COLS  = None
 _CALIBRATOR        = None
 _PACE_MODEL        = None
 _W                 = {
-    'pace': 0.25, 'recent': 0.20, 'jockey': 0.15, 'trainer': 0.10,
-    'blood': 0.10, 'distance': 0.08, 'post': 0.06, 'bias': 0.04, 'weight': 0.02,
+    'rl':       0.35,   # Phase 2: スピード指数ベースRLスコア
+    'distance': 0.20,
+    'pace':     0.15,
+    'maturity': 0.10,   # Phase 2: G1/重賞経験スコア
+    'trainer':  0.08,
+    'jockey':   0.04,
+    'blood':    0.03,
+    'post':     0.03,
+    'bias':     0.02,
+    'recent':   0.00,   # 後方互換（旧optimal_weights.jsonに存在する場合）
+    'weight':   0.00,
 }
-_horse_dist_dict   = {}
-_horse_course_dict = {}
 _horse_venue_dist_dict = {}  # (name, venue, dist_zone, surface) → {出走, 勝率, 複勝率}
 _post_zone_bias        = {}  # (venue, dist_zone) → float  正=内枠有利, 負=外枠有利
 _jockey_dict           = {}  # (騎手名, 競馬場, surface) → 勝率
@@ -69,10 +76,26 @@ def init_engine(base_dir,
         import json
         with open(f'{base_dir}/data/optimal_weights.json') as f:
             opt = json.load(f)
-        w_keys = ['pace', 'recent', 'jockey', 'trainer', 'blood', 'distance', 'post', 'bias', 'weight']
-        new_w = {k: opt[k] for k in w_keys if k in opt}
-        if new_w and abs(sum(new_w.values()) - 1.0) < 0.05:
+    if weights is not None:
+        _W = weights
+    elif os.path.exists(f'{base_dir}/data/optimal_weights.json'):
+        import json
+        with open(f'{base_dir}/data/optimal_weights.json') as f:
+            opt = json.load(f)
+        w_keys = ['pace', 'recent', 'rl', 'maturity', 'jockey', 'trainer',
+                  'blood', 'distance', 'post', 'bias', 'weight']
+        # Phase 2 のデフォルト値（optimal_weights.json に未登録のキーに適用）
+        ph2_defaults = {
+            'rl': 0.35, 'maturity': 0.10, 'distance': 0.20, 'pace': 0.15,
+            'trainer': 0.08, 'jockey': 0.04, 'blood': 0.03, 'post': 0.03,
+            'bias': 0.02, 'recent': 0.00, 'weight': 0.00,
+        }
+        new_w = {k: opt.get(k, ph2_defaults.get(k, 0)) for k in w_keys}
+        ws = sum(new_w.values())
+        if ws > 0.05:
+            new_w = {k: round(v / ws, 4) for k, v in new_w.items()}
             _W = new_w
+
 
     if horse_dist_dict is not None:
         _horse_dist_dict = horse_dist_dict
@@ -465,48 +488,126 @@ def calc_performance_index(last_3f, first_3f=0, corner_pos=8,
     return round(max(0.0, min(100.0, index)), 1)
 
 
+# ── Phase 2: クラス別基準上がりタイム ────────────────────────────────
+CLASS_BASE_AGARI = {
+    'G1':    33.5,
+    'G2':    33.8,
+    'G3':    34.0,
+    'L':     34.2,
+    'OP':    34.3,
+    'オープン': 34.3,
+    '3勝':   34.5,
+    '2勝':   34.8,
+    '1勝':   35.2,
+    '未勝利': 35.8,
+    '新馬':  36.0,
+}
+TRACK_CONDITION_ADJUST = {'良': 0.0, '稍重': +0.3, '重': +0.6, '不良': +1.0}
+
+
+def calc_race_content_score(r):
+    """1走分の内容スコア（着順ではなく中身を評価）"""
+    place      = r.get('place', 10)
+    finishers  = max(r.get('finishers', 16), 2)
+    margin     = r.get('margin', 0.0)
+    agari_rank = r.get('agari_rank', finishers)
+    race_class = r.get('class', r.get('race_class', '1勝'))
+
+    # 1. 相対着順スコア
+    pos_score = max(0, 10 * (1 - (place - 1) / max(finishers - 1, 1)))
+
+    # 2. 接戦ボーナス（0.3秒以内の負けは評価下げない）
+    if place > 1 and 0 < margin <= 0.3:
+        pos_score = min(10, pos_score + 1.5)
+
+    # 3. 上がり順位ボーナス（最重要）
+    agari_pct   = (finishers - agari_rank) / max(finishers - 1, 1)
+    agari_bonus = agari_pct * 3.0  # 最速で+3.0
+
+    # 4. クラス格係数
+    class_mult = {
+        'G1': 2.0, 'G2': 1.6, 'G3': 1.4, 'L': 1.2, 'OP': 1.1, 'オープン': 1.1,
+        '3勝': 1.0, '2勝': 0.85, '1勝': 0.7, '未勝利': 0.5, '新馬': 0.5,
+    }.get(race_class, 1.0)
+
+    return min(10, (pos_score + agari_bonus) * class_mult * 0.45 + 2.0)
+
+
+def f_rl(h, race):
+    """スピード指数・上がり実績ベースのRLスコア (0-10)"""
+    hist = h.get('history', [])
+    if not hist:
+        odds = h.get('win_odds')
+        if odds and 1.0 <= odds < 50.0:
+            return max(1.0, min(8.0, 10.0 - math.log(odds, 2)))
+        return 5.0
+
+    scores = []
+    for i, r in enumerate(hist[:5]):
+        last_3f    = r.get('last_3f') or r.get('agari3f') or 0
+        race_class = r.get('class', r.get('race_class', '1勝クラス'))
+        agari_rank = r.get('agari_rank', 9)
+        num_fin    = max(r.get('finishers', 16), 8)
+        track_cond = r.get('condition', r.get('track_condition', '良'))
+
+        base = CLASS_BASE_AGARI.get(race_class, 35.0)
+        base += TRACK_CONDITION_ADJUST.get(track_cond, 0)
+
+        if last_3f > 0:
+            speed_idx = (base - last_3f) * 10 + 50
+        else:
+            speed_idx = 50
+
+        agari_pct  = (num_fin - agari_rank) / max(num_fin - 1, 1)
+        agari_bonus = agari_pct * 15
+
+        class_mult = {'G1': 1.5, 'G2': 1.3, 'G3': 1.2, 'L': 1.1, 'OP': 1.05,
+                      'オープン': 1.05}.get(race_class, 1.0)
+
+        raw    = (speed_idx + agari_bonus) * class_mult
+        weight = 0.75 ** i
+        scores.append((raw, weight))
+
+    total_w      = sum(w for _, w in scores)
+    weighted_avg = sum(s * w for s, w in scores) / total_w
+
+    return max(0, min(10, (weighted_avg - 40) / 5))
+
+
+def f_maturity(h, race):
+    """G1・重賞・OP経験による完成度スコア (0-10)"""
+    hist = h.get('history', [])
+
+    class_points = {'G1': 5, 'G2': 3, 'G3': 2, 'L': 1.5, 'OP': 1, 'オープン': 1}
+    place_mult   = {1: 2.0, 2: 1.5, 3: 1.2}
+
+    total = 0
+    for r in hist:
+        rc = r.get('class', r.get('race_class', ''))
+        pt = class_points.get(rc, 0)
+        if pt > 0:
+            p     = r.get('place', 9)
+            total += pt * place_mult.get(p, 1.0 if p <= 5 else 0.5)
+
+    return min(10, total / 1.5)
+
+
 def f_recent(h, race):
     hist = h.get('history', [])
     if not hist:
         odds = h.get('win_odds')
-        # 有効なオッズ（1.0〜49.9）があれば市場情報を使う。斤量値(50-59)は除外
         if odds and 1.0 <= odds < 50.0:
             return max(1.0, min(8.0, 10.0 - math.log(odds, 2)))
-        # オッズ不明時は中立値（全馬同値にならないよう斤量・年齢で微調整）
         age = h.get('age', 4)
-        wl = h.get('weight_load', 56.0) or 56.0
+        wl  = h.get('weight_load', 56.0) or 56.0
         return max(4.0, min(6.5, 5.5 - (age - 4) * 0.1 + (56.0 - wl) * 0.05))
     ws = [.75 ** i for i in range(len(hist))]
     tw = sum(ws)
     sc = 0.0
     for i, r in enumerate(hist):
-        place     = r.get('place', 10)
-        finishers = max(r.get('finishers', 16), 2)
-        margin    = r.get('margin', 0.0)
-        if place == 1:   ps = 10.0
-        elif place == 2: ps = 7.0
-        elif place == 3: ps = 5.0
-        else: ps = max(0.0, 4.0 * (1.0 - (place - 3) / max(finishers - 3, 1)))
-        if place == 1:       ma = 0.0
-        elif margin <= 0.0:  ma = 0.0
-        elif margin <= 0.2:  ma = +0.5
-        elif margin <= 0.5:  ma = 0.0
-        elif margin <= 1.0:  ma = -0.5
-        else: ma = min(-2.0, -margin * 0.5)
-        last_3f  = r.get('last_3f') or 0
-        first_3f = r.get('first_3f') or 0
-        corner_3 = r.get('corner_3') or 0
-        surf     = r.get('surface', '芝')
-        dist     = r.get('distance', 1600)
-        cond     = r.get('track_condition', '良')
-        fins     = max(r.get('finishers', 16), 8)
-        if last_3f > 0:
-            pi = calc_performance_index(last_3f, first_3f, corner_3, fins, dist, surf, cond)
-            speed_bonus = max(-2.0, min(2.0, (pi - 50) / 10))
-        else:
-            speed_bonus = 0.0
-        sc += (ws[i] / tw) * (ps + ma + speed_bonus)
+        sc += (ws[i] / tw) * calc_race_content_score(r)
     return max(0, min(10, sc))
+
 
 
 # 距離帯別ペース×脚質スコア（短距離は逃げ優位が小さく、長距離は大きい）
@@ -1176,7 +1277,7 @@ def diagnose_race(race, bias_data=None):
 
 def calc_rl_cl_ranks(scored_horses):
     """RL/CL の生スコアを計算し、ランクを付与する"""
-    RL_FEATURES = ['recent', 'pace']
+    RL_FEATURES = ['rl', 'recent', 'pace', 'maturity']
     CL_FEATURES = ['distance', 'post', 'bias', 'jockey', 'blood']
 
     for h in scored_horses:
@@ -1224,6 +1325,8 @@ def calc_all(race, bias_data=None):
         sc = {
             'pace':     f_pace(h, race),
             'recent':   f_recent(h, race),
+            'rl':       f_rl(h, race),
+            'maturity': f_maturity(h, race),
             'jockey':   f_jockey(h, race),
             'trainer':  f_trainer(h),
             'blood':    f_blood(h, race),
@@ -1246,11 +1349,11 @@ def calc_all(race, bias_data=None):
                     prob = float(_np_cal.clip(_CALIBRATOR.transform([prob])[0], 0.01, 0.99))
                 total  = round(prob * 10, 2)
             except Exception:
-                total = sum(sc[k] * _W[k] for k in _W)
+                total = sum(sc.get(k, 5.0) * _W.get(k, 0) for k in _W if _W.get(k, 0) > 0)
                 total = apply_career_flags(total, career)
                 prob  = 1 / (1 + math.exp(-(total - 5.5) * .8))
         else:
-            total = sum(sc[k] * _W[k] for k in _W)
+            total = sum(sc.get(k, 5.0) * _W.get(k, 0) for k in _W if _W.get(k, 0) > 0)
             total = apply_career_flags(total, career)
             prob  = 1 / (1 + math.exp(-(total - 5.5) * .8))
             if _CALIBRATOR is not None:
