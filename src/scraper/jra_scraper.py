@@ -201,7 +201,8 @@ def get_history_from_db(horse_name, hist_db_path, limit=5):
                    COALESCE(r.track_condition, '良') as track_condition,
                    COALESCE(h.margin, -1.0) as margin_stored,
                    COALESCE(h.agari_rank, -1) as agari_rank_stored,
-                   COALESCE(r.num_finishers, 0) as num_finishers
+                   COALESCE(r.num_finishers, 0) as num_finishers,
+                       COALESCE(r.race_name, '') as race_name
             FROM horse_history h
             LEFT JOIN race_history r ON h.race_id = r.race_id
             WHERE h.horse_name = ?
@@ -218,7 +219,8 @@ def get_history_from_db(horse_name, hist_db_path, limit=5):
                        COALESCE(r.track_condition, '良') as track_condition,
                        COALESCE(h.margin, -1.0) as margin_stored,
                        COALESCE(h.agari_rank, -1) as agari_rank_stored,
-                       COALESCE(r.num_finishers, 0) as num_finishers
+                       COALESCE(r.num_finishers, 0) as num_finishers,
+                       COALESCE(r.race_name, '') as race_name
                 FROM horse_history h
                 LEFT JOIN race_history r ON h.race_id = r.race_id
                 WHERE h.horse_name LIKE ?
@@ -235,7 +237,7 @@ def get_history_from_db(horse_name, hist_db_path, limit=5):
             (race_id, date, distance, surface, place, agari3f,
              running_style_hist, corner_3, first_3f_val, horse_num_val,
              race_class, track_condition, margin_stored,
-             agari_rank_stored, num_finishers) = row
+             agari_rank_stored, num_finishers, race_name) = row
 
             if margin_stored >= 0:
                 margin = margin_stored
@@ -288,6 +290,7 @@ def get_history_from_db(horse_name, hist_db_path, limit=5):
                 "corner_3": corner_3,
                 "race_id": race_id,
                 "running_style": running_style_hist,
+                "race_name": race_name,
             })
         conn.close()
         return results
