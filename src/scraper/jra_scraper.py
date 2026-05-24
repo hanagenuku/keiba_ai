@@ -193,28 +193,38 @@ def get_history_from_db(horse_name, hist_db_path, limit=5):
     try:
         conn = sqlite3.connect(hist_db_path)
 
-        rows = conn.execute('''
+        rows = conn.execute("""
             SELECT h.race_id, h.date, h.distance, h.surface,
                    h.place, h.agari3f, h.running_style,
-                   h.corner_3, r.first_3f, h.horse_num
+                   h.corner_3, r.first_3f, h.horse_num,
+                   COALESCE(r.race_class, '1勝クラス') as race_class,
+                   COALESCE(r.track_condition, '良') as track_condition,
+                   COALESCE(h.margin, -1.0) as margin_stored,
+                   COALESCE(h.agari_rank, -1) as agari_rank_stored,
+                   COALESCE(r.num_finishers, 0) as num_finishers
             FROM horse_history h
             LEFT JOIN race_history r ON h.race_id = r.race_id
             WHERE h.horse_name = ?
             ORDER BY h.date DESC, h.race_id DESC
             LIMIT ?
-        ''', (horse_name, limit)).fetchall()
+        """, (horse_name, limit)).fetchall()
 
         if not rows and len(horse_name) >= 4:
-            rows = conn.execute('''
+            rows = conn.execute("""
                 SELECT h.race_id, h.date, h.distance, h.surface,
                        h.place, h.agari3f, h.running_style,
-                       h.corner_3, r.first_3f, h.horse_num
+                       h.corner_3, r.first_3f, h.horse_num,
+                       COALESCE(r.race_class, '1勝クラス') as race_class,
+                       COALESCE(r.track_condition, '良') as track_condition,
+                       COALESCE(h.margin, -1.0) as margin_stored,
+                       COALESCE(h.agari_rank, -1) as agari_rank_stored,
+                       COALESCE(r.num_finishers, 0) as num_finishers
                 FROM horse_history h
                 LEFT JOIN race_history r ON h.race_id = r.race_id
                 WHERE h.horse_name LIKE ?
                 ORDER BY h.date DESC, h.race_id DESC
                 LIMIT ?
-            ''', (horse_name[:5] + '%', limit)).fetchall()
+            """, (horse_name[:5] + '%', limit)).fetchall()
 
         if not rows:
             conn.close()
@@ -222,22 +232,29 @@ def get_history_from_db(horse_name, hist_db_path, limit=5):
 
         results = []
         for row in rows:
-            race_id, date, distance, surface, place, agari3f, \
-                running_style_hist, corner_3, first_3f_val, horse_num_val = row
-            finishers = conn.execute(
-                'SELECT COUNT(*) FROM horse_history WHERE race_id=?', (race_id,)
-            ).fetchone()[0]
-            winner = conn.execute(
-                'SELECT agari3f FROM horse_history WHERE race_id=? AND place=1',
-                (race_id,),
-            ).fetchone()
-            if winner and winner[0] and agari3f and place > 1:
-                margin = max(0.0, round((agari3f - winner[0]) * 0.3, 2))
+            (race_id, date, distance, surface, place, agari3f,
+             running_style_hist, corner_3, first_3f_val, horse_num_val,
+             race_class, track_condition, margin_stored,
+             agari_rank_stored, num_finishers) = row
+
+            if margin_stored >= 0:
+                margin = margin_stored
             else:
-                margin = 0.0
-            if agari3f:
+                winner = conn.execute(
+                    "SELECT agari3f FROM horse_history WHERE race_id=? AND place=1",
+                    (race_id,),
+                ).fetchone()
+                if winner and winner[0] and agari3f and place > 1:
+                    margin = max(0.0, round((agari3f - winner[0]) * 0.3, 2))
+                else:
+                    margin = 0.0
+
+            if agari_rank_stored > 0:
+                fn = num_finishers if num_finishers > 1 else max(agari_rank_stored, 1)
+                agari3f_rank_pct = (agari_rank_stored - 1) / max(fn - 1, 1)
+            elif agari3f:
                 all_agari = conn.execute(
-                    'SELECT agari3f FROM horse_history WHERE race_id=? AND agari3f IS NOT NULL',
+                    "SELECT agari3f FROM horse_history WHERE race_id=? AND agari3f IS NOT NULL",
                     (race_id,),
                 ).fetchall()
                 all_vals = sorted([x[0] for x in all_agari])
@@ -248,26 +265,35 @@ def get_history_from_db(horse_name, hist_db_path, limit=5):
                     agari3f_rank_pct = 0.5
             else:
                 agari3f_rank_pct = 0.5
+
+            if num_finishers > 0:
+                finishers_count = num_finishers
+            else:
+                finishers_count = conn.execute(
+                    "SELECT COUNT(*) FROM horse_history WHERE race_id=?", (race_id,)
+                ).fetchone()[0]
+
             results.append({
-                'place': place,
-                'finishers': max(finishers, 1),
-                'distance': distance,
-                'surface': surface,
-                'class': '1勝クラス',
-                'margin': margin,
-                'agari3f_rank_pct': round(agari3f_rank_pct, 3),
-                'condition': '良',
-                'date': date,
-                'last_3f': agari3f,
-                'first_3f': first_3f_val,
-                'corner_3': corner_3,
-                'race_id': race_id,
-                'running_style': running_style_hist,
+                "place": place,
+                "finishers": max(finishers_count, 1),
+                "distance": distance,
+                "surface": surface,
+                "class": race_class,
+                "margin": margin,
+                "agari3f_rank_pct": round(agari3f_rank_pct, 3),
+                "condition": track_condition,
+                "date": date,
+                "last_3f": agari3f,
+                "first_3f": first_3f_val,
+                "corner_3": corner_3,
+                "race_id": race_id,
+                "running_style": running_style_hist,
             })
         conn.close()
         return results
     except Exception:
         return []
+
 
 
 # ── 結果取得 ────────────────────────────────────────────────
@@ -291,6 +317,25 @@ def parse_dividends(soup):
     return divs
 
 
+
+def _parse_margin(text):
+    """着差テキストを数値（馬身）に変換する。"""
+    if not text or text in ('---', '-', ''):
+        return 0.0
+    named = {'ハナ': 0.1, 'クビ': 0.2, 'アタマ': 0.3, '大差': 10.0}
+    if text in named:
+        return named[text]
+    m = re.match(r'^(\d+)\s+(\d+)/(\d+)$', text.strip())
+    if m:
+        return int(m.group(1)) + int(m.group(2)) / int(m.group(3))
+    m = re.match(r'^(\d+)/(\d+)$', text.strip())
+    if m:
+        return int(m.group(1)) / int(m.group(2))
+    m = re.match(r'^(\d+(?:\.\d+)?)$', text.strip())
+    if m:
+        return float(m.group(1))
+    return 0.0
+
 def parse_result_soup(soup, racecourse, race_num, date, place_code):
     try:
         tables = soup.find_all('table')
@@ -300,7 +345,7 @@ def parse_result_soup(soup, racecourse, race_num, date, place_code):
             'race_num': race_num,
             'race_id': f'{date}_{place_code}_{race_num:02d}',
         }
-        dm = re.search(r'([\d,]+)\s*メートル\s*[（(]\s*([芝ダ])', header)
+        dm = re.search(r'([\d,]+)\s*[メ]ートル\s*[（(]\s*([芝ダ])', header)
         info['distance'] = int(dm.group(1).replace(',', '')) if dm else 2000
         info['surface'] = '芝' if dm and dm.group(2) == '芝' else 'ダート'
         c = header.replace('本賞金', '').replace('付加賞', '')
@@ -311,6 +356,9 @@ def parse_result_soup(soup, racecourse, race_num, date, place_code):
             if sp and sp.group(1) not in ('本賞', '付加賞') and len(sp.group(1)) >= 3
             else gen.group(1).strip() if gen else ''
         )
+        tc_m = re.search(r'(良|稍重|重|不良)', header)
+        info['track_condition'] = tc_m.group(1) if tc_m else '良'
+        info['race_class'] = get_class_from_racename(info['race_name'])
         finishers = []
         for row in tables[0].find_all('tr'):
             cells = row.find_all('td')
@@ -323,7 +371,6 @@ def parse_result_soup(soup, racecourse, race_num, date, place_code):
             place = int(pm.group(1))
             num_m = re.match(r'^(\d+)$', texts[2].strip())
             num = int(num_m.group(1)) if num_m else 0
-            # 馬名はカタカナ・英字・「・」のみ。性齢の漢字（牡牝騸セ）以降は取らない
             name_m = re.match(
                 r'^([゠-ヿA-Za-z][゠-ヿA-Za-z0-9・]{1,20})',
                 texts[3].strip(),
@@ -342,6 +389,7 @@ def parse_result_soup(soup, racecourse, race_num, date, place_code):
             pop_m = re.match(r'^(\d+)$', texts[13].strip()) if len(texts) > 13 else None
             jockey = texts[6].strip() if len(texts) > 6 else ''
             trainer = texts[12].strip() if len(texts) > 12 else ''
+            margin_txt = texts[8].strip() if len(texts) > 8 else ''
             finishers.append({
                 'place': place, 'num': num, 'name': name,
                 'running_style': style, 'post_position': num,
@@ -349,15 +397,33 @@ def parse_result_soup(soup, racecourse, race_num, date, place_code):
                 'popularity': int(pop_m.group(1)) if pop_m else 99,
                 'jockey': jockey, 'trainer': trainer,
                 'distance': info['distance'], 'surface': info['surface'],
+                'margin': _parse_margin(margin_txt),
             })
         divs = parse_dividends(soup)
         if not finishers:
             return None
+        valid = sorted(
+            [(i, h['agari3f']) for i, h in enumerate(finishers) if h['agari3f'] > 0],
+            key=lambda x: x[1],
+        )
+        for rank, (i, _) in enumerate(valid):
+            finishers[i]['agari_rank'] = rank + 1
+        for h in finishers:
+            if 'agari_rank' not in h:
+                h['agari_rank'] = 99
+        tan_payout = divs.get('tansho', {}).get('payout', 0)
+        fuku_list = divs.get('fukusho', [])
+        for h in finishers:
+            h['tansho_payout'] = tan_payout if h['place'] == 1 else 0
+            h['fukusho_payout'] = next(
+                (f['payout'] for f in fuku_list if f['num'] == h['num']), 0)
+        info['num_finishers'] = len(finishers)
         info['finishers'] = finishers
         info['dividends'] = divs
         return info
     except Exception:
         return None
+
 
 
 def fetch_results(sess, target_date, calendar=None):
