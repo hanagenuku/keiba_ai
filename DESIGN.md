@@ -420,8 +420,8 @@ PREP_RACE_PROFILES = {
 
 | Phase | 状態 | 完了条件 |
 |-------|------|---------|
-| Phase 0: RL/CL 分離表示 | ⏳ 未着手 | アプリにRL/CLランクが表示される |
-| Phase 1: DB スキーマ拡張 | ⏳ 未着手 | race_class, agari_rank 等が蓄積される |
+| Phase 0: RL/CL 分離表示 | ✅ 完了 | アプリにRL/CLランクが表示される |
+| Phase 1: DB スキーマ拡張 | ✅ 完了 | race_class, agari_rank 等が蓄積される |
 | Phase 2: RL 本格実装 | ⏳ 未着手 | G1でG1経験馬が正当評価される |
 | Phase 3: ローテーション | ⏳ 未着手 | 前走メンバーレベルが自動算出される |
 
