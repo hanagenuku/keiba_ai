@@ -94,7 +94,6 @@ def save_bets_db(date_str, race_id, bets, base_dir=None, db_path=None):
     conn.commit()
     conn.close()
 
-
 def save_history_db(all_results, base_dir=None, db_path=None):
     """レース結果を history.db の horse_history / race_history に追記する。
 
@@ -104,34 +103,62 @@ def save_history_db(all_results, base_dir=None, db_path=None):
     path = db_path or get_history_db_path(base_dir)
     os.makedirs(os.path.dirname(path), exist_ok=True)
     conn = sqlite3.connect(path)
-    conn.executescript('''
+    conn.executescript("""
         CREATE TABLE IF NOT EXISTS race_history (
-            race_id   TEXT PRIMARY KEY,
-            date      TEXT,
-            racecourse TEXT,
-            distance  INTEGER,
-            surface   TEXT,
-            first_3f  REAL
+            race_id         TEXT PRIMARY KEY,
+            date            TEXT,
+            racecourse      TEXT,
+            distance        INTEGER,
+            surface         TEXT,
+            first_3f        REAL,
+            race_name       TEXT,
+            race_class      TEXT,
+            track_condition TEXT,
+            num_finishers   INTEGER
         );
         CREATE TABLE IF NOT EXISTS horse_history (
-            id           INTEGER PRIMARY KEY AUTOINCREMENT,
-            race_id      TEXT,
-            date         TEXT,
-            racecourse   TEXT,
-            horse_name   TEXT,
-            horse_num    INTEGER,
-            place        INTEGER,
-            running_style TEXT,
-            agari3f      REAL,
-            jockey       TEXT,
-            trainer      TEXT,
-            corner_3     INTEGER,
-            distance     INTEGER,
-            surface      TEXT
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            race_id         TEXT,
+            date            TEXT,
+            racecourse      TEXT,
+            horse_name      TEXT,
+            horse_num       INTEGER,
+            place           INTEGER,
+            running_style   TEXT,
+            agari3f         REAL,
+            jockey          TEXT,
+            trainer         TEXT,
+            corner_3        INTEGER,
+            distance        INTEGER,
+            surface         TEXT,
+            popularity      INTEGER,
+            tansho_payout   INTEGER,
+            fukusho_payout  INTEGER,
+            margin          REAL,
+            agari_rank      INTEGER
         );
         CREATE UNIQUE INDEX IF NOT EXISTS idx_horse_history_uniq
             ON horse_history (race_id, horse_num);
-    ''')
+    """)
+
+    # Migrations for existing DBs (idempotent: errors on duplicate column are ignored)
+    migrations = [
+        "ALTER TABLE race_history ADD COLUMN race_name TEXT",
+        "ALTER TABLE race_history ADD COLUMN race_class TEXT",
+        "ALTER TABLE race_history ADD COLUMN track_condition TEXT",
+        "ALTER TABLE race_history ADD COLUMN num_finishers INTEGER",
+        "ALTER TABLE horse_history ADD COLUMN popularity INTEGER",
+        "ALTER TABLE horse_history ADD COLUMN tansho_payout INTEGER",
+        "ALTER TABLE horse_history ADD COLUMN fukusho_payout INTEGER",
+        "ALTER TABLE horse_history ADD COLUMN margin REAL",
+        "ALTER TABLE horse_history ADD COLUMN agari_rank INTEGER",
+    ]
+    for sql in migrations:
+        try:
+            conn.execute(sql)
+        except sqlite3.OperationalError:
+            pass
+    conn.commit()
 
     new_races = 0
     new_horses = 0
@@ -139,37 +166,43 @@ def save_history_db(all_results, base_dir=None, db_path=None):
         race_id = r.get('race_id', '')
         if not race_id:
             continue
-        # race_id から日付を復元（形式: YYYYMMDD_XX_NN）
         raw_date = race_id.split('_')[0]
         date_str = f'{raw_date[:4]}-{raw_date[4:6]}-{raw_date[6:8]}' if len(raw_date) == 8 else raw_date
 
         cur = conn.execute(
-            'INSERT OR IGNORE INTO race_history (race_id,date,racecourse,distance,surface,first_3f) VALUES (?,?,?,?,?,?)',
+            "INSERT OR IGNORE INTO race_history "
+            "(race_id,date,racecourse,distance,surface,first_3f,race_name,race_class,track_condition,num_finishers) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?)",
             (race_id, date_str, r.get('racecourse', ''),
-             r.get('distance', 0), r.get('surface', ''), None),
+             r.get('distance', 0), r.get('surface', ''), None,
+             r.get('race_name', ''), r.get('race_class', ''),
+             r.get('track_condition', '良'), r.get('num_finishers', 0)),
         )
         new_races += cur.rowcount
 
         for h in r.get('finishers', []):
             cur2 = conn.execute(
-                '''INSERT OR IGNORE INTO horse_history
-                   (race_id,date,racecourse,horse_name,horse_num,place,
-                    running_style,agari3f,jockey,trainer,corner_3,distance,surface)
-                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)''',
+                "INSERT OR IGNORE INTO horse_history "
+                "(race_id,date,racecourse,horse_name,horse_num,place,"
+                " running_style,agari3f,jockey,trainer,corner_3,distance,surface,"
+                " popularity,tansho_payout,fukusho_payout,margin,agari_rank) "
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (race_id, date_str, r.get('racecourse', ''),
                  h.get('name', ''), h.get('num', 0), h.get('place', 99),
                  h.get('running_style', ''), h.get('agari3f', 0.0),
                  h.get('jockey', ''), h.get('trainer', ''),
                  None,
                  h.get('distance', r.get('distance', 0)),
-                 h.get('surface', r.get('surface', ''))),
+                 h.get('surface', r.get('surface', '')),
+                 h.get('popularity', 99),
+                 h.get('tansho_payout', 0), h.get('fukusho_payout', 0),
+                 h.get('margin', 0.0), h.get('agari_rank', 99)),
             )
             new_horses += cur2.rowcount
 
     conn.commit()
     conn.close()
     print(f'📚 history.db に追記: {new_races}レース / {new_horses}頭 (重複スキップ済み)')
-
 
 def save_results_db(all_results, base_dir=None, db_path=None):
     """レース結果を keiba.db の results テーブルに保存する。"""
