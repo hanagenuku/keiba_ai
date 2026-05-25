@@ -14,10 +14,27 @@ import os
 import pickle
 import sqlite3
 import sys
+import unicodedata
 from collections import defaultdict
 
 WEIGHT_KEYS = ['rl', 'distance', 'pace', 'maturity', 'trainer', 'jockey', 'blood', 'post', 'bias', 'rotation', 'recent', 'weight']
 DEFAULT_W   = [0.33, 0.19, 0.14, 0.10, 0.08, 0.04, 0.03, 0.03, 0.02, 0.04, 0.00, 0.00]
+
+
+def _class_label(text):
+    """race_name からクラスラベルを判定（CLASS_BASE_AGARI / class_mult のキーに合わせる）。
+    全角・ローマ数字(GⅢ→GIII)をNFKC正規化してから部分一致。等級は高い順に先に判定する。"""
+    t = unicodedata.normalize('NFKC', text or '')
+    for k, label in [
+        ('GIII', 'G3'), ('GII', 'G2'), ('GI', 'G1'),
+        ('G3', 'G3'), ('G2', 'G2'), ('G1', 'G1'),
+        ('重賞', 'G3'), ('オープン', 'オープン'),
+        ('3勝', '3勝'), ('2勝', '2勝'), ('1勝', '1勝'),
+        ('未勝利', '未勝利'), ('新馬', '新馬'),
+    ]:
+        if k in t:
+            return label
+    return '1勝'  # 不明（特別・L等で名称にクラス語が無い場合）は控えめに1勝相当
 
 
 # ── DBロード ─────────────────────────────────────────────────────
@@ -47,6 +64,12 @@ def _diagnose_db(base_dir):
     conn.close()
 
 
+def _norm_name(s):
+    """騎手・調教師名の表記揺れを吸収（半角/全角スペース除去）。
+    出馬表と結果ページでスペース有無が異なるため、両側でこれを通して突き合わせる。"""
+    return (s or '').replace(' ', '').replace('　', '').strip()
+
+
 def _load_jockey_dict(base_dir):
     path = os.path.join(base_dir, 'data', 'jockey_db.csv')
     if not os.path.exists(path):
@@ -54,13 +77,30 @@ def _load_jockey_dict(base_dir):
     try:
         import csv
         d = {}
-        with open(path, encoding='utf-8') as f:
+        agg = {}  # 正規化名 -> [出走, 勝利]（騎手単位の総合勝率用）
+        # encoding='utf-8-sig': BOM付きCSVでも先頭列名('騎手')が壊れないようにする
+        with open(path, encoding='utf-8-sig') as f:
             for row in csv.DictReader(f):
-                key = (row.get('騎手', ''), row.get('競馬場', ''), row.get('surface', ''))
+                name = _norm_name(row.get('騎手', ''))
+                if not name:
+                    continue
                 try:
-                    d[key] = float(row['勝率'])
+                    rate = float(row['勝率'])
                 except (KeyError, ValueError):
-                    pass
+                    continue
+                course  = row.get('競馬場', '') or ''
+                surface = row.get('surface', '') or ''
+                d[(name, course, surface)] = rate
+                try:
+                    runs = int(float(row.get('出走', 0) or 0))
+                    wins = int(float(row.get('勝利', 0) or 0))
+                except ValueError:
+                    runs, wins = 0, 0
+                a = agg.setdefault(name, [0, 0]); a[0] += runs; a[1] += wins
+        # 騎手単位の総合勝率を (name, '', '') に格納（場×馬場で引けなかった時のフォールバック）
+        for name, (runs, wins) in agg.items():
+            if runs > 0:
+                d[(name, '', '')] = wins / runs
         return d
     except Exception:
         return {}
@@ -73,12 +113,15 @@ def _load_trainer_dict(base_dir):
     try:
         import csv
         d = {}
-        with open(path, encoding='utf-8') as f:
+        with open(path, encoding='utf-8-sig') as f:  # BOM対応
             for row in csv.DictReader(f):
+                name = _norm_name(row.get('調教師', ''))
+                if not name:
+                    continue
                 try:
-                    d[row['調教師']] = float(row['勝率'])
+                    d[name] = float(row['勝率'])
                 except (KeyError, ValueError):
-                    pass
+                    continue
         return d
     except Exception:
         return {}
@@ -127,7 +170,7 @@ def load_training_data(base_dir):
             SELECT hh.race_id, hh.date, hh.racecourse, hh.horse_name,
                    hh.horse_num, hh.place, hh.running_style,
                    hh.agari3f, hh.jockey, hh.trainer,
-                   hh.corner_3, hh.distance, hh.surface,
+                   hh.corner_3, hh.distance, hh.surface, hh.race_name,
                    rh.first_3f,
                    (SELECT COUNT(*) FROM horse_history hh2
                     WHERE hh2.race_id = hh.race_id) AS finishers
@@ -144,6 +187,17 @@ def load_training_data(base_dir):
             d = dict(row)
             horse_hist_map[d['horse_name']].append(d)
             race_horse_map[d['race_id']][d['horse_num']] = d
+
+        # ── 修正: レース内で上がり3Fを順位化（速い=1位）──────────────
+        # f_rl が参照する agari_rank を実データから生成する。
+        agari_rank_map = {}
+        for _rid, _hmap in race_horse_map.items():
+            _ranked = sorted(
+                [(_hn, float(_r['agari3f'])) for _hn, _r in _hmap.items()
+                 if _r['agari3f'] and float(_r['agari3f']) > 0],
+                key=lambda x: x[1])
+            for _rank, (_hn, _) in enumerate(_ranked, 1):
+                agari_rank_map[(_rid, _hn)] = _rank
 
         # 騎手・調教師勝率をDBから補完
         if not jdict:
@@ -279,7 +333,10 @@ def load_training_data(base_dir):
                             'finishers':       int(pr.get('finishers') or 16),
                             'distance':        int(pr['distance'] or 1600),
                             'surface':         pr['surface'] or '芝',
-                            'class':           '',
+                            'class':           _class_label(pr.get('race_name', '')),
+                            'agari_rank':      agari_rank_map.get(
+                                                   (pr['race_id'], pr['horse_num']),
+                                                   int(pr.get('finishers') or 16)),
                             'margin':          0.0,
                             'agari3f':         ag,
                             'last_3f':         ag,
@@ -292,10 +349,11 @@ def load_training_data(base_dir):
                     except Exception:
                         pass
 
-                jockey_r  = (jdict.get((jockey, rc, surf))
-                             or jdict.get((jockey, '', ''))
+                jk = _norm_name(jockey); tr = _norm_name(trainer)
+                jockey_r  = (jdict.get((jk, rc, surf))
+                             or jdict.get((jk, '', ''))
                              or 0.15)
-                trainer_r = tdict.get(trainer, 0.12)
+                trainer_r = tdict.get(tr, 0.12)
 
                 h = {
                     'name':         hname,
@@ -368,10 +426,11 @@ def load_training_data(base_dir):
             for idx, h in enumerate(horses):
                 jockey  = h.get('jockey', '')
                 trainer = h.get('trainer', '')
-                h['jockey_rate']  = (jdict.get((jockey, rc, surf))
-                                     or jdict.get((jockey, '', ''))
+                jk = _norm_name(jockey); tr = _norm_name(trainer)
+                h['jockey_rate']  = (jdict.get((jk, rc, surf))
+                                     or jdict.get((jk, '', ''))
                                      or h.get('jockey_rate', 0.15))
-                h['trainer_rate'] = tdict.get(trainer) or h.get('trainer_rate', 0.12)
+                h['trainer_rate'] = tdict.get(tr) or h.get('trainer_rate', 0.12)
                 try:
                     sc = {
                         'pace':     f_pace(h, race),
