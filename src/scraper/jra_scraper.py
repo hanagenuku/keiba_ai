@@ -2,6 +2,7 @@ import re
 import time
 import sqlite3
 import statistics
+import unicodedata
 from collections import defaultdict
 from bs4 import BeautifulSoup
 
@@ -321,6 +322,33 @@ def parse_dividends(soup):
 
 
 
+def _extract_class(header_text):
+    """ヘッダ全文からクラスを堅実に判定する（race_name パースより信頼できる）。"""
+    t = unicodedata.normalize('NFKC', header_text or '')
+    if re.search(r'\(\s*G\s*3\s*\)|\(GIII\)', t): return 'G3'
+    if re.search(r'\(\s*G\s*2\s*\)|\(GII\)',  t): return 'G2'
+    if re.search(r'\(\s*G\s*1\s*\)|\(GI\)',   t): return 'G1'
+    if re.search(r'\(\s*L\s*\)', t):              return 'L'
+    if '3勝クラス' in t:  return '3勝'
+    if '2勝クラス' in t:  return '2勝'
+    if '1勝クラス' in t:  return '1勝'
+    if '未勝利' in t:    return '未勝利'
+    if '新馬' in t:      return '新馬'
+    if 'オープン' in t:  return 'OP'
+    return ''
+
+
+def _parse_finish_time(text):
+    """タイム文字列を秒に変換。'1:34.5' / '1.34.5' / '59.8' 等に対応。"""
+    if not text: return 0.0
+    t = str(text).strip().replace(' ', '')
+    m = re.match(r'^(\d+)[:\.](\d{1,2})\.(\d)$', t)
+    if m: return int(m.group(1)) * 60 + int(m.group(2)) + int(m.group(3)) / 10
+    m = re.match(r'^(\d+(?:\.\d+)?)$', t)
+    if m: return float(m.group(1))
+    return 0.0
+
+
 def _parse_margin(text):
     """着差テキストを数値（馬身）に変換する。"""
     if not text or text in ('---', '-', ''):
@@ -361,7 +389,7 @@ def parse_result_soup(soup, racecourse, race_num, date, place_code):
         )
         tc_m = re.search(r'(良|稍重|重|不良)', header)
         info['track_condition'] = tc_m.group(1) if tc_m else '良'
-        info['race_class'] = get_class_from_racename(info['race_name'])
+        info['race_class'] = _extract_class(header)
         finishers = []
         for row in tables[0].find_all('tr'):
             cells = row.find_all('td')
@@ -393,6 +421,7 @@ def parse_result_soup(soup, racecourse, race_num, date, place_code):
             jockey = texts[6].strip() if len(texts) > 6 else ''
             trainer = texts[12].strip() if len(texts) > 12 else ''
             margin_txt = texts[8].strip() if len(texts) > 8 else ''
+            finish_time = _parse_finish_time(texts[7].strip() if len(texts) > 7 else '')
             finishers.append({
                 'place': place, 'num': num, 'name': name,
                 'running_style': style, 'post_position': num,
@@ -401,6 +430,8 @@ def parse_result_soup(soup, racecourse, race_num, date, place_code):
                 'jockey': jockey, 'trainer': trainer,
                 'distance': info['distance'], 'surface': info['surface'],
                 'margin': _parse_margin(margin_txt),
+                'chakusa_text': margin_txt,
+                'finish_time': finish_time,
             })
         divs = parse_dividends(soup)
         if not finishers:
@@ -420,6 +451,13 @@ def parse_result_soup(soup, racecourse, race_num, date, place_code):
             h['tansho_payout'] = tan_payout if h['place'] == 1 else 0
             h['fukusho_payout'] = next(
                 (f['payout'] for f in fuku_list if f['num'] == h['num']), 0)
+        # 着差秒：勝ち馬との実タイム差
+        winner = next((h for h in finishers if h.get('place') == 1), None)
+        wt = winner['finish_time'] if winner and winner.get('finish_time', 0) > 0 else 0
+        for h in finishers:
+            ft = h.get('finish_time', 0)
+            h['time_diff_sec'] = round(ft - wt, 2) if (wt > 0 and ft > 0) else None
+
         info['num_finishers'] = len(finishers)
         info['finishers'] = finishers
         info['dividends'] = divs
