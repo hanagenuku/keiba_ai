@@ -152,6 +152,17 @@ def save_history_db(all_results, base_dir=None, db_path=None):
         "ALTER TABLE horse_history ADD COLUMN fukusho_payout INTEGER",
         "ALTER TABLE horse_history ADD COLUMN margin REAL",
         "ALTER TABLE horse_history ADD COLUMN agari_rank INTEGER",
+        # 新フィールド（着差・馬場・タイム・クラス整備）
+        "ALTER TABLE race_history ADD COLUMN race_num INTEGER",
+        "ALTER TABLE race_history ADD COLUMN lap_times TEXT",
+        "ALTER TABLE race_history ADD COLUMN first_3f REAL",
+        "ALTER TABLE race_history ADD COLUMN last_3f REAL",
+        "ALTER TABLE horse_history ADD COLUMN class_grade TEXT",
+        "ALTER TABLE horse_history ADD COLUMN field_size INTEGER",
+        "ALTER TABLE horse_history ADD COLUMN corner_4 INTEGER",
+        "ALTER TABLE horse_history ADD COLUMN finish_time REAL",
+        "ALTER TABLE horse_history ADD COLUMN time_diff_sec REAL",
+        "ALTER TABLE horse_history ADD COLUMN chakusa_text TEXT",
     ]
     for sql in migrations:
         try:
@@ -185,8 +196,9 @@ def save_history_db(all_results, base_dir=None, db_path=None):
                 "INSERT OR IGNORE INTO horse_history "
                 "(race_id,date,racecourse,horse_name,horse_num,place,"
                 " running_style,agari3f,jockey,trainer,corner_3,distance,surface,"
-                " popularity,tansho_payout,fukusho_payout,margin,agari_rank) "
-                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                " popularity,tansho_payout,fukusho_payout,margin,agari_rank,"
+                " class_grade,finish_time,time_diff_sec,chakusa_text) "
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (race_id, date_str, r.get('racecourse', ''),
                  h.get('name', ''), h.get('num', 0), h.get('place', 99),
                  h.get('running_style', ''), h.get('agari3f', 0.0),
@@ -196,7 +208,11 @@ def save_history_db(all_results, base_dir=None, db_path=None):
                  h.get('surface', r.get('surface', '')),
                  h.get('popularity', 99),
                  h.get('tansho_payout', 0), h.get('fukusho_payout', 0),
-                 h.get('margin', 0.0), h.get('agari_rank', 99)),
+                 h.get('margin', 0.0), h.get('agari_rank', 99),
+                 r.get('race_class', ''),
+                 h.get('finish_time'),
+                 h.get('time_diff_sec'),
+                 h.get('chakusa_text', '')),
             )
             new_horses += cur2.rowcount
 
