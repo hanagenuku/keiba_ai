@@ -163,6 +163,17 @@ def save_history_db(all_results, base_dir=None, db_path=None):
         "ALTER TABLE horse_history ADD COLUMN finish_time REAL",
         "ALTER TABLE horse_history ADD COLUMN time_diff_sec REAL",
         "ALTER TABLE horse_history ADD COLUMN chakusa_text TEXT",
+        # Stage 3 で追加（事前確定情報＋過去走履歴の充実）
+        "ALTER TABLE horse_history ADD COLUMN weight_load REAL",
+        "ALTER TABLE horse_history ADD COLUMN sex TEXT",
+        "ALTER TABLE horse_history ADD COLUMN age INTEGER",
+        "ALTER TABLE horse_history ADD COLUMN body_weight INTEGER",
+        "ALTER TABLE horse_history ADD COLUMN body_weight_diff INTEGER",
+        "ALTER TABLE horse_history ADD COLUMN bracket INTEGER",
+        "ALTER TABLE horse_history ADD COLUMN corner_all TEXT",
+        "ALTER TABLE horse_history ADD COLUMN win_odds REAL",
+        "ALTER TABLE race_history ADD COLUMN weather TEXT",
+        "ALTER TABLE race_history ADD COLUMN pace_label TEXT",
     ]
     for sql in migrations:
         try:
@@ -182,14 +193,31 @@ def save_history_db(all_results, base_dir=None, db_path=None):
 
         cur = conn.execute(
             "INSERT OR IGNORE INTO race_history "
-            "(race_id,date,racecourse,distance,surface,first_3f,race_name,race_class,track_condition,num_finishers) "
-            "VALUES (?,?,?,?,?,?,?,?,?,?)",
+            "(race_id,date,racecourse,distance,surface,first_3f,race_name,race_class,"
+            " track_condition,num_finishers,weather,pace_label) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
             (race_id, date_str, r.get('racecourse', ''),
              r.get('distance', 0), r.get('surface', ''), None,
              r.get('race_name', ''), r.get('race_class', ''),
-             r.get('track_condition', '良'), r.get('num_finishers', 0)),
+             r.get('track_condition', '良'), r.get('num_finishers', 0),
+             r.get('weather'), r.get('pace_label')),
         )
         new_races += cur.rowcount
+        # Stage 3 rescrape 用：既存行の新フィールドを UPDATE で充填
+        conn.execute(
+            "UPDATE race_history SET "
+            "  race_name      = COALESCE(NULLIF(?, ''), race_name), "
+            "  race_class     = COALESCE(NULLIF(?, ''), race_class), "
+            "  track_condition= COALESCE(?, track_condition), "
+            "  num_finishers  = COALESCE(?, num_finishers), "
+            "  weather        = COALESCE(?, weather), "
+            "  pace_label     = COALESCE(?, pace_label) "
+            "WHERE race_id = ?",
+            (r.get('race_name', ''), r.get('race_class', ''),
+             r.get('track_condition'), r.get('num_finishers'),
+             r.get('weather'), r.get('pace_label'),
+             race_id),
+        )
 
         for h in r.get('finishers', []):
             cur2 = conn.execute(
@@ -197,8 +225,10 @@ def save_history_db(all_results, base_dir=None, db_path=None):
                 "(race_id,date,racecourse,horse_name,horse_num,place,"
                 " running_style,agari3f,jockey,trainer,corner_3,distance,surface,"
                 " popularity,tansho_payout,fukusho_payout,margin,agari_rank,"
-                " class_grade,finish_time,time_diff_sec,chakusa_text) "
-                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                " class_grade,finish_time,time_diff_sec,chakusa_text,"
+                " weight_load,sex,age,body_weight,body_weight_diff,"
+                " bracket,corner_all,win_odds) "
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (race_id, date_str, r.get('racecourse', ''),
                  h.get('name', ''), h.get('num', 0), h.get('place', 99),
                  h.get('running_style', ''), h.get('agari3f', 0.0),
@@ -212,9 +242,43 @@ def save_history_db(all_results, base_dir=None, db_path=None):
                  r.get('race_class', ''),
                  h.get('finish_time'),
                  h.get('time_diff_sec'),
-                 h.get('chakusa_text', '')),
+                 h.get('chakusa_text', ''),
+                 h.get('weight_load'),
+                 h.get('sex', ''), h.get('age'),
+                 h.get('body_weight'), h.get('body_weight_diff'),
+                 h.get('bracket'), h.get('corner_all', ''),
+                 h.get('win_odds')),
             )
             new_horses += cur2.rowcount
+            # Stage 3 rescrape 用：既存行の新フィールドを UPDATE で充填
+            conn.execute(
+                "UPDATE horse_history SET "
+                "  finish_time      = COALESCE(?, finish_time), "
+                "  time_diff_sec    = COALESCE(?, time_diff_sec), "
+                "  chakusa_text     = COALESCE(NULLIF(?, ''), chakusa_text), "
+                "  margin           = COALESCE(?, margin), "
+                "  class_grade      = COALESCE(NULLIF(?, ''), class_grade), "
+                "  agari_rank       = COALESCE(?, agari_rank), "
+                "  weight_load      = COALESCE(?, weight_load), "
+                "  sex              = COALESCE(NULLIF(?, ''), sex), "
+                "  age              = COALESCE(?, age), "
+                "  body_weight      = COALESCE(?, body_weight), "
+                "  body_weight_diff = COALESCE(?, body_weight_diff), "
+                "  bracket          = COALESCE(?, bracket), "
+                "  corner_all       = COALESCE(NULLIF(?, ''), corner_all), "
+                "  win_odds         = COALESCE(?, win_odds), "
+                "  surface          = COALESCE(NULLIF(?, ''), surface) "
+                "WHERE race_id = ? AND horse_num = ?",
+                (h.get('finish_time'), h.get('time_diff_sec'),
+                 h.get('chakusa_text', ''), h.get('margin'),
+                 r.get('race_class', ''), h.get('agari_rank'),
+                 h.get('weight_load'), h.get('sex', ''), h.get('age'),
+                 h.get('body_weight'), h.get('body_weight_diff'),
+                 h.get('bracket'), h.get('corner_all', ''),
+                 h.get('win_odds'),
+                 h.get('surface', r.get('surface', '')),
+                 race_id, h.get('num', 0)),
+            )
 
     conn.commit()
     conn.close()
