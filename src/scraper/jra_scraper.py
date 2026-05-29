@@ -10,7 +10,7 @@ from src.utils.config import JRA_BASE, HEADERS, PLACE_NAMES
 from src.scraper.calendar import get_base_from_calendar, get_kaisai_on_date
 from src.scraper.parser import (
     parse_header, parse_rname, parse_hist, parse_horse,
-    get_class_from_racename,
+    get_class_from_racename, _detect_surface,
 )
 
 
@@ -367,6 +367,83 @@ def _parse_margin(text):
         return float(m.group(1))
     return 0.0
 
+
+def _extract_body_weight(texts, start_idx=10):
+    """テキスト列から馬体重(増減)を抽出。
+    フォーマット: '516(+4)' / '516(-2)' / '516' / '計不'
+    返り値: (body_weight: int|None, body_weight_diff: int|None)
+    """
+    for t in texts[start_idx:]:
+        s = t.strip()
+        m = re.match(r'^(\d{3,4})\s*[\(（]\s*([+-]?\d{1,3})\s*[\)）]', s)
+        if m:
+            return int(m.group(1)), int(m.group(2))
+        m = re.match(r'^(\d{3,4})\s*$', s)
+        if m:
+            v = int(m.group(1))
+            if 300 <= v <= 700:  # 馬体重の妥当範囲
+                return v, None
+    return None, None
+
+
+def _extract_sex_age(texts, start_idx=4, end_idx=6):
+    """性齢欄から性別と年齢を抽出。'牡3' / '牝4' / 'セ5' / '騙4' """
+    for t in texts[start_idx:end_idx]:
+        m = re.match(r'^([牡牝騸セ騙])\s*(\d+)', t.strip())
+        if m:
+            sex = m.group(1)
+            if sex == '騙':
+                sex = 'セ'
+            return sex, int(m.group(2))
+    return '', None
+
+
+def _extract_weight_load(texts, start_idx=4, end_idx=7):
+    """斤量を抽出。'57.0' / '54' / '57.5' 等。"""
+    for t in texts[start_idx:end_idx]:
+        s = t.strip()
+        m = re.match(r'^(\d{2}(?:\.\d)?)$', s)
+        if m:
+            v = float(m.group(1))
+            if 45.0 <= v <= 65.0:
+                return v
+    return None
+
+
+def _extract_win_odds(texts, start_idx=10):
+    """単勝オッズを抽出。row末尾付近の "NN.N" 形式の数字。
+    タイム('1:34.5')/上がり3F(NN.N同形式だが既に取得済)等と区別が難しいので、
+    indexが大きい後ろの方から探す。
+    """
+    for t in reversed(texts[start_idx:]):
+        s = t.strip()
+        m = re.match(r'^(\d{1,4}\.\d)$', s)
+        if m:
+            v = float(m.group(1))
+            if 1.0 <= v <= 9999.9:
+                return v
+    return None
+
+
+def _extract_weather_pace(header_text):
+    """ヘッダから天候とペース判定を抽出。"""
+    t = unicodedata.normalize('NFKC', header_text or '')
+    weather = None
+    wm = re.search(r'天候[\s:：]*([晴曇雨雪]+小?雨?)', t)
+    if wm:
+        weather = wm.group(1)
+    else:
+        for w in ['小雨', '小雪', '晴', '曇', '雨', '雪']:
+            if w in t:
+                weather = w
+                break
+    pace = None
+    pm = re.search(r'ペース[\s:：]*([HMS])', t)
+    if pm:
+        pace = pm.group(1)
+    return weather, pace
+
+
 def parse_result_soup(soup, racecourse, race_num, date, place_code):
     try:
         tables = soup.find_all('table')
@@ -378,7 +455,17 @@ def parse_result_soup(soup, racecourse, race_num, date, place_code):
         }
         dm = re.search(r'([\d,]+)\s*[メ]ートル\s*[（(]\s*([芝ダ])', header)
         info['distance'] = int(dm.group(1).replace(',', '')) if dm else 2000
-        info['surface'] = '芝' if dm and dm.group(2) == '芝' else 'ダート'
+        # surface: 堅実な多段判定（サイレントなフォールバック廃止）
+        surf = _detect_surface(header)
+        if surf in ('芝', 'ダート'):
+            info['surface'] = surf
+        elif surf == '障害':
+            return None  # 障害は履歴対象外
+        else:
+            # 最終手段: 距離regex由来
+            info['surface'] = '芝' if dm and dm.group(2) == '芝' else ('ダート' if dm and dm.group(2) == 'ダ' else None)
+            if info['surface'] is None:
+                return None  # 判定不能なら静かに捨てる（誤判定混入を避ける）
         c = header.replace('本賞金', '').replace('付加賞', '')
         sp = re.search(r'([぀-鿿゠-ヿa-zA-Z0-9]+(?:賞|杯|記念|特別|ステークス|カップ|トロフィー))', c)
         gen = re.search(r'(\d歳(?:以上)?(?:未勝利|1勝クラス|2勝クラス|3勝クラス|オープン))', header)
@@ -390,6 +477,10 @@ def parse_result_soup(soup, racecourse, race_num, date, place_code):
         tc_m = re.search(r'(良|稍重|重|不良)', header)
         info['track_condition'] = tc_m.group(1) if tc_m else '良'
         info['race_class'] = _extract_class(header)
+        # 天候・ペース判定（race-level）
+        weather, pace = _extract_weather_pace(header)
+        info['weather'] = weather
+        info['pace_label'] = pace
         finishers = []
         for row in tables[0].find_all('tr'):
             cells = row.find_all('td')
@@ -400,6 +491,9 @@ def parse_result_soup(soup, racecourse, race_num, date, place_code):
             if not pm:
                 continue
             place = int(pm.group(1))
+            # 枠番（texts[1]）
+            br_m = re.match(r'^(\d+)$', texts[1].strip()) if len(texts) > 1 else None
+            bracket = int(br_m.group(1)) if br_m else None
             num_m = re.match(r'^(\d+)$', texts[2].strip())
             num = int(num_m.group(1)) if num_m else 0
             name_m = re.match(
@@ -407,7 +501,13 @@ def parse_result_soup(soup, racecourse, race_num, date, place_code):
                 texts[3].strip(),
             )
             name = name_m.group(1).strip() if name_m else texts[3].strip()[:10]
-            pos_nums = re.findall(r'\d+', texts[9] if len(texts) > 9 else '')
+            # 性齢（texts[4]近辺）
+            sex, age = _extract_sex_age(texts, start_idx=4, end_idx=6)
+            # 斤量（texts[5]近辺）
+            weight_load = _extract_weight_load(texts, start_idx=4, end_idx=7)
+            # 通過順（既存ロジック：脚質推定用 + 全文保存）
+            corner_all_text = texts[9] if len(texts) > 9 else ''
+            pos_nums = re.findall(r'\d+', corner_all_text)
             if pos_nums:
                 positions = [int(n) for n in pos_nums[:4]]
                 first = positions[0]
@@ -415,6 +515,7 @@ def parse_result_soup(soup, racecourse, race_num, date, place_code):
                 style = '逃げ' if first == 1 else '先行' if avg <= 3 else '差し' if avg <= 7 else '追込'
             else:
                 style = '差し'
+            corner_all = '-'.join(pos_nums[:4]) if pos_nums else ''
             agari_m = re.search(r'(\d{2}\.\d)', texts[10]) if len(texts) > 10 else None
             agari = float(agari_m.group(1)) if agari_m else 0.0
             pop_m = re.match(r'^(\d+)$', texts[13].strip()) if len(texts) > 13 else None
@@ -422,6 +523,10 @@ def parse_result_soup(soup, racecourse, race_num, date, place_code):
             trainer = texts[12].strip() if len(texts) > 12 else ''
             margin_txt = texts[8].strip() if len(texts) > 8 else ''
             finish_time = _parse_finish_time(texts[7].strip() if len(texts) > 7 else '')
+            # 馬体重（texts[11]近辺、'516(+4)' 形式）
+            body_weight, body_weight_diff = _extract_body_weight(texts, start_idx=10)
+            # 単勝オッズ（row末尾付近の小数）
+            win_odds = _extract_win_odds(texts, start_idx=13)
             finishers.append({
                 'place': place, 'num': num, 'name': name,
                 'running_style': style, 'post_position': num,
@@ -432,6 +537,14 @@ def parse_result_soup(soup, racecourse, race_num, date, place_code):
                 'margin': _parse_margin(margin_txt),
                 'chakusa_text': margin_txt,
                 'finish_time': finish_time,
+                # 新フィールド
+                'bracket': bracket,
+                'sex': sex, 'age': age,
+                'weight_load': weight_load,
+                'body_weight': body_weight,
+                'body_weight_diff': body_weight_diff,
+                'corner_all': corner_all,
+                'win_odds': win_odds,
             })
         divs = parse_dividends(soup)
         if not finishers:
