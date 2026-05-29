@@ -175,14 +175,15 @@ def parse_horse(cells, rc, surf):
                 break
 
         # 騎手・調教師（馬名以外の日本語リンクを順番に取得）
+        # JRAカードの実際の列順は [調教師, 騎手]（2026-05-28 確定版で確認）
         jp_links = []
         for col_idx in range(len(cells)):
             for a in cells[col_idx].find_all('a'):
                 txt = a.get_text(strip=True)
                 if txt != name and re.search(r'[゠-ヿ一-鿿]', txt) and len(txt) >= 2:
                     jp_links.append(txt)
-        jockey  = jp_links[0] if jp_links else ''
-        trainer = jp_links[1] if len(jp_links) >= 2 else ''
+        trainer = jp_links[0] if jp_links else ''
+        jockey  = jp_links[1] if len(jp_links) >= 2 else ''
 
         # 父名（リンクなし・カタカナ3文字以上のテキストセル）
         sire = ''
