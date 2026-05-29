@@ -1,5 +1,40 @@
 import re
+import unicodedata
 from src.utils.config import PLACE_NAMES
+
+
+def _detect_surface(text):
+    """テキストから芝/ダート/障害を堅実に判定する。
+
+    JRAの記法を多段で試す。判定不能なら None を返す（サイレントなフォールバックは廃止）。
+    返り値: '芝' | 'ダート' | '障害' | None
+    """
+    if not text:
+        return None
+    t = unicodedata.normalize('NFKC', text)
+    # 1) 障害レースの明示
+    if any(kw in t for kw in ['障害', 'ジャンプ', '(J)', '(J)', 'J・G', 'J-G']):
+        return '障害'
+    # 2) "NNNNメートル（芝/ダ" の明示形式（最強パターン）
+    m = re.search(r'メートル\s*[（(]\s*([芝ダ])', t)
+    if m:
+        return '芝' if m.group(1) == '芝' else 'ダート'
+    # 3) "芝NNNN" / "ダNNNN" 形式（過去走テキスト等）
+    has_turf_dist = bool(re.search(r'芝\s*\d{3,4}', t))
+    has_dirt_dist = bool(re.search(r'ダ(?:ート)?\s*\d{3,4}', t))
+    if has_turf_dist and not has_dirt_dist:
+        return '芝'
+    if has_dirt_dist and not has_turf_dist:
+        return 'ダート'
+    # 4) 単独で "ダート" / "芝" が含まれる
+    has_dirt = 'ダート' in t
+    has_turf = '芝' in t
+    if has_turf and not has_dirt:
+        return '芝'
+    if has_dirt and not has_turf:
+        return 'ダート'
+    # 判定不能（サイレントなフォールバック無し）
+    return None
 
 
 def get_class_from_racename(rname: str) -> str:
@@ -35,8 +70,9 @@ def parse_header(text):
         if name in text:
             info['racecourse'] = name
             break
-    _shogai_kws = ['障害', 'ジャンプ', '(J)', '（J）', 'J・G', 'J-G']
-    if any(kw in text for kw in _shogai_kws):
+    # 障害判定 + surface判定を堅実なヘルパーで一括
+    surf = _detect_surface(text)
+    if surf == '障害':
         info['surface'] = '障害'
         info['distance'] = 0
         info['direction'] = ''
@@ -44,12 +80,15 @@ def parse_header(text):
     dm = re.search(r'([\d,]+)\s*メートル\s*[（(]\s*([芝ダ])[^）)]*([右左])', text)
     if dm:
         info['distance'] = int(dm.group(1).replace(',', ''))
-        info['surface'] = '芝' if dm.group(2) == '芝' else 'ダート'
         info['direction'] = dm.group(3)
     else:
         info['distance'] = 2000
-        info['surface'] = '芝'
         info['direction'] = '右'
+    if surf in ('芝', 'ダート'):
+        info['surface'] = surf
+    else:
+        # 距離regex由来のsurface推定（フォールバック）
+        info['surface'] = ('芝' if dm and dm.group(2) == '芝' else 'ダート') if dm else None
     for kw, cls in [
         ('G1', 'G1'), ('G2', 'G2'), ('G3', 'G3'),
         ('3勝クラス', '3勝クラス'), ('2勝クラス', '2勝クラス'),
@@ -89,7 +128,8 @@ def parse_hist(text):
     if not dm:
         dm = re.search(r'(\d{4})', text)
     h['distance'] = int(dm.group(1)) if dm else 2000
-    h['surface'] = 'ダート' if 'ダ' in text else '芝'
+    surf = _detect_surface(text)
+    h['surface'] = surf if surf in ('芝', 'ダート') else '芝'  # 過去走では最終手段として芝
     for cond in ['不良', '重', '稍重', '良']:
         if cond in text:
             h['condition'] = cond
