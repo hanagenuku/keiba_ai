@@ -70,9 +70,8 @@ def parse_header(text):
         if name in text:
             info['racecourse'] = name
             break
-    # 障害判定 + surface判定を堅実なヘルパーで一括
-    surf = _detect_surface(text)
-    if surf == '障害':
+    _shogai_kws = ['障害', 'ジャンプ', '(J)', '（J）', 'J・G', 'J-G']
+    if any(kw in text for kw in _shogai_kws):
         info['surface'] = '障害'
         info['distance'] = 0
         info['direction'] = ''
@@ -80,15 +79,12 @@ def parse_header(text):
     dm = re.search(r'([\d,]+)\s*メートル\s*[（(]\s*([芝ダ])[^）)]*([右左])', text)
     if dm:
         info['distance'] = int(dm.group(1).replace(',', ''))
+        info['surface'] = '芝' if dm.group(2) == '芝' else 'ダート'
         info['direction'] = dm.group(3)
     else:
         info['distance'] = 2000
+        info['surface'] = '芝'
         info['direction'] = '右'
-    if surf in ('芝', 'ダート'):
-        info['surface'] = surf
-    else:
-        # 距離regex由来のsurface推定（フォールバック）
-        info['surface'] = ('芝' if dm and dm.group(2) == '芝' else 'ダート') if dm else None
     for kw, cls in [
         ('G1', 'G1'), ('G2', 'G2'), ('G3', 'G3'),
         ('3勝クラス', '3勝クラス'), ('2勝クラス', '2勝クラス'),
@@ -128,8 +124,7 @@ def parse_hist(text):
     if not dm:
         dm = re.search(r'(\d{4})', text)
     h['distance'] = int(dm.group(1)) if dm else 2000
-    surf = _detect_surface(text)
-    h['surface'] = surf if surf in ('芝', 'ダート') else '芝'  # 過去走では最終手段として芝
+    h['surface'] = 'ダート' if 'ダ' in text else '芝'
     for cond in ['不良', '重', '稍重', '良']:
         if cond in text:
             h['condition'] = cond
