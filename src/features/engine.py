@@ -8,11 +8,13 @@ import pickle
 
 from src.utils.config import POST_BIAS, POST_BIAS_BY_ZONE
 from src.models.predict import softmax_probs, calibrate_and_renormalize
+from src.models.calibration_xgb import load_xgb_calibrator
 
 # ── グローバルコンテキスト（init_engine()で設定） ─────────────────
 _XGB_FUKUSHO_MODEL = None
 _XGB_FEATURE_COLS  = None
 _CALIBRATOR        = None
+_XGB_CALIBRATOR    = None
 _PACE_MODEL        = None
 _W                 = {
     'rl':       0.35,   # Phase 2: スピード指数ベースRLスコア
@@ -42,7 +44,7 @@ def init_engine(base_dir,
                 horse_dist_dict=None, horse_course_dict=None,
                 horse_venue_dist_dict=None):
     """エンジンのグローバル変数を設定する。ノートブックのセル4で呼ぶ"""
-    global _XGB_FUKUSHO_MODEL, _XGB_FEATURE_COLS, _CALIBRATOR, _PACE_MODEL
+    global _XGB_FUKUSHO_MODEL, _XGB_FEATURE_COLS, _CALIBRATOR, _XGB_CALIBRATOR, _PACE_MODEL
     global _W, _horse_dist_dict, _horse_course_dict, _horse_venue_dist_dict, _post_zone_bias
     global _jockey_dict, _trainer_dict, _hist_db_path
     _hist_db_path = os.path.join(base_dir, 'data', 'history.db')
@@ -66,6 +68,9 @@ def init_engine(base_dir,
     elif os.path.exists(f'{base_dir}/data/calibrator.pkl'):
         with open(f'{base_dir}/data/calibrator.pkl', 'rb') as f:
             _CALIBRATOR = pickle.load(f)
+
+    # XGB専用キャリブレーター（calibrate_xgb.py で学習・保存）
+    _XGB_CALIBRATOR = load_xgb_calibrator(base_dir)
 
     if pace_model is not None:
         _PACE_MODEL = pace_model
@@ -189,6 +194,7 @@ def init_engine(base_dir,
 
     xgb_ok = _XGB_FUKUSHO_MODEL is not None
     print(f'✅ 特徴量エンジン初期化完了 (XGB:{xgb_ok}, Cal:{_CALIBRATOR is not None}, '
+          f'XGB_Cal:{_XGB_CALIBRATOR is not None}, '
           f'馬別統計:{len(_horse_dist_dict)}件, 枠バイアス:{len(_post_zone_bias)}件, '
           f'騎手:{len(_jockey_dict)}件, 調教師:{len(_trainer_dict)}件)')
 
@@ -1435,9 +1441,10 @@ def calc_all(race, bias_data=None):
                 xrow   = {c: xfeats.get(c, 5.0) for c in _XGB_FEATURE_COLS}
                 X_pred = _pd_xgb.DataFrame([xrow])[_XGB_FEATURE_COLS].fillna(5.0)
                 prob   = float(_XGB_FUKUSHO_MODEL.predict_proba(X_pred)[0][1])
-                if _CALIBRATOR is not None:
+                # XGB専用キャリブレーターを適用（旧 _CALIBRATOR は型違いなので使わない）
+                if _XGB_CALIBRATOR is not None:
                     import numpy as _np_cal
-                    prob = float(_np_cal.clip(_CALIBRATOR.transform([prob])[0], 0.01, 0.99))
+                    prob = float(_np_cal.clip(_XGB_CALIBRATOR.transform([prob])[0], 0.01, 0.99))
                 total  = round(prob * 10, 2)
             except Exception:
                 total = sum(sc.get(k, 5.0) * _W.get(k, 0) for k in _W if _W.get(k, 0) > 0)
