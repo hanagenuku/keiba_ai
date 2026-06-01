@@ -79,7 +79,7 @@ def build_training_data(base_dir, output_csv='data/horse_features.csv',
                class_grade, agari_rank, field_size, margin,
                weight_load, sex, age, body_weight, body_weight_diff,
                bracket, win_odds, popularity, race_name,
-               COALESCE(last_3f, agari3f) AS last_3f,
+               agari3f AS last_3f,
                time_diff_sec
         FROM horse_history
         WHERE race_id = ?
@@ -138,7 +138,7 @@ def build_training_data(base_dir, output_csv='data/horse_features.csv',
         # 各馬の過去走履歴を取得（当該レース以前の最新10走）
         for h in horse_objs:
             hist_rows = conn.execute("""
-                SELECT agari3f, COALESCE(last_3f, agari3f) AS last_3f,
+                SELECT agari3f, agari3f AS last_3f,
                        place, corner_3, corner_4, distance, surface, racecourse,
                        date, race_id, race_name, agari_rank, field_size, margin,
                        running_style, class_grade, time_diff_sec
