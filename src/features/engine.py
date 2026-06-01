@@ -1184,6 +1184,73 @@ def calc_features_for_xgb(h, race):
     return feats
 
 
+def add_relative_features(all_xfeats):
+    """22個の相対特徴量をフィールド全馬のxfeatsに一括追加する（in-place）。
+
+    XGB予測の前に全馬の絶対特徴量が揃った状態で呼ぶこと。
+    rank: 1=ベスト。vs_field: 正=平均より良い。
+    """
+    n = len(all_xfeats)
+    if n == 0:
+        return
+
+    def _assign(src_key, default, prefix, reverse=True):
+        vals = [xf.get(src_key, default) for xf in all_xfeats]
+        mean_v = sum(vals) / n
+        indexed = sorted(enumerate(vals), key=lambda kv: kv[1], reverse=reverse)
+        ranks = [0] * n
+        for rank_i, (idx, _) in enumerate(indexed, start=1):
+            ranks[idx] = rank_i
+        sign = 1 if reverse else -1  # lower_is_better → vs_field = mean - val
+        for i, xf in enumerate(all_xfeats):
+            xf[prefix + '_rank']     = float(ranks[i])
+            xf[prefix + '_vs_field'] = round(sign * (vals[i] - mean_v), 4)
+
+    # RL系: スピード指数・近走成績（高いほど良い）
+    _assign('f_speed_avg',      50.0,  'rl_f_speed_avg')
+    _assign('f_speed_last',     50.0,  'rl_f_speed_last')
+    _assign('f_recent',          5.0,  'rl_f_recent')
+    _assign('f_recent_fukusho', 0.33,  'rl_f_recent_fukusho')
+    # 上がりタイム: 低いほど速い → reverse=False、vs_field = mean - val（正=速い）
+    _assign('f_late_speed',     37.0,  'rl_f_late_speed',  reverse=False)
+
+    # CL系: 騎手・調教師・距離・コース・血統適性（高いほど良い）
+    _assign('f_jockey',          5.0,  'cl_f_jockey')
+    _assign('f_trainer',         5.0,  'cl_f_trainer')
+    _assign('f_dist_fukusho',   0.33,  'cl_f_dist_fukusho')
+    _assign('f_course_fukusho', 0.33,  'cl_f_course_fukusho')
+    _assign('f_blood',           5.0,  'cl_f_blood')
+
+    # f_rl_rank / f_cl_rank: 複合スコアで順位付け
+    for xf in all_xfeats:
+        xf['_rl_c'] = (
+            xf.get('f_speed_avg',       50.0) * 0.40 +
+            xf.get('f_recent',           5.0) * 2.00 +
+            (37.0 - xf.get('f_late_speed', 37.0)) * 5.00 +
+            xf.get('f_recent_fukusho',  0.33) * 5.00
+        )
+        xf['_cl_c'] = (
+            xf.get('f_jockey',          5.0) * 0.30 +
+            xf.get('f_dist_fukusho',   0.33) * 10.0 +
+            xf.get('f_course_fukusho', 0.33) * 10.0 +
+            xf.get('f_blood',           5.0) * 0.10 +
+            xf.get('f_trainer',         5.0) * 0.20
+        )
+
+    rl_s = sorted(enumerate([x['_rl_c'] for x in all_xfeats]), key=lambda kv: kv[1], reverse=True)
+    cl_s = sorted(enumerate([x['_cl_c'] for x in all_xfeats]), key=lambda kv: kv[1], reverse=True)
+    rl_r, cl_r = [0] * n, [0] * n
+    for ri, (idx, _) in enumerate(rl_s, 1):
+        rl_r[idx] = ri
+    for ri, (idx, _) in enumerate(cl_s, 1):
+        cl_r[idx] = ri
+    for i, xf in enumerate(all_xfeats):
+        xf['f_rl_rank'] = float(rl_r[i])
+        xf['f_cl_rank'] = float(cl_r[i])
+        xf.pop('_rl_c', None)
+        xf.pop('_cl_c', None)
+
+
 def calc_fukusho_prob(win_prob, num_horses):
     """後方互換用。calc_harville_probs 移行後はこちらは使わない。"""
     p = max(0.0, min(1.0, win_prob))
@@ -1407,6 +1474,8 @@ def calc_all(race, bias_data=None):
     rc   = race.get('racecourse', '')
     surf = race.get('surface', '芝')
 
+    # ── Pass 1: 全馬の絶対特徴量を収集 ───────────────────────────────────
+    horse_data = []  # (h, sc, career, xfeats)
     for h in race['horses']:
         # 騎手・調教師名から勝率を引く。スペース除去で正規化してlookup
         if 'jockey_rate' not in h:
@@ -1433,11 +1502,18 @@ def calc_all(race, bias_data=None):
             'rotation': f_rotation(h, race),
         }
         career = analyze_career(h, race)
+        xfeats = calc_features_for_xgb(h, race) if use_xgb else {}
+        horse_data.append((h, sc, career, xfeats))
 
+    # ── 相対特徴量をフィールド全体で一括計算 ────────────────────────────
+    if use_xgb:
+        add_relative_features([xf for _, _, _, xf in horse_data])
+
+    # ── Pass 2: XGB予測（相対特徴量込み） ───────────────────────────────
+    for h, sc, career, xfeats in horse_data:
         if use_xgb:
             try:
                 import pandas as _pd_xgb
-                xfeats = calc_features_for_xgb(h, race)
                 xrow   = {c: xfeats.get(c, 5.0) for c in _XGB_FEATURE_COLS}
                 X_pred = _pd_xgb.DataFrame([xrow])[_XGB_FEATURE_COLS].fillna(5.0)
                 prob   = float(_XGB_FUKUSHO_MODEL.predict_proba(X_pred)[0][1])
