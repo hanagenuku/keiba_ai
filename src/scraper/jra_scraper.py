@@ -133,7 +133,7 @@ def _parse_shutuba(soup, racecourse, race_num, date, place_code, hist_db_path):
             return None
         header_text = tables[0].get_text(' ', strip=True)
         info = parse_header(header_text)
-        if info.get('surface') == '障害':
+        if info.get('surface') in ('障害', '不明'):
             return None
         # suffixズレ検知: ページの日付が指定日と合わない場合はスキップ
         expected_date = f'{date[:4]}-{date[4:6]}-{date[6:8]}'
@@ -454,7 +454,7 @@ def parse_result_soup(soup, racecourse, race_num, date, place_code):
             'race_id': f'{date}_{place_code}_{race_num:02d}',
         }
         dm = re.search(r'([\d,]+)\s*[メ]ートル\s*[（(]\s*([芝ダ])', header)
-        info['distance'] = int(dm.group(1).replace(',', '')) if dm else 2000
+        info['distance'] = int(dm.group(1).replace(',', '')) if dm else 0
         # surface: 堅実な多段判定（サイレントなフォールバック廃止）
         surf = _detect_surface(header)
         if surf in ('芝', 'ダート'):

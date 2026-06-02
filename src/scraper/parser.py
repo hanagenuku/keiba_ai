@@ -82,9 +82,10 @@ def parse_header(text):
         info['surface'] = '芝' if dm.group(2) == '芝' else 'ダート'
         info['direction'] = dm.group(3)
     else:
-        info['distance'] = 2000
-        info['surface'] = '芝'
-        info['direction'] = '右'
+        info['distance'] = 0
+        info['surface'] = '不明'
+        info['direction'] = ''
+        print(f'  ⚠ surface判定失敗: {text[:80]}')
     for kw, cls in [
         ('G1', 'G1'), ('G2', 'G2'), ('G3', 'G3'),
         ('3勝クラス', '3勝クラス'), ('2勝クラス', '2勝クラス'),
