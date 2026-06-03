@@ -43,6 +43,7 @@ def _get_history_before(conn, horse_name, before_date_str, limit=10):
             SELECT h.agari3f, h.place, h.corner_3, h.distance, h.surface,
                    h.racecourse, h.date, h.race_id, h.running_style,
                    h.agari_rank, h.field_size, h.margin,
+                   h.finish_time, h.time_diff_sec,
                    COALESCE(h.class_grade, r.race_class, '1勝') AS race_class,
                    COALESCE(r.track_condition, '良')             AS track_condition,
                    COALESCE(r.first_3f, 0.0)                    AS first_3f,
@@ -115,6 +116,8 @@ def _get_history_before(conn, horse_name, before_date_str, limit=10):
             "condition":        row['track_condition'] or '良',
             # タイム・コース
             "first_3f":         float(row['first_3f'] or 0.0),
+            "finish_time":      float(row['finish_time']) if row['finish_time'] else None,
+            "time_diff_sec":    float(row['time_diff_sec']) if row['time_diff_sec'] else None,
             "distance":         int(row['distance'] or 1600),
             "surface":          row['surface'] or '芝',
             "racecourse":       row['racecourse'] or '',
