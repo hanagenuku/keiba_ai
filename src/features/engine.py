@@ -1181,6 +1181,43 @@ def calc_features_for_xgb(h, race):
     else:
         feats.update({'f_speed_avg': 50.0, 'f_speed_max': 50.0, 'f_speed_last': 50.0, 'f_speed_trend': 0.0})
 
+    # ── Stage 3 新特徴量 ────────────────────────────────────────
+    # 性別（牡=0, 牝=1, セ=2）
+    _sex_map = {'牡': 0, '牝': 1, 'セ': 2, '騸': 2}
+    feats['f_sex']    = float(_sex_map.get(h.get('sex', '牡') or '牡', 0))
+    # 年齢
+    feats['f_age']    = float(int(h.get('age', 4) or 4))
+
+    # 馬場状態（当該レース）
+    _tc_map = {'良': 0.0, '稍重': 1.0, '重': 2.0, '不良': 3.0}
+    feats['f_track_cond'] = float(_tc_map.get(race.get('track_condition', '良') or '良', 0.0))
+
+    # 重馬場適性（過去走で稍重以上での複勝率）
+    heavy_runs = [r for r in hist if r.get('track_condition', '良') in ('稍重', '重', '不良')]
+    feats['f_heavy_track_rate'] = (
+        float(sum(1 for r in heavy_runs if r.get('place', 10) <= 3) / len(heavy_runs))
+        if heavy_runs else 0.33
+    )
+
+    # クラスレベル（当該レースの格）
+    _cls_map = {'新馬': 1, '未勝利': 2, '1勝': 3, '1勝クラス': 3, '2勝': 4, '2勝クラス': 4,
+                '3勝': 5, '3勝クラス': 5, 'OP': 6, 'オープン': 6, 'L': 7, 'G3': 8, 'G2': 9, 'G1': 10}
+    feats['f_class_level'] = float(_cls_map.get(race.get('race_class', '') or '', 3))
+
+    # クラスジャンプ（前走クラスとの差）
+    if hist:
+        prev_cls = _cls_map.get(hist[-1].get('race_class', '') or hist[-1].get('class', '') or '', 3)
+        feats['f_class_jump'] = float(feats['f_class_level'] - prev_cls)
+    else:
+        feats['f_class_jump'] = 0.0
+
+    # 走破タイム平均・勝ち馬差平均（過去走）
+    ft_list = [float(r.get('finish_time') or 0) for r in hist if r.get('finish_time')]
+    feats['f_finish_time_avg'] = float(sum(ft_list) / len(ft_list)) if ft_list else 0.0
+    td_list = [float(r.get('time_diff_sec') or 0) for r in hist
+               if r.get('time_diff_sec') is not None and r.get('time_diff_sec') != 0]
+    feats['f_time_diff_avg'] = float(sum(td_list) / len(td_list)) if td_list else 0.0
+
     return feats
 
 
@@ -1220,6 +1257,12 @@ def add_relative_features(all_xfeats):
     _assign('f_dist_fukusho',   0.33,  'cl_f_dist_fukusho')
     _assign('f_course_fukusho', 0.33,  'cl_f_course_fukusho')
     _assign('f_blood',           5.0,  'cl_f_blood')
+    # Stage 3 新特徴量の相対化
+    _assign('f_heavy_track_rate', 0.33, 'cl_f_heavy_track')
+    _assign('f_weight_load',      5.0,  'cl_f_weight_load')
+    # finish_time_avg: 低いほど速い
+    _assign('f_finish_time_avg',  0.0,  'rl_f_finish_time',  reverse=False)
+    _assign('f_time_diff_avg',    0.0,  'rl_f_time_diff',    reverse=False)
 
     # f_rl_rank / f_cl_rank: 複合スコアで順位付け
     for xf in all_xfeats:

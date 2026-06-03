@@ -47,7 +47,9 @@ BASE_URL = 'https://raw.githubusercontent.com/hanagenuku/keiba_ai/main'
 files = [
     'src/tools/__init__.py', 'src/tools/tune_weights.py',
     'src/tools/calibrate.py', 'src/tools/analyze_divergence.py',
-    'src/tools/rescrape_history.py', 'src/features/engine.py',
+    'src/tools/rescrape_history.py', 'src/tools/build_training_data.py',
+    'src/tools/train_xgb.py', 'src/tools/calibrate_xgb.py',
+    'src/features/engine.py',
     'src/utils/config.py', 'src/utils/db.py', 'src/utils/model_registry.py',
     'src/scraper/parser.py', 'src/scraper/jra_scraper.py',
     'src/models/__init__.py', 'src/models/calibration.py', 'src/models/predict.py',
@@ -112,6 +114,12 @@ print('done')
 - WEIGHT_KEYS に rl/maturity/rotation 追加
 - エンジンから f_rl/f_maturity/f_rotation をインポートし sc 辞書に追加
 
+### 2026-06-03：XGBoost再学習準備（engine.py + train_xgb.py + KEIBA_XGB_retrain.ipynb）
+- `calc_features_for_xgb` に8個の新特徴量追加（f_sex, f_age, f_track_cond, f_heavy_track_rate, f_class_level, f_class_jump, f_finish_time_avg, f_time_diff_avg）
+- `add_relative_features` に4列の相対化追加（cl_f_heavy_track, cl_f_weight_load, rl_f_finish_time, rl_f_time_diff）
+- `train_xgb.py` ハイパーパラメータ更新（n_estimators=500, min_child_weight=10, early_stopping_rounds=50）
+- `KEIBA_XGB_retrain.ipynb` 作成（セル1〜6: 学習データ生成→再学習→キャリブレーション→統合テスト）
+
 ### 2026-06-03：Stage3 全レース再スクレイプ完了
 - KEIBA_Stage3_rescrape.ipynb を作成・実行（v5 URL構造を使用）
 - race_history: 4,893件 / horse_history: 67,843件
@@ -163,10 +171,12 @@ print('done')
 DESIGN.md の Phase 0〜3 はすべて実装完了（2026-05-25）。
 
 ### 次にやること（優先順）
-1. **Stage3 列マッピング修正**（bracket/win_odds/body_weight が 0〜6.5%）← 要調査
+1. **KEIBA_XGB_retrain.ipynb 実行**（XGBoost再学習）← 実装完了・実行待ち
+   - セル1〜6を順番に実行（所要15〜30分）
+   - 合格基準: AUC≥0.77 / Brier≤0.150 / cal_prob合計2.8〜3.2
+2. **Stage3 列マッピング修正**（bracket/win_odds/body_weight が 0〜6.5%）← 要調査
    - JRA結果ページの実際の列順を確認し、`parse_result_page()` の tx インデックスを修正
    - 修正後に Stage3 を再実行（再開ロジックあり・完了済み開催日は自動スキップ）
-2. **過去データノートのセル7実行**（pkl・CSV再生成）← チューニング前に必須
 3. **チューニングノート実行**（rl/maturity/rotation を含む重み最適化）→ optimal_weights.json 更新
 4. **週末の実運用**で動作確認・ROI計測
 
