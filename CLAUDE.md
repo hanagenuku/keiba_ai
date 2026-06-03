@@ -23,7 +23,7 @@ JRA競馬AI予想システム。Google Colab + Google Drive で運用。
 ## データ・モデル構造
 ```
 data/
-  history.db      # 学習データ（horse_history: 62,835件 / race_history: 4,646件）
+  history.db      # 学習データ（horse_history: 67,843件 / race_history: 4,893件）
   keiba.db        # 予想・ベット結果（bets, bet_simulation, results）
   optimal_weights.json  # チューニング済み重み（※Phase2-3後に再チューニング必要）
   calibrator.pkl
@@ -112,6 +112,17 @@ print('done')
 - WEIGHT_KEYS に rl/maturity/rotation 追加
 - エンジンから f_rl/f_maturity/f_rotation をインポートし sc 辞書に追加
 
+### 2026-06-03：Stage3 全レース再スクレイプ完了
+- KEIBA_Stage3_rescrape.ipynb を作成・実行（v5 URL構造を使用）
+- race_history: 4,893件 / horse_history: 67,843件
+- surface/track_condition/race_class/weather/weight_load/sex/age/corner_all/finish_time を補完
+- bracket/win_odds/body_weight は列マッピングのズレにより未取得（要修正）
+- ランタイム切れ後の再開ロジック組み込み済み（開催日×競馬場単位でスキップ）
+
+### 2026-05-25：KEIBA_Stage3_rescrape.ipynb 作成・src/ バグ修正
+- parser.py / jra_scraper.py の surface フォールバックを `'不明'` に統一
+- `_parse_shutuba()` が `surface='不明'` のレースをスキップするよう修正
+
 ### 2026-05-22：history.db 8頭打ち切り補完・重みチューニング
 - horse_history: 34,086件 → 62,835件（全頭取得に改善）
 - ECE: 0.0726 → 0.0270
@@ -126,6 +137,9 @@ print('done')
 |------|--------|------|
 | optimal_weights.json が旧キー（rl/maturity/rotation なし） | 高 | チューニング再実行が必要 |
 | 過去データノートのセル7（pkl再生成）未実行 | 中 | チューニング前に必ず実行すること |
+| horse_history.body_weight が 6.5% しか埋まっていない | 中 | Stage3の列順ズレが原因の可能性。tx[13]の内容を確認して修正が必要 |
+| horse_history.bracket が 0% | 中 | tx[1]が枠番でない可能性（horse_numと混在？）。列マッピング要確認 |
+| horse_history.win_odds が 0% | 中 | tx[11]が単勝オッズでない可能性。列マッピング要確認 |
 | f_rotation のローテ照合は1シーズン後から有効 | 低 | データ蓄積待ち |
 | 騎手DBが少数件 | 中 | save_history_dbで週次蓄積→自然解消 |
 
@@ -139,7 +153,7 @@ print('done')
 
 ## 現在の作業状況（セッション引き継ぎ用）
 
-### 最終更新: 2026-05-25
+### 最終更新: 2026-06-03
 
 ---
 
@@ -149,9 +163,24 @@ print('done')
 DESIGN.md の Phase 0〜3 はすべて実装完了（2026-05-25）。
 
 ### 次にやること（優先順）
-1. **過去データノートのセル7実行**（pkl・CSV再生成）← まだ未実行！チューニング前に必須
-2. **チューニングノート実行**（rl/maturity/rotation を含む重み最適化）→ optimal_weights.json 更新
-3. **週末の実運用**で動作確認・ROI計測
+1. **Stage3 列マッピング修正**（bracket/win_odds/body_weight が 0〜6.5%）← 要調査
+   - JRA結果ページの実際の列順を確認し、`parse_result_page()` の tx インデックスを修正
+   - 修正後に Stage3 を再実行（再開ロジックあり・完了済み開催日は自動スキップ）
+2. **過去データノートのセル7実行**（pkl・CSV再生成）← チューニング前に必須
+3. **チューニングノート実行**（rl/maturity/rotation を含む重み最適化）→ optimal_weights.json 更新
+4. **週末の実運用**で動作確認・ROI計測
+
+### Stage3 再スクレイプ 完了状況（2026-06-03）
+```
+race_history （4,893件）
+  surface: 100%  track_condition: 94.6%  race_class: 94.7%
+  weather: 94.5%  num_finishers: 95.0%  race_name: 100%
+
+horse_history （67,843件）
+  surface: 100%  weight_load: 95.2%  sex/age: 90.8%
+  corner_all: 94.5%  finish_time: 95.2%
+  ❌ body_weight: 6.5%  bracket: 0%  win_odds: 0%  ← 要修正
+```
 
 ### セッション開始時の確認事項
 - PATをユーザーから取得（毎セッション必要）
