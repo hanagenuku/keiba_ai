@@ -1264,9 +1264,18 @@ def add_relative_features(all_xfeats):
         return
 
     def _assign(src_key, default, prefix, reverse=True):
+        import math
         vals = [xf.get(src_key, default) for xf in all_xfeats]
-        mean_v = sum(vals) / n
-        indexed = sorted(enumerate(vals), key=lambda kv: kv[1], reverse=reverse)
+        # NaN を除いた有効値で mean を計算
+        valid_vals = [v for v in vals if v is not None and not (isinstance(v, float) and math.isnan(v))]
+        mean_v = sum(valid_vals) / len(valid_vals) if valid_vals else default
+        # NaN は sort で末尾に置く（reverse=True なら最低ランク扱い）
+        def _sort_key(kv):
+            v = kv[1]
+            if v is None or (isinstance(v, float) and math.isnan(v)):
+                return float('-inf') if reverse else float('inf')
+            return v
+        indexed = sorted(enumerate(vals), key=_sort_key, reverse=reverse)
         ranks = [0] * n
         for rank_i, (idx, _) in enumerate(indexed, start=1):
             ranks[idx] = rank_i
