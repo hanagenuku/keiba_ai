@@ -13,65 +13,52 @@ def get_base_from_calendar(place_code, date_str, calendar=None):
 
 
 def get_kaisai_on_date(date_str, sess, calendar=None):
-    """指定日の開催情報を取得（カレンダー＋thisweek補完）"""
-    cal = calendar if calendar is not None else _DEFAULT_CALENDAR
+    """指定日の開催情報を取得（出走表一覧ページから正確なkai/nichiを取得）"""
     links = {}
-    for pc in cal:
-        base = get_base_from_calendar(pc, date_str, cal)
-        if base:
-            links[base] = date_str
-            print(f"  📅 {PLACE_NAMES.get(pc, '?')} → {base}")
 
-    thisweek_pcs = set()
+    # ① 出走表一覧(pw01dli00)から pw01drl00 形式でkai/nichiを取得（最も信頼性が高い）
     try:
-        resp = sess.get(f'{JRA_BASE}/keiba/thisweek/', timeout=15)
-        resp.encoding = 'shift_jis'
-        for a in BeautifulSoup(resp.text, 'lxml').find_all('a', href=True):
-            href = a['href']
-            if 'pw01dde01' not in href:
-                continue
-            m = re.search(r'pw01dde01(\d{2})(\d{4})(\d{2})(\d{2})(\d{8})', href)
+        r = sess.post(f'{JRA_BASE}/JRADB/accessD.html',
+                      data={'cname': 'pw01dli00/F3', 'CNAME': 'pw01dli00/F3'}, timeout=15)
+        r.encoding = 'shift_jis'
+        soup = BeautifulSoup(r.text, 'lxml')
+        for tag in soup.find_all(onclick=True):
+            oc = tag.get('onclick', '')
+            m = re.search(r'pw01drl00(\d{2})(\d{4})(\d{2})(\d{2})(\d{8})', oc)
             if not m:
                 continue
-            pc_tw = m.group(1)
-            date_tw = m.group(5)
-            if date_tw != date_str:
+            pc, year, kai, nichi, date = m.group(1), m.group(2), m.group(3), m.group(4), m.group(5)
+            if date != date_str:
                 continue
-            thisweek_pcs.add(pc_tw)
-            base_tw = f'pw01dde01{m.group(1)}{m.group(2)}{m.group(3)}{m.group(4)}'
-            if base_tw not in links:
-                links[base_tw] = date_str
-                print(f"  🌐 thisweek補完: {PLACE_NAMES.get(pc_tw, '?')} → {base_tw}")
-        if thisweek_pcs:
-            links = {b: d for b, d in links.items()
-                     if re.search(r'pw01dde01(\d{2})', b) and
-                     re.search(r'pw01dde01(\d{2})', b).group(1) in thisweek_pcs}
-            for pc in cal:
-                if pc not in thisweek_pcs:
-                    base_cal = get_base_from_calendar(pc, date_str, cal)
-                    if base_cal:
-                        print(f"  ⏭ {PLACE_NAMES.get(pc, '?')} カレンダーにあるがthisweekになし → スキップ")
+            base = f'pw01dde01{pc}{year}{kai}{nichi}'
+            if base not in links:
+                links[base] = date_str
+                print(f"  📅 {PLACE_NAMES.get(pc, '?')} → {base}")
     except Exception as e:
-        print(f"  ⚠ thisweek取得失敗: {e}")
+        print(f"  ⚠ 出走表一覧取得失敗: {e}")
 
+    # ② thisweek補完（dli00で取得できなかった会場を補完）
     if not links:
         try:
-            print(f"  ⚠ {date_str}はカレンダー・thisweek両方になし → 結果一覧から取得")
-            resp2 = sess.post(f'{JRA_BASE}/JRADB/accessS.html',
-                              data={'CNAME': 'pw01sli00/AF'}, timeout=15)
-            resp2.encoding = 'shift_jis'
-            for tag in BeautifulSoup(resp2.text, 'lxml').find_all(onclick=True):
-                oc = tag['onclick']
-                m = re.search(r'pw01srl10(\d{2})(\d{4})(\d{2})(\d{2})(\d{8})/(\w{2})', oc)
-                if m and m.group(5) == date_str:
-                    pc_r = m.group(1)
-                    base_r = f'pw01dde01{pc_r}{m.group(2)}{m.group(3)}{m.group(4)}'
-                    if base_r not in links:
-                        links[base_r] = date_str
-                        print(f"  📋 結果一覧補完: {PLACE_NAMES.get(pc_r, '?')} → {base_r}")
+            resp = sess.get(f'{JRA_BASE}/keiba/thisweek/', timeout=15)
+            resp.encoding = 'shift_jis'
+            for a in BeautifulSoup(resp.text, 'lxml').find_all('a', href=True):
+                href = a['href']
+                if 'pw01dde01' not in href:
+                    continue
+                m = re.search(r'pw01dde01(\d{2})(\d{4})(\d{2})(\d{2})(\d{8})', href)
+                if not m:
+                    continue
+                if m.group(5) != date_str:
+                    continue
+                base_tw = f'pw01dde01{m.group(1)}{m.group(2)}{m.group(3)}{m.group(4)}'
+                if base_tw not in links:
+                    links[base_tw] = date_str
+                    print(f"  🌐 thisweek補完: {PLACE_NAMES.get(m.group(1), '?')} → {base_tw}")
         except Exception as e:
-            print(f"  ⚠ 結果一覧取得失敗: {e}")
+            print(f"  ⚠ thisweek取得失敗: {e}")
 
     if not links:
         print(f"  ❌ {date_str}の開催情報が見つかりません")
     return links
+
