@@ -11,11 +11,12 @@ from src.models.predict import softmax_probs, calibrate_and_renormalize
 from src.models.calibration_xgb import load_xgb_calibrator
 
 # ── グローバルコンテキスト（init_engine()で設定） ─────────────────
-_XGB_FUKUSHO_MODEL = None
-_XGB_FEATURE_COLS  = None
-_CALIBRATOR        = None
-_XGB_CALIBRATOR    = None
-_PACE_MODEL        = None
+_XGB_FUKUSHO_MODEL  = None
+_XGB_FEATURE_COLS   = None
+_CALIBRATOR         = None
+_XGB_CALIBRATOR     = None
+_PACE_MODEL         = None
+_SPEED_INDEX_CALC   = None  # SpeedIndexCalculator
 _W                 = {
     'rl':       0.35,   # Phase 2: スピード指数ベースRLスコア
     'distance': 0.20,
@@ -46,8 +47,15 @@ def init_engine(base_dir,
     """エンジンのグローバル変数を設定する。ノートブックのセル4で呼ぶ"""
     global _XGB_FUKUSHO_MODEL, _XGB_FEATURE_COLS, _CALIBRATOR, _XGB_CALIBRATOR, _PACE_MODEL
     global _W, _horse_dist_dict, _horse_course_dict, _horse_venue_dist_dict, _post_zone_bias
-    global _jockey_dict, _trainer_dict, _hist_db_path
+    global _jockey_dict, _trainer_dict, _hist_db_path, _SPEED_INDEX_CALC
     _hist_db_path = os.path.join(base_dir, 'data', 'history.db')
+
+    # スピード指数キャッシュをロード（なければ history.db から自動構築）
+    try:
+        from src.features.speed_index import load_speed_index_calculator
+        _SPEED_INDEX_CALC = load_speed_index_calculator(base_dir)
+    except Exception:
+        _SPEED_INDEX_CALC = None
 
     if xgb_model is not None:
         _XGB_FUKUSHO_MODEL = xgb_model
@@ -1181,6 +1189,35 @@ def calc_features_for_xgb(h, race):
     else:
         feats.update({'f_speed_avg': 50.0, 'f_speed_max': 50.0, 'f_speed_last': 50.0, 'f_speed_trend': 0.0})
 
+    # ── スピード指数特徴量 ────────────────────────────────────────
+    if _SPEED_INDEX_CALC is not None and hist:
+        figs = []
+        agari_figs = []
+        for r_ in hist[-5:]:
+            ft_  = r_.get('finish_time')
+            d_   = int(r_.get('distance', 1600) or 1600)
+            s_   = r_.get('surface', '芝') or '芝'
+            tc_  = r_.get('track_condition', '良') or r_.get('condition', '良') or '良'
+            dt_  = r_.get('date', '')
+            rc_  = r_.get('racecourse', '') or ''
+            fig  = _SPEED_INDEX_CALC.calc_speed_figure(ft_, d_, s_, tc_, dt_, rc_)
+            if fig is not None:
+                figs.append(fig)
+            # 上がり3Fスピード指数（race_last_3f は first_3f とは別: last_3f がレース全体の最速上がりを指す）
+            a3f_ = float(r_.get('last_3f') or r_.get('agari3f') or 0)
+            # ここでは race_last_3f として同レースの最速上がりは持っていないため
+            # 代わりに a3f_ 自体を「上がりタイム」として calc_agari_speed_figure は省略し
+            # calc_performance_index（既存）が代替する
+        feats['f_speed_fig_last']  = figs[-1] if figs else 0.0
+        feats['f_speed_fig_avg']   = float(sum(figs[-3:]) / len(figs[-3:])) if figs else 0.0
+        feats['f_speed_fig_max']   = float(max(figs)) if figs else 0.0
+        feats['f_speed_fig_trend'] = float(figs[-1] - figs[0]) if len(figs) >= 2 else 0.0
+    else:
+        feats['f_speed_fig_last']  = 0.0
+        feats['f_speed_fig_avg']   = 0.0
+        feats['f_speed_fig_max']   = 0.0
+        feats['f_speed_fig_trend'] = 0.0
+
     # ── Stage 3 新特徴量 ────────────────────────────────────────
     # 性別（牡=0, 牝=1, セ=2）
     _sex_map = {'牡': 0, '牝': 1, 'セ': 2, '騸': 2}
@@ -1263,6 +1300,8 @@ def add_relative_features(all_xfeats):
     # finish_time_avg: 低いほど速い
     _assign('f_finish_time_avg',  0.0,  'rl_f_finish_time',  reverse=False)
     _assign('f_time_diff_avg',    0.0,  'rl_f_time_diff',    reverse=False)
+    # スピード指数相対化（高いほど速い）
+    _assign('f_speed_fig_avg',    0.0,  'rl_f_speed_fig_avg')
 
     # f_rl_rank / f_cl_rank: 複合スコアで順位付け
     for xf in all_xfeats:

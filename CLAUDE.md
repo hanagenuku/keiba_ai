@@ -49,7 +49,7 @@ files = [
     'src/tools/calibrate.py', 'src/tools/analyze_divergence.py',
     'src/tools/rescrape_history.py', 'src/tools/build_training_data.py',
     'src/tools/train_xgb.py', 'src/tools/calibrate_xgb.py',
-    'src/features/engine.py',
+    'src/features/engine.py', 'src/features/speed_index.py',
     'src/utils/config.py', 'src/utils/db.py', 'src/utils/model_registry.py',
     'src/scraper/parser.py', 'src/scraper/jra_scraper.py',
     'src/models/__init__.py', 'src/models/calibration.py', 'src/models/predict.py',
@@ -114,6 +114,15 @@ print('done')
 - WEIGHT_KEYS に rl/maturity/rotation 追加
 - エンジンから f_rl/f_maturity/f_rotation をインポートし sc 辞書に追加
 
+### 2026-06-05：スピード指数（Speed Figure）実装
+- `src/features/speed_index.py` 新規作成（SpeedIndexCalculator + load/rebuild キャッシュ）
+- 基準タイム: (distance, surface, track_condition) ごとの1着馬 finish_time 中央値
+- Track Variant: 同日×同競馬場の全レースで基準タイムからのズレの中央値
+- `engine.py` に特徴量4個追加: f_speed_fig_last / f_speed_fig_avg / f_speed_fig_max / f_speed_fig_trend
+- `engine.py` の `add_relative_features` に相対特徴量1個追加: rl_f_speed_fig_avg
+- `init_engine` で speed_index_cache.pkl を自動ロード（なければ history.db から構築）
+- 強制アップデートセルに `src/features/speed_index.py` を追加
+
 ### 2026-06-03：XGBoost再学習準備（engine.py + train_xgb.py + KEIBA_XGB_retrain.ipynb）
 - `calc_features_for_xgb` に8個の新特徴量追加（f_sex, f_age, f_track_cond, f_heavy_track_rate, f_class_level, f_class_jump, f_finish_time_avg, f_time_diff_avg）
 - `add_relative_features` に4列の相対化追加（cl_f_heavy_track, cl_f_weight_load, rl_f_finish_time, rl_f_time_diff）
@@ -161,7 +170,7 @@ print('done')
 
 ## 現在の作業状況（セッション引き継ぎ用）
 
-### 最終更新: 2026-06-03
+### 最終更新: 2026-06-05
 
 ---
 
@@ -171,10 +180,13 @@ print('done')
 DESIGN.md の Phase 0〜3 はすべて実装完了（2026-05-25）。
 
 ### 次にやること（優先順）
-1. **KEIBA_XGB_retrain.ipynb 実行**（XGBoost再学習）← 実装完了・実行待ち
-   - セル1〜6を順番に実行（所要15〜30分）
-   - 合格基準: AUC≥0.77 / Brier≤0.150 / cal_prob合計2.8〜3.2
-2. **Stage3 列マッピング修正**（bracket/win_odds/body_weight が 0〜6.5%）← 要調査
+1. **スピード指数 XGB再学習**（新特徴量追加後の再学習）← 実装完了・実行待ち
+   - KEIBA_XGB_retrain_v2.ipynb のセル2でキャッシュ再構築 → セル3でデータ再生成 → セル4A〜C
+   - 合格基準: AUC≥0.78（スピード指数なし 0.7648 より改善）/ Brier≤0.165
+   - セル2冒頭で `rebuild_speed_index_cache(BASE_DIR)` を追加してから実行すること
+2. **KEIBA_XGB_retrain_v2.ipynb 実行**（Step A = 66特徴量ベースライン確認）← まず実行
+   - セル4A の AUC/Brier を確認してから Step B/C（スピード指数追加）に進む
+3. **Stage3 列マッピング修正**（bracket/win_odds/body_weight が 0〜6.5%）← 要調査
    - JRA結果ページの実際の列順を確認し、`parse_result_page()` の tx インデックスを修正
    - 修正後に Stage3 を再実行（再開ロジックあり・完了済み開催日は自動スキップ）
 3. **チューニングノート実行**（rl/maturity/rotation を含む重み最適化）→ optimal_weights.json 更新
