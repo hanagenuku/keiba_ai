@@ -70,7 +70,7 @@ def parse_header(text):
         if name in text:
             info['racecourse'] = name
             break
-    _shogai_kws = ['障害', 'ジャンプ', '(J)', '（J）', 'J・G', 'J-G']
+    _shogai_kws = ['障害', '(J)', '（J）', 'J・G', 'J-G']
     if any(kw in text for kw in _shogai_kws):
         info['surface'] = '障害'
         info['distance'] = 0
