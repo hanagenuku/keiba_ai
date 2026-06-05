@@ -1189,30 +1189,6 @@ def calc_features_for_xgb(h, race):
     else:
         feats.update({'f_speed_avg': 50.0, 'f_speed_max': 50.0, 'f_speed_last': 50.0, 'f_speed_trend': 0.0})
 
-    # ── スピード指数特徴量（NaN=欠損でXGBネイティブ処理） ────────────
-    _NAN = float('nan')
-    if _SPEED_INDEX_CALC is not None and hist:
-        figs = []
-        for r_ in hist[-5:]:
-            ft_  = r_.get('finish_time')
-            d_   = int(r_.get('distance', 1600) or 1600)
-            s_   = r_.get('surface', '芝') or '芝'
-            tc_  = r_.get('track_condition', '良') or r_.get('condition', '良') or '良'
-            dt_  = r_.get('date', '')
-            rc_  = r_.get('racecourse', '') or ''
-            fig  = _SPEED_INDEX_CALC.calc_speed_figure(ft_, d_, s_, tc_, dt_, rc_)
-            if fig is not None:
-                figs.append(fig)
-        feats['f_speed_fig_last']  = figs[-1]                                   if figs else _NAN
-        feats['f_speed_fig_avg']   = sum(figs[-3:]) / len(figs[-3:])            if figs else _NAN
-        feats['f_speed_fig_max']   = max(figs)                                  if figs else _NAN
-        feats['f_speed_fig_trend'] = float(figs[-1] - figs[0]) if len(figs) >= 2 else _NAN
-    else:
-        feats['f_speed_fig_last']  = _NAN
-        feats['f_speed_fig_avg']   = _NAN
-        feats['f_speed_fig_max']   = _NAN
-        feats['f_speed_fig_trend'] = _NAN
-
     # ── Stage 3 新特徴量 ────────────────────────────────────────
     # 性別（牡=0, 牝=1, セ=2）
     _sex_map = {'牡': 0, '牝': 1, 'セ': 2, '騸': 2}
@@ -1304,8 +1280,6 @@ def add_relative_features(all_xfeats):
     # finish_time_avg: 低いほど速い
     _assign('f_finish_time_avg',  0.0,  'rl_f_finish_time',  reverse=False)
     _assign('f_time_diff_avg',    0.0,  'rl_f_time_diff',    reverse=False)
-    # スピード指数相対化（高いほど速い、NaNは平均で補完してから順位付け）
-    _assign('f_speed_fig_avg',    0.0,  'rl_f_speed_fig_avg')
 
     # f_rl_rank / f_cl_rank: 複合スコアで順位付け
     for xf in all_xfeats:
