@@ -12,8 +12,8 @@ def _detect_surface(text):
     if not text:
         return None
     t = unicodedata.normalize('NFKC', text)
-    # 1) 障害レースの明示
-    if any(kw in t for kw in ['障害', 'ジャンプ', '(J)', '(J)', 'J・G', 'J-G']):
+    # 1) 障害レースの明示（「ジャンプ」は馬名に含まれることがあるため除外）
+    if '障害' in t or any(kw in t for kw in ['(J)', '（J）', 'J・G', 'J-G']):
         return '障害'
     # 2) "NNNNメートル（芝/ダ" の明示形式（最強パターン）
     m = re.search(r'メートル\s*[（(]\s*([芝ダ])', t)
