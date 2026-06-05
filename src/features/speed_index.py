@@ -91,7 +91,12 @@ class SpeedIndexCalculator:
             surf = r['surface'] or '芝'
             tc   = r['track_condition'] or '良'
             ft   = float(r['finish_time'])
-            date = str(r['date'] or '')[:10]  # YYYY-MM-DD か YYYYMMDD どちらでも上位8桁
+            # 日付を YYYY-MM-DD に統一（YYYYMMDD と YYYY-MM-DD 混在対応）
+            raw_date = str(r['date'] or '').replace('-', '')[:8]
+            if len(raw_date) == 8:
+                date = f'{raw_date[:4]}-{raw_date[4:6]}-{raw_date[6:8]}'
+            else:
+                date = raw_date
             rc   = r['racecourse'] or ''
             if dist <= 0 or ft <= 0 or not date or not rc:
                 continue
