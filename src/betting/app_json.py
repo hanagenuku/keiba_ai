@@ -217,10 +217,13 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday'):
         spd      = bias_data.get('track_speed', 0)
         bias_tag = ('時計速め' if spd > 0.3 else '時計遅め' if spd < -0.3 else 'フラット')
 
-    jday = ['月', '火', '水', '木', '金', '土', '日'][jst_now.weekday()]
+    from datetime import timedelta
+    # sunday予想は翌日の日付を表示（土曜夜に実行するため）
+    display_dt = jst_now + timedelta(days=1) if day_type == 'sunday' else jst_now
+    jday = ['月', '火', '水', '木', '金', '土', '日'][display_dt.weekday()]
     return {
         'generated_at': jst_now.isoformat(),
-        'date':         f'{jst_now.month}月{jst_now.day}日({jday})',
+        'date':         f'{display_dt.month}月{display_dt.day}日({jday})',
         'type':         day_type,
         'venues':       all_venues,
         'bias':         {'txt': bias_txt, 'tag': bias_tag},
