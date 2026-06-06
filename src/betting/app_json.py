@@ -2,7 +2,7 @@
 アプリ用 JSON 生成。
 ノートブックの to_app_json を分離。
 """
-from src.betting.ev_filter import VENUE_ORDER
+from src.betting.ev_filter import VENUE_ORDER, calc_market_probs, calc_value_score
 from src.betting.make_bets import calc_ev, make_bets
 from src.features.engine import auto_comment, calc_all
 
@@ -17,13 +17,49 @@ def _build_horse_ranks(scored):
     return {scored[i]['num']: r + 1 for r, i in enumerate(
         sorted(range(len(scored)), key=lambda x: ev_scores[x], reverse=True))}
 def _build_horses_list(scored, top1, by_odds):
-    """アプリ表示用の馬リストを生成する（馬番順）。"""
+    """アプリ表示用の馬リストを生成する（馬番順）。
+
+    バリュースコアが付与済みの場合は EV ベースのマーク（高/推/穴）を使用。
+    未付与の場合は旧ロジックにフォールバック。
+    """
     ev_ranks = _build_horse_ranks(scored)
+
+    # バリュースコア未付与の場合は計算する
+    has_value_scores = any('ev' in h for h in scored)
+    if not has_value_scores:
+        market_probs = calc_market_probs(scored)
+        for i, h in enumerate(scored):
+            ai_prob = h.get('pn', 0) or 0
+            m_prob  = market_probs[i]
+            odds    = h.get('win_odds') or 0
+            vs      = calc_value_score(ai_prob, m_prob, odds)
+            h['prob_gap'] = vs['prob_gap']
+            h['ev']       = vs['ev']
+            h['is_value'] = vs['is_value']
+
     horses = []
     for h in scored:
-        pop = next((i + 1 for i, x in enumerate(by_odds) if x['name'] == h['name']), 99)
-        pn  = h.get('pn', 0)
-        wo  = h.get('win_odds', 0) or 0
+        pop     = next((i + 1 for i, x in enumerate(by_odds) if x['name'] == h['name']), 99)
+        pn      = h.get('pn', 0)
+        wo      = h.get('win_odds', 0) or 0
+        fuku_pct = round(min(88, pn * 3.2 * 100), 1)
+        is_value = h.get('is_value', False)
+
+        # バリューベースのマーク（高/推/穴）
+        # 穴馬: AI複勝確率 > 市場複勝確率×1.5 かつ 人気8位以下
+        market_probs_list = calc_market_probs(scored)
+        mkt_fuku = market_probs_list[scored.index(h)] * 3.2  # 市場複勝確率の近似
+        is_ana   = (pn * 3.2 > mkt_fuku * 1.5 and pop > 8)
+
+        if is_value and pop <= 3:
+            mark = '高'
+        elif is_value and pop <= 8:
+            mark = '推'
+        elif is_value and is_ana:
+            mark = '穴'
+        else:
+            mark = ''
+
         horses.append({
             'n':        h['num'],
             'name':     h['name'],
@@ -33,13 +69,13 @@ def _build_horses_list(scored, top1, by_odds):
             'style':    h.get('running_style', '差し'),
             'tan_pct':  round(min(60,  pn * 100),       1),
             'ren_pct':  round(min(80,  pn * 2.0 * 100), 1),
-            'fuku_pct': round(min(88,  pn * 3.2 * 100), 1),
+            'fuku_pct': fuku_pct,
             'ev_rank':  ev_ranks.get(h['num'], 99),
             'rl_rank':  h.get('rl_rank', 99),
             'cl_rank':  h.get('cl_rank', 99),
-            'mark': ('推' if h['num'] == top1['num'] else
-                     '高' if round(min(88, pn * 3.2 * 100), 1) >= 38 else
-                     '穴' if (h.get('rl_rank', 99) <= 4 and wo >= 10) else ''),
+            'ev':       h.get('ev', 0.0),
+            'prob_gap': h.get('prob_gap', 0.0),
+            'mark':     mark,
         })
     horses.sort(key=lambda x: x['n'])
     return horses
