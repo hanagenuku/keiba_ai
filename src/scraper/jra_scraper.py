@@ -595,10 +595,10 @@ def fetch_results(sess, target_date, calendar=None):
         soup0 = BeautifulSoup(r0.text, 'lxml')
         for tag in soup0.find_all(onclick=True):
             oc = tag.get('onclick', '')
-            m = re.search(r'pw01srl1(\d{2})(\d{4})(\d{2})(\d{2})(\d{2})(\d{8})/(\w{2})', oc)
+            m = re.search(r'pw01srl\d{2}(\d{2})(\d{4})(\d{2})(\d{2})(\d{8})/(\w{2})', oc)
             if not m:
                 continue
-            pc_m, year, kai, nichi, date = m.group(1), m.group(2), m.group(3), m.group(4), m.group(6)
+            pc_m, year, kai, nichi, date = m.group(1), m.group(2), m.group(3), m.group(4), m.group(5)
             if date != target_date:
                 continue
             base = f'pw01sde10{pc_m}{year}{kai}{nichi}'
