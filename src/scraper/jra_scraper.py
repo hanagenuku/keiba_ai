@@ -582,16 +582,13 @@ def parse_result_soup(soup, racecourse, race_num, date, place_code):
 
 def fetch_results(sess, target_date, calendar=None):
     """指定日の全レース結果を取得"""
-    from src.scraper.calendar import get_base_from_calendar
-    from src.utils.config import KAISAI_CALENDAR
-    cal = calendar if calendar is not None else KAISAI_CALENDAR
+    from src.scraper.calendar import get_kaisai_on_date_result
     print(f'📡 {target_date} 結果取得中...')
     all_results = []
-    for pc in cal:
-        base_shutuba = get_base_from_calendar(pc, target_date, cal)
-        if not base_shutuba:
-            continue
-        base_result = base_shutuba.replace('pw01dde01', 'pw01sde10')
+    bases = get_kaisai_on_date_result(target_date, sess)
+    for base_result, _ in bases.items():
+        pc = re.search(r'pw01sde10(\d{2})', base_result)
+        pc = pc.group(1) if pc else '00'
         rc = PLACE_NAMES.get(pc, '?')
         print(f'\n🏟 {rc}  suffix探索...', end=' ', flush=True)
         r01 = find_r01_result(base_result, target_date, sess)
