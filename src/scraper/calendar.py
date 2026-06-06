@@ -62,3 +62,32 @@ def get_kaisai_on_date(date_str, sess, calendar=None):
         print(f"  ❌ {date_str}の開催情報が見つかりません")
     return links
 
+
+def get_kaisai_on_date_result(date_str, sess):
+    """指定日の結果取得用 base を取得（結果一覧ページから pw01sde10 形式で返す）"""
+    links = {}
+
+    # 結果一覧(pw01sli00)から pw01srl10 の onclick を解析して正確な kai/nichi を取得
+    try:
+        r = sess.post(f'{JRA_BASE}/JRADB/accessS.html',
+                      data={'CNAME': 'pw01sli00/AF'}, timeout=15)
+        r.encoding = 'shift_jis'
+        soup = BeautifulSoup(r.text, 'lxml')
+        for tag in soup.find_all(onclick=True):
+            oc = tag.get('onclick', '')
+            m = re.search(r'pw01srl10(\d{2})(\d{4})(\d{2})(\d{2})(\d{8})/(\w{2})', oc)
+            if not m:
+                continue
+            pc, year, kai, nichi, date = m.group(1), m.group(2), m.group(3), m.group(4), m.group(5)
+            if date != date_str:
+                continue
+            base = f'pw01sde10{pc}{year}{kai}{nichi}'
+            if base not in links:
+                links[base] = date_str
+                print(f"  📋 {PLACE_NAMES.get(pc, '?')} → {base}")
+    except Exception as e:
+        print(f"  ⚠ 結果一覧取得失敗: {e}")
+
+    if not links:
+        print(f"  ❌ {date_str}の結果開催情報が見つかりません")
+    return links
