@@ -1577,11 +1577,16 @@ def calc_all(race, bias_data=None):
                 xrow   = {c: xfeats.get(c, 5.0) for c in _XGB_FEATURE_COLS}
                 X_pred = _pd_xgb.DataFrame([xrow])[_XGB_FEATURE_COLS].fillna(5.0)
                 prob   = float(_XGB_FUKUSHO_MODEL.predict_proba(X_pred)[0][1])
-                # XGB専用キャリブレーターを適用（旧 _CALIBRATOR は型違いなので使わない）
+                raw_prob = prob
+                # XGB専用キャリブレーターを適用（複勝確率表示用）
                 if _XGB_CALIBRATOR is not None:
                     import numpy as _np_cal
-                    prob = float(_np_cal.clip(_XGB_CALIBRATOR.transform([prob])[0], 0.01, 0.99))
-                total  = round(prob * 10, 2)
+                    cal_prob = float(_np_cal.clip(_XGB_CALIBRATOR.transform([prob])[0], 0.01, 0.99))
+                else:
+                    cal_prob = prob
+                # softmaxにはキャリブ前のraw_probを使う（calibratorのフロアで潰れるのを防ぐ）
+                total  = round(raw_prob * 10, 2)
+                prob   = cal_prob  # 表示用複勝確率はcal_probを保持
             except Exception:
                 total = sum(sc.get(k, 5.0) * _W.get(k, 0) for k in _W if _W.get(k, 0) > 0)
                 total = apply_career_flags(total, career)
