@@ -586,13 +586,37 @@ def fetch_results(sess, target_date, calendar=None):
     print(f'📡 {target_date} 結果取得中...')
     all_results = []
 
-    # 出走表一覧(pw01dli00/F3)で取得した shutuba base を結果 base に変換
-    # pw01dde01 → pw01sde10 で結果URLになる
-    shutuba_bases = get_kaisai_on_date(target_date, sess)
+    # Step1: 結果一覧(pw01sli00/AF)から sde_base を取得
     bases = {}
-    for shutuba_base in shutuba_bases:
-        result_base = shutuba_base.replace('pw01dde01', 'pw01sde10')
-        bases[result_base] = target_date
+    try:
+        r0 = sess.post(f'{JRA_BASE}/JRADB/accessS.html',
+                       data={'CNAME': 'pw01sli00/AF'}, timeout=15)
+        r0.encoding = 'shift_jis'
+        soup0 = BeautifulSoup(r0.text, 'lxml')
+        for tag in soup0.find_all(onclick=True):
+            oc = tag.get('onclick', '')
+            m = re.search(r'pw01srl1(\d{2})(\d{4})(\d{2})(\d{2})(\d{2})(\d{8})/(\w{2})', oc)
+            if not m:
+                continue
+            pc_m, year, kai, nichi, date = m.group(1), m.group(2), m.group(3), m.group(4), m.group(6)
+            if date != target_date:
+                continue
+            base = f'pw01sde10{pc_m}{year}{kai}{nichi}'
+            if base not in bases:
+                bases[base] = target_date
+                print(f"  📋 {PLACE_NAMES.get(pc_m, '?')} → {base}")
+    except Exception as e:
+        print(f'  ⚠ 結果一覧取得失敗: {e}')
+
+    # フォールバック: 出走表一覧から変換
+    if not bases:
+        shutuba_bases = get_kaisai_on_date(target_date, sess)
+        for shutuba_base in shutuba_bases:
+            result_base = shutuba_base.replace('pw01dde01', 'pw01sde10')
+            bases[result_base] = target_date
+            pc_m = re.search(r'pw01sde10(\d{2})', result_base)
+            pc_m = pc_m.group(1) if pc_m else '?'
+            print(f"  📋(FB) {PLACE_NAMES.get(pc_m, '?')} → {result_base}")
 
     if not bases:
         print(f'  ❌ {target_date}の開催情報が見つかりません')
@@ -611,8 +635,8 @@ def fetch_results(sess, target_date, calendar=None):
         for r in range(1, 13):
             sx = calc_suffix(r01, r)
             cn = f'{base_result}{r:02d}{target_date}/{sx}'
-            resp = sess.post(f'{JRA_BASE}/JRADB/accessS.html',
-                             data={'CNAME': cn}, headers=HEADERS, timeout=15)
+            resp = sess.post(f'{JRA_BASE}/JRADB/accessD.html',
+                             data={'cname': cn, 'CNAME': cn}, timeout=15)
             resp.encoding = 'shift_jis'
             if 'パラメータエラー' in resp.text:
                 continue
