@@ -582,10 +582,35 @@ def parse_result_soup(soup, racecourse, race_num, date, place_code):
 
 def fetch_results(sess, target_date, calendar=None):
     """指定日の全レース結果を取得"""
-    from src.scraper.calendar import get_kaisai_on_date_result
     print(f'📡 {target_date} 結果取得中...')
     all_results = []
-    bases = get_kaisai_on_date_result(target_date, sess)
+
+    # 結果一覧(pw01sli00/AF)から正確な kai/nichi を取得
+    bases = {}
+    try:
+        r = sess.post(f'{JRA_BASE}/JRADB/accessS.html',
+                      data={'CNAME': 'pw01sli00/AF'}, timeout=15)
+        r.encoding = 'shift_jis'
+        soup = BeautifulSoup(r.text, 'lxml')
+        for tag in soup.find_all(onclick=True):
+            oc = tag.get('onclick', '')
+            m = re.search(r'pw01srl10(\d{2})(\d{4})(\d{2})(\d{2})(\d{8})/(\w{2})', oc)
+            if not m:
+                continue
+            pc_m, year, kai, nichi, date = m.group(1), m.group(2), m.group(3), m.group(4), m.group(5)
+            if date != target_date:
+                continue
+            base = f'pw01sde10{pc_m}{year}{kai}{nichi}'
+            if base not in bases:
+                bases[base] = target_date
+                print(f"  📋 {PLACE_NAMES.get(pc_m, '?')} → {base}")
+    except Exception as e:
+        print(f'  ⚠ 結果一覧取得失敗: {e}')
+
+    if not bases:
+        print(f'  ❌ {target_date}の結果開催情報が見つかりません')
+        return all_results
+
     for base_result, _ in bases.items():
         pc = re.search(r'pw01sde10(\d{2})', base_result)
         pc = pc.group(1) if pc else '00'
