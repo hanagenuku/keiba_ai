@@ -7,58 +7,76 @@ from src.betting.make_bets import calc_ev, make_bets
 from src.features.engine import auto_comment, calc_all
 
 
-def _build_horse_ranks(scored):
-    """EV の各馬ランクを返す。"""
-    ev_scores = []
-    for h in scored:
-        p = h.get('pn', 0.1)
-        o = h.get('win_odds', 10) or 10
-        ev_scores.append(round(min(0.88, p * 3.2) * max(1.2, o * 0.32), 3))
-    return {scored[i]['num']: r + 1 for r, i in enumerate(
-        sorted(range(len(scored)), key=lambda x: ev_scores[x], reverse=True))}
-def _build_horses_list(scored, top1, by_odds):
-    """アプリ表示用の馬リストを生成する（馬番順）。
+def _assign_marks(scored, by_odds):
+    """各馬に高/推/穴マークを付与する。1レースにつき穴は最大1頭、推は最大2頭。
 
-    バリュースコアが付与済みの場合は EV ベースのマーク（高/推/穴）を使用。
-    未付与の場合は旧ロジックにフォールバック。
+    本命（AI確率1位）は必ず買い目に入るため、マーク付与とは独立して決まる。
     """
-    ev_ranks = _build_horse_ranks(scored)
+    market_probs = calc_market_probs(scored)
 
-    # バリュースコア未付与の場合は計算する
-    has_value_scores = any('ev' in h for h in scored)
-    if not has_value_scores:
-        market_probs = calc_market_probs(scored)
-        for i, h in enumerate(scored):
+    # EV未計算なら計算する
+    for i, h in enumerate(scored):
+        if 'ev' not in h:
             ai_prob = h.get('pn', 0) or 0
             m_prob  = market_probs[i]
             odds    = h.get('win_odds') or 0
             vs      = calc_value_score(ai_prob, m_prob, odds)
-            h['prob_gap'] = vs['prob_gap']
             h['ev']       = vs['ev']
+            h['prob_gap'] = vs['prob_gap']
             h['is_value'] = vs['is_value']
+
+    # AI順位（win_prob降順）を付与
+    ai_sorted = sorted(range(len(scored)), key=lambda i: scored[i].get('pn', 0), reverse=True)
+    for rank, idx in enumerate(ai_sorted):
+        scored[idx]['ai_rank'] = rank + 1
+
+    # 人気順を付与
+    for h in scored:
+        h['_pop'] = next((i + 1 for i, x in enumerate(by_odds) if x['name'] == h['name']), 99)
+
+    marks = {h['num']: '' for h in scored}
+
+    # 高マーク: 3番人気以内 かつ AI上位3位 かつ EV>=1.0
+    for h in scored:
+        if h['_pop'] <= 3 and h['ai_rank'] <= 3 and h.get('ev', 0) >= 1.0:
+            marks[h['num']] = '高'
+
+    # 推マーク: AI順位が人気より3以上高い かつ AI上位8位 かつ EV>=1.2（最大2頭）
+    osusume = [h for h in scored
+               if h['ai_rank'] <= h['_pop'] - 3
+               and h['ai_rank'] <= 8
+               and h.get('ev', 0) >= 1.2
+               and marks[h['num']] == '']
+    osusume.sort(key=lambda h: h.get('ev', 0), reverse=True)
+    for h in osusume[:2]:
+        marks[h['num']] = '推'
+
+    # 穴マーク: 6番人気以下 かつ AI上位5位 かつ EV>=1.5 かつ cal_prob>=0.15（最大1頭）
+    ana_cands = [h for h in scored
+                 if h['_pop'] >= 6
+                 and h['ai_rank'] <= 5
+                 and h.get('ev', 0) >= 1.5
+                 and h.get('pn', 0) >= 0.15
+                 and marks[h['num']] == '']
+    if ana_cands:
+        ana = max(ana_cands, key=lambda h: h.get('ev', 0))
+        marks[ana['num']] = '穴'
+
+    return marks
+
+
+def _build_horses_list(scored, top1, by_odds):
+    """アプリ表示用の馬リストを生成する（馬番順）。
+
+    本命はAI確率1位の馬。マークは _assign_marks で決定。
+    """
+    marks = _assign_marks(scored, by_odds)
 
     horses = []
     for h in scored:
-        pop     = next((i + 1 for i, x in enumerate(by_odds) if x['name'] == h['name']), 99)
-        pn      = h.get('pn', 0)
-        wo      = h.get('win_odds', 0) or 0
-        fuku_pct = round(min(88, pn * 3.2 * 100), 1)
-        is_value = h.get('is_value', False)
-
-        # バリューベースのマーク（高/推/穴）
-        # 穴馬: AI複勝確率 > 市場複勝確率×1.5 かつ 人気8位以下
-        market_probs_list = calc_market_probs(scored)
-        mkt_fuku = market_probs_list[scored.index(h)] * 3.2  # 市場複勝確率の近似
-        is_ana   = (pn * 3.2 > mkt_fuku * 1.5 and pop > 8)
-
-        if is_value and pop <= 3:
-            mark = '高'
-        elif is_value and pop <= 8:
-            mark = '推'
-        elif is_value and is_ana:
-            mark = '穴'
-        else:
-            mark = ''
+        pop = h.get('_pop') or next((i + 1 for i, x in enumerate(by_odds) if x['name'] == h['name']), 99)
+        pn  = h.get('pn', 0)
+        wo  = h.get('win_odds', 0) or 0
 
         horses.append({
             'n':        h['num'],
@@ -66,16 +84,16 @@ def _build_horses_list(scored, top1, by_odds):
             'odds':     wo,
             'score':    round(h['total'], 1),
             'pop':      pop,
+            'ai_rank':  h.get('ai_rank', 99),
             'style':    h.get('running_style', '差し'),
             'tan_pct':  round(min(60,  pn * 100),       1),
             'ren_pct':  round(min(80,  pn * 2.0 * 100), 1),
-            'fuku_pct': fuku_pct,
-            'ev_rank':  ev_ranks.get(h['num'], 99),
+            'fuku_pct': round(min(88,  pn * 3.2 * 100), 1),
             'rl_rank':  h.get('rl_rank', 99),
             'cl_rank':  h.get('cl_rank', 99),
-            'ev':       h.get('ev', 0.0),
-            'prob_gap': h.get('prob_gap', 0.0),
-            'mark':     mark,
+            'ev':       round(h.get('ev', 0.0), 3),
+            'prob_gap': round(h.get('prob_gap', 0.0), 4),
+            'mark':     marks[h['num']],
         })
     horses.sort(key=lambda x: x['n'])
     return horses
@@ -121,8 +139,10 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday'):
     # ── 厳選レース ─────────────────────────────────────────────────
     for c in selected:
         race   = c['race']
-        top1   = c['top1']
         scored = c['scored']
+        # 本命はAI確率（win_prob）1位の馬（EVではなく能力基準）
+        top1   = max(scored, key=lambda h: h.get('pn', 0))
+        c['top1'] = top1
         bets   = make_bets(c)
         rc     = race['racecourse']
         if rc not in races_by_venue:
