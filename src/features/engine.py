@@ -1677,4 +1677,9 @@ def calc_all(race, bias_data=None):
 
     out = sorted(out, key=lambda x: x['total'], reverse=True)
     calc_rl_cl_ranks(out)
+
+    # RL順位をwin_prob（AI確率）の順位に統一（rl_rawは旧加重スコアで逆転が起きるため）
+    for i, h in enumerate(sorted(out, key=lambda h: h['win_prob'], reverse=True)):
+        h['rl_rank'] = i + 1
+
     return out
