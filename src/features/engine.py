@@ -1585,7 +1585,8 @@ def calc_all(race, bias_data=None):
                 else:
                     cal_prob = prob
                 # softmaxにはキャリブ前のraw_probを使う（calibratorのフロアで潰れるのを防ぐ）
-                total  = round(raw_prob * 10, 2)
+                # round()は精度損失で同一確率が発生するため使わない
+                total  = raw_prob * 10
                 prob   = cal_prob  # 表示用複勝確率はcal_probを保持
             except Exception:
                 total = sum(sc.get(k, 5.0) * _W.get(k, 0) for k in _W if _W.get(k, 0) > 0)
@@ -1659,8 +1660,9 @@ def calc_all(race, bias_data=None):
         )
 
     all_totals = [h['total'] for h in out]
-    win_probs = softmax_probs(all_totals, temperature=1.2)
-    win_probs = calibrate_and_renormalize(win_probs, _CALIBRATOR)
+    win_probs = softmax_probs(all_totals, temperature=1.5)
+    # 旧IsotonicCalibratorは同一確率フロアを生じさせるためスキップ
+    # （XGB raw_probを入力しているため再calibrationは不要）
     for h, p in zip(out, win_probs):
         h['win_prob'] = round(p, 6)
 

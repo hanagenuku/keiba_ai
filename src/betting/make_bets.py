@@ -89,6 +89,7 @@ def make_bets(c):
     nh  = race.get('num_horses', 16)
     sg  = c.get('score_gap', 0)
     ch  = c.get('chaos_score', 0)
+    chaos_level = c.get('chaos_level', 'B')
 
     def go(i, k, d):
         return scored[i].get(k, d) if len(scored) > i else d
@@ -108,6 +109,9 @@ def make_bets(c):
     ita = (nh >= 14)
     imd = (3.0 <= o1 <= 12.0)
     icl = (sg >= 0.5 and o1 >= 3.0)
+    # 波乱度フラグ
+    is_solid = (chaos_level == 'A')   # 堅い: 単勝・馬連強化
+    is_chaos = (chaos_level == 'C')   # 大荒れ: 本命系弱め・穴複勝
 
     # 各券種の確率・オッズ・EV・ベット額
     fp  = f1
@@ -145,10 +149,12 @@ def make_bets(c):
             s *= factor if cond else (2.0 - factor)
         return s
 
-    fs  = ws(fev,  (1.1, ikn),  (0.95, ish))
-    ts  = ws(tev,  (1.2, icl and imd), (0.7, itz), (0.8, o1 < 3.5))
-    ws2 = ws(wev,  (1.2, itz or i2k),  (1.1, ita), (0.85, ikn))
-    rs  = ws(rev,  (1.3, i2k and not itz), (1.1, ish), (0.6, itz), (0.8, ita))
+    fs  = ws(fev,  (1.1, ikn),  (0.95, ish),  (0.8, is_chaos))
+    ts  = ws(tev,  (1.2, icl and imd), (0.7, itz), (0.8, o1 < 3.5),
+                   (1.3, is_solid), (0.7, is_chaos))
+    ws2 = ws(wev,  (1.2, itz or i2k),  (1.1, ita), (0.85, ikn), (0.7, is_solid))
+    rs  = ws(rev,  (1.3, i2k and not itz), (1.1, ish), (0.6, itz), (0.8, ita),
+                   (1.3, is_solid), (0.7, is_chaos))
     t2s = ws(t2ev, (1.2, icl and ish), (1.1, icl and imd), (0.6, itz), (0.75, ita))
     ss  = ws(sev,  (1.2, ish), (1.1, not ikn and not itz and not ita), (0.7, ikn), (0.8, ita))
 

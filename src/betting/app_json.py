@@ -2,7 +2,8 @@
 アプリ用 JSON 生成。
 ノートブックの to_app_json を分離。
 """
-from src.betting.ev_filter import VENUE_ORDER, calc_market_probs, calc_value_score
+from src.betting.ev_filter import (VENUE_ORDER, calc_market_probs, calc_value_score,
+                                    classify_race_chaos, is_maiden_race)
 from src.betting.make_bets import calc_ev, make_bets
 from src.features.engine import auto_comment, calc_all
 
@@ -168,9 +169,7 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday'):
             },
             'horses': _build_horses_list(scored, top1, by_odds),
             'bets':   _build_bet_list(bets),
-            'chaos_label': ('A' if c.get('chaos_score', 0) >= 0.65 else
-                            'B' if c.get('chaos_score', 0) >= 0.45 else
-                            'C' if c.get('chaos_score', 0) >= 0.25 else 'D'),
+            'chaos_level': c.get('chaos_level', classify_race_chaos(scored)),
             'cmt': auto_comment(c, bias_data),
         })
 
@@ -196,9 +195,11 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday'):
                          if h['name'] == top1['name']), 99)
         conf = min(99, max(1, int(60 + (pop_rank - 2) * 4 + gap * 20)))
 
-        win_prob = top1.get('pn', 0)
-        ev_fuku  = calc_ev(min(1.0, win_prob * 3), odds * 0.28)
-        ev_tan   = calc_ev(win_prob, odds)
+        win_prob    = top1.get('pn', 0)
+        ev_fuku     = calc_ev(min(1.0, win_prob * 3), odds * 0.28)
+        ev_tan      = calc_ev(win_prob, odds)
+        chaos_lvl   = classify_race_chaos(scored)
+        maiden_note = '⚠ 新馬戦：データ不足のため参考値' if is_maiden_race(race) else ''
         c_ref    = {
             'race':            race,
             'scored':          scored,
@@ -209,15 +210,17 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday'):
             'ev_fuku':         ev_fuku,
             'ev_tan':          ev_tan,
             'ev_max':          max(ev_fuku, ev_tan),
+            'chaos_level':     chaos_lvl,
         }
         bets = make_bets(c_ref)
 
         races_by_venue[rc].append({
-            'r':    race['race_num'],
-            'name': race['race_name'],
-            'dist': f'{race["distance"]}m{race["surface"]}',
-            'rec':  False,
-            'conf': conf,
+            'r':           race['race_num'],
+            'name':        race['race_name'],
+            'dist':        f'{race["distance"]}m{race["surface"]}',
+            'rec':         False,
+            'conf':        conf,
+            'chaos_level': chaos_lvl,
             'honmei': {
                 'n':     top1['num'],
                 'name':  top1['name'],
@@ -227,7 +230,7 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday'):
             },
             'horses': _build_horses_list(scored, top1, by_odds),
             'bets':   _build_bet_list(bets),
-            'cmt':    auto_comment(c_ref, bias_data),
+            'cmt':    auto_comment(c_ref, bias_data) + ('\n' + maiden_note if maiden_note else ''),
         })
 
     bias_txt = '内外:フラット ペース:±0 時計:±0'

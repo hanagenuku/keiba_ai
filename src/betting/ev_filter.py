@@ -14,6 +14,36 @@ SKIP_CLASSES = ('未勝利', '新馬')
 VALUE_EV_MIN = 1.2   # バリュー判定の最低期待値
 
 
+def classify_race_chaos(scored):
+    """レースの波乱度をA/B/Cに分類する。
+
+    A: 堅い（本命有力）  B: 中荒れ  C: 大荒れ（混戦）
+
+    Args:
+        scored: calc_all が返す馬リスト（win_prob付き）
+
+    Returns:
+        'A' | 'B' | 'C'
+    """
+    probs = sorted([h.get('win_prob', h.get('pn', 0)) for h in scored], reverse=True)
+    if not probs:
+        return 'B'
+    gap_1_2 = probs[0] - probs[1] if len(probs) >= 2 else probs[0]
+    top3_sum = sum(probs[:3])
+    if gap_1_2 > 0.10 and top3_sum > 0.50:
+        return 'A'
+    if gap_1_2 < 0.03 or top3_sum < 0.35:
+        return 'C'
+    return 'B'
+
+
+def is_maiden_race(race):
+    """新馬戦かどうか判定する（race_class / race_name の両方をチェック）。"""
+    rc = race.get('race_class', race.get('class', '')) or ''
+    rn = race.get('race_name', '') or ''
+    return '新馬' in rc or '新馬' in rn
+
+
 def calc_market_probs(horses):
     """全馬のオッズから市場確率を計算（JRA控除率補正込み）。
 
@@ -71,7 +101,8 @@ def ability_first_loose(races, bias_data=None, top_n=6):
         odds  = top1.get('win_odds') or 99
         if odds < ODDS_MIN or odds > ODDS_MAX:
             continue
-        if race.get('class', '') in SKIP_CLASSES:
+        rc = race.get('race_class', race.get('class', '')) or ''
+        if any(s in rc for s in SKIP_CLASSES) or is_maiden_race(race):
             continue
         gap = top1['total'] - scored[1]['total']
         if gap < 0.005:
@@ -89,6 +120,7 @@ def ability_first_loose(races, bias_data=None, top_n=6):
         by_odds  = sorted(scored, key=lambda h: h.get('win_odds') or 99)
         pop_rank = next((i + 1 for i, h in enumerate(by_odds)
                          if h['name'] == top1['name']), 99)
+        chaos_lvl = classify_race_chaos(scored)
         cands.append({
             'race':            race,
             'scored':          scored,
@@ -101,6 +133,7 @@ def ability_first_loose(races, bias_data=None, top_n=6):
             'ev_tan':          ev_tan,
             'ev_max':          ev_max,
             'chaos_score':     calc_chaos_score(race, scored),
+            'chaos_level':     chaos_lvl,
         })
 
     cands.sort(key=lambda x: x['priority'], reverse=True)
@@ -131,7 +164,8 @@ def ability_first_with_value(races, bias_data=None, top_n=6):
         scored = calc_all(race, bias_data)
         if len(scored) < 3:
             continue
-        if race.get('class', '') in SKIP_CLASSES:
+        rc2 = race.get('race_class', race.get('class', '')) or ''
+        if any(s in rc2 for s in SKIP_CLASSES) or is_maiden_race(race):
             continue
 
         market_probs = calc_market_probs(scored)
@@ -175,6 +209,7 @@ def ability_first_with_value(races, bias_data=None, top_n=6):
             'best_ev':         best_ev,
             'value_horses':    value_horses,
             'chaos_score':     calc_chaos_score(race, scored),
+            'chaos_level':     classify_race_chaos(scored),
         })
 
     cands.sort(key=lambda x: x['priority'], reverse=True)
