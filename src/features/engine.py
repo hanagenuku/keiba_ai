@@ -17,6 +17,7 @@ _CALIBRATOR         = None
 _XGB_CALIBRATOR     = None
 _PACE_MODEL         = None
 _SPEED_INDEX_CALC   = None  # SpeedIndexCalculator
+_MEMBER_LEVEL_CACHE = {}    # race_id → float (前走メンバーレベルキャッシュ)
 _W                 = {
     'rl':       0.35,   # Phase 2: スピード指数ベースRLスコア
     'distance': 0.20,
@@ -47,7 +48,7 @@ def init_engine(base_dir,
     """エンジンのグローバル変数を設定する。ノートブックのセル4で呼ぶ"""
     global _XGB_FUKUSHO_MODEL, _XGB_FEATURE_COLS, _CALIBRATOR, _XGB_CALIBRATOR, _PACE_MODEL
     global _W, _horse_dist_dict, _horse_course_dict, _horse_venue_dist_dict, _post_zone_bias
-    global _jockey_dict, _trainer_dict, _hist_db_path, _SPEED_INDEX_CALC
+    global _jockey_dict, _trainer_dict, _hist_db_path, _SPEED_INDEX_CALC, _MEMBER_LEVEL_CACHE
     _hist_db_path = os.path.join(base_dir, 'data', 'history.db')
 
     # スピード指数キャッシュをロード（なければ history.db から自動構築）
@@ -56,6 +57,21 @@ def init_engine(base_dir,
         _SPEED_INDEX_CALC = load_speed_index_calculator(base_dir)
     except Exception:
         _SPEED_INDEX_CALC = None
+
+    # 前走メンバーレベルキャッシュをロード（なければ history.db から自動構築）
+    try:
+        ml_path = os.path.join(base_dir, 'data', 'member_level_cache.pkl')
+        if os.path.exists(ml_path):
+            with open(ml_path, 'rb') as _f:
+                _MEMBER_LEVEL_CACHE = pickle.load(_f)
+            print(f'  📊 メンバーレベルキャッシュ: {len(_MEMBER_LEVEL_CACHE):,}件')
+        elif os.path.exists(_hist_db_path):
+            print('  🔨 メンバーレベルキャッシュ構築中...')
+            _MEMBER_LEVEL_CACHE = build_member_level_cache(base_dir)
+            print(f'  ✅ メンバーレベルキャッシュ完了: {len(_MEMBER_LEVEL_CACHE):,}件')
+    except Exception as _e:
+        _MEMBER_LEVEL_CACHE = {}
+        print(f'  ⚠ メンバーレベルキャッシュ失敗: {_e}')
 
     if xgb_model is not None:
         _XGB_FUKUSHO_MODEL = xgb_model
@@ -638,6 +654,73 @@ PREP_RACE_PROFILES = {
         '菊花賞':         {'level': 4, 'dist_match': 0.70},
     },
 }
+
+
+def build_member_level_cache(base_dir):
+    """対戦相手のその後の成績から前走メンバーレベルキャッシュを構築して保存する。
+
+    各レースのスコア = (対戦相手の その後の勝利数×3 + 複勝数) / その後のレース数
+    → 0-10スケールに変換（×2.5）し、高い = 強い相手と戦った実績
+
+    計算はすべてメモリ上で行いDBクエリを最小化する。
+    """
+    import sqlite3 as _sq
+    from collections import defaultdict
+
+    db_path    = os.path.join(base_dir, 'data', 'history.db')
+    cache_path = os.path.join(base_dir, 'data', 'member_level_cache.pkl')
+
+    conn = _sq.connect(db_path)
+    rows = conn.execute(
+        'SELECT race_id, date, horse_name, place FROM horse_history '
+        'WHERE place IS NOT NULL AND place < 99 ORDER BY date'
+    ).fetchall()
+    conn.close()
+
+    # horse → [(date, race_id, place)] の時系列辞書
+    horse_timeline = defaultdict(list)
+    for race_id, date, horse_name, place in rows:
+        if horse_name:
+            horse_timeline[horse_name].append((str(date), race_id, int(place)))
+    # 日付昇順に整列（DBからORDER BY dateで来るが念のため）
+    for name in horse_timeline:
+        horse_timeline[name].sort(key=lambda x: x[0])
+
+    # race_id → [(horse_name, date, place)]
+    race_horses = defaultdict(list)
+    for race_id, date, horse_name, place in rows:
+        if horse_name:
+            race_horses[race_id].append((horse_name, str(date), int(place)))
+
+    cache = {}
+    for race_id, horses_in_race in race_horses.items():
+        if len(horses_in_race) < 5:
+            cache[race_id] = 5.0
+            continue
+
+        race_date = horses_in_race[0][1]
+        opp_scores = []
+
+        for horse_name, _, _ in horses_in_race:
+            timeline = horse_timeline.get(horse_name, [])
+            # この日付より後のレースを最大5件
+            subsequent = [(p, rid) for d, rid, p in timeline if d > race_date][:5]
+            if not subsequent:
+                continue
+            wins = sum(1 for p, _ in subsequent if p == 1)
+            top3 = sum(1 for p, _ in subsequent if p <= 3)
+            raw_score = (wins * 3 + top3) / len(subsequent)  # 0-4 range
+            opp_scores.append(raw_score)
+
+        if opp_scores:
+            avg_raw = sum(opp_scores) / len(opp_scores)
+            cache[race_id] = round(min(10.0, avg_raw * 2.5), 3)
+        else:
+            cache[race_id] = 5.0
+
+    with open(cache_path, 'wb') as f:
+        pickle.dump(cache, f)
+    return cache
 
 
 def calc_prev_member_level(prev_race_id):
@@ -1226,6 +1309,21 @@ def calc_features_for_xgb(h, race):
                if r.get('time_diff_sec') is not None and r.get('time_diff_sec') != 0]
     feats['f_time_diff_avg'] = float(sum(td_list) / len(td_list)) if td_list else 0.0
 
+    # ── 前走メンバーレベル（対戦相手のその後の成績で強度を評価）────────
+    ml_levels = []
+    for past_race in hist[:5]:
+        rid = past_race.get('race_id', '')
+        if rid and _MEMBER_LEVEL_CACHE:
+            ml_levels.append(_MEMBER_LEVEL_CACHE.get(rid, 5.0))
+    if ml_levels:
+        feats['f_member_level_avg']  = float(sum(ml_levels) / len(ml_levels))
+        feats['f_member_level_max']  = float(max(ml_levels))
+        feats['f_member_level_last'] = float(ml_levels[0])  # 直近走
+    else:
+        feats['f_member_level_avg']  = 5.0
+        feats['f_member_level_max']  = 5.0
+        feats['f_member_level_last'] = 5.0
+
     return feats
 
 
@@ -1280,6 +1378,9 @@ def add_relative_features(all_xfeats):
     # finish_time_avg: 低いほど速い
     _assign('f_finish_time_avg',  0.0,  'rl_f_finish_time',  reverse=False)
     _assign('f_time_diff_avg',    0.0,  'rl_f_time_diff',    reverse=False)
+    # 前走メンバーレベル（高いほど強い相手と戦った実績）
+    _assign('f_member_level_avg',  5.0, 'rl_f_member_level_avg')
+    _assign('f_member_level_last', 5.0, 'rl_f_member_level_last')
 
     # f_rl_rank / f_cl_rank: 複合スコアで順位付け
     for xf in all_xfeats:

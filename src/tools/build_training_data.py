@@ -151,6 +151,7 @@ def build_training_data(base_dir, output_csv='data/horse_features.csv',
     import src.features.engine as _eng
     from src.features.engine import (
         init_engine, calc_features_for_xgb, add_relative_features,
+        build_member_level_cache,
     )
 
     db_path  = os.path.join(base_dir, 'data', 'history.db')
@@ -162,7 +163,13 @@ def build_training_data(base_dir, output_csv='data/horse_features.csv',
         shutil.copy2(out_path, bak_path)
         print(f'Backed up existing CSV → {bak_path}')
 
-    # エンジン初期化（jockey_dict / trainer_dict を読み込む）
+    # メンバーレベルキャッシュを必ず最新で再構築（新データ取り込み後は再生成が必要）
+    ml_path = os.path.join(base_dir, 'data', 'member_level_cache.pkl')
+    print('🔨 メンバーレベルキャッシュ再構築中...')
+    build_member_level_cache(base_dir)
+    print(f'✅ メンバーレベルキャッシュ保存: {ml_path}')
+
+    # エンジン初期化（jockey_dict / trainer_dict + キャッシュを読み込む）
     init_engine(base_dir)
 
     conn = sqlite3.connect(db_path)
