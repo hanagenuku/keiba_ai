@@ -2,8 +2,11 @@
 アプリ用 JSON 生成。
 ノートブックの to_app_json を分離。
 """
-from src.betting.ev_filter import (VENUE_ORDER, calc_market_probs, calc_value_score,
-                                    classify_race_chaos, is_maiden_race)
+from src.betting.ev_filter import (VENUE_ORDER, VALUE_GAP_THRESHOLD,
+                                    calc_market_probs, calc_value_score,
+                                    classify_race_chaos, detect_value_horses,
+                                    is_maiden_race)
+from src.betting.make_bets import classify_chaos_grade
 from src.betting.make_bets import calc_ev, make_bets
 from src.features.engine import auto_comment, calc_all
 
@@ -154,6 +157,36 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday'):
                          if h['name'] == top1['name']), 99)
         conf = min(99, max(50, int(60 + (pop_rank - 2) * 4 + c['score_gap'] * 20)))
 
+        # chaos_grade / value_horses / bet_reason の計算
+        _chaos_score_val = c.get('chaos_score', 0)
+        for _h in scored:
+            if 'horse_num' not in _h:
+                _h['horse_num'] = _h.get('num')
+            if 'cal_prob' not in _h:
+                _h['cal_prob'] = _h.get('pn', 0)
+            if 'popularity' not in _h:
+                _h['popularity'] = _h.get('_pop', 99)
+        _grade    = classify_chaos_grade(scored, _chaos_score_val)
+        _vh_all   = detect_value_horses(scored, {})
+        _vh_list  = [{'horse_num': _h.get('horse_num', _h.get('num')),
+                      'horse_name': _h.get('name', ''),
+                      'value_gap':  round(_h.get('value_gap', 0), 4),
+                      'cal_prob':   round(_h.get('cal_prob', _h.get('pn', 0)), 4),
+                      'market_prob': round(_h.get('market_prob', 0), 4)}
+                     for _h in _vh_all if _h.get('value_gap', 0) >= VALUE_GAP_THRESHOLD]
+        _vh_count = len(_vh_list)
+        _bet_reason = (
+            f'波乱度{_grade}・バリュー馬{_vh_count}頭 → ' + (
+                '単勝+三連複' if _grade == 'A' and _vh_count > 0 else
+                '複勝（守り）' if _grade == 'A' else
+                'ワイド+三連複' if _grade == 'B' and _vh_count >= 2 else
+                '複勝+ワイド' if _grade == 'B' and _vh_count == 1 else
+                '複勝' if _grade == 'B' else
+                '複勝少額' if _grade == 'C' and _vh_count > 0 else
+                'スキップ'
+            )
+        )
+
         races_by_venue[rc].append({
             'r':    race['race_num'],
             'name': race['race_name'],
@@ -167,9 +200,12 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday'):
                 'score': top1['total'],
                 'style': top1.get('running_style', '差し'),
             },
-            'horses': _build_horses_list(scored, top1, by_odds),
-            'bets':   _build_bet_list(bets),
+            'horses':      _build_horses_list(scored, top1, by_odds),
+            'bets':        _build_bet_list(bets),
             'chaos_level': c.get('chaos_level', classify_race_chaos(scored)),
+            'chaos_grade': _grade,
+            'value_horses': _vh_list,
+            'bet_reason':  _bet_reason,
             'cmt': auto_comment(c, bias_data),
         })
 

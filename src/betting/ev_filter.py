@@ -6,12 +6,46 @@ from src.betting.make_bets import calc_ev
 from src.features.engine import calc_all, calc_chaos_score
 from src.utils.config import VENUE_ORDER
 
-EV_THRESHOLD = 1.05
-ODDS_MIN     = 1.3
-ODDS_MAX     = 30.0
-WIN_PROB_MIN = 0.06
-SKIP_CLASSES = ('未勝利', '新馬')
-VALUE_EV_MIN = 1.2   # バリュー判定の最低期待値
+EV_THRESHOLD      = 1.05
+ODDS_MIN          = 1.3
+ODDS_MAX          = 30.0
+WIN_PROB_MIN      = 0.06
+SKIP_CLASSES      = ('未勝利', '新馬')
+VALUE_EV_MIN      = 1.2   # バリュー判定の最低期待値
+VALUE_GAP_THRESHOLD = 0.10  # detect_value_horses のバリューギャップ閾値
+
+
+def detect_value_horses(horses, market_odds_map):
+    """AI複勝確率と市場オッズから乖離（バリューギャップ）を計算する。
+
+    Args:
+        horses           : 各馬の予測結果。必須キー: horse_num, cal_prob
+        market_odds_map  : {horse_num: fukusho_odds} の形式。
+                           空dictの場合は value_gap=0.0 を全馬に設定して続行。
+
+    Returns:
+        value_gap（AI確率 - 市場逆算確率）を付与した馬リスト（降順ソート済み）。
+        value_gap > VALUE_GAP_THRESHOLD の馬が「バリュー馬」。
+    """
+    result = []
+    for h in horses:
+        hnum      = h.get('horse_num', h.get('num'))
+        cal_prob  = h.get('cal_prob', h.get('pn', 0)) or 0.0
+        fuku_odds = market_odds_map.get(hnum) if market_odds_map else None
+
+        if fuku_odds and fuku_odds >= 1.0:
+            market_prob = 0.8 / fuku_odds
+        else:
+            market_prob = 0.0
+
+        value_gap = round(cal_prob - market_prob, 4) if market_odds_map else 0.0
+        entry = dict(h)
+        entry['value_gap']   = value_gap
+        entry['market_prob'] = round(market_prob, 4)
+        result.append(entry)
+
+    result.sort(key=lambda x: x['value_gap'], reverse=True)
+    return result
 
 
 def classify_race_chaos(scored):
