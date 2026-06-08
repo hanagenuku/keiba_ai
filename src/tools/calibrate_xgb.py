@@ -41,6 +41,22 @@ from src.models.calibration_xgb import save_xgb_calibrator
 
 # ── ペア構築 ────────────────────────────────────────────────────
 
+def _precompute_horse_past_races(conn):
+    """全馬の過去レース履歴を事前に dict に格納する。
+
+    {horse_name: [(date_str, race_id), ...]} の形で、date 昇順に並べた辞書を返す。
+    f_member_level の計算に必要な race_id を正確に渡すために使用する。
+    """
+    rows = conn.execute(
+        "SELECT horse_name, date, race_id FROM horse_history ORDER BY date ASC, id ASC"
+    ).fetchall()
+    from collections import defaultdict
+    d = defaultdict(list)
+    for r in rows:
+        d[r['horse_name']].append((str(r['date'] or ''), r['race_id']))
+    return d
+
+
 def _build_xgb_pairs(base_dir, verbose=True):
     """history.db から (raw_prob, is_fukusho, date, race_id) のペアを構築。
 
@@ -80,6 +96,9 @@ def _build_xgb_pairs(base_dir, verbose=True):
     if verbose:
         print(f'  対象レース: {len(races_rows):,}件')
 
+    # f_member_level 計算のため馬別過去レース履歴を事前構築
+    horse_past = _precompute_horse_past_races(conn)
+
     pairs = []
     skipped = 0
 
@@ -87,7 +106,8 @@ def _build_xgb_pairs(base_dir, verbose=True):
         if verbose and ri % 500 == 0 and ri > 0:
             print(f'  処理中... {ri}/{len(races_rows)}  (ペア: {len(pairs):,})')
 
-        race_id = row['race_id']
+        race_id  = row['race_id']
+        date_str = str(row['date'] or '')
         horses_rows = conn.execute(
             'SELECT * FROM horse_history WHERE race_id=? ORDER BY place ASC',
             (race_id,)
@@ -98,7 +118,7 @@ def _build_xgb_pairs(base_dir, verbose=True):
             continue
 
         race_dict = {
-            'id': race_id, 'date': row['date'], 'racecourse': row['racecourse'],
+            'id': race_id, 'date': date_str, 'racecourse': row['racecourse'],
             'race_num': row['race_num'], 'distance': row['distance'],
             'surface': row['surface'], 'race_class': row['race_class'] or '',
             'num_horses': len(horses_rows), 'race_name': row['race_name'] or '',
@@ -106,14 +126,20 @@ def _build_xgb_pairs(base_dir, verbose=True):
         }
 
         for hrow in horses_rows:
+            name = hrow['horse_name'] or ''
+            # このレース日より前の過去レースID（最大5件）を history に渡す
+            past = [{'race_id': rid} for d, rid in horse_past.get(name, [])
+                    if d < date_str][-5:]
+            past.reverse()  # 直近順
+
             h = {
                 'num': hrow['horse_num'] or 0,
-                'name': hrow['horse_name'] or '',
+                'name': name,
                 'jockey': hrow['jockey'] or '',
                 'trainer': hrow['trainer'] or '',
                 'age': hrow['age'] or 3,
                 'weight_load': hrow['weight_load'] or 55.0,
-                'history': [],
+                'history': past,
                 'place': hrow['place'] or 99,
                 'agari3f': hrow['agari3f'],
                 'corner_3': hrow['corner_3'],
