@@ -94,7 +94,11 @@ def classify_chaos_grade(horses, chaos_score):
 
 
 def select_sanrenpuku_bets(horses, chaos_grade, value_horses):
-    """三連複の買い方を波乱度とバリュー馬から決定する。
+    """三連複の買い方を波乱度とバリュー馬から決定する（厳格化版）。
+
+    【三連複を買う条件】
+      chaos_grade == 'C' かつ 頭数 >= 12 かつ バリュー馬あり
+      → 混戦条件のみ。chaos_grade A/B では三連複は買わない。
 
     Args:
         horses       : 全馬の予測結果（rl_rank 昇順ソート済みを前提）
@@ -106,44 +110,42 @@ def select_sanrenpuku_bets(horses, chaos_grade, value_horses):
     """
     from src.betting.ev_filter import VALUE_GAP_THRESHOLD
 
+    # 三連複は chaos_grade C（混戦）かつ 頭数>=12 かつ バリュー馬あり の場合のみ
+    if chaos_grade != 'C':
+        return None
+
+    n_horses = len(horses)
+    if n_horses < 12:
+        return None
+
+    vh = [h for h in value_horses if h.get('value_gap', 0) > VALUE_GAP_THRESHOLD]
+    if not vh:
+        return None
+
     top3 = sorted(horses, key=lambda h: h.get('rl_rank', 99))[:3]
     if len(top3) < 3:
         return None
 
-    if chaos_grade == 'A':
-        pops = [h.get('popularity', 99) for h in top3]
-        if all(p <= 4 for p in pops):
-            nums = [h.get('horse_num', h.get('num')) for h in top3]
-            return [{'type': '三連複', 'nums': nums,
-                     'reason': '波乱度A・上位3頭ボックス（全員4番人気以内）'}]
+    axis = vh[0]
+    axis_num = axis.get('horse_num', axis.get('num'))
+    himo = [h for h in top3 if h.get('horse_num', h.get('num')) != axis_num][:2]
+    if len(himo) < 2:
+        himo = [h for h in sorted(horses, key=lambda x: x.get('rl_rank', 99))
+                if h.get('horse_num', h.get('num')) != axis_num][:2]
+    if len(himo) < 2:
         return None
 
-    if chaos_grade == 'B':
-        vh = [h for h in value_horses if h.get('value_gap', 0) > VALUE_GAP_THRESHOLD]
-        if not vh:
-            return None
-        axis = vh[0]
-        axis_num = axis.get('horse_num', axis.get('num'))
-        himo = [h for h in top3 if h.get('horse_num', h.get('num')) != axis_num][:2]
-        if len(himo) < 2:
-            himo = [h for h in sorted(horses, key=lambda x: x.get('rl_rank', 99))
-                    if h.get('horse_num', h.get('num')) != axis_num][:2]
-        if len(himo) < 2:
-            return None
-        tickets = []
-        for h in himo:
-            n = h.get('horse_num', h.get('num'))
-            other = [x.get('horse_num', x.get('num'))
-                     for x in top3 if x.get('horse_num', x.get('num')) not in (axis_num, n)]
-            for o in other:
-                ticket = sorted([axis_num, n, o])
-                if ticket not in [t['nums'] for t in tickets]:
-                    tickets.append({'type': '三連複', 'nums': ticket,
-                                    'reason': f'波乱度B・バリュー馬#{axis_num}軸流し'})
-        return tickets or None
-
-    # chaos_grade == 'C'
-    return None
+    tickets = []
+    for h in himo:
+        n = h.get('horse_num', h.get('num'))
+        other = [x.get('horse_num', x.get('num'))
+                 for x in top3 if x.get('horse_num', x.get('num')) not in (axis_num, n)]
+        for o in other:
+            ticket = sorted([axis_num, n, o])
+            if ticket not in [t['nums'] for t in tickets]:
+                tickets.append({'type': '三連複', 'nums': ticket,
+                                'reason': f'混戦+多頭数・バリュー馬#{axis_num}軸流し'})
+    return tickets or None
 
 
 def select_bet_type(horses, chaos_grade, value_horses, market_odds_map):
@@ -170,14 +172,13 @@ def select_bet_type(horses, chaos_grade, value_horses, market_odds_map):
 
     bets = []
 
+    n_horses = len(horses)
+
     if chaos_grade == 'A':
         if vh:
             v_num = vh[0].get('horse_num', vh[0].get('num'))
             bets.append({'type': '単勝', 'nums': [v_num],
                          'reason': f'波乱度A・バリュー馬#{v_num}単勝'})
-            san = select_sanrenpuku_bets(horses, 'A', vh)
-            if san:
-                bets.extend(san)
         else:
             bets.append({'type': '複勝', 'nums': [top1_num],
                          'reason': '波乱度A・バリューなし → 本命複勝（守り）'})
@@ -188,9 +189,6 @@ def select_bet_type(horses, chaos_grade, value_horses, market_odds_map):
             v2_num = vh[1].get('horse_num', vh[1].get('num'))
             bets.append({'type': 'ワイド', 'nums': [v1_num, v2_num],
                          'reason': f'波乱度B・バリュー2頭ワイド #{v1_num}-#{v2_num}'})
-            san = select_sanrenpuku_bets(horses, 'B', vh)
-            if san:
-                bets.extend(san)
         elif len(vh) == 1:
             v_num = vh[0].get('horse_num', vh[0].get('num'))
             bets.append({'type': '複勝', 'nums': [v_num],
@@ -203,12 +201,20 @@ def select_bet_type(horses, chaos_grade, value_horses, market_odds_map):
         else:
             bets.append({'type': '複勝', 'nums': [top1_num],
                          'reason': '波乱度B・バリューなし → 本命複勝'})
+        # 波乱度B では三連複は買わない
 
     else:  # chaos_grade == 'C'
-        if vh:
+        if vh and n_horses >= 12:
             v_num = vh[0].get('horse_num', vh[0].get('num'))
             bets.append({'type': '複勝', 'nums': [v_num],
-                         'reason': f'波乱度C・バリュー馬#{v_num}複勝少額'})
+                         'reason': f'混戦+多頭数・バリュー馬#{v_num}複勝少額'})
+            san = select_sanrenpuku_bets(horses, 'C', vh)
+            if san:
+                bets.extend(san)
+        elif vh:
+            v_num = vh[0].get('horse_num', vh[0].get('num'))
+            bets.append({'type': '複勝', 'nums': [v_num],
+                         'reason': f'波乱度C・バリュー馬#{v_num}複勝少額（頭数不足で三連複なし）'})
         # バリューなしはスキップ（空リスト）
 
     return bets
