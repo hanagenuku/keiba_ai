@@ -159,6 +159,7 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday'):
 
         # chaos_grade / value_horses / bet_reason の計算
         _chaos_score_val = c.get('chaos_score', 0)
+        _num_horses      = race.get('num_horses', len(scored))
         for _h in scored:
             if 'horse_num' not in _h:
                 _h['horse_num'] = _h.get('num')
@@ -175,17 +176,20 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday'):
                       'market_prob': round(_h.get('market_prob', 0), 4)}
                      for _h in _vh_all if _h.get('value_gap', 0) >= VALUE_GAP_THRESHOLD]
         _vh_count = len(_vh_list)
-        _bet_reason = (
-            f'波乱度{_grade}・バリュー馬{_vh_count}頭 → ' + (
-                '単勝+三連複' if _grade == 'A' and _vh_count > 0 else
-                '複勝（守り）' if _grade == 'A' else
-                'ワイド+三連複' if _grade == 'B' and _vh_count >= 2 else
-                '複勝+ワイド' if _grade == 'B' and _vh_count == 1 else
-                '複勝' if _grade == 'B' else
-                '複勝少額' if _grade == 'C' and _vh_count > 0 else
-                'スキップ'
-            )
-        )
+        # bet_reason は頭数ベースのルールに合わせて生成
+        if _num_horses >= 14:
+            _bet_reason = (f'多頭数({_num_horses}頭)・馬連+' +
+                           ('三連複' if _grade == 'C' else 'ワイド'))
+        elif _num_horses <= 8:
+            _bet_reason = f'少頭数({_num_horses}頭)・馬連'
+        elif _grade == 'A':
+            _bet_reason = f'中頭数({_num_horses}頭)+堅い・馬連'
+        elif _grade == 'B':
+            _bet_reason = (f'中頭数({_num_horses}頭)+中荒れ・' +
+                           ('複勝+ワイド' if _vh_count > 0 else '複勝'))
+        else:
+            _bet_reason = (f'中頭数({_num_horses}頭)+大荒れ・' +
+                           ('複勝少額' if _vh_count > 0 else 'スキップ'))
 
         races_by_venue[rc].append({
             'r':    race['race_num'],
@@ -202,10 +206,11 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday'):
             },
             'horses':      _build_horses_list(scored, top1, by_odds),
             'bets':        _build_bet_list(bets),
-            'chaos_level': c.get('chaos_level', classify_race_chaos(scored)),
-            'chaos_grade': _grade,
+            'chaos_level':  c.get('chaos_level', classify_race_chaos(scored)),
+            'chaos_grade':  _grade,
+            'num_horses':   _num_horses,
             'value_horses': _vh_list,
-            'bet_reason':  _bet_reason,
+            'bet_reason':   _bet_reason,
             'cmt': auto_comment(c, bias_data),
         })
 

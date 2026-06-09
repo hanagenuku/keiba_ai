@@ -18,7 +18,13 @@ REN_AMT  = 300
 TAN2_AMT = 300
 SAN_AMT  = 300
 
-# ── 券種選択モデル（オプション）────────────────────────────────────────────
+# ── ルールベース券種選択の金額定数（フォワードテスト後に調整）────────────────
+BET_AMOUNT_REN  = 500   # 馬連の基本金額（円）
+BET_AMOUNT_WIDE = 300   # ワイドの基本金額（円）
+BET_AMOUNT_FUKU = 500   # 複勝の基本金額（円）
+BET_AMOUNT_SAN  = 200   # 三連複の基本金額（円）※少額固定
+
+# ── 券種選択モデル（後方互換のため残存。ルールベースでは使用しない）──────────
 _BET_SELECTOR    = None
 _BET_SELECTOR_LE = None
 
@@ -49,9 +55,9 @@ def init_betting(base_dir,
     if os.path.exists(bs_path) and os.path.exists(le_path):
         with open(bs_path, 'rb') as f: _BET_SELECTOR    = pickle.load(f)
         with open(le_path, 'rb') as f: _BET_SELECTOR_LE = pickle.load(f)
-        print('✅ 券種選択モデル読み込み完了')
+        print('✅ 券種選択モデル読み込み完了（ルールベースのため予測には使用しない）')
     else:
-        print('⚠ 券種選択モデルなし → EVルールで代替')
+        print('⚠ 券種選択モデルなし → ルールベースで動作')
 
 
 def calc_ev(win_prob, odds):
@@ -74,7 +80,12 @@ def calc_kelly(win_prob, odds, bankroll=None, max_ratio=0.05):
 
 
 def classify_chaos_grade(horses, chaos_score):
-    """波乱度スコアとトップ馬の人気から A/B/C を判定する。
+    """波乱度スコアとRL1位馬の人気から A/B/C を判定する。
+
+    判定ルール（優先順）:
+        chaos_score < 0.30 かつ rl_rank=1 の人気 <= 2  → 'A'（堅い）
+        chaos_score > 0.55 または rl_rank=1 の人気 >= 6 → 'C'（大荒れ）
+        それ以外 → 'B'（中荒れ）
 
     Args:
         horses      : 全馬の予測結果。必須キー: rl_rank, popularity
@@ -93,135 +104,117 @@ def classify_chaos_grade(horses, chaos_score):
     return 'B'
 
 
-def select_sanrenpuku_bets(horses, chaos_grade, value_horses):
-    """三連複の買い方を波乱度とバリュー馬から決定する（厳格化版）。
+def select_bet_type(horses, chaos_grade, value_horses, num_horses):
+    """波乱度・頭数・バリュー馬を総合して最終買い目を生成する。
 
-    【三連複を買う条件】
-      chaos_grade == 'C' かつ 頭数 >= 12 かつ バリュー馬あり
-      → 混戦条件のみ。chaos_grade A/B では三連複は買わない。
+    100%ルールベース。XGBモデル（bet_selector_model.pkl）は使用しない。
+    ★ 馬連・ワイドの対象馬は rl_rank（AI予測順位）上位を使用する。
+
+    【多頭数(>=14頭)】
+        A/B: 馬連（rl_rank 1×2）+ ワイド（rl_rank 1×2）
+        C  : 馬連（rl_rank 1×2）+ 三連複（rl_rank 1〜3ボックス・少額）
+
+    【少頭数(<=8頭)】
+        → 馬連（rl_rank 1×2）のみ
+
+    【中頭数(9-13頭)】
+        A: 馬連（rl_rank 1×2）
+        B + バリュー馬あり: 複勝（バリュー馬）+ ワイド（バリュー馬×rl_rank1位）
+        B + バリュー馬なし: 複勝（rl_rank 1位）
+        C + バリュー馬あり: 複勝（バリュー馬）少額
+        C + バリュー馬なし: スキップ（空リスト）
 
     Args:
-        horses       : 全馬の予測結果（rl_rank 昇順ソート済みを前提）
-        chaos_grade  : 'A' / 'B' / 'C'
+        horses       : 全馬の予測結果（rl_rank 付きを前提）
+        chaos_grade  : 'A'/'B'/'C'
         value_horses : value_gap > VALUE_GAP_THRESHOLD の馬リスト
+        num_horses   : 出走頭数
 
     Returns:
-        買い目リスト（各要素: {type, nums, reason}）または None
+        買い目リスト。各要素: {type, nums, amount, reason}
+        スキップ時は空リスト []
     """
     from src.betting.ev_filter import VALUE_GAP_THRESHOLD
 
-    # 三連複は chaos_grade C（混戦）かつ 頭数>=12 かつ バリュー馬あり の場合のみ
-    if chaos_grade != 'C':
-        return None
-
-    n_horses = len(horses)
-    if n_horses < 12:
-        return None
-
-    vh = [h for h in value_horses if h.get('value_gap', 0) > VALUE_GAP_THRESHOLD]
-    if not vh:
-        return None
-
-    top3 = sorted(horses, key=lambda h: h.get('rl_rank', 99))[:3]
-    if len(top3) < 3:
-        return None
-
-    axis = vh[0]
-    axis_num = axis.get('horse_num', axis.get('num'))
-    himo = [h for h in top3 if h.get('horse_num', h.get('num')) != axis_num][:2]
-    if len(himo) < 2:
-        himo = [h for h in sorted(horses, key=lambda x: x.get('rl_rank', 99))
-                if h.get('horse_num', h.get('num')) != axis_num][:2]
-    if len(himo) < 2:
-        return None
-
-    tickets = []
-    for h in himo:
-        n = h.get('horse_num', h.get('num'))
-        other = [x.get('horse_num', x.get('num'))
-                 for x in top3 if x.get('horse_num', x.get('num')) not in (axis_num, n)]
-        for o in other:
-            ticket = sorted([axis_num, n, o])
-            if ticket not in [t['nums'] for t in tickets]:
-                tickets.append({'type': '三連複', 'nums': ticket,
-                                'reason': f'混戦+多頭数・バリュー馬#{axis_num}軸流し'})
-    return tickets or None
-
-
-def select_bet_type(horses, chaos_grade, value_horses, market_odds_map):
-    """波乱度・バリュー馬・オッズを総合して最終買い目を生成する。
-
-    Args:
-        horses          : 全馬の予測結果
-        chaos_grade     : 'A'/'B'/'C'
-        value_horses    : value_gap > 閾値 の馬
-        market_odds_map : {horse_num: fukusho_odds}
-
-    Returns:
-        買い目リスト。各要素: {type, nums, reason}
-    """
-    from src.betting.ev_filter import VALUE_GAP_THRESHOLD
-
-    by_rl  = sorted(horses, key=lambda h: h.get('rl_rank', 99))
-    top1   = by_rl[0] if by_rl else None
+    by_rl = sorted(horses, key=lambda h: h.get('rl_rank', 99))
+    top1  = by_rl[0] if len(by_rl) > 0 else None
+    top2  = by_rl[1] if len(by_rl) > 1 else None
+    top3  = by_rl[2] if len(by_rl) > 2 else None
     if top1 is None:
         return []
 
-    top1_num = top1.get('horse_num', top1.get('num'))
+    n1 = top1.get('horse_num', top1.get('num'))
+    n2 = top2.get('horse_num', top2.get('num')) if top2 else None
+    n3 = top3.get('horse_num', top3.get('num')) if top3 else None
     vh = [h for h in value_horses if h.get('value_gap', 0) >= VALUE_GAP_THRESHOLD]
 
-    bets = []
+    def ren(reason):
+        return {'type': '馬連', 'nums': [n1, n2], 'amount': BET_AMOUNT_REN, 'reason': reason}
 
-    n_horses = len(horses)
+    def wide(a, b, reason):
+        return {'type': 'ワイド', 'nums': [a, b], 'amount': BET_AMOUNT_WIDE, 'reason': reason}
 
+    def fuku(num, reason):
+        return {'type': '複勝', 'nums': [num], 'amount': BET_AMOUNT_FUKU, 'reason': reason}
+
+    def san(nums, reason):
+        return {'type': '三連複', 'nums': sorted(nums), 'amount': BET_AMOUNT_SAN, 'reason': reason}
+
+    # ── 多頭数(>=14頭) ────────────────────────────────────────────────────────
+    if num_horses >= 14:
+        if chaos_grade in ('A', 'B'):
+            if n2 is None:
+                return [fuku(n1, f'多頭数({num_horses}頭)・馬連候補不足→複勝')]
+            return [
+                ren(f'多頭数({num_horses}頭)・馬連(RL1×2)'),
+                wide(n1, n2, f'多頭数({num_horses}頭)・ワイド(RL1×2)'),
+            ]
+        else:  # C
+            if n2 is None:
+                return []
+            bets = [ren(f'多頭数({num_horses}頭)+混戦・馬連(RL1×2)')]
+            if n3 is not None:
+                bets.append(san([n1, n2, n3],
+                                f'多頭数({num_horses}頭)+混戦・三連複RL1〜3ボックス'))
+            return bets
+
+    # ── 少頭数(<=8頭) ─────────────────────────────────────────────────────────
+    if num_horses <= 8:
+        if n2 is None:
+            return [fuku(n1, f'少頭数({num_horses}頭)・馬連候補不足→複勝')]
+        return [ren(f'少頭数({num_horses}頭)・馬連(RL1×2)')]
+
+    # ── 中頭数(9-13頭) ────────────────────────────────────────────────────────
     if chaos_grade == 'A':
+        if n2 is None:
+            return [fuku(n1, f'中頭数({num_horses}頭)+堅い・馬連候補不足→複勝')]
+        return [ren(f'中頭数({num_horses}頭)+堅い・馬連(RL1×2)')]
+
+    if chaos_grade == 'B':
         if vh:
             v_num = vh[0].get('horse_num', vh[0].get('num'))
-            bets.append({'type': '単勝', 'nums': [v_num],
-                         'reason': f'波乱度A・バリュー馬#{v_num}単勝'})
-        else:
-            bets.append({'type': '複勝', 'nums': [top1_num],
-                         'reason': '波乱度A・バリューなし → 本命複勝（守り）'})
+            bets = [fuku(v_num, f'中頭数({num_horses}頭)+中荒れ・バリュー馬#{v_num}複勝')]
+            if v_num != n1:
+                bets.append(wide(v_num, n1,
+                                 f'中頭数({num_horses}頭)+中荒れ・バリュー#{v_num}×RL1位#{n1}ワイド'))
+            elif n2 is not None:
+                bets.append(wide(v_num, n2,
+                                 f'中頭数({num_horses}頭)+中荒れ・バリュー#{v_num}×RL2位#{n2}ワイド'))
+            return bets
+        return [fuku(n1, f'中頭数({num_horses}頭)+中荒れ・バリューなし→RL1位複勝')]
 
-    elif chaos_grade == 'B':
-        if len(vh) >= 2:
-            v1_num = vh[0].get('horse_num', vh[0].get('num'))
-            v2_num = vh[1].get('horse_num', vh[1].get('num'))
-            bets.append({'type': 'ワイド', 'nums': [v1_num, v2_num],
-                         'reason': f'波乱度B・バリュー2頭ワイド #{v1_num}-#{v2_num}'})
-        elif len(vh) == 1:
-            v_num = vh[0].get('horse_num', vh[0].get('num'))
-            bets.append({'type': '複勝', 'nums': [v_num],
-                         'reason': f'波乱度B・バリュー馬#{v_num}複勝'})
-            top2 = by_rl[1] if len(by_rl) > 1 else None
-            if top2:
-                t2_num = top2.get('horse_num', top2.get('num'))
-                bets.append({'type': 'ワイド', 'nums': [v_num, t2_num],
-                             'reason': f'波乱度B・バリュー#{v_num}×RL2位#{t2_num}ワイド'})
-        else:
-            bets.append({'type': '複勝', 'nums': [top1_num],
-                         'reason': '波乱度B・バリューなし → 本命複勝'})
-        # 波乱度B では三連複は買わない
-
-    else:  # chaos_grade == 'C'
-        if vh and n_horses >= 12:
-            v_num = vh[0].get('horse_num', vh[0].get('num'))
-            bets.append({'type': '複勝', 'nums': [v_num],
-                         'reason': f'混戦+多頭数・バリュー馬#{v_num}複勝少額'})
-            san = select_sanrenpuku_bets(horses, 'C', vh)
-            if san:
-                bets.extend(san)
-        elif vh:
-            v_num = vh[0].get('horse_num', vh[0].get('num'))
-            bets.append({'type': '複勝', 'nums': [v_num],
-                         'reason': f'波乱度C・バリュー馬#{v_num}複勝少額（頭数不足で三連複なし）'})
-        # バリューなしはスキップ（空リスト）
-
-    return bets
+    # chaos_grade == 'C'
+    if vh:
+        v_num = vh[0].get('horse_num', vh[0].get('num'))
+        return [fuku(v_num, f'中頭数({num_horses}頭)+大荒れ・バリュー馬#{v_num}複勝少額')]
+    return []  # バリューなし → スキップ
 
 
 def make_bets(c, market_odds_map=None):
-    """EV × 適性係数スコアで最適券種を選択する（v5）。
+    """最適券種を選択してベット辞書リストを返す。
+
+    市場オッズ（market_odds_map）が渡された場合はルールベースで決定する。
+    省略時は従来のEV×スコアリングロジックにフォールバック（後方互換）。
 
     Args:
         c               : ability_first_loose が返す候補辞書
@@ -229,17 +222,17 @@ def make_bets(c, market_odds_map=None):
         market_odds_map : {horse_num: fukusho_odds}（省略時は従来ロジック）
 
     Returns:
-        ベット辞書のリスト（最大2件）
+        ベット辞書のリスト
     """
     race   = c['race']
     scored = c['scored']
     top1   = c['top1']
-    nh  = race.get('num_horses', 16)
+    nh  = race.get('num_horses', len(scored))
     sg  = c.get('score_gap', 0)
     ch  = c.get('chaos_score', 0)
     chaos_level = c.get('chaos_level', 'B')
 
-    # market_odds_map があれば波乱度×バリュー馬ルールベースで決定
+    # ── ルールベース（market_odds_map が渡された場合）──────────────────────────
     if market_odds_map is not None:
         from src.betting.ev_filter import detect_value_horses
         from src.features.engine import calc_chaos_score
@@ -253,32 +246,30 @@ def make_bets(c, market_odds_map=None):
         chaos_score_val = c.get('chaos_score', calc_chaos_score(race, scored))
         grade     = classify_chaos_grade(scored, chaos_score_val)
         vh_all    = detect_value_horses(scored, market_odds_map)
-        rule_bets = select_bet_type(scored, grade, vh_all, market_odds_map)
+        rule_bets = select_bet_type(scored, grade, vh_all, nh)
         if rule_bets:
             result = []
             for rb in rule_bets:
-                nums = rb['nums']
-                first_num = nums[0] if isinstance(nums[0], int) else nums[0]
+                nums      = rb['nums']
+                first_num = nums[0]
                 horse_obj = next((h for h in scored if h.get('num') == first_num
                                   or h.get('horse_num') == first_num), top1)
                 result.append({
-                    'type':       rb['type'],
-                    'mark':       '◎',
-                    'nums':       nums,
-                    'horse_name': horse_obj.get('name', ''),
-                    'odds':       horse_obj.get('win_odds', 0) or 0,
-                    'odds_est':   horse_obj.get('win_odds', 0) or 0,
-                    'amount':     (FUKU_AMT if rb['type'] == '複勝' else
-                                   TAN_AMT  if rb['type'] == '単勝' else
-                                   WIDE_AMT if rb['type'] == 'ワイド' else
-                                   SAN_AMT * len(nums) // 3),
-                    'ev':         0.0,
-                    'prob':       round(horse_obj.get('pn', 0), 4),
-                    'pattern':    rb['reason'],
+                    'type':        rb['type'],
+                    'mark':        '◎',
+                    'nums':        nums,
+                    'horse_name':  horse_obj.get('name', ''),
+                    'odds':        horse_obj.get('win_odds', 0) or 0,
+                    'odds_est':    horse_obj.get('win_odds', 0) or 0,
+                    'amount':      rb['amount'],
+                    'ev':          0.0,
+                    'prob':        round(horse_obj.get('pn', 0), 4),
+                    'pattern':     rb['reason'],
                     'chaos_grade': grade,
                 })
             return result
 
+    # ── 従来の EV×スコアリングロジック（後方互換フォールバック）──────────────
     def go(i, k, d):
         return scored[i].get(k, d) if len(scored) > i else d
 
@@ -297,11 +288,9 @@ def make_bets(c, market_odds_map=None):
     ita = (nh >= 14)
     imd = (3.0 <= o1 <= 12.0)
     icl = (sg >= 0.5 and o1 >= 3.0)
-    # 波乱度フラグ
-    is_solid = (chaos_level == 'A')   # 堅い: 単勝・馬連強化
-    is_chaos = (chaos_level == 'C')   # 大荒れ: 本命系弱め・穴複勝
+    is_solid = (chaos_level == 'A')
+    is_chaos = (chaos_level == 'C')
 
-    # 各券種の確率・オッズ・EV・ベット額
     fp  = f1
     fo  = max(1.2, o1 * 0.30)
     fev = calc_ev(fp, fo)
@@ -348,22 +337,6 @@ def make_bets(c, market_odds_map=None):
 
     EV   = 1.00
     cds  = []
-
-    # XGBoostで最適券種を予測（モデルがあれば）
-    if _BET_SELECTOR is not None:
-        import pandas as _pd
-        X_pred = _pd.DataFrame([[
-            nh, o1, o2, o3,
-            o2 / o1 if o1 > 0 else 2.0,
-            o3 / o2 if o2 > 0 else 2.0,
-            ch,
-            race.get('distance', 1600),
-            1 if race.get('surface') == '芝' else 0,
-            race.get('last_3f', 0) or 0,
-        ]], columns=['n', 'o1', 'o2', 'o3', 'gap12', 'gap23',
-                     'chaos', 'distance', 'surface', 'last3f'])
-        _BET_SELECTOR_LE.classes_[_BET_SELECTOR.predict(X_pred)[0]]
-        EV = 0.90
 
     s0n  = scored[0]['num']  if scored           else top1['num']
     s1n  = scored[1]['num']  if len(scored) > 1  else 0
