@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="KEIBA-AI">
 <meta name="theme-color" content="#0a2e1a">
 <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%230a2e1a'/><text y='70' x='10' font-size='60'>🏇</text></svg>">
-<title>KEIBA-AI v6</title><!-- build:20260610-0001 -->
+<title>KEIBA-AI v5</title><!-- build:20260510-1251 -->
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
@@ -64,26 +64,15 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
 .htbl th{font-weight:700;padding:4px 3px;text-align:center;border-bottom:2px solid #ddd;font-size:10px;color:#fff;background:var(--g1)}
 .htbl th.col-name{text-align:left;background:#2d6a4f}
 .htbl th.col-rl{background:#e67e22}
+.htbl th.col-cl{background:#8e44ad}
 .htbl th.col-mk{background:#555;width:26px}
 .htbl td{padding:5px 3px;border-bottom:1px solid #f0ece4;vertical-align:middle;text-align:center}
 .htbl td.col-name{text-align:left;font-weight:600;max-width:75px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .htbl tr.hl td{background:rgba(201,168,76,0.10);font-weight:700}
 .htbl td.col-rl{font-weight:800;color:#c0450a}
+.htbl td.col-cl{font-weight:800;color:#7d29b5}
 .htbl td.phi{color:#c0392b;font-weight:800}
 .htbl td.plo{color:var(--g2);font-weight:600}
-/* 人気列 */
-.htbl th.col-pop{background:#34495e;width:22px}
-.htbl td.col-pop{font-weight:700;color:#555;font-size:10px}
-/* オッズ列 */
-.htbl th.col-odds{background:#2c3e50}
-.htbl td.col-odds{font-size:10px;color:#666}
-/* バリュー列 */
-.htbl th.col-val{background:#117a65}
-/* バリューバッジ */
-.val-buy{color:#fff;background:#27ae60;font-weight:800;font-size:10px;border-radius:3px}
-.val-neutral{color:#27ae60;font-weight:600;font-size:10px}
-.val-over{color:#999;font-size:10px}
-.val-none{color:#ccc;font-size:10px}
 .mk{display:inline-block;padding:1px 4px;border-radius:3px;font-size:9px;font-weight:800;line-height:1.5}
 .mk-推{background:#8e44ad;color:#fff}
 .mk-高{background:#27ae60;color:#fff}
@@ -216,49 +205,16 @@ function render() {
       html += '<div class="hstrip" onclick="toggle(\''+k+'\')"><span class="hbadge">◎本命</span><span class="hname">#'+race.honmei.n+' '+race.honmei.name+'</span><span class="hodds">'+race.honmei.odds+'倍 / '+race.honmei.style+'</span></div>';
     }
     if (isOpen) {
-      html += '<div class="detail open"><div class="det-inner"><div class="sec">出走馬・AI評価</div>';
-      if (race.chaos_grade) {
-        const gradeColor = {A:'#2980b9', B:'#e67e22', C:'#c0392b'}[race.chaos_grade] || '#999';
-        const gradeLabel = {A:'堅い', B:'中荒れ', C:'大荒れ'}[race.chaos_grade] || '';
-        html += '<div style="padding:0 0 8px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">';
-        html += '<span style="background:'+gradeColor+';color:#fff;font-size:10px;font-weight:800;padding:2px 8px;border-radius:4px">波乱度'+race.chaos_grade+' '+gradeLabel+'</span>';
-        if (race.bet_reason) {
-          html += '<span style="font-size:11px;color:#666">'+race.bet_reason+'</span>';
-        }
-        html += '</div>';
-      }
-      html += '<table class="htbl"><tr><th style="width:20px">番</th><th class="col-name">馬名</th><th class="col-pop" style="width:22px">人</th><th class="col-odds" style="width:34px">ｵｯｽﾞ</th><th class="col-mk">特記</th><th class="col-rl" style="width:24px">RL</th><th style="width:32px">勝率</th><th style="width:32px">複勝</th><th class="col-val" style="width:32px">Val</th></tr>';
+      html += '<div class="detail open"><div class="det-inner"><div class="sec">出走馬・AI評価</div><table class="htbl"><tr><th style="width:22px">番</th><th class="col-name">馬名</th><th class="col-mk">特記</th><th class="col-rl" style="width:24px">RL</th><th class="col-cl" style="width:24px">CL</th><th style="width:34px">勝率</th><th style="width:34px">連対率</th><th style="width:34px">複勝率</th></tr>';
       for (const h of (race.horses||[])) {
         const isH = race.honmei && h.n === race.honmei.n;
         const rl = h.rl_rank && h.rl_rank<99 ? h.rl_rank : '-';
+        const cl = h.cl_rank && h.cl_rank<99 ? h.cl_rank : '-';
         const tan = h.tan_pct != null ? h.tan_pct+'%' : (h.score ? (h.score*3.5).toFixed(1)+'%' : '-');
+        const ren = h.ren_pct != null ? h.ren_pct+'%' : '-';
         const fuku = h.fuku_pct != null ? h.fuku_pct+'%' : (h.score ? Math.min(88,h.score*11).toFixed(1)+'%' : '-');
         const hi = h.fuku_pct != null && h.fuku_pct >= 38;
-
-        // 人気
-        const pop = h.pop != null ? h.pop : '-';
-
-        // オッズ（小数1桁。100倍以上は整数）
-        const odds = h.odds != null && h.odds !== 0 ? (h.odds >= 100 ? Math.round(h.odds) : h.odds.toFixed(1)) : '-';
-
-        // バリューギャップ表示
-        const vg = h.value_gap;
-        let valCell = '-';
-        let valClass = 'val-none';
-        if (vg != null && vg !== 0) {
-          if (vg >= 0.10) {
-            valCell = '+' + (vg * 100).toFixed(0) + '%';
-            valClass = 'val-buy';
-          } else if (vg > 0) {
-            valCell = '+' + (vg * 100).toFixed(0) + '%';
-            valClass = 'val-neutral';
-          } else {
-            valCell = (vg * 100).toFixed(0) + '%';
-            valClass = 'val-over';
-          }
-        }
-
-        html += '<tr'+(isH?' class="hl"':'')+'><td>'+(isH?'◎':'')+h.n+'</td><td class="col-name">'+h.name+'</td><td class="col-pop">'+pop+'</td><td class="col-odds">'+odds+'</td><td>'+mkBadge(h.mark)+'</td><td class="col-rl">'+rl+'</td><td>'+tan+'</td><td class="'+(hi?'phi':'plo')+'">'+fuku+'</td><td class="'+valClass+'">'+valCell+'</td></tr>';
+        html += '<tr'+(isH?' class="hl"':'')+'><td>'+(isH?'◎':'')+h.n+'</td><td class="col-name">'+h.name+'</td><td>'+mkBadge(h.mark)+'</td><td class="col-rl">'+rl+'</td><td class="col-cl">'+cl+'</td><td>'+tan+'</td><td>'+ren+'</td><td class="'+(hi?'phi':'plo')+'">'+fuku+'</td></tr>';
       }
       html += '</table><div class="bets"><div class="sec" style="margin-top:12px">買い目</div>';
       for (const b of (race.bets||[])) {

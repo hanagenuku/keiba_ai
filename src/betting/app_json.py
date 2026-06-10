@@ -69,12 +69,13 @@ def _assign_marks(scored, by_odds):
     return marks
 
 
-def _build_horses_list(scored, top1, by_odds):
+def _build_horses_list(scored, top1, by_odds, value_gap_map=None):
     """アプリ表示用の馬リストを生成する（馬番順）。
 
     本命はAI確率1位の馬。マークは _assign_marks で決定。
     """
     marks = _assign_marks(scored, by_odds)
+    value_gap_map = value_gap_map or {}
 
     horses = []
     for h in scored:
@@ -82,7 +83,7 @@ def _build_horses_list(scored, top1, by_odds):
         pn  = h.get('pn', 0)
         wo  = h.get('win_odds', 0) or 0
 
-        horses.append({
+        horse = {
             'n':        h['num'],
             'name':     h['name'],
             'odds':     wo,
@@ -98,7 +99,11 @@ def _build_horses_list(scored, top1, by_odds):
             'ev':       round(h.get('ev', 0.0), 3),
             'prob_gap': round(h.get('prob_gap', 0.0), 4),
             'mark':     marks[h['num']],
-        })
+        }
+        vg = value_gap_map.get(h['num'])
+        if vg:
+            horse['value_gap'] = round(vg, 3)
+        horses.append(horse)
     horses.sort(key=lambda x: x['n'])
     return horses
 
@@ -175,6 +180,7 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday'):
                       'cal_prob':   round(_h.get('cal_prob', _h.get('pn', 0)), 4),
                       'market_prob': round(_h.get('market_prob', 0), 4)}
                      for _h in _vh_all if _h.get('value_gap', 0) >= VALUE_GAP_THRESHOLD]
+        _vg_map   = {_h.get('horse_num', _h.get('num')): _h.get('value_gap', 0) for _h in _vh_all}
         _vh_count = len(_vh_list)
         # bet_reason は頭数ベースのルールに合わせて生成
         if _num_horses >= 14:
@@ -204,7 +210,7 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday'):
                 'score': top1['total'],
                 'style': top1.get('running_style', '差し'),
             },
-            'horses':      _build_horses_list(scored, top1, by_odds),
+            'horses':      _build_horses_list(scored, top1, by_odds, _vg_map),
             'bets':        _build_bet_list(bets),
             'chaos_level':  c.get('chaos_level', classify_race_chaos(scored)),
             'chaos_grade':  _grade,
