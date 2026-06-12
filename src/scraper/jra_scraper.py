@@ -61,6 +61,108 @@ def _try_fetch_shutuba(sess, base, r, date_str, sx):
     return resp, soup
 
 
+def find_r01_odds(base, date, sess):
+    """単勝・複勝オッズページ(accessO.html)のsuffixを探索する。
+
+    出馬表(pw01dde01)とオッズ(pw01oxw1)はCNAMEのprefixが異なる想定。
+    JRAサイトの実際のページ構造に応じて要調整。
+    """
+    odds_base = base.replace('pw01dde01', 'pw01oxw1')
+    for s in range(256):
+        cn = f'{odds_base}01{date}/{s:02X}'
+        try:
+            r = sess.post(f'{JRA_BASE}/JRADB/accessO.html',
+                          data={'cname': cn, 'CNAME': cn}, timeout=10)
+            r.encoding = 'shift_jis'
+        except Exception:
+            return None
+        if 'パラメータエラー' not in r.text and BeautifulSoup(r.text, 'lxml').find_all('table'):
+            return s
+        time.sleep(0.05)
+    return None
+
+
+def fetch_odds_for_race(sess, base, race_num, date_str, sx):
+    """指定レースの単勝・複勝オッズを取得する。
+
+    JRAの単勝・複勝オッズページ(accessO.html / pw01oxw1系CNAME)を想定した
+    ベストエフォート実装。ページ構造が想定と異なる場合は空dictを返す
+    （呼び出し側は market_odds_map={} として安全にフォールバックする）。
+
+    Returns:
+        {horse_num: {'tansho': float|None, 'fukusho': float|None}}
+    """
+    odds_base = base.replace('pw01dde01', 'pw01oxw1')
+    cn = f'{odds_base}{race_num:02d}{date_str}/{sx}'
+    try:
+        resp = sess.post(f'{JRA_BASE}/JRADB/accessO.html',
+                         data={'cname': cn, 'CNAME': cn},
+                         headers=HEADERS, timeout=15)
+        resp.encoding = 'shift_jis'
+        if 'パラメータエラー' in resp.text:
+            return {}
+        soup = BeautifulSoup(resp.text, 'lxml')
+    except Exception:
+        return {}
+
+    odds_map = {}
+    for table in soup.find_all('table'):
+        for tr in table.find_all('tr'):
+            cells = [unicodedata.normalize('NFKC', c.get_text(strip=True))
+                     for c in tr.find_all(['td', 'th'])]
+            if not cells:
+                continue
+            # 先頭セルが馬番(1-18)であること
+            m = re.match(r'^(\d{1,2})$', cells[0])
+            if not m:
+                continue
+            horse_num = int(m.group(1))
+            if not (1 <= horse_num <= 18):
+                continue
+
+            tansho = None
+            fukusho = None
+            for cell in cells[1:]:
+                # 複勝オッズ: "X.X - Y.Y" 形式の範囲表示 → 中央値を採用
+                fm = re.match(r'^(\d{1,4}\.\d)\s*[-~〜]\s*(\d{1,4}\.\d)$', cell)
+                if fm:
+                    fukusho = round((float(fm.group(1)) + float(fm.group(2))) / 2, 1)
+                    continue
+                # 単勝オッズ: "X.X" 単独表示（複勝より先に出現する想定）
+                tm = re.match(r'^(\d{1,4}\.\d)$', cell)
+                if tm and tansho is None:
+                    tansho = float(tm.group(1))
+
+            if tansho is not None or fukusho is not None:
+                odds_map[horse_num] = {'tansho': tansho, 'fukusho': fukusho}
+
+    return odds_map
+
+
+def fetch_odds_map(sess, races):
+    """races（fetch_races_on_dateの戻り値）の各レースについて
+    単勝・複勝オッズを取得し、to_app_json の market_odds_map 形式で返す。
+
+    Args:
+        sess  : requests.Session
+        races : fetch_races_on_date が返すレース辞書のリスト
+                （各要素に _odds_cn キーが必要）
+
+    Returns:
+        {race_id: {horse_num: {'tansho': float|None, 'fukusho': float|None}}}
+        取得失敗したレースは空dict（market_odds_map[race_id] = {}）。
+    """
+    market_odds_map = {}
+    for race in races:
+        cn = race.get('_odds_cn')
+        if not cn:
+            continue
+        odds_map = fetch_odds_for_race(sess, cn['base'], cn['race_num'], cn['date_str'], cn['sx'])
+        market_odds_map[race['id']] = odds_map
+        time.sleep(0.5)
+    return market_odds_map
+
+
 def fetch_races_on_date(sess, target_date, hist_db_path):
     """指定日の全レース出走表を取得"""
     print(f'📡 {target_date} 出走表取得中...')
@@ -116,6 +218,9 @@ def fetch_races_on_date(sess, target_date, hist_db_path):
                     print(f'  R{r:02d}: ログ取得中に例外 suffix={sx}')
                 time.sleep(0.3)
                 continue
+
+            # オッズ取得用のCNAME情報を保持（fetch_odds_for_race で使用）
+            race['_odds_cn'] = {'base': base, 'date_str': date_str, 'sx': sx, 'race_num': r}
 
             all_races.append(race)
             print(f'  R{r:02d}: {race.get("race_name", "")} '

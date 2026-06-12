@@ -20,7 +20,8 @@ def detect_value_horses(horses, market_odds_map):
 
     Args:
         horses           : 各馬の予測結果。必須キー: horse_num, cal_prob
-        market_odds_map  : {horse_num: fukusho_odds} の形式。
+        market_odds_map  : {horse_num: fukusho_odds} または
+                           {horse_num: {'tansho': float, 'fukusho': float}} の形式。
                            空dictの場合は value_gap=0.0 を全馬に設定して続行。
 
     Returns:
@@ -29,9 +30,16 @@ def detect_value_horses(horses, market_odds_map):
     """
     result = []
     for h in horses:
-        hnum      = h.get('horse_num', h.get('num'))
-        cal_prob  = h.get('cal_prob', h.get('pn', 0)) or 0.0
-        fuku_odds = market_odds_map.get(hnum) if market_odds_map else None
+        hnum  = h.get('horse_num', h.get('num'))
+        cal_prob = h.get('cal_prob', h.get('pn', 0)) or 0.0
+        odds  = market_odds_map.get(hnum) if market_odds_map else None
+
+        tansho_odds = None
+        if isinstance(odds, dict):
+            fuku_odds   = odds.get('fukusho')
+            tansho_odds = odds.get('tansho')
+        else:
+            fuku_odds = odds
 
         if fuku_odds and fuku_odds >= 1.0:
             market_prob = 0.8 / fuku_odds
@@ -42,6 +50,8 @@ def detect_value_horses(horses, market_odds_map):
         entry = dict(h)
         entry['value_gap']   = value_gap
         entry['market_prob'] = round(market_prob, 4)
+        entry['fukusho_odds'] = fuku_odds
+        entry['tansho_odds']  = tansho_odds
         result.append(entry)
 
     result.sort(key=lambda x: x['value_gap'], reverse=True)

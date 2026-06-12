@@ -98,6 +98,7 @@ def _build_horses_list(scored, top1, by_odds, value_gap_map=None):
             'cl_rank':  h.get('cl_rank', 99),
             'ev':       round(h.get('ev', 0.0), 3),
             'prob_gap': round(h.get('prob_gap', 0.0), 4),
+            'cal_prob': round(h.get('cal_prob', pn), 4),
             'mark':     marks[h['num']],
         }
         vg = value_gap_map.get(h['num'])
@@ -126,7 +127,7 @@ def _build_bet_list(bets):
     return result
 
 
-def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday'):
+def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', market_odds_map=None):
     """厳選レース＋全レース情報をアプリ用 JSON 形式で返す。
 
     Args:
@@ -135,15 +136,19 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday'):
         bias_data : 馬場バイアス辞書（省略可）
         jst_now   : datetime（JST）
         day_type  : 'friday' | 'saturday' | 'sunday'
+        market_odds_map : {race_id: {horse_num: {'tansho': float, 'fukusho': float}}}
+                          形式の市場オッズ（省略可）。レース単位で
+                          detect_value_horses / make_bets に渡される。
 
     Returns:
         dict（JSON シリアライズ可能）
     """
     all_venues   = sorted({r['racecourse'] for r in races_all},
                           key=lambda v: VENUE_ORDER.get(v, 99))
-    total_inv    = sum(sum(b['amount'] for b in make_bets(c)) for c in selected)
+    market_odds_map = market_odds_map or {}
     races_by_venue = {}
     selected_ids = {c['race']['id'] for c in selected}
+    total_inv = 0
 
     # ── 厳選レース ─────────────────────────────────────────────────
     for c in selected:
@@ -152,7 +157,9 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday'):
         # 本命はAI確率（win_prob）1位の馬（EVではなく能力基準）
         top1   = max(scored, key=lambda h: h.get('pn', 0))
         c['top1'] = top1
-        bets   = make_bets(c)
+        _race_odds = market_odds_map.get(race['id'], {})
+        bets   = make_bets(c, _race_odds or None)
+        total_inv += sum(b['amount'] for b in bets)
         rc     = race['racecourse']
         if rc not in races_by_venue:
             races_by_venue[rc] = []
@@ -173,7 +180,7 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday'):
             if 'popularity' not in _h:
                 _h['popularity'] = _h.get('_pop', 99)
         _grade    = classify_chaos_grade(scored, _chaos_score_val)
-        _vh_all   = detect_value_horses(scored, {})
+        _vh_all   = detect_value_horses(scored, _race_odds)
         _vh_list  = [{'horse_num': _h.get('horse_num', _h.get('num')),
                       'horse_name': _h.get('name', ''),
                       'value_gap':  round(_h.get('value_gap', 0), 4),
@@ -198,7 +205,8 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday'):
                            ('複勝少額' if _vh_count > 0 else 'スキップ'))
 
         races_by_venue[rc].append({
-            'r':    race['race_num'],
+            'r':       race['race_num'],
+            'race_id': race['id'],
             'name': race['race_name'],
             'dist': f'{race["distance"]}m{race["surface"]}',
             'rec':  True,
@@ -263,6 +271,7 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday'):
 
         races_by_venue[rc].append({
             'r':           race['race_num'],
+            'race_id':     race['id'],
             'name':        race['race_name'],
             'dist':        f'{race["distance"]}m{race["surface"]}',
             'rec':         False,
