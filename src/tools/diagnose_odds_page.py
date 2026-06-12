@@ -1,7 +1,7 @@
 """
 オッズページ(accessO.html)構造調査スクリプト。
 
-fetch_odds_for_race / find_r01_odds はベストエフォート実装で未検証。
+fetch_odds_for_race / find_r01_odds は pw151ouS3 系CNAMEで実機検証済み。
 このスクリプトは実際のJRAページのCNAME・HTML構造を調査するための
 診断専用ツール。Colab（JRAアクセス可能な環境）で実行する。
 

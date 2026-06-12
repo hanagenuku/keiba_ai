@@ -61,18 +61,27 @@ def _try_fetch_shutuba(sess, base, r, date_str, sx):
     return resp, soup
 
 
-def find_r01_odds(base, date, sess):
-    """単勝・複勝オッズページ(accessO.html)のsuffixを探索する。
+# 単勝・複勝オッズページ(accessO.html)のCNAME prefix。
+# 出馬表は 'pw01dde01' だが、オッズページは 'pw151ouS3' を使用する（実機検証済み）。
+ODDS_PREFIX = 'pw151ouS3'
 
-    出馬表(pw01dde01)とオッズ(pw01oxw1)はCNAMEのprefixが異なる想定。
-    JRAサイトの実際のページ構造に応じて要調整。
+
+def _to_odds_base(base):
+    """出馬表用base(pw01dde01...)をオッズページ用base(pw151ouS3...)に変換する。"""
+    return re.sub(r'^pw01dde01', ODDS_PREFIX, base)
+
+
+def find_r01_odds(odds_base, date_str, sess):
+    """単勝・複勝オッズページ(accessO.html)のR01 suffixを探索する。
+
+    CNAMEは「レース番号(01) + 日付 + Z + suffix」の形式（出馬表の'/'の代わりにZ）。
+    suffixを0x00〜0xFFで総当たりし、テーブルが取得できた値を返す。
     """
-    odds_base = base.replace('pw01dde01', 'pw01oxw1')
     for s in range(256):
-        cn = f'{odds_base}01{date}/{s:02X}'
+        cn = f'{odds_base}01{date_str}Z{s:02X}'
         try:
             r = sess.post(f'{JRA_BASE}/JRADB/accessO.html',
-                          data={'cname': cn, 'CNAME': cn}, timeout=10)
+                          data={'cname': cn, 'CNAME': cn}, headers=HEADERS, timeout=10)
             r.encoding = 'shift_jis'
         except Exception:
             return None
@@ -82,18 +91,17 @@ def find_r01_odds(base, date, sess):
     return None
 
 
-def fetch_odds_for_race(sess, base, race_num, date_str, sx):
+def fetch_odds_for_race(sess, odds_base, race_num, date_str, sx):
     """指定レースの単勝・複勝オッズを取得する。
 
-    JRAの単勝・複勝オッズページ(accessO.html / pw01oxw1系CNAME)を想定した
-    ベストエフォート実装。ページ構造が想定と異なる場合は空dictを返す
-    （呼び出し側は market_odds_map={} として安全にフォールバックする）。
+    オッズページ(accessO.html / pw151ouS3系CNAME)のテーブルを解析する。
+    「枠」列はrowspanで複数馬にまたがるため、同枠2頭目以降の行には
+    枠セルが無く、セル数が1つ少なくなる（セル数9/10で列位置を切り替え）。
 
     Returns:
         {horse_num: {'tansho': float|None, 'fukusho': float|None}}
     """
-    odds_base = base.replace('pw01dde01', 'pw01oxw1')
-    cn = f'{odds_base}{race_num:02d}{date_str}/{sx}'
+    cn = f'{odds_base}{race_num:02d}{date_str}Z{sx}'
     try:
         resp = sess.post(f'{JRA_BASE}/JRADB/accessO.html',
                          data={'cname': cn, 'CNAME': cn},
@@ -110,19 +118,20 @@ def fetch_odds_for_race(sess, base, race_num, date_str, sx):
         for tr in table.find_all('tr'):
             cells = [unicodedata.normalize('NFKC', c.get_text(strip=True))
                      for c in tr.find_all(['td', 'th'])]
-            if not cells:
+            if len(cells) not in (9, 10):
                 continue
-            # 先頭セルが馬番(1-18)であること
-            m = re.match(r'^(\d{1,2})$', cells[0])
-            if not m:
+            # 10セル: 枠 馬番 馬名 ... / 9セル: (枠省略) 馬番 馬名 ...
+            offset = 1 if len(cells) == 10 else 0
+            horse_cell = cells[offset]
+            if not re.match(r'^\d{1,2}$', horse_cell):
                 continue
-            horse_num = int(m.group(1))
+            horse_num = int(horse_cell)
             if not (1 <= horse_num <= 18):
                 continue
 
             tansho = None
             fukusho = None
-            for cell in cells[1:]:
+            for cell in cells[offset + 1:]:
                 # 複勝オッズ: "X.X - Y.Y" 形式の範囲表示 → 中央値を採用
                 fm = re.match(r'^(\d{1,4}\.\d)\s*[-~〜]\s*(\d{1,4}\.\d)$', cell)
                 if fm:
@@ -143,6 +152,9 @@ def fetch_odds_map(sess, races):
     """races（fetch_races_on_dateの戻り値）の各レースについて
     単勝・複勝オッズを取得し、to_app_json の market_odds_map 形式で返す。
 
+    開催（_odds_cn['base']）ごとにR01のsuffixを1回だけ探索し、
+    各レースのsuffixは calc_suffix で算出する。
+
     Args:
         sess  : requests.Session
         races : fetch_races_on_date が返すレース辞書のリスト
@@ -153,11 +165,20 @@ def fetch_odds_map(sess, races):
         取得失敗したレースは空dict（market_odds_map[race_id] = {}）。
     """
     market_odds_map = {}
+    r01_cache = {}
     for race in races:
         cn = race.get('_odds_cn')
         if not cn:
             continue
-        odds_map = fetch_odds_for_race(sess, cn['base'], cn['race_num'], cn['date_str'], cn['sx'])
+        odds_base = _to_odds_base(cn['base'])
+        if odds_base not in r01_cache:
+            r01_cache[odds_base] = find_r01_odds(odds_base, cn['date_str'], sess)
+        r01 = r01_cache[odds_base]
+        if r01 is None:
+            market_odds_map[race['id']] = {}
+            continue
+        sx = calc_suffix(r01, cn['race_num'])
+        odds_map = fetch_odds_for_race(sess, odds_base, cn['race_num'], cn['date_str'], sx)
         market_odds_map[race['id']] = odds_map
         time.sleep(0.5)
     return market_odds_map
