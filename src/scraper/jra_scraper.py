@@ -74,17 +74,17 @@ def _to_odds_base(base):
 def find_r01_odds(odds_base, date_str, sess):
     """単勝・複勝オッズページ(accessO.html)のR01 suffixを探索する。
 
-    CNAMEは「レース番号(01) + 日付 + Z + suffix」の形式（出馬表の'/'の代わりにZ）。
+    CNAMEは「レース番号(01) + 日付 + Z + / + suffix」の形式（実機検証済み）。
     suffixを0x00〜0xFFで総当たりし、テーブルが取得できた値を返す。
     """
     for s in range(256):
-        cn = f'{odds_base}01{date_str}Z{s:02X}'
+        cn = f'{odds_base}01{date_str}Z/{s:02X}'
         try:
             r = sess.post(f'{JRA_BASE}/JRADB/accessO.html',
                           data={'cname': cn, 'CNAME': cn}, headers=HEADERS, timeout=10)
             r.encoding = 'shift_jis'
         except Exception:
-            return None
+            continue
         if 'パラメータエラー' not in r.text and BeautifulSoup(r.text, 'lxml').find_all('table'):
             return s
         time.sleep(0.05)
@@ -101,7 +101,7 @@ def fetch_odds_for_race(sess, odds_base, race_num, date_str, sx):
     Returns:
         {horse_num: {'tansho': float|None, 'fukusho': float|None}}
     """
-    cn = f'{odds_base}{race_num:02d}{date_str}Z{sx}'
+    cn = f'{odds_base}{race_num:02d}{date_str}Z/{sx}'
     try:
         resp = sess.post(f'{JRA_BASE}/JRADB/accessO.html',
                          data={'cname': cn, 'CNAME': cn},
