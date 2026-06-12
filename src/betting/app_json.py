@@ -69,13 +69,14 @@ def _assign_marks(scored, by_odds):
     return marks
 
 
-def _build_horses_list(scored, top1, by_odds, value_gap_map=None):
+def _build_horses_list(scored, top1, by_odds, value_gap_map=None, odds_lookup=None):
     """アプリ表示用の馬リストを生成する（馬番順）。
 
     本命はAI確率1位の馬。マークは _assign_marks で決定。
     """
     marks = _assign_marks(scored, by_odds)
     value_gap_map = value_gap_map or {}
+    odds_lookup = odds_lookup or {}
 
     horses = []
     for h in scored:
@@ -101,6 +102,10 @@ def _build_horses_list(scored, top1, by_odds, value_gap_map=None):
             'cal_prob': round(h.get('cal_prob', pn), 4),
             'mark':     marks[h['num']],
         }
+        od = odds_lookup.get(h['num'])
+        if od:
+            horse['tansho_odds']  = od.get('tansho_odds')
+            horse['fukusho_odds'] = od.get('fukusho_odds')
         vg = value_gap_map.get(h['num'])
         if vg:
             horse['value_gap'] = round(vg, 3)
@@ -188,6 +193,9 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
                       'market_prob': round(_h.get('market_prob', 0), 4)}
                      for _h in _vh_all if _h.get('value_gap', 0) >= VALUE_GAP_THRESHOLD]
         _vg_map   = {_h.get('horse_num', _h.get('num')): _h.get('value_gap', 0) for _h in _vh_all}
+        _odds_lookup = {_h.get('horse_num', _h.get('num')):
+                        {'tansho_odds': _h.get('tansho_odds'), 'fukusho_odds': _h.get('fukusho_odds')}
+                        for _h in _vh_all}
         _vh_count = len(_vh_list)
         # bet_reason は頭数ベースのルールに合わせて生成
         if _num_horses >= 14:
@@ -218,7 +226,7 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
                 'score': top1['total'],
                 'style': top1.get('running_style', '差し'),
             },
-            'horses':      _build_horses_list(scored, top1, by_odds, _vg_map),
+            'horses':      _build_horses_list(scored, top1, by_odds, _vg_map, _odds_lookup),
             'bets':        _build_bet_list(bets),
             'chaos_level':  c.get('chaos_level', classify_race_chaos(scored)),
             'chaos_grade':  _grade,
@@ -267,6 +275,17 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
             'ev_max':          max(ev_fuku, ev_tan),
             'chaos_level':     chaos_lvl,
         }
+        _race_odds2 = market_odds_map.get(race['id'], {})
+        for _h in scored:
+            if 'horse_num' not in _h:
+                _h['horse_num'] = _h.get('num')
+            if 'cal_prob' not in _h:
+                _h['cal_prob'] = _h.get('pn', 0)
+        _vh_all2     = detect_value_horses(scored, _race_odds2)
+        _odds_lookup2 = {_h.get('horse_num', _h.get('num')):
+                         {'tansho_odds': _h.get('tansho_odds'), 'fukusho_odds': _h.get('fukusho_odds')}
+                         for _h in _vh_all2}
+
         bets = make_bets(c_ref)
 
         races_by_venue[rc].append({
@@ -284,7 +303,7 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
                 'score': top1['total'],
                 'style': top1.get('running_style', '差し'),
             },
-            'horses': _build_horses_list(scored, top1, by_odds),
+            'horses': _build_horses_list(scored, top1, by_odds, odds_lookup=_odds_lookup2),
             'bets':   _build_bet_list(bets),
             'cmt':    auto_comment(c_ref, bias_data) + ('\n' + maiden_note if maiden_note else ''),
         })
