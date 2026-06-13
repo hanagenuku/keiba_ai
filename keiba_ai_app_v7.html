@@ -239,7 +239,8 @@ async function fetchFreshOdds(raceKey, btn) {
   btn.textContent = '取得中...';
 
   try {
-    const url = GAS_URL + '?action=getOdds&race_id=' + encodeURIComponent(race.race_id);
+    let url = GAS_URL + '?action=getOdds&race_id=' + encodeURIComponent(race.race_id);
+    if (race.odds_cn) url += '&cn=' + encodeURIComponent(race.odds_cn);
     let data;
     try {
       const res = await fetch(url);
