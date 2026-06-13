@@ -24,6 +24,9 @@ BET_AMOUNT_WIDE = 300   # ワイドの基本金額（円）
 BET_AMOUNT_FUKU = 500   # 複勝の基本金額（円）
 BET_AMOUNT_SAN  = 200   # 三連複の基本金額（円）※少額固定
 
+# ── EVフィルタ（市場オッズ取得時のみ適用）────────────────────────────────────
+EV_THRESHOLD = 1.5  # 推定払戻 >= 投資額 × EV_THRESHOLD で買い
+
 # ── 券種選択モデル（後方互換のため残存。ルールベースでは使用しない）──────────
 _BET_SELECTOR    = None
 _BET_SELECTOR_LE = None
@@ -104,6 +107,70 @@ def classify_chaos_grade(horses, chaos_score):
     return 'B'
 
 
+def estimate_payout(bet_type, horse_odds_list):
+    """券種ごとの推定払戻（100円あたり）を計算する。
+
+    keiba_ai_app_v7.html の estimatePayout() と同じ式（JS側と同期すること）。
+    horse_odds_list の各要素は detect_value_horses() が返す馬辞書を想定
+    （'fukusho_odds' / 'tansho_odds' キーを持つ）。
+
+    Returns:
+        推定払戻額（円）。算出に必要なオッズが無い場合は None（推定不能）。
+    """
+    def tansho(h):
+        return h.get('tansho_odds') or h.get('odds', 0)
+
+    if bet_type == '複勝':
+        fo = horse_odds_list[0].get('fukusho_odds')
+        if not fo:
+            return None
+        return fo * 100
+
+    if bet_type in ('馬連', 'ワイド'):
+        if len(horse_odds_list) < 2:
+            return None
+        o1, o2 = tansho(horse_odds_list[0]), tansho(horse_odds_list[1])
+        if not o1 or not o2:
+            return None
+        if bet_type == '馬連':
+            return max(200, (o1 * o2) ** 0.5 * 75)
+        return max(150, (o1 * o2) ** 0.5 * 45)
+
+    if bet_type == '三連複':
+        if len(horse_odds_list) < 3:
+            return None
+        odds = [tansho(h) for h in horse_odds_list[:3]]
+        if not all(odds):
+            return None
+        return max(300, (odds[0] * odds[1] * odds[2]) ** 0.33 * 80)
+
+    return None
+
+
+def _apply_ev_filter(bets, value_horses):
+    """市場オッズ取得済みの場合、推定払戻が投資額×EV_THRESHOLD未満の買い目を除外する。
+
+    value_horses（detect_value_horses の戻り値）が市場オッズを一切含まない
+    （= market_odds_map が空だった）場合はフィルタせずそのまま返す。
+    """
+    if not bets:
+        return bets
+
+    odds_by_num = {h.get('horse_num', h.get('num')): h for h in value_horses}
+    has_odds = any(h.get('fukusho_odds') is not None or h.get('tansho_odds') is not None
+                   for h in value_horses)
+    if not has_odds:
+        return bets
+
+    filtered = []
+    for b in bets:
+        odds_list = [odds_by_num.get(n, {}) for n in b['nums'][:3]]
+        est = estimate_payout(b['type'], odds_list)
+        if est is None or est >= b['amount'] * EV_THRESHOLD:
+            filtered.append(b)
+    return filtered
+
+
 def select_bet_type(horses, chaos_grade, value_horses, num_horses):
     """波乱度・頭数・バリュー馬を総合して最終買い目を生成する。
 
@@ -124,10 +191,15 @@ def select_bet_type(horses, chaos_grade, value_horses, num_horses):
         C + バリュー馬あり: 複勝（バリュー馬）少額
         C + バリュー馬なし: スキップ（空リスト）
 
+    市場オッズ取得済み（value_horses に fukusho_odds/tansho_odds がある）場合は、
+    上記で生成した候補をさらに _apply_ev_filter() でフィルタする
+    （推定払戻 < 投資額×EV_THRESHOLD の券種は除外）。
+
     Args:
         horses       : 全馬の予測結果（rl_rank 付きを前提）
         chaos_grade  : 'A'/'B'/'C'
-        value_horses : value_gap > VALUE_GAP_THRESHOLD の馬リスト
+        value_horses : detect_value_horses() の戻り値（value_gap・fukusho_odds・
+                       tansho_odds 付きの全馬リスト）
         num_horses   : 出走頭数
 
     Returns:
@@ -142,6 +214,14 @@ def select_bet_type(horses, chaos_grade, value_horses, num_horses):
     top3  = by_rl[2] if len(by_rl) > 2 else None
     if top1 is None:
         return []
+
+    candidates = _select_bet_candidates(by_rl, top1, top2, top3,
+                                         chaos_grade, value_horses, num_horses)
+    return _apply_ev_filter(candidates, value_horses)
+
+
+def _select_bet_candidates(by_rl, top1, top2, top3, chaos_grade, value_horses, num_horses):
+    from src.betting.ev_filter import VALUE_GAP_THRESHOLD
 
     n1 = top1.get('horse_num', top1.get('num'))
     n2 = top2.get('horse_num', top2.get('num')) if top2 else None

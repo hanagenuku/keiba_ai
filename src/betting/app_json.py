@@ -11,6 +11,20 @@ from src.betting.make_bets import calc_ev, make_bets
 from src.features.engine import auto_comment, calc_all
 
 
+def _build_odds_cn(race):
+    """直前オッズ取得用のCNAME文字列を組み立てる。
+
+    jra_scraper.fetch_odds_for_race と同じ規則（出馬表ページのCNAMEの
+    prefixを pw01oxw1 に置き換えたもの）でオッズページのCNAMEを生成する。
+    race['_odds_cn'] が無い場合は None を返す。
+    """
+    cn_info = race.get('_odds_cn')
+    if not cn_info:
+        return None
+    odds_base = cn_info['base'].replace('pw01dde01', 'pw01oxw1')
+    return f"{odds_base}{cn_info['race_num']:02d}{cn_info['date_str']}/{cn_info['sx']}"
+
+
 def _assign_marks(scored, by_odds):
     """各馬に高/推/穴マークを付与する。1レースにつき穴は最大1頭、推は最大2頭。
 
@@ -215,6 +229,7 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
         races_by_venue[rc].append({
             'r':       race['race_num'],
             'race_id': race['id'],
+            'odds_cn': _build_odds_cn(race),
             'name': race['race_name'],
             'dist': f'{race["distance"]}m{race["surface"]}',
             'rec':  True,
@@ -291,6 +306,7 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
         races_by_venue[rc].append({
             'r':           race['race_num'],
             'race_id':     race['id'],
+            'odds_cn':     _build_odds_cn(race),
             'name':        race['race_name'],
             'dist':        f'{race["distance"]}m{race["surface"]}',
             'rec':         False,
