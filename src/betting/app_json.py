@@ -300,6 +300,7 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
         _odds_lookup2 = {_h.get('horse_num', _h.get('num')):
                          {'tansho_odds': _h.get('tansho_odds'), 'fukusho_odds': _h.get('fukusho_odds')}
                          for _h in _vh_all2}
+        _vg_map2 = {_h.get('horse_num', _h.get('num')): _h.get('value_gap', 0) for _h in _vh_all2}
 
         bets = make_bets(c_ref)
 
@@ -319,7 +320,7 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
                 'score': top1['total'],
                 'style': top1.get('running_style', '差し'),
             },
-            'horses': _build_horses_list(scored, top1, by_odds, odds_lookup=_odds_lookup2),
+            'horses': _build_horses_list(scored, top1, by_odds, _vg_map2, _odds_lookup2),
             'bets':   _build_bet_list(bets),
             'cmt':    auto_comment(c_ref, bias_data) + ('\n' + maiden_note if maiden_note else ''),
         })

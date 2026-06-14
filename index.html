@@ -284,6 +284,9 @@ async function fetchFreshOdds(raceKey, btn) {
 function updateValueGaps(race, freshOdds) {
   for (const h of (race.horses || [])) {
     const od = freshOdds[String(h.n)];
+    if (od && od.tansho) {
+      h.odds = od.tansho;  // オッズ列の表示用も更新
+    }
     if (od && od.fukusho && od.fukusho >= 1.0 && h.cal_prob != null) {
       h.value_gap    = h.cal_prob - (0.8 / od.fukusho);
       h.fukusho_odds = od.fukusho;
