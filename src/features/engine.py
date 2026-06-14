@@ -1761,7 +1761,7 @@ def calc_all(race, bias_data=None):
         )
 
     all_totals = [h['total'] for h in out]
-    win_probs = softmax_probs(all_totals, temperature=1.5)
+    win_probs = softmax_probs(all_totals, temperature=2.0)
     # 旧IsotonicCalibratorは同一確率フロアを生じさせるためスキップ
     # （XGB raw_probを入力しているため再calibrationは不要）
     for h, p in zip(out, win_probs):
