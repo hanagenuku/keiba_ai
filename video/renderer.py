@@ -1,4 +1,5 @@
 import os
+import textwrap
 
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
@@ -19,6 +20,14 @@ RED = (255, 32, 32)
 GRASS_COLOR = (34, 120, 50)
 GRASS_DARK = (28, 100, 42)
 WHITE = (255, 255, 255)
+SKY_COLOR = (120, 190, 230)
+STAND_COLOR = (150, 150, 160)
+STAND_DARK = (110, 110, 120)
+RAIL_COLOR = (235, 235, 235)
+DIALOG_BG = (250, 250, 250)
+DIALOG_BORDER = (20, 20, 20)
+TEXT_COLOR = (20, 20, 20)
+BODY_COLOR = (120, 80, 50)
 
 HORSE_COLORS = [
     (230, 60, 60),
@@ -31,16 +40,31 @@ HORSE_COLORS = [
     (220, 220, 220),
 ]
 
-# 8x8 ドット絵の馬シルエット
-HORSE_BITMAP = [
-    "00111000",
-    "01111100",
-    "11111110",
-    "11111111",
-    "01111110",
-    "00100100",
-    "00100100",
-    "01100110",
+LEG_COLOR = (40, 30, 20)
+
+# 横向き（側面視点）の馬+ジョッキー ドット絵。ギャロップの2フレーム。
+# '.'=透明 'B'=馬体 'J'=ジョッキー(馬番カラー) 'D'=脚
+HORSE_SIDE_FRAMES = [
+    [
+        "....JJ......",
+        "...JJJJ.....",
+        "...BBBBBB...",
+        "..BBBBBBBB..",
+        ".BBBBBBBBBB.",
+        "D.D....D.D..",
+        "D.D....D.D..",
+        "............",
+    ],
+    [
+        "....JJ......",
+        "...JJJJ.....",
+        "...BBBBBB...",
+        "..BBBBBBBB..",
+        ".BBBBBBBBBB.",
+        "...D....D...",
+        "...D....D...",
+        "............",
+    ],
 ]
 
 _FONT_CANDIDATES = [
@@ -74,14 +98,65 @@ def horse_color(number):
     return HORSE_COLORS[(number - 1) % len(HORSE_COLORS)]
 
 
-def draw_horse_icon(draw, x, y, color):
-    """8x8 ドット絵の馬を (x, y) を左上として描画する。"""
-    for row, bits in enumerate(HORSE_BITMAP):
+def draw_horse_side(draw, x, y, jockey_color, frame=0):
+    """側面視点の馬+ジョッキーを (x, y) を左上として描画する。"""
+    bitmap = HORSE_SIDE_FRAMES[frame % len(HORSE_SIDE_FRAMES)]
+    for row, bits in enumerate(bitmap):
         for col, bit in enumerate(bits):
-            if bit == "1":
-                px, py = x + col, y + row
-                if 0 <= px < W and 0 <= py < H:
-                    draw.point((px, py), fill=color)
+            if bit == ".":
+                continue
+            color = {"B": BODY_COLOR, "J": jockey_color, "D": LEG_COLOR}[bit]
+            px, py = x + col, y + row
+            if 0 <= px < W and 0 <= py < H:
+                draw.point((px, py), fill=color)
+
+
+def generate_commentary(horses_by_number, initial_order, positions, segments):
+    """各区間の実況テキストを生成する。"""
+    texts = []
+    prev_order = initial_order
+    for i, seg in enumerate(segments):
+        order = positions[seg]
+        leader = horses_by_number[order[0]]["name"]
+        chaser = horses_by_number[order[1]]["name"] if len(order) > 1 else ""
+        prev_leader = horses_by_number[prev_order[0]]["name"]
+
+        if order[0] != prev_order[0]:
+            text = f"{leader}が{prev_leader}をかわした！{chaser}食いさがる"
+        else:
+            text = f"{leader}が先頭を守る！{chaser}食いさがる"
+
+        if seg == segments[-1]:
+            text += f" ゴール！{leader}が一着！"
+
+        texts.append(text)
+        prev_order = order
+    return texts
+
+
+def draw_dialog_box(draw, leader_color, text, progress):
+    """画面下部に実況テロップのダイアログボックスを描画する。"""
+    box_y0 = H - 32
+    draw.rectangle([0, box_y0, W, H], fill=DIALOG_BG)
+    draw.rectangle([0, box_y0, W, H], outline=DIALOG_BORDER, width=2)
+
+    # 左側のポートレート枠
+    draw.rectangle([4, box_y0 + 4, 28, H - 4], fill=leader_color)
+    draw.rectangle([4, box_y0 + 4, 28, H - 4], outline=DIALOG_BORDER, width=1)
+
+    font = get_font(9)
+    lines = textwrap.wrap(text, width=20)
+    chars_shown = int(sum(len(line) for line in lines) * progress)
+
+    remaining = chars_shown
+    ty = box_y0 + 5
+    for line in lines:
+        if remaining <= 0:
+            break
+        show = line[: min(len(line), remaining)]
+        remaining -= len(show)
+        draw.text((34, ty), show, fill=TEXT_COLOR, font=font)
+        ty += 11
 
 
 def to_frame(img):
@@ -101,7 +176,6 @@ def make_scene1(race_name, duration=3.0):
         f"TARGET COORDINATES: {race_name}",
         "TEMPORAL JUMP INITIATED",
     ]
-    full_text = "\n".join(lines)
     total_chars = sum(len(line) for line in lines)
     font = get_font(10)
 
@@ -134,49 +208,80 @@ def make_scene2(data, positions, duration=40.0):
     horses = data["horses"]
     n = len(horses)
     horses_by_number = {h["number"]: h for h in horses}
+    numbers_sorted = sorted(h["number"] for h in horses)
+    lane_of = {number: i for i, number in enumerate(numbers_sorted)}
+
+    initial_order = [h["number"] for h in sorted(horses, key=lambda h: h["score"], reverse=True)]
     segments = ["400m", "300m", "200m", "100m"]
     seg_duration = duration / len(segments)
-    font_small = get_font(10)
-    font_label = get_font(14)
+    commentary = generate_commentary(horses_by_number, initial_order, positions, segments)
 
-    track_y0, track_y1 = 10, 150
+    font_label = get_font(12)
+
+    track_y0, track_y1 = 38, H - 32
     lane_height = (track_y1 - track_y0) / max(n, 1)
 
+    BASE_X = 60
+    SPREAD = 170
+
+    def smoothstep(p):
+        p = max(0.0, min(1.0, p))
+        return p * p * (3 - 2 * p)
+
     def make_frame(t):
-        img = Image.new("RGB", (W, H), GRASS_COLOR)
+        img = Image.new("RGB", (W, H), SKY_COLOR)
         draw = ImageDraw.Draw(img)
 
-        # 横スクロールする芝のストライプ
-        scroll = int(t * 40) % 20
+        # スタンド（簡易）
+        draw.rectangle([0, 14, W, 28], fill=STAND_COLOR)
+        scroll_far = int(t * 20) % 16
+        for sx in range(-16, W + 16, 16):
+            draw.rectangle([sx - scroll_far, 16, sx - scroll_far + 8, 26], fill=STAND_DARK)
+
+        # 馬場（芝）と横スクロールするストライプ
+        draw.rectangle([0, track_y0, W, track_y1], fill=GRASS_COLOR)
+        scroll = int(t * 60) % 20
         for sx in range(-20, W + 20, 20):
             draw.rectangle(
                 [sx - scroll, track_y0, sx - scroll + 10, track_y1],
                 fill=GRASS_DARK,
             )
 
+        # 内側ラチ（白線）
+        draw.rectangle([0, track_y0 - 3, W, track_y0], fill=RAIL_COLOR)
+
         seg_index = min(int(t // seg_duration), len(segments) - 1)
         seg = segments[seg_index]
-        order = positions[seg]  # 先頭(1着想定)から最後尾の馬番リスト
+        seg_progress = (t % seg_duration) / seg_duration
+        ease = smoothstep(seg_progress)
+
+        prev_order = initial_order if seg_index == 0 else positions[segments[seg_index - 1]]
+        cur_order = positions[seg]
+
+        gallop_frame = int(t * 8) % 2
+
+        for number in numbers_sorted:
+            prev_rank = prev_order.index(number)
+            cur_rank = cur_order.index(number)
+            rank = prev_rank + (cur_rank - prev_rank) * ease
+
+            offset = (n - 1 - rank) * (SPREAD / max(n - 1, 1))
+            x = int(BASE_X + offset)
+            lane = lane_of[number]
+            y = int(track_y0 + lane * lane_height + (lane_height - 8) / 2)
+            y += -1 if gallop_frame == 0 else 0
+
+            draw_horse_side(draw, x, y, horse_color(number), frame=gallop_frame)
+            draw.text((x + 1, y - 9), str(number), fill=WHITE, font=get_font(8))
 
         # 残り距離表示
-        distance_label = seg
-        draw.text((W - 70, 8), distance_label, fill=WHITE, font=font_label)
+        draw.text((6, 4), f"残り{seg}", fill=WHITE, font=font_label)
 
-        # 馬を描画（順位が高いほど右側=先頭側に近づく）
-        track_width = W - 40
-        for rank, number in enumerate(order):
-            x = 10 + int(track_width * (1 - rank / max(n - 1, 1)) * 0.85)
-            y = int(track_y0 + rank * lane_height) + 2
-            draw_horse_icon(draw, x, y, horse_color(number))
-            draw.text((x - 2, y - 10), str(number), fill=WHITE, font=font_small)
-
-        # 右側に現在順位を表示
-        draw.rectangle([W - 60, 0, W, H], fill=(0, 0, 0))
-        draw.text((W - 58, 4), "RANK", fill=WHITE, font=font_small)
-        for i, number in enumerate(order):
-            name = horses_by_number[number]["name"]
-            label = f"{i + 1}.{number} {name[:4]}"
-            draw.text((W - 58, 16 + i * 12), label, fill=horse_color(number), font=font_small)
+        # 実況テロップ
+        text = commentary[seg_index]
+        box_progress = min(seg_progress / 0.6, 1.0)
+        leader_color = horse_color(cur_order[0])
+        draw_dialog_box(draw, leader_color, text, box_progress)
 
         return to_frame(img)
 
