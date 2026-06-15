@@ -118,12 +118,22 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
 .odds-btn:active{background:#1a252f}
 .odds-btn:disabled{background:#95a5a6}
 .odds-time{font-size:10px;color:#888;margin-left:8px}
+.action-bar{display:flex;gap:6px;padding:8px 12px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.action-btn{background:#1a5c3a;color:#fff;border:none;border-radius:6px;padding:8px 12px;font-size:11px;font-weight:700;white-space:nowrap;cursor:pointer;flex-shrink:0}
+.action-btn:active{background:#0d3d25}
+.action-btn:disabled{background:#95a5a6}
 </style>
 </head>
 <body>
 <div class="hdr">
   <div><div class="hdr-logo">KEIBA-AI</div><div class="hdr-sub">AI RACING PREDICTION</div></div>
   <div class="hdr-right"><div class="hdr-date" id="hdate">読込中...</div><div class="hdr-venues" id="hvenues">---</div></div>
+</div>
+<div class="action-bar">
+  <button class="action-btn" onclick="triggerAction('friday-predict')">📊 金曜予想</button>
+  <button class="action-btn" onclick="triggerAction('weekend','saturday')">📋 土曜結果</button>
+  <button class="action-btn" onclick="triggerAction('weekend','sunday')">🔮 日曜予想</button>
+  <button class="action-btn" onclick="triggerAction('sunday-results')">📋 日曜結果</button>
 </div>
 <div class="bias"><span class="bias-txt" id="bias-txt">バイアス読込中...</span><span class="bias-tag" id="bias-tag">-</span></div>
 <div class="tabs" id="tabs"></div>
@@ -221,6 +231,40 @@ function findRace(raceKey) {
     }
   }
   return null;
+}
+
+async function triggerAction(workflow, mode) {
+  const btn = event.target;
+  btn.disabled = true;
+  const origText = btn.textContent;
+  btn.textContent = '実行中...';
+
+  try {
+    let url = GAS_URL + '?action=trigger&workflow=' + workflow;
+    if (mode) url += '&mode=' + mode;
+
+    let data;
+    try {
+      const res = await fetch(url);
+      data = await res.json();
+    } catch(_) {
+      const proxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
+      const res2 = await fetch(proxy);
+      const j = await res2.json();
+      data = JSON.parse(j.contents);
+    }
+
+    if (data.status === 'ok') {
+      alert('✅ ' + data.message + '\n\n5〜10分後にページを更新してください');
+    } else {
+      alert('❌ エラー: ' + (data.message || JSON.stringify(data)));
+    }
+  } catch(err) {
+    alert('❌ 通信エラー: ' + err.message);
+  } finally {
+    btn.textContent = origText;
+    btn.disabled = false;
+  }
 }
 
 async function fetchFreshOdds(raceKey, btn) {

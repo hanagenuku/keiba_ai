@@ -1,6 +1,7 @@
 import sqlite3
 import json
 import os
+import shutil
 
 
 def get_db_path(base_dir):
@@ -11,10 +12,31 @@ def get_history_db_path(base_dir):
     return os.path.join(base_dir, 'data', 'history.db')
 
 
+def _connect(path):
+    """WALモード・busy_timeout付きでDBに接続する（並行アクセス対策）"""
+    conn = sqlite3.connect(path)
+    conn.execute('PRAGMA journal_mode=WAL')
+    conn.execute('PRAGMA busy_timeout=5000')
+    return conn
+
+
+def backup_db(path):
+    """DBファイルの .bak バックアップを作成する（処理前に呼ぶ）"""
+    if os.path.exists(path):
+        shutil.copy2(path, path + '.bak')
+
+
+def checkpoint_db(path):
+    """WALの内容をDB本体に統合し、-wal/-shmファイルを解消する（commit/push前に呼ぶ）"""
+    conn = _connect(path)
+    conn.execute('PRAGMA wal_checkpoint(TRUNCATE)')
+    conn.close()
+
+
 def init_db(base_dir=None, db_path=None):
     """keiba.db の初期化。テーブルがなければ作成"""
     path = db_path or get_db_path(base_dir)
-    conn = sqlite3.connect(path)
+    conn = _connect(path)
     conn.executescript('''
         CREATE TABLE IF NOT EXISTS races (
             id TEXT PRIMARY KEY, date TEXT, racecourse TEXT,
@@ -50,7 +72,7 @@ def init_db(base_dir=None, db_path=None):
 
 def save_race_db(race, base_dir=None, db_path=None):
     path = db_path or get_db_path(base_dir)
-    conn = sqlite3.connect(path)
+    conn = _connect(path)
     conn.execute(
         'INSERT OR REPLACE INTO races VALUES (?,?,?,?,?,?,?,?,?)',
         (race['id'], race['date'], race['racecourse'], race['race_name'],
@@ -64,7 +86,7 @@ def save_race_db(race, base_dir=None, db_path=None):
 def save_bets_db(date_str, race_id, bets, base_dir=None, db_path=None):
     """ベットをDBに保存（重複スキップ方式）"""
     path = db_path or get_db_path(base_dir)
-    conn = sqlite3.connect(path)
+    conn = _connect(path)
     for b in bets:
         if b['type'] == '三連複' and 'tickets' in b:
             for t in b['tickets']:
@@ -102,7 +124,7 @@ def save_history_db(all_results, base_dir=None, db_path=None):
     """
     path = db_path or get_history_db_path(base_dir)
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    conn = sqlite3.connect(path)
+    conn = _connect(path)
     conn.executescript("""
         CREATE TABLE IF NOT EXISTS race_history (
             race_id         TEXT PRIMARY KEY,
@@ -287,7 +309,7 @@ def save_history_db(all_results, base_dir=None, db_path=None):
 def save_results_db(all_results, base_dir=None, db_path=None):
     """レース結果を keiba.db の results テーブルに保存する。"""
     path = db_path or get_db_path(base_dir)
-    conn = sqlite3.connect(path)
+    conn = _connect(path)
     for r in all_results:
         race_id = r.get('race_id', '')
         divs = r.get('dividends', {})
@@ -324,7 +346,7 @@ def check_and_update_bets(all_results, base_dir=None, db_path=None):
         dict: {hit, total, invested, recovered, roi, details}
     """
     path = db_path or get_db_path(base_dir)
-    conn = sqlite3.connect(path)
+    conn = _connect(path)
     conn.row_factory = sqlite3.Row
 
     # 未照合ベットを取得
@@ -403,7 +425,7 @@ def check_and_update_bets(all_results, base_dir=None, db_path=None):
 def update_bet_results(race_id, results, base_dir=None, db_path=None):
     """レース結果でbetsテーブルのis_hit/payoutを更新"""
     path = db_path or get_db_path(base_dir)
-    conn = sqlite3.connect(path)
+    conn = _connect(path)
     rows = conn.execute(
         'SELECT id, bet_type, horse_num, horse_num2 FROM bets WHERE race_id=? AND is_hit=-1',
         (race_id,),
