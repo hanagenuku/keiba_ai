@@ -67,8 +67,10 @@ def main():
     print(f'📋 取得レース: {len(races)}R')
 
     if not races:
-        print('❌ レースが見つかりません')
-        sys.exit(1)
+        print('⚠ レースが見つかりません（開催日ではないか、出馬表未掲載）')
+        checkpoint_db(get_db_path(ROOT))
+        checkpoint_db(hist_path)
+        return
 
     surf_counts = {}
     for r in races:
