@@ -1,0 +1,14 @@
+{
+  "rl": 0.01,
+  "distance": 0.2552,
+  "pace": 0.2003,
+  "maturity": 0.01,
+  "trainer": 0.1702,
+  "jockey": 0.2943,
+  "blood": 0.01,
+  "post": 0.01,
+  "bias": 0.01,
+  "rotation": 0.01,
+  "recent": 0.01,
+  "weight": 0.01
+}
