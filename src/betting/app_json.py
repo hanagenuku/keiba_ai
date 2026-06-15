@@ -274,7 +274,8 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
         conf = min(99, max(1, int(60 + (pop_rank - 2) * 4 + gap * 20)))
 
         win_prob    = top1.get('pn', 0)
-        ev_fuku     = calc_ev(min(1.0, win_prob * 3), odds * 0.28)
+        fuku_prob   = top1.get('top3_prob', min(0.80, win_prob * 3))
+        ev_fuku     = calc_ev(fuku_prob, odds * 0.28)
         ev_tan      = calc_ev(win_prob, odds)
         chaos_lvl   = classify_race_chaos(scored)
         maiden_note = '⚠ 新馬戦：データ不足のため参考値' if is_maiden_race(race) else ''

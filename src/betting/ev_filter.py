@@ -155,7 +155,8 @@ def ability_first_loose(races, bias_data=None, top_n=6):
         if win_prob < WIN_PROB_MIN:
             continue
 
-        ev_fuku = calc_ev(min(1.0, win_prob * 3), odds * 0.28)
+        fuku_prob = top1.get('top3_prob', min(0.80, win_prob * 3))
+        ev_fuku = calc_ev(fuku_prob, odds * 0.28)
         ev_tan  = calc_ev(win_prob, odds)
         ev_max  = max(ev_fuku, ev_tan)
         if ev_max < EV_THRESHOLD:
