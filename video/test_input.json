@@ -1,0 +1,10 @@
+{
+  "race_name": "宝塚記念",
+  "race_date": "2026-06-22",
+  "horses": [
+    {"name": "テスト馬A", "number": 1, "score": 98, "expected_value": 1.23, "style": "逃げ"},
+    {"name": "テスト馬B", "number": 2, "score": 85, "expected_value": 0.95, "style": "差し"},
+    {"name": "テスト馬C", "number": 3, "score": 72, "expected_value": 1.10, "style": "追込"}
+  ],
+  "recommended_bets": ["馬連 1-2", "ワイド 1-3"]
+}
