@@ -7,7 +7,7 @@ import pickle
 import sqlite3
 
 from src.features.engine import harville_pair_prob, harville_trio_prob
-from src.utils.db import get_db_path
+from src.utils.db import get_db_path, _connect
 
 # ── デフォルト賭け金設定（init_betting() または直接書き換えで上書き可能）────
 BANKROLL = 100_000
@@ -572,7 +572,7 @@ def log_bet_simulation(date_str, c, base_dir=None, db_path=None):
             soo, ps, calc_ev(ps, soo),
         ))
 
-    conn = sqlite3.connect(path)
+    conn = _connect(path)
     for bt, hn, hname, oe, ap, ev in rows:
         conn.execute(
             'INSERT INTO bet_simulation'
