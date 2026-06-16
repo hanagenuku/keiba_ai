@@ -42,14 +42,16 @@ BG_BLACK   = (0, 0, 0)
 POLE_RED   = (210, 26, 26)
 
 HORSE_COLORS = [
-    (230, 55,  55),   # 1: 赤
-    (55,  120, 225),  # 2: 青
-    (235, 195, 35),   # 3: 黄
-    (85,  215, 110),  # 4: 緑
-    (195, 90,  225),  # 5: 紫
-    (235, 135, 35),   # 6: オレンジ
-    (75,  215, 215),  # 7: 水色
-    (215, 215, 215),  # 8: 白
+    (220, 45,  45),   # 1: 赤
+    (50,  110, 215),  # 2: 青
+    (225, 190, 25),   # 3: 黄
+    (60,  195, 80),   # 4: 緑
+    (180, 65,  215),  # 5: 紫
+    (245, 245, 245),  # 6: 白
+    (55,  200, 210),  # 7: 水色
+    (230, 100, 175),  # 8: ピンク
+    (225, 118, 22),   # 9: 橙
+    (140, 88,  48),   # 10: 茶
 ]
 
 # ── レイアウト ──────────────────────────────────────────────
@@ -91,6 +93,77 @@ def horse_color(number):
 
 def to_frame(img):
     return np.array(img.resize((OUT_W, OUT_H), Image.NEAREST))
+
+
+# ── 馬スプライト読み込み＆色置換 ─────────────────────────────
+
+_SPRITE_DIR   = os.path.join(os.path.dirname(__file__), "assets")
+_SPRITE_PATH  = os.path.join(_SPRITE_DIR, "horse.png")
+_CAP_REGION   = (0, 0, 8, 8)   # ジョッキー帽の領域（left,top,right,bottom）
+
+_base_sprite: Image.Image | None = None
+_sprite_cache: dict = {}          # number → RGBA PIL Image
+
+def _load_base_sprite() -> Image.Image | None:
+    """assets/horse.png を RGBA で読み込む。なければ None。"""
+    global _base_sprite
+    if _base_sprite is not None:
+        return _base_sprite
+    if not os.path.exists(_SPRITE_PATH):
+        return None
+    try:
+        _base_sprite = Image.open(_SPRITE_PATH).convert("RGBA")
+        return _base_sprite
+    except Exception:
+        return None
+
+def _tint_cap(sprite: Image.Image, color: tuple) -> Image.Image:
+    """帽の領域（上部8×8）の不透明ピクセルを指定色に置換した新Imageを返す。"""
+    out = sprite.copy()
+    arr = np.array(out)
+    x0, y0, x1, y1 = _CAP_REGION
+    region = arr[y0:y1, x0:x1]     # shape (8, 8, 4)
+    mask = region[:, :, 3] > 0     # 不透明ピクセルのマスク
+    region[mask, 0] = color[0]
+    region[mask, 1] = color[1]
+    region[mask, 2] = color[2]
+    arr[y0:y1, x0:x1] = region
+    return Image.fromarray(arr, "RGBA")
+
+def get_horse_sprite(number: int) -> Image.Image | None:
+    """馬番ごとの色付きスプライトを返す。horse.png がなければ None。"""
+    if number in _sprite_cache:
+        return _sprite_cache[number]
+    base = _load_base_sprite()
+    if base is None:
+        _sprite_cache[number] = None
+        return None
+    colored = _tint_cap(base, horse_color(number))
+    _sprite_cache[number] = colored
+    return colored
+
+def paste_horse(img: Image.Image, number: int, cx: int, cy: int) -> bool:
+    """
+    スプライトを img に貼り付ける。
+    cx, cy = スプライト中心座標（内部解像度）。
+    成功したら True、フォールバックが必要なら False を返す。
+    """
+    sprite = get_horse_sprite(number)
+    if sprite is None:
+        return False
+    sw, sh = sprite.size          # 32×32
+    sx = cx - sw // 2
+    sy = cy - sh // 2
+    # PIL の paste はキャンバス外座標を自動クリップしない → 手動でクリップ
+    src_x0 = max(0, -sx);  src_y0 = max(0, -sy)
+    dst_x0 = max(0,  sx);  dst_y0 = max(0,  sy)
+    src_x1 = min(sw, W - sx);  src_y1 = min(sh, H - sy)
+    if src_x1 <= src_x0 or src_y1 <= src_y0:
+        return True
+    region  = sprite.crop((src_x0, src_y0, src_x1, src_y1))
+    mask    = region.split()[3]   # alpha チャンネルをマスクとして使用
+    img.paste(region.convert("RGB"), (dst_x0, dst_y0), mask)
+    return True
 
 
 # ── 背景 ────────────────────────────────────────────────────
@@ -419,7 +492,9 @@ def make_scene2(data, positions, duration=40.0):
             lane = lane_of[number]
             cy = int(HORSE_CY + (lane - (n - 1) / 2) * 10)
 
-            draw_horse(draw, cx, cy, horse_color(number), gallop, number)
+            # horse.png があればスプライト描画、なければフォールバック
+            if not paste_horse(img, number, cx, cy):
+                draw_horse(draw, cx, cy, horse_color(number), gallop, number)
 
         draw_race_info(draw, data)
         draw_minimap(draw, data, phase_idx, cur_order, phases)
