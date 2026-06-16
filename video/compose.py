@@ -67,6 +67,75 @@ def add_glitch(frame, intensity=0.08):
 # Phase 1: cinematic.mov
 # ---------------------------------------------------------------------------
 
+def _make_cinematic_placeholder(config, duration=8.0):
+    """cinematic.mov がない場合のAI映像風プレースホルダー"""
+    race_name = config.get("race_name", "RACE")
+    fn = _font(32)
+    fn_sm = _font(18)
+    total_frames = int(duration * FPS)
+    frames = []
+    for i in range(total_frames):
+        t = i / FPS
+        img = Image.new("RGB", (W, H), BLACK)
+        draw = ImageDraw.Draw(img)
+
+        # スキャンライン背景
+        for y in range(0, H, 4):
+            alpha = int(15 + 10 * np.sin(y * 0.05 + t * 2))
+            draw.line([0, y, W, y], fill=(0, alpha, 0))
+
+        # 流れる縦ライン
+        for x_offset in range(0, W, 80):
+            x = (x_offset + int(t * 60)) % W
+            draw.line([x, 0, x, H], fill=(0, 40, 0))
+
+        # 中央テキスト
+        blink = int(t * 3) % 3 != 0
+        if blink:
+            draw.text((W // 2 - 220, H // 2 - 80), "AI TEMPORAL SCAN", font=_font(52), fill=GREEN)
+        draw.text((W // 2 - 160, H // 2),      f"TARGET: {race_name}", font=fn, fill=(0, 200, 50))
+        draw.text((W // 2 - 200, H // 2 + 60), "FUTURE EVENT DETECTED", font=fn_sm, fill=(0, 150, 40))
+        draw.text((W // 2 - 140, H // 2 + 90), f"T-{int((duration - t) * 10) / 10:.1f}s TO LOCK", font=fn_sm, fill=RED)
+
+        # コーナーフレーム
+        sz = 30
+        for cx, cy in [(0, 0), (W, 0), (0, H), (W, H)]:
+            sx = 1 if cx == 0 else -1
+            sy = 1 if cy == 0 else -1
+            draw.line([cx, cy, cx + sx * sz, cy], fill=GREEN, width=2)
+            draw.line([cx, cy, cx, cy + sy * sz], fill=GREEN, width=2)
+
+        frames.append(np.array(img))
+    return ImageSequenceClip(frames, fps=FPS)
+
+
+def _make_evidence_placeholder(config):
+    """evidence.png がない場合の証拠写真風プレースホルダー"""
+    race_name = config.get("race_name", "RACE")
+    race_date = config.get("race_date", "2026-06-28")
+    img = Image.new("RGB", (W, H), (10, 10, 10))
+    draw = ImageDraw.Draw(img)
+
+    # グリッド
+    for x in range(0, W, 40):
+        draw.line([x, 0, x, H], fill=(30, 30, 30))
+    for y in range(0, H, 40):
+        draw.line([0, y, W, y], fill=(30, 30, 30))
+
+    # 楕円コース
+    draw.ellipse([200, 100, 1080, 620], outline=(80, 80, 80), width=3)
+    draw.ellipse([320, 200, 960, 520],  outline=(50, 50, 50), width=2)
+
+    # ラベル
+    draw.text((W // 2 - 200, H // 2 - 60), f"[EVIDENCE FRAME]", font=_font(48), fill=(160, 160, 160))
+    draw.text((W // 2 - 150, H // 2 + 20), race_name, font=_font(36), fill=(120, 120, 120))
+    draw.text((W // 2 - 100, H // 2 + 70), race_date, font=_font(24), fill=(90, 90, 90))
+
+    os.makedirs(os.path.join(BASE_DIR, "assets"), exist_ok=True)
+    img.save(os.path.join(BASE_DIR, "assets", "evidence_placeholder.png"))
+    return img
+
+
 def make_phase1(config):
     cine_path = os.path.join(BASE_DIR, "assets", "cinematic.mov")
     clip = VideoFileClip(cine_path)
@@ -120,8 +189,9 @@ def make_phase1(config):
 # Phase 2: evidence.png (~4s)
 # ---------------------------------------------------------------------------
 
-def make_phase2(config):
-    ev_path = os.path.join(BASE_DIR, "assets", "evidence.png")
+def make_phase2(config, ev_path=None):
+    if ev_path is None:
+        ev_path = os.path.join(BASE_DIR, "assets", "evidence.png")
     src = Image.open(ev_path).convert("RGB").resize((W, H), Image.LANCZOS)
     src_arr = np.array(src)
 
@@ -365,14 +435,16 @@ def main(json_path):
         print("フェーズ1: cinematic.mov を読み込み中...")
         clips.append(make_phase1(config))
     else:
-        print("⚠ cinematic.mov が見つかりません。フェーズ1をスキップします。")
+        print("フェーズ1: cinematic.mov なし → AI映像をプログラム生成")
+        clips.append(_make_cinematic_placeholder(config))
 
     ev_path = os.path.join(BASE_DIR, "assets", "evidence.png")
-    if os.path.exists(ev_path):
-        print("フェーズ2: evidence.png を処理中...")
-        clips.append(make_phase2(config))
-    else:
-        print("⚠ evidence.png が見つかりません。フェーズ2をスキップします。")
+    if not os.path.exists(ev_path):
+        print("フェーズ2: evidence.png なし → 証拠写真をプログラム生成")
+        _make_evidence_placeholder(config)
+        ev_path = os.path.join(BASE_DIR, "assets", "evidence_placeholder.png")
+    print("フェーズ2: 証拠写真を処理中...")
+    clips.append(make_phase2(config, ev_path))
 
     print("フェーズ3: レーダー画面を生成中...")
     clips.append(make_phase3(config))
