@@ -64,7 +64,7 @@ def main(json_path: str):
     print("🏇 レースシミュレーション開始...")
     for frame_idx in range(engine.TOTAL_FRAMES):
         engine.step()
-        bg_scroll += 2.2
+        bg_scroll += 3.5
         dist = engine.dist_remaining()
 
         battery.update(dist)
