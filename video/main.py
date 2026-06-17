@@ -5,14 +5,27 @@ import os
 from horse import Horse
 from race_engine import RaceEngine
 from commentary import generate_commentary
-from renderer import render_frame, render_title_card, render_result_card
+from renderer import render_frame, render_title_card, render_result_card, DramaState
 from composer import export_mp4
-from battery import BatteryState, apply_battery_overlay
+from battery import BatteryState
 from protagonist import Protagonist
 
 BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_DIR = os.path.join(BASE_DIR, "output")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+
+def horse_to_dict(h: Horse) -> dict:
+    return {
+        "number":       h.number,
+        "name":         h.name,
+        "style":        h.style,
+        "power":        h.power,
+        "jockey_color": h.jockey_color,
+        "screen_x":     h.screen_x,
+        "rank":         h.rank,
+        "comment":      h.comment,
+    }
 
 
 def main(json_path: str):
@@ -38,28 +51,41 @@ def main(json_path: str):
     engine      = RaceEngine(horses)
     battery     = BatteryState()
     protagonist = Protagonist()
+    drama       = DramaState()
     prev_battery_phase = "normal"
 
     frames = []
     commentary = ["スタート！", "各馬一斉にスタート！"]
     bg_scroll  = 0.0
 
-    # タイトルカード（5秒）
     print("🎬 タイトルカード生成中...")
     frames += render_title_card(data, len(horses))
 
     print("🏇 レースシミュレーション開始...")
     for frame_idx in range(engine.TOTAL_FRAMES):
         engine.step()
-        bg_scroll += 2.0
+        bg_scroll += 2.2
         dist = engine.dist_remaining()
 
-        # 電池状態更新
         battery.update(dist)
 
-        # ドラマ発動チェック → ツッコミ
-        for evt in engine.drama.get_newly_fired_events(dist):
+        # ドラマ発動チェック → DramaState 更新 + ツッコミ
+        newly = engine.drama.get_newly_fired_events(dist)
+        for evt in newly:
             protagonist.react(evt.event_type)
+            if evt.event_type in ("ロケット", "一気", "ワープ"):
+                drama.event     = {"ロケット":"rocket","一気":"charge","ワープ":"warp"}[evt.event_type]
+                drama.intensity = 1.0
+                drama.flash     = 0.35
+            elif evt.event_type == "まくり":
+                drama.event     = "makuri"
+                drama.intensity = 0.7
+
+        # ドラマを徐々にフェードアウト
+        drama.flash     = max(0.0, drama.flash     - 0.04)
+        drama.intensity = max(0.0, drama.intensity - 0.015)
+        if drama.intensity <= 0:
+            drama.event = ""
 
         # 電池フェーズ変化 → ツッコミ
         if battery.phase != prev_battery_phase:
@@ -71,24 +97,24 @@ def main(json_path: str):
             entry = engine.commentary_queue.pop(0)
             drama_active = engine.drama.get_active_events(dist)
             commentary = generate_commentary(
-                entry["dist"],
-                entry["horses"],
-                drama_active,
-            )
+                entry["dist"], entry["horses"], drama_active)
+
+        h_dicts = [horse_to_dict(h) for h in horses]
 
         frame = render_frame(
-            horses=horses,
+            horses=h_dicts,
             bg_scroll=bg_scroll,
             commentary=commentary,
             dist_remaining=dist,
             tick=frame_idx,
-            tsukkomi=protagonist.get_display(),
             race_info=data,
+            tsukkomi=protagonist.get_display(),
+            battery_phase=battery.phase,
+            battery_intensity=battery.noise_intensity,
+            drama=drama,
         )
 
-        frame = apply_battery_overlay(frame, battery, tick=frame_idx)
         frames.append(frame)
-
         protagonist.tick()
 
         if battery.is_finished():
@@ -99,9 +125,9 @@ def main(json_path: str):
             pct = frame_idx / engine.TOTAL_FRAMES * 100
             print(f"  {pct:.0f}% (残り{dist:.0f}m)")
 
-    # 結果カード（10秒）
     print("🎬 結果カード生成中...")
-    frames += render_result_card(horses, data)
+    h_dicts = [horse_to_dict(h) for h in horses]
+    frames += render_result_card(h_dicts, data)
 
     out_name = f"race_{data['race_date']}_{data['race_name']}.mp4"
     out_path = os.path.join(OUTPUT_DIR, out_name)
