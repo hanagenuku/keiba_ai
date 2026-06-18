@@ -32,7 +32,8 @@ def train_xgb(base_dir,
               min_child_weight=10,
               reg_alpha=0.1,
               reg_lambda=1.0,
-              early_stopping_rounds=50):
+              early_stopping_rounds=50,
+              use_optuna=False):
     """
     Parameters
     ----------

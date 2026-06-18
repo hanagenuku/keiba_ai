@@ -10,6 +10,7 @@ sys.path.insert(0, ROOT)
 
 from scripts._session import create_session
 from scripts.weekend import fetch_and_save_results
+from src.betting.shadow import record_all_shadow_bets
 from src.features.engine import init_engine
 from src.utils.db import (init_db, get_db_path, get_history_db_path,
                            backup_db, checkpoint_db)
@@ -59,7 +60,10 @@ def main():
     target_date = jst_now.strftime('%Y%m%d')
 
     sess = create_session()
-    fetch_and_save_results(sess, hist_path, target_date)
+    all_results = fetch_and_save_results(sess, hist_path, target_date)
+
+    if all_results:
+        record_all_shadow_bets(all_results, ROOT)
 
     since_date = (jst_now - timedelta(days=7)).strftime('%Y-%m-%d')
     print_roi_breakdown(db_path, since_date)

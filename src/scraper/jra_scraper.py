@@ -439,11 +439,23 @@ def parse_dividends(soup):
         fm = re.findall(r'(\d+)\s+([\d,]+)\s*円', text[idx:idx + 200])
         if fm:
             divs['fukusho'] = [{'num': int(f[0]), 'payout': int(f[1].replace(',', ''))} for f in fm[:3]]
+    idx = text.find('馬連')
+    if idx >= 0:
+        um = re.findall(r'(\d+)-(\d+)\s+([\d,]+)\s*円', text[idx:idx + 200])
+        if um:
+            divs['umaren'] = {'nums': [int(um[0][0]), int(um[0][1])],
+                              'payout': int(um[0][2].replace(',', ''))}
     idx = text.find('ワイド')
     if idx >= 0:
         wm = re.findall(r'(\d+)-(\d+)\s+([\d,]+)\s*円', text[idx:idx + 300])
         if wm:
             divs['wide'] = [{'nums': [int(w[0]), int(w[1])], 'payout': int(w[2].replace(',', ''))} for w in wm[:3]]
+    idx = text.find('三連複')
+    if idx >= 0:
+        sm = re.findall(r'(\d+)-(\d+)-(\d+)\s+([\d,]+)\s*円', text[idx:idx + 200])
+        if sm:
+            divs['sanrenpuku'] = {'nums': [int(sm[0][0]), int(sm[0][1]), int(sm[0][2])],
+                                  'payout': int(sm[0][3].replace(',', ''))}
     return divs
 
 

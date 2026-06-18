@@ -65,6 +65,45 @@ def init_db(base_dir=None, db_path=None):
             pop_rank INTEGER, score_gap REAL,
             is_hit INTEGER DEFAULT -1, payout REAL DEFAULT 0
         );
+        CREATE TABLE IF NOT EXISTS shadow_bets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            date TEXT,
+            race_id TEXT,
+            racecourse TEXT,
+            race_num INTEGER,
+            race_class TEXT,
+            num_horses INTEGER,
+            surface TEXT,
+            distance INTEGER,
+            chaos_grade TEXT,
+            rl1_num INTEGER,
+            rl1_name TEXT,
+            rl1_win_prob REAL,
+            rl1_cal_prob REAL,
+            rl2_num INTEGER,
+            rl2_name TEXT,
+            rl3_num INTEGER,
+            rl3_name TEXT,
+            winner_num INTEGER,
+            winner_pop INTEGER,
+            winner_odds REAL,
+            second_num INTEGER,
+            third_num INTEGER,
+            shadow_tansho_hit INTEGER,
+            shadow_tansho_payout REAL,
+            shadow_fukusho_hit INTEGER,
+            shadow_fukusho_payout REAL,
+            shadow_umaren_hit INTEGER,
+            shadow_umaren_payout REAL,
+            shadow_wide_hit INTEGER,
+            shadow_wide_payout REAL,
+            shadow_sanrenp_hit INTEGER,
+            shadow_sanrenp_payout REAL,
+            was_recommended INTEGER DEFAULT 0,
+            actual_bet_type TEXT,
+            actual_bet_hit INTEGER,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        );
     ''')
     conn.commit()
     conn.close()
