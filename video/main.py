@@ -24,6 +24,7 @@ def horse_to_dict(h: Horse) -> dict:
         "jockey_color": h.jockey_color,
         "screen_x":     h.screen_x,
         "rank":         h.rank,
+        "speed":        h.speed,
         "comment":      h.comment,
     }
 
@@ -77,6 +78,10 @@ def main(json_path: str):
                 drama.event     = {"ロケット":"rocket","一気":"charge","ワープ":"warp"}[evt.event_type]
                 drama.intensity = 1.0
                 drama.flash     = 0.35
+                if evt.event_type == "ロケット":
+                    import random as _r
+                    drama.shake_x = _r.randint(-3, 3)
+                    drama.shake_y = _r.randint(-2, 2)
             elif evt.event_type == "まくり":
                 drama.event     = "makuri"
                 drama.intensity = 0.7

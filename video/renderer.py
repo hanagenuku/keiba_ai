@@ -30,16 +30,67 @@ COATS = [
 ]
 def coat(num): return COATS[(num - 1) % len(COATS)]
 
-G8 = [
-    {"bob": 1,  "fl":{"ox":14,"len":10,"b": 1}, "fr":{"ox":11,"len": 9,"b": 1}, "bl":{"ox": 3,"len":10,"b":-1}, "br":{"ox": 6,"len": 9,"b":-1}},
-    {"bob": 0,  "fl":{"ox":18,"len":11,"b": 3}, "fr":{"ox":14,"len":10,"b": 2}, "bl":{"ox": 0,"len":12,"b":-3}, "br":{"ox": 4,"len":11,"b":-2}},
-    {"bob":-3,  "fl":{"ox":22,"len":13,"b": 5}, "fr":{"ox":17,"len":12,"b": 4}, "bl":{"ox":-5,"len":13,"b":-5}, "br":{"ox": 0,"len":12,"b":-4}},
-    {"bob":-1,  "fl":{"ox":19,"len":11,"b": 2}, "fr":{"ox":15,"len":10,"b": 2}, "bl":{"ox":-2,"len":11,"b":-2}, "br":{"ox": 3,"len":10,"b":-2}},
-    {"bob": 1,  "fl":{"ox":11,"len": 9,"b":-1}, "fr":{"ox":14,"len":10,"b":-1}, "bl":{"ox": 6,"len": 9,"b": 1}, "br":{"ox": 9,"len":10,"b": 1}},
-    {"bob": 0,  "fl":{"ox": 8,"len":11,"b":-3}, "fr":{"ox":12,"len":12,"b":-3}, "bl":{"ox": 8,"len":11,"b": 3}, "br":{"ox":12,"len":12,"b": 3}},
-    {"bob":-3,  "fl":{"ox": 4,"len":13,"b":-5}, "fr":{"ox": 9,"len":13,"b":-4}, "bl":{"ox":12,"len":13,"b": 5}, "br":{"ox":16,"len":12,"b": 4}},
-    {"bob":-1,  "fl":{"ox": 7,"len":10,"b":-2}, "fr":{"ox":11,"len":11,"b":-2}, "bl":{"ox": 9,"len":10,"b": 2}, "br":{"ox":13,"len":11,"b": 2}},
+# ──────────────────────────────────────────────
+#  4フレームギャロップアニメ
+#  各脚: (x_offset, length, bend)
+#    x_offset: 馬体左端からの水平オフセット(内部px)
+#    length:   脚の全長(内部px)
+#    bend:     膝の曲げ量(正=前、負=後ろ)
+#
+#  F0: 前脚前方・後脚後方（最大開脚）
+#  F1: 脚を中央へ戻す
+#  F2: 前脚後方・後脚前方（逆開脚）
+#  F3: 脚を中央へ戻す
+# ──────────────────────────────────────────────
+G4 = [
+    # F0: 前脚前方・後脚後方
+    {"bob": -3,
+     "fl": {"ox": 23, "len": 14, "b":  6},   # 前左: 大きく前へ
+     "fr": {"ox": 19, "len": 13, "b":  5},   # 前右: 前へ
+     "bl": {"ox": -4, "len": 14, "b": -6},   # 後左: 大きく後ろへ
+     "br": {"ox":  1, "len": 13, "b": -5}},  # 後右: 後ろへ
+
+    # F1: 脚を中央へ（収束・体が上がる）
+    {"bob":  1,
+     "fl": {"ox": 14, "len": 11, "b":  1},
+     "fr": {"ox": 11, "len": 10, "b":  1},
+     "bl": {"ox":  7, "len": 11, "b": -1},
+     "br": {"ox": 10, "len": 10, "b": -1}},
+
+    # F2: 前脚後方・後脚前方（逆開脚）
+    {"bob": -3,
+     "fl": {"ox":  5, "len": 14, "b": -6},   # 前左: 後ろへ
+     "fr": {"ox":  9, "len": 13, "b": -5},   # 前右: 後ろへ
+     "bl": {"ox": 15, "len": 14, "b":  6},   # 後左: 前へ
+     "br": {"ox": 19, "len": 13, "b":  5}},  # 後右: 前へ
+
+    # F3: 脚を中央へ（収束）
+    {"bob":  1,
+     "fl": {"ox": 11, "len": 10, "b": -1},
+     "fr": {"ox": 14, "len": 11, "b": -1},
+     "bl": {"ox":  6, "len": 10, "b":  1},
+     "br": {"ox":  9, "len": 11, "b":  1}},
 ]
+
+# 速度 → fps 変換テーブル
+# horse.speed が 1.0=基準。drama.event で上書き。
+def speed_to_fps(speed: float, drama_event: str) -> int:
+    if drama_event == "rocket":   return 12
+    if speed > 1.30:              return 8
+    if speed > 1.12:              return 6
+    return 4
+
+# 累積アニメカウンタ（馬番→float）
+_anim_acc: dict[int, float] = {}
+
+def get_anim_frame(num: int, speed: float, drama_event: str) -> int:
+    """速度連動フレームインデックスを返す（0〜3）"""
+    fps = speed_to_fps(speed, drama_event)
+    step = fps / 30.0   # 30fps動画における1フレームあたりの進み量
+    acc = _anim_acc.get(num, 0.0) + step
+    if acc >= 4.0: acc -= 4.0
+    _anim_acc[num] = acc
+    return int(acc) % 4
 
 @dataclass
 class DramaState:
@@ -65,78 +116,97 @@ def draw_leg(d, bx, by, BH, lg, col):
     tl = lg["len"] * S
     ox = lg["ox"] * S
     b  = lg["b"]  * S
-    fr(d, bx+ox,   by+BH,   2*S, h,    col)
-    fr(d, bx+ox+b, by+BH+h, 2*S, tl-h, col)
-    fr(d, bx+ox+b, by+BH+tl, 3*S, 2*S, (26,10,0))
+    fr(d, bx+ox,   by+BH,    2*S, h,     col)
+    fr(d, bx+ox+b, by+BH+h,  2*S, tl-h,  col)
+    fr(d, bx+ox+b, by+BH+tl, 3*S, 2*S,   (26,10,0))
 
-def draw_horse(d, hx, hy, num, jockey_hex, tick):
-    fi  = (tick // 2) % 8
-    gf  = G8[fi]
+
+def draw_horse(d, hx, hy, num, jockey_hex, horse_speed=1.0, drama_event=""):
+    fi  = get_anim_frame(num, horse_speed, drama_event)
+    gf  = G4[fi]
     ct  = coat(num)
     bc, mc, lc = ct["b"], ct["m"], ct["l"]
     try:    jc = hex2rgb(jockey_hex)
     except: jc = (128, 128, 128)
     jcd = darker(jc)
 
+    # ロケット時は紫プラズマ色を混ぜる
+    if drama_event == "rocket":
+        bc = tuple(min(255, int(c * 0.6 + p * 0.4)) for c, p in zip(bc, (160, 0, 220)))
+
     bx = int(hx) - 13*S
-    by = int(hy) + gf["bob"]*S
+    bob_scale = 1 if drama_event != "rocket" else 2  # ロケット時は上下動大きく
+    by = int(hy) + gf["bob"] * S * bob_scale
     BH = 5*S
 
-    # 影
-    fr(d, bx - 2*S, hy + 3*S, 38*S, 2*S, (0,0,0))
+    # 影（ロケット時は浮き気味 → 影を小さく）
+    shadow_w = 38*S if drama_event != "rocket" else 28*S
+    fr(d, bx - 2*S, hy + 3*S, shadow_w, 2*S, (0,0,0))
 
-    # 後脚（奥側）
+    # ── 後脚（奥側・少し暗く）──
     draw_leg(d, bx, by, BH, gf["br"], darker(lc, 20))
     draw_leg(d, bx, by, BH, gf["bl"], darker(lc, 20))
 
-    # しっぽ
-    tw = round(math.sin(tick * 0.4)) * S
-    fr(d, bx - 2*S,       by + S,   3*S, 5*S, mc)
-    fr(d, bx - 4*S + tw,  by + 4*S, 4*S, 8*S, darker(mc))
+    # ── しっぽ ──
+    tw = round(math.sin(_anim_acc.get(num, 0) * 1.5)) * S
+    fr(d, bx - 2*S,      by + S,   3*S, 5*S, mc)
+    fr(d, bx - 4*S + tw, by + 4*S, 4*S, 8*S, darker(mc))
 
-    # 馬体（前傾スプリント型）
-    fr(d, bx,            by,         7*S,  BH,       bc)
-    fr(d, bx +  5*S,     by,        14*S,  BH,       bc)
-    fr(d, bx + 15*S,     by -  2*S,  7*S,  BH + 2*S, bc)
-    fr(d, bx +  5*S,     by,        14*S,  2*S,      lighter(bc))
-    fr(d, bx +  2*S,     by + BH,   18*S,  2*S,      darker(bc))
+    # ── 馬体（前傾スプリント型）──
+    fr(d, bx,          by,        7*S,  BH,       bc)
+    fr(d, bx +  5*S,   by,       14*S,  BH,       bc)
+    fr(d, bx + 15*S,   by - 2*S,  7*S,  BH + 2*S, bc)
+    fr(d, bx +  5*S,   by,       14*S,  2*S,      lighter(bc))
+    fr(d, bx +  2*S,   by + BH,  18*S,  2*S,      darker(bc))
 
-    # 首（斜め前傾）
-    fr(d, bx + 19*S,     by -  2*S,  4*S,  4*S,      bc)
-    fr(d, bx + 21*S,     by -  5*S,  4*S,  4*S,      bc)
-    fr(d, bx + 23*S,     by -  8*S,  3*S,  3*S,      bc)
+    # ── 首（斜め前傾）──
+    fr(d, bx + 19*S,   by - 2*S,  4*S, 4*S, bc)
+    fr(d, bx + 21*S,   by - 5*S,  4*S, 4*S, bc)
+    fr(d, bx + 23*S,   by - 8*S,  3*S, 3*S, bc)
 
-    # 頭（水平に前方へ）
-    fr(d, bx + 24*S,     by - 10*S,  8*S,  4*S,      bc)
-    fr(d, bx + 30*S,     by -  9*S,  4*S,  3*S,      bc)
-    fr(d, bx + 26*S,     by - 10*S,  2*S,  2*S,      (8,4,0))
-    fr(d, bx + 26*S,     by - 10*S,  S,    S,         (200,200,200))
-    fr(d, bx + 31*S,     by -  8*S,  2*S,  2*S,      (26,0,0))
-    fr(d, bx + 26*S,     by -  9*S,  2*S,  5*S,      (220,220,220))
-    fr(d, bx + 24*S,     by - 12*S,  2*S,  3*S,      mc)
+    # ── 頭（水平）──
+    fr(d, bx + 24*S,   by - 10*S, 8*S, 4*S, bc)
+    fr(d, bx + 30*S,   by -  9*S, 4*S, 3*S, bc)
+    fr(d, bx + 26*S,   by - 10*S, 2*S, 2*S, (8,4,0))
+    fr(d, bx + 26*S,   by - 10*S, S,   S,   (200,200,200))
+    fr(d, bx + 31*S,   by -  8*S, 2*S, 2*S, (26,0,0))
+    fr(d, bx + 26*S,   by -  9*S, 2*S, 5*S, (220,220,220))
+    fr(d, bx + 24*S,   by - 12*S, 2*S, 3*S, mc)
 
-    # 前脚（手前）
+    # ── 前脚（手前）──
     draw_leg(d, bx, by, BH, gf["fl"], lc)
     draw_leg(d, bx, by, BH, gf["fr"], lc)
 
-    # 鞍布
-    fr(d, bx +  8*S,     by +  S,    8*S,  BH + S,   (0,34,153))
+    # ── 鞍布 ──
+    fr(d, bx + 8*S, by + S, 8*S, BH + S, (0, 34, 153))
     try: d.text((bx + 9*S, by + 2*S), str(num), fill=(255,255,255))
     except: pass
 
-    # 騎手（前傾・首に覆いかぶさる）
-    fr(d, bx + 13*S,     by -  4*S, 10*S,  6*S,      jcd)
-    fr(d, bx + 13*S,     by -  4*S,  7*S,  6*S,      jc)
+    # ── 騎手（前傾）──
+    fr(d, bx + 13*S,  by - 4*S,  10*S, 6*S, jcd)
+    fr(d, bx + 13*S,  by - 4*S,   7*S, 6*S, jc)
     st = lighter(jc, 35)
-    fr(d, bx + 14*S,     by -  4*S,  2*S,  6*S,      st)
-    fr(d, bx + 17*S,     by -  4*S,  2*S,  6*S,      st)
-    fr(d, bx + 14*S,     by +  S,    7*S,  3*S,      (240,240,240))
-    fr(d, bx + 18*S,     by -  8*S,  6*S,  5*S,      jc)
-    fr(d, bx + 20*S,     by - 12*S,  5*S,  4*S,      (240,192,144))
-    fr(d, bx + 19*S,     by - 15*S,  6*S,  4*S,      jc)
-    fr(d, bx + 18*S,     by - 12*S,  2*S,  2*S,      jcd)
-    fr(d, bx + 20*S,     by - 11*S,  4*S,  2*S,      (255,200,50))
-    fr(d, bx + 23*S,     by - 12*S,  S,   10*S,      (50,50,50))
+    fr(d, bx + 14*S,  by - 4*S,   2*S, 6*S, st)
+    fr(d, bx + 17*S,  by - 4*S,   2*S, 6*S, st)
+    fr(d, bx + 14*S,  by + S,     7*S, 3*S, (240,240,240))
+    fr(d, bx + 18*S,  by - 8*S,   6*S, 5*S, jc)
+    fr(d, bx + 20*S,  by - 12*S,  5*S, 4*S, (240,192,144))
+    fr(d, bx + 19*S,  by - 15*S,  6*S, 4*S, jc)
+    fr(d, bx + 18*S,  by - 12*S,  2*S, 2*S, jcd)
+    fr(d, bx + 20*S,  by - 11*S,  4*S, 2*S, (255,200,50))
+    fr(d, bx + 23*S,  by - 12*S,  S,  10*S, (50,50,50))
+
+    # ── ロケット: 紫プラズマ後光 ──
+    if drama_event == "rocket":
+        plasma = [(160,0,220),(200,50,255),(120,0,180)]
+        for pi in range(3):
+            r = (4 + pi * 3) * S
+            px = bx + 10*S
+            py = by - 5*S
+            for dy in range(-r, r+1, 2):
+                dx = int(math.sqrt(max(0, r*r - dy*dy)))
+                col_p = plasma[pi % len(plasma)]
+                d.line([px-dx, py+dy, px+dx, py+dy], fill=col_p)
 
 def _cloud(d, x, y, w, h, W):
     c = (234,243,255)
@@ -390,14 +460,15 @@ def render_frame(
     sorted_draw  = sorted(horses, key=lambda h: _gh(h, "screen_x", 0))
 
     for i, h in enumerate(sorted_draw):
-        sx_h = _gh(h, "screen_x", 0)
+        sx_h   = _gh(h, "screen_x", 0)
+        hnum   = _gh(h, "number", 1)
+        hjc    = _gh(h, "jockey_color", "#888888")
+        hspeed = _gh(h, "speed", 1.0)
         if -60 < sx_h < IW + 60:
             if drama.event == "warp":
-                draw_warp_afterimage(d, sx_h, GROUND_Y - i,
-                                     _gh(h,"number",1),
-                                     _gh(h,"jockey_color","#888888"), tick)
+                draw_warp_afterimage(d, sx_h, GROUND_Y - i, hnum, hjc, tick)
             draw_horse(d, sx_h + drama.shake_x, GROUND_Y - i + drama.shake_y,
-                       _gh(h,"number",1), _gh(h,"jockey_color","#888888"), tick)
+                       hnum, hjc, hspeed, drama.event)
         if _gh(h, "rank", 99) == 1:
             leader_horse = h
 
