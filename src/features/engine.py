@@ -538,6 +538,44 @@ CLASS_BASE_AGARI = {
 TRACK_CONDITION_ADJUST = {'良': 0.0, '稍重': +0.3, '重': +0.6, '不良': +1.0}
 
 
+
+def calc_competitiveness(history):
+    """
+    過去走の着差÷着順の平均。値が小さいほど「着順の割に接戦」。
+
+    例:
+      8着で0.5秒差 → 0.5/8 = 0.0625（実力は上位に近い）
+      2着で1.0秒差 → 1.0/2 = 0.50（着順ほど強くない）
+
+    Parameters
+    ----------
+    history : list of dict
+        過去走データ。各要素に 'place', 'time_diff_sec' を含む
+
+    Returns
+    -------
+    f_competitiveness : float  着差/着順の平均（直近5走）
+    f_competitive_best : float  着差/着順の最小値（最も接戦だった走）
+    """
+    vals = []
+    for r in history[:5]:  # 直近5走
+        place = r.get('place', 99)
+        diff = r.get('time_diff_sec')
+        if place is None or place <= 0 or place >= 99:
+            continue
+        if diff is None or diff < 0:
+            continue
+        if place == 1:
+            vals.append(0.0)  # 1着は着差0
+        else:
+            vals.append(diff / place)
+
+    if not vals:
+        return 0.5, 0.5  # デフォルト（中間値）
+
+    return round(sum(vals) / len(vals), 4), round(min(vals), 4)
+
+
 def calc_race_content_score(r):
     """1走分の内容スコア（着順ではなく中身を評価）"""
     place      = r.get('place', 10)
@@ -1323,6 +1361,11 @@ def calc_features_for_xgb(h, race):
         feats['f_member_level_avg']  = 5.0
         feats['f_member_level_max']  = 5.0
         feats['f_member_level_last'] = 5.0
+
+    # 競争力指数（着差÷着順：小さいほど着順より実力が上位に近い）
+    f_comp_avg, f_comp_best = calc_competitiveness(hist)
+    feats['f_competitiveness']      = float(f_comp_avg)
+    feats['f_competitive_best']     = float(f_comp_best)
 
     return feats
 
