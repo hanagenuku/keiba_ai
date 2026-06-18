@@ -16,7 +16,8 @@ HUD_H    = 22
 RACE_Y   = HUD_H
 RACE_H   = 360
 PANEL_Y  = RACE_Y + RACE_H
-S = 2
+S = 2      # UI/background scale
+HS = 4     # horse sprite scale (2× S for larger horses)
 LEADER_X = 155
 GROUND_Y = RACE_Y + int(RACE_H * 0.88)
 
@@ -75,7 +76,7 @@ G4 = [
 # 速度 → fps 変換テーブル
 # horse.speed が 1.0=基準。drama.event で上書き。
 def speed_to_fps(speed: float, drama_event: str) -> int:
-    if drama_event == "rocket":   return 12
+    if drama_event == "rocket":   return 36   # 3× base speed for rocket
     if speed > 1.30:              return 8
     if speed > 1.12:              return 6
     return 4
@@ -112,13 +113,14 @@ def darker(c, n=40):  return tuple(max(0,   v - n) for v in c)
 def lighter(c, n=20): return tuple(min(255, v + n) for v in c)
 
 def draw_leg(d, bx, by, BH, lg, col):
-    h  = math.ceil(lg["len"] * 0.55) * S
-    tl = lg["len"] * S
-    ox = lg["ox"] * S
-    b  = lg["b"]  * S
-    fr(d, bx+ox,   by+BH,    2*S, h,     col)
-    fr(d, bx+ox+b, by+BH+h,  2*S, tl-h,  col)
-    fr(d, bx+ox+b, by+BH+tl, 3*S, 2*S,   (26,10,0))
+    """脚を2段折れ線で描画。HS単位で拡大。"""
+    h  = math.ceil(lg["len"] * 0.55) * HS
+    tl = lg["len"] * HS
+    ox = lg["ox"] * HS
+    b  = lg["b"]  * HS
+    fr(d, bx+ox,       by+BH,       3*HS//2, h,     col)         # 上半脚
+    fr(d, bx+ox+b,     by+BH+h,     3*HS//2, tl-h,  col)         # 下半脚
+    fr(d, bx+ox+b,     by+BH+tl,    2*HS,    HS,    (26,10,0))   # 蹄
 
 
 def draw_horse(d, hx, hy, num, jockey_hex, horse_speed=1.0, drama_event=""):
@@ -134,76 +136,76 @@ def draw_horse(d, hx, hy, num, jockey_hex, horse_speed=1.0, drama_event=""):
     if drama_event == "rocket":
         bc = tuple(min(255, int(c * 0.6 + p * 0.4)) for c, p in zip(bc, (160, 0, 220)))
 
-    bx = int(hx) - 13*S
-    bob_scale = 1 if drama_event != "rocket" else 2  # ロケット時は上下動大きく
-    by = int(hy) + gf["bob"] * S * bob_scale
-    BH = 5*S
+    bx = int(hx) - 13*HS
+    bob_scale = 1 if drama_event != "rocket" else 2
+    by = int(hy) + gf["bob"] * HS * bob_scale
+    BH = 5*HS
 
-    # 影（ロケット時は浮き気味 → 影を小さく）
-    shadow_w = 38*S if drama_event != "rocket" else 28*S
-    fr(d, bx - 2*S, hy + 3*S, shadow_w, 2*S, (0,0,0))
+    # 影
+    shadow_w = 38*HS if drama_event != "rocket" else 28*HS
+    fr(d, bx - 2*HS, hy + 3*HS, shadow_w, 2*HS, (0,0,0))
 
     # ── 後脚（奥側・少し暗く）──
     draw_leg(d, bx, by, BH, gf["br"], darker(lc, 20))
     draw_leg(d, bx, by, BH, gf["bl"], darker(lc, 20))
 
     # ── しっぽ ──
-    tw = round(math.sin(_anim_acc.get(num, 0) * 1.5)) * S
-    fr(d, bx - 2*S,      by + S,   3*S, 5*S, mc)
-    fr(d, bx - 4*S + tw, by + 4*S, 4*S, 8*S, darker(mc))
+    tw = round(math.sin(_anim_acc.get(num, 0) * 1.5)) * HS
+    fr(d, bx - 2*HS,      by + HS,   3*HS, 5*HS, mc)
+    fr(d, bx - 4*HS + tw, by + 4*HS, 4*HS, 8*HS, darker(mc))
 
     # ── 馬体（前傾スプリント型）──
-    fr(d, bx,          by,        7*S,  BH,       bc)
-    fr(d, bx +  5*S,   by,       14*S,  BH,       bc)
-    fr(d, bx + 15*S,   by - 2*S,  7*S,  BH + 2*S, bc)
-    fr(d, bx +  5*S,   by,       14*S,  2*S,      lighter(bc))
-    fr(d, bx +  2*S,   by + BH,  18*S,  2*S,      darker(bc))
+    fr(d, bx,           by,         7*HS,  BH,        bc)
+    fr(d, bx +  5*HS,   by,        14*HS,  BH,        bc)
+    fr(d, bx + 15*HS,   by - 2*HS,  7*HS,  BH + 2*HS, bc)
+    fr(d, bx +  5*HS,   by,        14*HS,  2*HS,      lighter(bc))
+    fr(d, bx +  2*HS,   by + BH,   18*HS,  2*HS,      darker(bc))
 
     # ── 首（斜め前傾）──
-    fr(d, bx + 19*S,   by - 2*S,  4*S, 4*S, bc)
-    fr(d, bx + 21*S,   by - 5*S,  4*S, 4*S, bc)
-    fr(d, bx + 23*S,   by - 8*S,  3*S, 3*S, bc)
+    fr(d, bx + 19*HS,   by - 2*HS,  4*HS, 4*HS, bc)
+    fr(d, bx + 21*HS,   by - 5*HS,  4*HS, 4*HS, bc)
+    fr(d, bx + 23*HS,   by - 8*HS,  3*HS, 3*HS, bc)
 
     # ── 頭（水平）──
-    fr(d, bx + 24*S,   by - 10*S, 8*S, 4*S, bc)
-    fr(d, bx + 30*S,   by -  9*S, 4*S, 3*S, bc)
-    fr(d, bx + 26*S,   by - 10*S, 2*S, 2*S, (8,4,0))
-    fr(d, bx + 26*S,   by - 10*S, S,   S,   (200,200,200))
-    fr(d, bx + 31*S,   by -  8*S, 2*S, 2*S, (26,0,0))
-    fr(d, bx + 26*S,   by -  9*S, 2*S, 5*S, (220,220,220))
-    fr(d, bx + 24*S,   by - 12*S, 2*S, 3*S, mc)
+    fr(d, bx + 24*HS,   by - 10*HS, 8*HS, 4*HS, bc)
+    fr(d, bx + 30*HS,   by -  9*HS, 4*HS, 3*HS, bc)
+    fr(d, bx + 26*HS,   by - 10*HS, 2*HS, 2*HS, (8,4,0))
+    fr(d, bx + 26*HS,   by - 10*HS, HS,   HS,   (200,200,200))
+    fr(d, bx + 31*HS,   by -  8*HS, 2*HS, 2*HS, (26,0,0))
+    fr(d, bx + 26*HS,   by -  9*HS, 2*HS, 5*HS, (220,220,220))
+    fr(d, bx + 24*HS,   by - 12*HS, 2*HS, 3*HS, mc)
 
     # ── 前脚（手前）──
     draw_leg(d, bx, by, BH, gf["fl"], lc)
     draw_leg(d, bx, by, BH, gf["fr"], lc)
 
     # ── 鞍布 ──
-    fr(d, bx + 8*S, by + S, 8*S, BH + S, (0, 34, 153))
-    try: d.text((bx + 9*S, by + 2*S), str(num), fill=(255,255,255))
+    fr(d, bx + 8*HS, by + HS, 8*HS, BH + HS, (0, 34, 153))
+    try: d.text((bx + 9*HS, by + 2*HS), str(num), fill=(255,255,255))
     except: pass
 
     # ── 騎手（前傾）──
-    fr(d, bx + 13*S,  by - 4*S,  10*S, 6*S, jcd)
-    fr(d, bx + 13*S,  by - 4*S,   7*S, 6*S, jc)
+    fr(d, bx + 13*HS,  by - 4*HS,  10*HS, 6*HS, jcd)
+    fr(d, bx + 13*HS,  by - 4*HS,   7*HS, 6*HS, jc)
     st = lighter(jc, 35)
-    fr(d, bx + 14*S,  by - 4*S,   2*S, 6*S, st)
-    fr(d, bx + 17*S,  by - 4*S,   2*S, 6*S, st)
-    fr(d, bx + 14*S,  by + S,     7*S, 3*S, (240,240,240))
-    fr(d, bx + 18*S,  by - 8*S,   6*S, 5*S, jc)
-    fr(d, bx + 20*S,  by - 12*S,  5*S, 4*S, (240,192,144))
-    fr(d, bx + 19*S,  by - 15*S,  6*S, 4*S, jc)
-    fr(d, bx + 18*S,  by - 12*S,  2*S, 2*S, jcd)
-    fr(d, bx + 20*S,  by - 11*S,  4*S, 2*S, (255,200,50))
-    fr(d, bx + 23*S,  by - 12*S,  S,  10*S, (50,50,50))
+    fr(d, bx + 14*HS,  by - 4*HS,   2*HS, 6*HS, st)
+    fr(d, bx + 17*HS,  by - 4*HS,   2*HS, 6*HS, st)
+    fr(d, bx + 14*HS,  by + HS,     7*HS, 3*HS, (240,240,240))
+    fr(d, bx + 18*HS,  by - 8*HS,   6*HS, 5*HS, jc)
+    fr(d, bx + 20*HS,  by - 12*HS,  5*HS, 4*HS, (240,192,144))
+    fr(d, bx + 19*HS,  by - 15*HS,  6*HS, 4*HS, jc)
+    fr(d, bx + 18*HS,  by - 12*HS,  2*HS, 2*HS, jcd)
+    fr(d, bx + 20*HS,  by - 11*HS,  4*HS, 2*HS, (255,200,50))
+    fr(d, bx + 23*HS,  by - 12*HS,  HS,  10*HS, (50,50,50))
 
     # ── ロケット: 紫プラズマ後光 ──
     if drama_event == "rocket":
         plasma = [(160,0,220),(200,50,255),(120,0,180)]
         for pi in range(3):
-            r = (4 + pi * 3) * S
-            px = bx + 10*S
-            py = by - 5*S
-            for dy in range(-r, r+1, 2):
+            r = (5 + pi * 4) * HS
+            px = bx + 10*HS
+            py = by - 5*HS
+            for dy in range(-r, r+1, max(1, HS//2)):
                 dx = int(math.sqrt(max(0, r*r - dy*dy)))
                 col_p = plasma[pi % len(plasma)]
                 d.line([px-dx, py+dy, px+dx, py+dy], fill=col_p)
@@ -332,9 +334,22 @@ def draw_warp_afterimage(d, horse_x, horse_y, num, jc_hex, tick, steps=3):
         ghost_x = horse_x + i * 8
         alpha   = 80 - i * 20
         bc = (alpha, alpha, alpha)
-        bx = int(ghost_x) - 13*S
+        bx = int(ghost_x) - 13*HS
         by = int(horse_y)
-        fr(d, bx+2*S, by-9*S, 26*S, 25*S, bc)
+        fr(d, bx+2*HS, by-9*HS, 26*HS, 25*HS, bc)
+
+def draw_rocket_afterimage(d, horse_x, horse_y, ct, steps=4):
+    """ロケット時：馬の後方に紫がかった残像を描画"""
+    bc = ct["b"]
+    for i in range(steps, 0, -1):
+        ghost_x = horse_x + i * 6
+        alpha_r = max(0, int(bc[0] * 0.4 * (steps - i + 1) / steps + 120 * i / steps))
+        alpha_g = max(0, int(bc[1] * 0.2 * (steps - i + 1) / steps))
+        alpha_b = max(0, int(bc[2] * 0.4 * (steps - i + 1) / steps + 180 * i / steps))
+        ghost_col = (min(255, alpha_r), min(255, alpha_g), min(255, alpha_b))
+        bx = int(ghost_x) - 13*HS
+        by = int(horse_y) - 2*HS
+        fr(d, bx+2*HS, by-9*HS, 26*HS, 25*HS, ghost_col)
 
 def apply_drama_to_frame(arr, drama):
     if drama.flash > 0:
@@ -467,6 +482,8 @@ def render_frame(
         if -60 < sx_h < IW + 60:
             if drama.event == "warp":
                 draw_warp_afterimage(d, sx_h, GROUND_Y - i, hnum, hjc, tick)
+            elif drama.event == "rocket" and drama.intensity > 0.3:
+                draw_rocket_afterimage(d, sx_h, GROUND_Y - i, coat(hnum))
             draw_horse(d, sx_h + drama.shake_x, GROUND_Y - i + drama.shake_y,
                        hnum, hjc, hspeed, drama.event)
         if _gh(h, "rank", 99) == 1:
