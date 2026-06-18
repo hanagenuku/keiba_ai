@@ -5,6 +5,7 @@ renderer.py  ―  Future Derby Viewer
 
 import math
 import random
+import os as _os
 from dataclasses import dataclass
 
 import numpy as np
@@ -85,13 +86,61 @@ def speed_to_fps(speed: float, drama_event: str) -> int:
 _anim_acc: dict[int, float] = {}
 
 def get_anim_frame(num: int, speed: float, drama_event: str) -> int:
-    """速度連動フレームインデックスを返す（0〜3）"""
     fps = speed_to_fps(speed, drama_event)
-    step = fps / 30.0   # 30fps動画における1フレームあたりの進み量
+    step = fps / 30.0
+    n = len(_SPRITE_FRAMES_RAW) if _SPRITE_FRAMES_RAW else 4
     acc = _anim_acc.get(num, 0.0) + step
-    if acc >= 4.0: acc -= 4.0
+    if acc >= n: acc -= n
     _anim_acc[num] = acc
-    return int(acc) % 4
+    return int(acc) % n
+
+
+# ── スプライトシステム ─────────────────────────────
+_SPW = 100   # 内部キャンバス表示幅
+_SPH = 58    # 内部キャンバス表示高さ
+SPRITE_BOB = [-2, 1, 0, -2, 1, 0]  # フレームごとの上下ボブ量
+
+_SPRITE_FRAMES_RAW: list = []
+_SPRITE_CACHE: dict = {}
+
+def _load_sprites() -> None:
+    global _SPRITE_FRAMES_RAW
+    base = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "assets", "frames")
+    frames = []
+    for i in range(6):
+        p = _os.path.join(base, f"horse_{i}.png")
+        if _os.path.exists(p):
+            img = Image.open(p).convert("RGBA")
+            img = img.resize((_SPW, _SPH), Image.LANCZOS)
+            frames.append(img)
+    _SPRITE_FRAMES_RAW = frames
+
+def _colorize(frame: Image.Image, bc: tuple, drama_event: str = "") -> Image.Image:
+    arr = np.array(frame, dtype=np.float32)
+    a = arr[:, :, 3]
+    lum = (0.299*arr[:,:,0] + 0.587*arr[:,:,1] + 0.114*arr[:,:,2]) / 255.0
+    c = bc
+    if drama_event == "rocket":
+        c = tuple(min(255, int(v*0.5 + p*0.5)) for v, p in zip(c, (160, 0, 220)))
+    result = np.stack([
+        np.clip(c[0] * lum, 0, 255),
+        np.clip(c[1] * lum, 0, 255),
+        np.clip(c[2] * lum, 0, 255),
+        a,
+    ], axis=2).astype(np.uint8)
+    return Image.fromarray(result, "RGBA")
+
+def _get_sprite(fi: int, num: int, drama_event: str = ""):
+    if not _SPRITE_FRAMES_RAW:
+        return None
+    key = (fi % len(_SPRITE_FRAMES_RAW), num, drama_event)
+    if key not in _SPRITE_CACHE:
+        raw = _SPRITE_FRAMES_RAW[fi % len(_SPRITE_FRAMES_RAW)]
+        _SPRITE_CACHE[key] = _colorize(raw, coat(num)["b"], drama_event)
+    return _SPRITE_CACHE[key]
+
+_load_sprites()
+
 
 @dataclass
 class DramaState:
@@ -112,103 +161,56 @@ def hex2rgb(s):
 def darker(c, n=40):  return tuple(max(0,   v - n) for v in c)
 def lighter(c, n=20): return tuple(min(255, v + n) for v in c)
 
-def draw_leg(d, bx, by, BH, lg, col):
-    """脚を2段折れ線で描画。HS単位で拡大。"""
-    h  = math.ceil(lg["len"] * 0.55) * HS
-    tl = lg["len"] * HS
-    ox = lg["ox"] * HS
-    b  = lg["b"]  * HS
-    fr(d, bx+ox,       by+BH,       3*HS//2, h,     col)         # 上半脚
-    fr(d, bx+ox+b,     by+BH+h,     3*HS//2, tl-h,  col)         # 下半脚
-    fr(d, bx+ox+b,     by+BH+tl,    2*HS,    HS,    (26,10,0))   # 蹄
+def draw_horse(img: Image.Image, hx: float, hy: float, num: int,
+               jockey_hex: str, horse_speed: float = 1.0, drama_event: str = ""):
+    fi       = get_anim_frame(num, horse_speed, drama_event)
+    bob      = SPRITE_BOB[fi % len(SPRITE_BOB)]
+    bob_mul  = 2 if drama_event == "rocket" else 1
+    px       = int(hx) - _SPW // 2
+    py       = int(hy) - _SPH + bob * bob_mul
 
-
-def draw_horse(d, hx, hy, num, jockey_hex, horse_speed=1.0, drama_event=""):
-    fi  = get_anim_frame(num, horse_speed, drama_event)
-    gf  = G4[fi]
-    ct  = coat(num)
-    bc, mc, lc = ct["b"], ct["m"], ct["l"]
-    try:    jc = hex2rgb(jockey_hex)
-    except: jc = (128, 128, 128)
-    jcd = darker(jc)
-
-    # ロケット時は紫プラズマ色を混ぜる
-    if drama_event == "rocket":
-        bc = tuple(min(255, int(c * 0.6 + p * 0.4)) for c, p in zip(bc, (160, 0, 220)))
-
-    bx = int(hx) - 13*HS
-    bob_scale = 1 if drama_event != "rocket" else 2
-    by = int(hy) + gf["bob"] * HS * bob_scale
-    BH = 5*HS
+    d = ImageDraw.Draw(img)
 
     # 影
-    shadow_w = 38*HS if drama_event != "rocket" else 28*HS
-    fr(d, bx - 2*HS, hy + 3*HS, shadow_w, 2*HS, (0,0,0))
+    sw = _SPW if drama_event != "rocket" else int(_SPW * 0.7)
+    fr(d, px, int(hy) + 2, sw, 3, (0, 0, 0))
 
-    # ── 後脚（奥側・少し暗く）──
-    draw_leg(d, bx, by, BH, gf["br"], darker(lc, 20))
-    draw_leg(d, bx, by, BH, gf["bl"], darker(lc, 20))
-
-    # ── しっぽ ──
-    tw = round(math.sin(_anim_acc.get(num, 0) * 1.5)) * HS
-    fr(d, bx - 2*HS,      by + HS,   3*HS, 5*HS, mc)
-    fr(d, bx - 4*HS + tw, by + 4*HS, 4*HS, 8*HS, darker(mc))
-
-    # ── 馬体（前傾スプリント型）──
-    fr(d, bx,           by,         7*HS,  BH,        bc)
-    fr(d, bx +  5*HS,   by,        14*HS,  BH,        bc)
-    fr(d, bx + 15*HS,   by - 2*HS,  7*HS,  BH + 2*HS, bc)
-    fr(d, bx +  5*HS,   by,        14*HS,  2*HS,      lighter(bc))
-    fr(d, bx +  2*HS,   by + BH,   18*HS,  2*HS,      darker(bc))
-
-    # ── 首（斜め前傾）──
-    fr(d, bx + 19*HS,   by - 2*HS,  4*HS, 4*HS, bc)
-    fr(d, bx + 21*HS,   by - 5*HS,  4*HS, 4*HS, bc)
-    fr(d, bx + 23*HS,   by - 8*HS,  3*HS, 3*HS, bc)
-
-    # ── 頭（水平）──
-    fr(d, bx + 24*HS,   by - 10*HS, 8*HS, 4*HS, bc)
-    fr(d, bx + 30*HS,   by -  9*HS, 4*HS, 3*HS, bc)
-    fr(d, bx + 26*HS,   by - 10*HS, 2*HS, 2*HS, (8,4,0))
-    fr(d, bx + 26*HS,   by - 10*HS, HS,   HS,   (200,200,200))
-    fr(d, bx + 31*HS,   by -  8*HS, 2*HS, 2*HS, (26,0,0))
-    fr(d, bx + 26*HS,   by -  9*HS, 2*HS, 5*HS, (220,220,220))
-    fr(d, bx + 24*HS,   by - 12*HS, 2*HS, 3*HS, mc)
-
-    # ── 前脚（手前）──
-    draw_leg(d, bx, by, BH, gf["fl"], lc)
-    draw_leg(d, bx, by, BH, gf["fr"], lc)
-
-    # ── 鞍布 ──
-    fr(d, bx + 8*HS, by + HS, 8*HS, BH + HS, (0, 34, 153))
-    try: d.text((bx + 9*HS, by + 2*HS), str(num), fill=(255,255,255))
-    except: pass
-
-    # ── 騎手（前傾）──
-    fr(d, bx + 13*HS,  by - 4*HS,  10*HS, 6*HS, jcd)
-    fr(d, bx + 13*HS,  by - 4*HS,   7*HS, 6*HS, jc)
-    st = lighter(jc, 35)
-    fr(d, bx + 14*HS,  by - 4*HS,   2*HS, 6*HS, st)
-    fr(d, bx + 17*HS,  by - 4*HS,   2*HS, 6*HS, st)
-    fr(d, bx + 14*HS,  by + HS,     7*HS, 3*HS, (240,240,240))
-    fr(d, bx + 18*HS,  by - 8*HS,   6*HS, 5*HS, jc)
-    fr(d, bx + 20*HS,  by - 12*HS,  5*HS, 4*HS, (240,192,144))
-    fr(d, bx + 19*HS,  by - 15*HS,  6*HS, 4*HS, jc)
-    fr(d, bx + 18*HS,  by - 12*HS,  2*HS, 2*HS, jcd)
-    fr(d, bx + 20*HS,  by - 11*HS,  4*HS, 2*HS, (255,200,50))
-    fr(d, bx + 23*HS,  by - 12*HS,  HS,  10*HS, (50,50,50))
-
-    # ── ロケット: 紫プラズマ後光 ──
+    # ロケット：スプライトの後ろ（左側）に紫プラズマ
     if drama_event == "rocket":
         plasma = [(160,0,220),(200,50,255),(120,0,180)]
         for pi in range(3):
-            r = (5 + pi * 4) * HS
-            px = bx + 10*HS
-            py = by - 5*HS
-            for dy in range(-r, r+1, max(1, HS//2)):
+            r  = 8 + pi * 6
+            cx = px + _SPW // 4
+            cy = py + _SPH // 2
+            for dy in range(-r, r+1, 2):
                 dx = int(math.sqrt(max(0, r*r - dy*dy)))
-                col_p = plasma[pi % len(plasma)]
-                d.line([px-dx, py+dy, px+dx, py+dy], fill=col_p)
+                d.line([cx-dx, cy+dy, cx+dx, cy+dy], fill=plasma[pi % 3])
+
+    # スプライト貼り付け（アルファ合成）
+    sprite = _get_sprite(fi, num, drama_event)
+    if sprite is not None:
+        dx = max(0, -px);  dy = max(0, -py)
+        sx = max(0, px);   sy = max(0, py)
+        pw = min(sprite.width - dx, img.width - sx)
+        ph = min(sprite.height - dy, img.height - sy)
+        if pw > 0 and ph > 0:
+            img.alpha_composite(sprite.crop((dx, dy, dx+pw, dy+ph)), dest=(sx, sy))
+        d = ImageDraw.Draw(img)  # alpha_composite後にDrawを再取得
+
+    # 騎手（鞍部分の上に小さく描画）
+    try:    jc = hex2rgb(jockey_hex)
+    except: jc = (128, 128, 128)
+    jx = px + int(_SPW * 0.38)
+    jy = py + int(_SPH * 0.10)
+    fr(d, jx,   jy,    12, 9,  darker(jc))
+    fr(d, jx,   jy,     8, 9,  jc)
+    fr(d, jx+1, jy,     2, 9,  lighter(jc, 35))
+    fr(d, jx+4, jy,     2, 9,  lighter(jc, 35))
+    fr(d, jx+2, jy-7,   6, 5,  jc)
+    fr(d, jx+3, jy-11,  4, 4,  (240, 192, 144))
+    try:
+        d.text((jx+1, jy+1), str(num), fill=(255, 255, 255))
+    except: pass
 
 def _cloud(d, x, y, w, h, W):
     c = (234,243,255)
@@ -329,27 +331,32 @@ def draw_speed_lines(d, cx, cy, intensity=1.0):
         y2 = cy + math.sin(angle) * r2 * 2
         d.line([int(x1), int(y1), int(x2), int(y2)], fill=(255,220,80), width=1)
 
-def draw_warp_afterimage(d, horse_x, horse_y, num, jc_hex, tick, steps=3):
+def draw_warp_afterimage(img: Image.Image, horse_x, horse_y, num, jc_hex, tick, steps=3):
     for i in range(steps, 0, -1):
         ghost_x = horse_x + i * 8
-        alpha   = 80 - i * 20
-        bc = (alpha, alpha, alpha)
-        bx = int(ghost_x) - 13*HS
-        by = int(horse_y)
-        fr(d, bx+2*HS, by-9*HS, 26*HS, 25*HS, bc)
+        a = max(0, 70 - i * 20)
+        ghost = Image.new("RGBA", (_SPW - 8, _SPH - 4), (180, 180, 220, a))
+        sx = max(0, int(ghost_x) - _SPW // 2 + 4)
+        sy = max(0, int(horse_y) - _SPH + 4)
+        if sx < img.width and sy < img.height:
+            img.alpha_composite(ghost, dest=(sx, sy))
 
-def draw_rocket_afterimage(d, horse_x, horse_y, ct, steps=4):
-    """ロケット時：馬の後方に紫がかった残像を描画"""
+def draw_rocket_afterimage(img: Image.Image, horse_x, horse_y, ct, steps=4):
     bc = ct["b"]
     for i in range(steps, 0, -1):
-        ghost_x = horse_x + i * 6
-        alpha_r = max(0, int(bc[0] * 0.4 * (steps - i + 1) / steps + 120 * i / steps))
-        alpha_g = max(0, int(bc[1] * 0.2 * (steps - i + 1) / steps))
-        alpha_b = max(0, int(bc[2] * 0.4 * (steps - i + 1) / steps + 180 * i / steps))
-        ghost_col = (min(255, alpha_r), min(255, alpha_g), min(255, alpha_b))
-        bx = int(ghost_x) - 13*HS
-        by = int(horse_y) - 2*HS
-        fr(d, bx+2*HS, by-9*HS, 26*HS, 25*HS, ghost_col)
+        ghost_x = horse_x + i * 5
+        t = i / steps
+        col = (
+            min(255, int(bc[0] * (1-t) * 0.4 + 160 * t)),
+            min(255, int(bc[1] * 0.1)),
+            min(255, int(bc[2] * (1-t) * 0.4 + 200 * t)),
+        )
+        a = int(80 * t)
+        ghost = Image.new("RGBA", (_SPW - 8, _SPH - 4), (*col, a))
+        sx = max(0, int(ghost_x) - _SPW // 2 + 4)
+        sy = max(0, int(horse_y) - _SPH + 4)
+        if sx < img.width and sy < img.height:
+            img.alpha_composite(ghost, dest=(sx, sy))
 
 def apply_drama_to_frame(arr, drama):
     if drama.flash > 0:
@@ -466,7 +473,8 @@ def render_frame(
     if race_info is None: race_info = {}
     if drama is None:     drama = DramaState()
 
-    img = Image.new("RGB", (IW, IH), (0, 0, 0))
+    # RGBA で合成（スプライトのアルファ合成のため）
+    img = Image.new("RGBA", (IW, IH), (0, 0, 0, 255))
     d   = ImageDraw.Draw(img)
 
     draw_bg(d, bg_scroll, IW)
@@ -481,14 +489,15 @@ def render_frame(
         hspeed = _gh(h, "speed", 1.0)
         if -60 < sx_h < IW + 60:
             if drama.event == "warp":
-                draw_warp_afterimage(d, sx_h, GROUND_Y - i, hnum, hjc, tick)
+                draw_warp_afterimage(img, sx_h, GROUND_Y - i, hnum, hjc, tick)
             elif drama.event == "rocket" and drama.intensity > 0.3:
-                draw_rocket_afterimage(d, sx_h, GROUND_Y - i, coat(hnum))
-            draw_horse(d, sx_h + drama.shake_x, GROUND_Y - i + drama.shake_y,
+                draw_rocket_afterimage(img, sx_h, GROUND_Y - i, coat(hnum))
+            draw_horse(img, sx_h + drama.shake_x, GROUND_Y - i + drama.shake_y,
                        hnum, hjc, hspeed, drama.event)
         if _gh(h, "rank", 99) == 1:
             leader_horse = h
 
+    d = ImageDraw.Draw(img)  # 馬描画後にDrawを再取得
     if drama.event in ("rocket","charge","makuri") and drama.intensity > 0:
         lx = _gh(leader_horse, "screen_x", LEADER_X) if leader_horse else LEADER_X
         draw_speed_lines(d, lx + drama.shake_x, GROUND_Y - 10*S + drama.shake_y, drama.intensity)
@@ -496,7 +505,7 @@ def render_frame(
     draw_sf_hud(d, leader_horse, dist_remaining, tick, IW)
     draw_bottom_panel(d, horses, commentary, tsukkomi, IW)
 
-    big = img.resize((1080, 1920), Image.NEAREST)
+    big = img.convert("RGB").resize((1080, 1920), Image.NEAREST)
     arr = np.array(big)
 
     arr = apply_drama_to_frame(arr, drama)
