@@ -44,3 +44,16 @@ jobs:
           git diff --cached --quiet || git commit -m "auto: Sunday results $(date +%Y%m%d)"
           GIT_LFS_SKIP_SMUDGE=1 git pull --rebase origin main
           git push
+
+      - name: Write status (always)
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]" || true
+          git config user.email "github-actions[bot]@users.noreply.github.com" || true
+          STATUS="${{ job.status }}"
+          TS=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          echo "{\"status\":\"$STATUS\",\"workflow\":\"sunday-results\",\"updated_at\":\"$TS\"}" > data/workflow_status.json
+          git add data/workflow_status.json
+          git diff --cached --quiet || git commit -m "auto: workflow status $STATUS $TS"
+          GIT_LFS_SKIP_SMUDGE=1 git pull --rebase origin main || true
+          git push || true

@@ -236,12 +236,26 @@ function findRace(raceKey) {
 let _pollingTimer = null;
 const _POLL_KEY = 'keiba_polling';
 
+const STATUS_URL = 'https://hanagenuku.github.io/keiba_ai/data/workflow_status.json';
+
 async function _getLatestTimestamp() {
   try {
     const res = await fetch(DATA_URL + '?t=' + Date.now(), { cache: 'no-store' });
     if (!res.ok) return null;
     const j = await res.json();
     return j.generated_at || j.date || null;
+  } catch(_) { return null; }
+}
+
+async function _getWorkflowStatus(startTime) {
+  try {
+    const res = await fetch(STATUS_URL + '?t=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) return null;
+    const j = await res.json();
+    // 今回のトリガー後に書かれたステータスのみ有効
+    const updatedAt = new Date(j.updated_at).getTime();
+    if (updatedAt < startTime) return null;
+    return j.status; // 'success' or 'failure'
   } catch(_) { return null; }
 }
 
@@ -252,7 +266,7 @@ function _stopPolling(btn, origText) {
   if (btn) { btn.textContent = origText; btn.disabled = false; }
 }
 
-function _startPolling(btn, origText, baselineTs, startTime) {
+function _startPolling(btn, origText, baselineTs, startTime = Date.now()) {
   const MAX_WAIT = 15 * 60;
   const CHECK_INTERVAL = 30;
 
@@ -266,7 +280,21 @@ function _startPolling(btn, origText, baselineTs, startTime) {
     btn.textContent = `実行中... ${mins}:${String(secs).padStart(2,'0')}`;
 
     if (elapsed % CHECK_INTERVAL < 2) { // 30秒ごとにチェック（±1秒の誤差許容）
-      const ts = await _getLatestTimestamp();
+      const [ts, wfStatus] = await Promise.all([
+        _getLatestTimestamp(),
+        _getWorkflowStatus(startTime),
+      ]);
+
+      if (wfStatus === 'failure') {
+        _stopPolling(btn, origText);
+        document.getElementById('race-list').innerHTML =
+          '<div class="error-box">❌ <strong>実行中にエラーが発生しました</strong><br><br>' +
+          'GitHub Actions でエラーが起きました。<br>' +
+          '<a href="https://github.com/hanagenuku/keiba_ai/actions" target="_blank" style="color:#e74c3c">→ エラーログを確認する</a><br><br>' +
+          '<button class="reload-btn" onclick="loadData()" style="margin:8px 0 0">再読み込み</button></div>';
+        return;
+      }
+
       if (ts && ts !== baselineTs) {
         _stopPolling(btn, origText);
         await loadData();
