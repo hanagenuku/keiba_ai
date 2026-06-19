@@ -2,86 +2,44 @@
  * スマホ直前オッズ取得（単勝・複勝）エンドポイント
  *
  * 【導入方法】
- * 既存のGASプロジェクト（latest.json配信用）の doGet() に、
- * 下記の getOddsHandler / getOddsMockHandler への分岐を追加し、
- * このファイルの残りの関数（fetchOdds, normalizeCell）をそのまま貼り付ける。
- *
- * 既存の doGet() 例:
+ * 既存のGASプロジェクトの doGet() に以下の分岐を追加し、
+ * このファイルの全関数をコード.gsに貼り付ける。
  *
  *   function doGet(e) {
  *     const action = (e.parameter.action || '').toString();
  *     if (action === 'getOdds')     return getOddsHandler(e);
  *     if (action === 'getOddsMock') return getOddsMockHandler(e);
- *     // ↓ 既存のlatest.json配信ロジック（変更なし）
- *     ...
+ *     ...既存コード...
  *   }
- *
- * 既存の doGet() に jsonResponse() が既に定義されている場合は、
- * このファイル末尾の jsonResponse() は重複定義になるため削除すること。
  */
 
-/**
- * パラメータ:
- *   race_id: レースID（例: "202506140611"）※レスポンスのエコー用
- *   cn     : オッズページ取得用CNAME文字列（latest.jsonのrace.odds_cnをそのまま渡す）
- *
- * レスポンス（成功時）:
- *   {
- *     "status": "ok",
- *     "race_id": "202506140611",
- *     "updated_at": "14:25",
- *     "odds": {
- *       "1": {"tansho": 12.5, "fukusho": 4.2},
- *       "3": {"tansho": 2.8,  "fukusho": 1.5},
- *       "7": {"tansho": 25.0, "fukusho": 8.6}
- *     }
- *   }
- *
- * レスポンス（失敗時）:
- *   { "status": "error", "message": "..." }
- *
- * 取得自体に失敗した場合（JRA側の構造変化・パラメータエラー等）は
- * エラーにせず status:"ok" / odds:{} を返す（アプリ側で「変化なし」として扱える）。
- */
+var JRA_ODDS_URL = 'https://www.jra.go.jp/JRADB/accessO.html';
+var UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+
 function getOddsHandler(e) {
   try {
-    const raceId = (e.parameter.race_id || '').toString();
-    const cn = (e.parameter.cn || '').toString();
+    var raceId = (e.parameter.race_id || '').toString();
+    var cn     = (e.parameter.cn     || '').toString();
 
     if (!raceId || raceId.length < 10) {
       return jsonResponse({ status: 'error', message: 'race_id が不正です' });
     }
     if (!cn) {
-      return jsonResponse({ status: 'error', message: 'cn が指定されていません（latest.jsonのodds_cnを送信してください）' });
+      return jsonResponse({ status: 'error', message: 'cn が指定されていません' });
     }
 
-    const odds = fetchOdds(cn);
-    const now = new Date();
-    const timeStr = Utilities.formatDate(now, 'Asia/Tokyo', 'HH:mm');
-
-    return jsonResponse({
-      status: 'ok',
-      race_id: raceId,
-      updated_at: timeStr,
-      odds: odds
-    });
+    var odds = fetchOdds(cn);
+    var timeStr = Utilities.formatDate(new Date(), 'Asia/Tokyo', 'HH:mm');
+    return jsonResponse({ status: 'ok', race_id: raceId, updated_at: timeStr, odds: odds });
   } catch (err) {
     return jsonResponse({ status: 'error', message: err.toString() });
   }
 }
 
-/**
- * テスト用モックエンドポイント（action=getOddsMock）
- * JRAにアクセスせず固定の単勝・複勝オッズを返す。
- */
 function getOddsMockHandler(e) {
-  const raceId = (e.parameter.race_id || 'mock').toString();
-  const now = new Date();
-  const timeStr = Utilities.formatDate(now, 'Asia/Tokyo', 'HH:mm');
+  var timeStr = Utilities.formatDate(new Date(), 'Asia/Tokyo', 'HH:mm');
   return jsonResponse({
-    status: 'ok',
-    race_id: raceId,
-    updated_at: timeStr,
+    status: 'ok', race_id: 'mock', updated_at: timeStr,
     odds: {
       '1': { tansho: 12.5, fukusho: 4.2 },
       '3': { tansho: 2.8,  fukusho: 1.5 },
@@ -91,58 +49,128 @@ function getOddsMockHandler(e) {
 }
 
 /**
- * JRAの単勝・複勝オッズページ(accessO.html)から単勝・複勝オッズを取得する。
- *
- * src/scraper/jra_scraper.py の fetch_odds_for_race と同じパース規則を
- * GAS（正規表現ベース）で再現したもの。
- *
- *   - 複勝オッズは「X.X - Y.Y」の範囲表示 → 中央値を採用
- *   - 単勝オッズは「X.X」単独表示（複勝より先に出現する想定）
- *   - 取得失敗時・構造不一致時は空オブジェクト {} を返す（エラーにしない）
- *
- * @param {string} cn - latest.jsonのrace.odds_cnの値（accessO.htmlへのCNAME）
- * @returns {object} {horse_num(string): {tansho: number|null, fukusho: number|null}}
+ * cn が "{odds_base}|{race_num}|{date_str}" 形式の場合:
+ *   → r01スキャン（Script Propertiesキャッシュ）でCNAMEを確定してからオッズ取得
+ * cn が従来の完全CNAME文字列の場合:
+ *   → そのまま使用（後方互換）
  */
 function fetchOdds(cn) {
-  const oddsMap = {};
+  var parts = cn.split('|');
+  if (parts.length === 3) {
+    // 新形式: {odds_base}|{race_num}|{date_str}
+    var oddsBase  = parts[0];
+    var raceNum   = parseInt(parts[1], 10);
+    var dateStr   = parts[2];
+    var r01 = findR01Cached(oddsBase, dateStr);
+    if (r01 === null) return {};
+    var sx = calcSuffix(r01, raceNum);
+    var fullCN = oddsBase + ('0' + raceNum).slice(-2) + dateStr + 'Z/' + sx;
+    return fetchOddsFromCN(fullCN);
+  }
+  // 後方互換: 完全CNAMEをそのまま使用
+  return fetchOddsFromCN(cn);
+}
+
+/**
+ * オッズページのR01 suffixをスキャンして返す（Script Propertiesでキャッシュ）。
+ * キャッシュキー: "r01_{oddsBase}_{dateStr}"
+ * 当日中は同じ値が使われるため、初回のみスキャン（最大256回）が発生する。
+ */
+function findR01Cached(oddsBase, dateStr) {
+  var props    = PropertiesService.getScriptProperties();
+  var cacheKey = 'r01_' + oddsBase + '_' + dateStr;
+  var cached   = props.getProperty(cacheKey);
+  if (cached !== null) return parseInt(cached, 10);
+
+  // fetchAll で32本ずつ並列リクエスト（最大8バッチ = 256試行）
+  for (var batch = 0; batch < 8; batch++) {
+    var requests = [];
+    for (var i = 0; i < 32; i++) {
+      var s   = batch * 32 + i;
+      var hex = ('0' + s.toString(16).toUpperCase()).slice(-2);
+      var testCN = oddsBase + '01' + dateStr + 'Z/' + hex;
+      requests.push({
+        url: JRA_ODDS_URL,
+        method: 'post',
+        payload: { cname: testCN, CNAME: testCN },
+        muteHttpExceptions: true,
+        headers: { 'User-Agent': UA }
+      });
+    }
+    var responses = UrlFetchApp.fetchAll(requests);
+    for (var j = 0; j < responses.length; j++) {
+      try {
+        var html = responses[j].getContentText('Shift_JIS');
+        if (html.indexOf('パラメータエラー') === -1 && html.match(/<table/i)) {
+          var found = batch * 32 + j;
+          props.setProperty(cacheKey, String(found));
+          return found;
+        }
+      } catch(e) { /* 続行 */ }
+    }
+  }
+  return null;  // オッズ未公開（レース日前など）
+}
+
+/**
+ * Python の calc_suffix と同じ計算式
+ */
+function calcSuffix(r01, raceNum) {
+  var val;
+  if (raceNum <= 9) {
+    val = (r01 + (raceNum - 1) * 181) % 256;
+  } else if (raceNum === 10) {
+    val = (r01 + 8 * 181 + 245) % 256;
+  } else {
+    val = (r01 + 8 * 181 + 245 + (raceNum - 10) * 181) % 256;
+  }
+  return ('0' + val.toString(16).toUpperCase()).slice(-2);
+}
+
+/**
+ * 完全CNAMEでJRAオッズページを取得・解析する。
+ * Python の fetch_odds_for_race と同じロジック（セル数9/10でoffset制御）。
+ */
+function fetchOddsFromCN(cn) {
+  var oddsMap = {};
   try {
-    const res = UrlFetchApp.fetch('https://www.jra.go.jp/JRADB/accessO.html', {
+    var res = UrlFetchApp.fetch(JRA_ODDS_URL, {
       method: 'post',
       payload: { cname: cn, CNAME: cn },
-      muteHttpExceptions: true
+      muteHttpExceptions: true,
+      headers: { 'User-Agent': UA }
     });
-    const html = res.getContentText('Shift_JIS');
+    var html = res.getContentText('Shift_JIS');
     if (html.indexOf('パラメータエラー') !== -1) return {};
 
-    const rows = html.match(/<tr[\s\S]*?<\/tr>/gi) || [];
-    for (const row of rows) {
-      const cellsRaw = row.match(/<t[dh][\s\S]*?<\/t[dh]>/gi) || [];
+    var rows = html.match(/<tr[\s\S]*?<\/tr>/gi) || [];
+    for (var ri = 0; ri < rows.length; ri++) {
+      var cellsRaw = rows[ri].match(/<t[dh][\s\S]*?<\/t[dh]>/gi) || [];
       if (cellsRaw.length === 0) continue;
-      const cells = cellsRaw.map(normalizeCell);
+      var cells = cellsRaw.map(normalizeCell);
 
-      // 先頭セルが馬番(1-18)であること
-      const m = cells[0].match(/^(\d{1,2})$/);
+      // Python と同じ: セル数10なら枠列あり(offset=1)、9なら offset=0
+      if (cells.length !== 9 && cells.length !== 10) continue;
+      var offset = (cells.length === 10) ? 1 : 0;
+
+      var m = cells[offset].match(/^(\d{1,2})$/);
       if (!m) continue;
-      const horseNum = parseInt(m[1], 10);
+      var horseNum = parseInt(m[1], 10);
       if (horseNum < 1 || horseNum > 18) continue;
 
-      let tansho = null;
-      let fukusho = null;
-      for (let i = 1; i < cells.length; i++) {
-        const cell = cells[i];
-
-        // 複勝オッズ: "X.X - Y.Y" 形式の範囲表示 → 中央値を採用
-        const fm = cell.match(/^(\d{1,4}\.\d)\s*[-~〜]\s*(\d{1,4}\.\d)$/);
+      var tansho  = null;
+      var fukusho = null;
+      for (var ci = offset + 1; ci < cells.length; ci++) {
+        var cell = cells[ci];
+        // 複勝: "X.X - Y.Y"
+        var fm = cell.match(/^(\d{1,4}\.\d)\s*[-~〜～]\s*(\d{1,4}\.\d)$/);
         if (fm) {
           fukusho = Math.round((parseFloat(fm[1]) + parseFloat(fm[2])) / 2 * 10) / 10;
           continue;
         }
-
-        // 単勝オッズ: "X.X" 単独表示（複勝より先に出現する想定）
-        const tm = cell.match(/^(\d{1,4}\.\d)$/);
-        if (tm && tansho === null) {
-          tansho = parseFloat(tm[1]);
-        }
+        // 単勝: "X.X"
+        var tm = cell.match(/^(\d{1,4}\.\d)$/);
+        if (tm && tansho === null) tansho = parseFloat(tm[1]);
       }
 
       if (tansho !== null || fukusho !== null) {
@@ -155,31 +183,24 @@ function fetchOdds(cn) {
   return oddsMap;
 }
 
-/**
- * HTMLセル(<td>...</td>等)からタグを除き、全角数字・記号を半角化してトリムする。
- */
 function normalizeCell(cellHtml) {
-  let text = cellHtml.replace(/<[^>]+>/g, '');
+  var text = cellHtml.replace(/<[^>]+>/g, '');
   text = text
     .replace(/&nbsp;/g, ' ')
     .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>');
-
-  const zenkakuMap = {
-    '０': '0', '１': '1', '２': '2', '３': '3', '４': '4',
-    '５': '5', '６': '6', '７': '7', '８': '8', '９': '9',
-    '．': '.', '－': '-', 'ー': '-'
+  var zenkakuMap = {
+    '０':'0','１':'1','２':'2','３':'3','４':'4',
+    '５':'5','６':'6','７':'7','８':'8','９':'9',
+    '．':'.', '－':'-', 'ー':'-'
   };
-  text = text.replace(/[０-９．－ー]/g, ch => zenkakuMap[ch] || ch);
-
+  text = text.replace(/[０-９．－ー]/g, function(ch) {
+    return zenkakuMap[ch] || ch;
+  });
   return text.trim();
 }
 
-/**
- * 既存のGASプロジェクトに jsonResponse() が無い場合のみ、この定義を使用する。
- * 既にある場合はこの関数を削除すること（重複定義エラーになる）。
- */
 function jsonResponse(obj) {
   return ContentService
     .createTextOutput(JSON.stringify(obj))

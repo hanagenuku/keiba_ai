@@ -12,23 +12,17 @@ from src.features.engine import auto_comment, calc_all
 
 
 def _build_odds_cn(race):
-    """直前オッズ取得用のCNAME文字列を組み立てる。
+    """直前オッズ取得用のCNAME情報をGAS向けにパイプ区切り文字列で返す。
 
-    fetch_odds_for_race と同じ規則：
-      {odds_base}{race_num:02d}{date_str}Z/{sx}
-    odds_r01 が保存されている場合は calc_suffix で正しい sx を算出する。
+    GAS側でsuffixをスキャン・キャッシュするため、
+    {odds_base}|{race_num:02d}|{date_str} の形式で返す。
     race['_odds_cn'] が無い場合は None を返す。
     """
-    from src.scraper.jra_scraper import calc_suffix
     cn_info = race.get('_odds_cn')
     if not cn_info:
         return None
-    odds_r01 = cn_info.get('odds_r01')
-    if odds_r01 is None:
-        return None
     odds_base = cn_info['base'].replace('pw01dde01', 'pw151ouS3')
-    sx = calc_suffix(odds_r01, cn_info['race_num'])
-    return f"{odds_base}{cn_info['race_num']:02d}{cn_info['date_str']}Z/{sx}"
+    return f"{odds_base}|{cn_info['race_num']:02d}|{cn_info['date_str']}"
 
 
 def _assign_marks(scored, by_odds):
