@@ -234,6 +234,7 @@ function findRace(raceKey) {
 }
 
 let _pollingTimer = null;
+const _POLL_KEY = 'keiba_polling';
 
 async function _getLatestTimestamp() {
   try {
@@ -244,38 +245,66 @@ async function _getLatestTimestamp() {
   } catch(_) { return null; }
 }
 
-function _startPolling(btn, origText, baselineTs) {
-  let elapsed = 0;
-  const MAX_WAIT = 15 * 60;  // 15分（秒）
-  const CHECK_INTERVAL = 30; // 30秒ごとにサーバー確認
+function _stopPolling(btn, origText) {
+  clearInterval(_pollingTimer);
+  _pollingTimer = null;
+  localStorage.removeItem(_POLL_KEY);
+  if (btn) { btn.textContent = origText; btn.disabled = false; }
+}
+
+function _startPolling(btn, origText, baselineTs, startTime) {
+  const MAX_WAIT = 15 * 60;
+  const CHECK_INTERVAL = 30;
+
+  // localStorage に保存（ページ再読み込み後も復元できるように）
+  localStorage.setItem(_POLL_KEY, JSON.stringify({ baselineTs, startTime, origText }));
 
   _pollingTimer = setInterval(async () => {
-    elapsed += 1;
+    const elapsed = Math.floor((Date.now() - startTime) / 1000);
     const mins = Math.floor(elapsed / 60);
     const secs = elapsed % 60;
     btn.textContent = `実行中... ${mins}:${String(secs).padStart(2,'0')}`;
 
-    // 30秒ごとにlatest.jsonをチェック
-    if (elapsed % CHECK_INTERVAL === 0) {
+    if (elapsed % CHECK_INTERVAL < 2) { // 30秒ごとにチェック（±1秒の誤差許容）
       const ts = await _getLatestTimestamp();
       if (ts && ts !== baselineTs) {
-        clearInterval(_pollingTimer);
-        _pollingTimer = null;
-        btn.textContent = origText;
-        btn.disabled = false;
+        _stopPolling(btn, origText);
         await loadData();
         return;
       }
     }
 
     if (elapsed >= MAX_WAIT) {
-      clearInterval(_pollingTimer);
-      _pollingTimer = null;
-      btn.textContent = origText;
-      btn.disabled = false;
+      _stopPolling(btn, origText);
       alert('⚠️ 15分経過しましたが完了を確認できませんでした。\nページを手動で更新してください。');
     }
-  }, 1000); // 1秒ごとに実行
+  }, 1000);
+}
+
+// ページ読み込み時に実行中のポーリングを復元
+async function _restorePolling() {
+  const saved = localStorage.getItem(_POLL_KEY);
+  if (!saved) return;
+  try {
+    const { baselineTs, startTime, origText } = JSON.parse(saved);
+    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+    if (elapsed >= 15 * 60) { localStorage.removeItem(_POLL_KEY); return; }
+
+    // 既に完了しているか確認
+    const ts = await _getLatestTimestamp();
+    if (ts && ts !== baselineTs) {
+      localStorage.removeItem(_POLL_KEY);
+      await loadData();
+      return;
+    }
+
+    // まだ実行中 → ボタンを探して復元
+    const btn = document.querySelector('.action-btn');
+    if (btn) {
+      btn.disabled = true;
+      _startPolling(btn, origText, baselineTs, startTime);
+    }
+  } catch(_) { localStorage.removeItem(_POLL_KEY); }
 }
 
 async function triggerAction(workflow, mode) {
@@ -284,8 +313,8 @@ async function triggerAction(workflow, mode) {
   const origText = btn.textContent;
   btn.textContent = '実行中... 0:00';
 
-  // トリガー前のタイムスタンプを記録
   const baselineTs = await _getLatestTimestamp();
+  const startTime = Date.now();
 
   try {
     let url = GAS_URL + '?action=trigger&workflow=' + workflow;
@@ -303,8 +332,7 @@ async function triggerAction(workflow, mode) {
     }
 
     if (data.status === 'ok') {
-      // ポーリング開始（ボタンはそのまま無効化）
-      _startPolling(btn, origText, baselineTs);
+      _startPolling(btn, origText, baselineTs, startTime);
     } else {
       alert('❌ エラー: ' + (data.message || JSON.stringify(data)));
       btn.textContent = origText;
@@ -678,7 +706,7 @@ function render() {
   document.getElementById('race-list').innerHTML = html;
 }
 
-loadData();
+loadData().then(() => _restorePolling());
 </script>
 </body>
 </html>
