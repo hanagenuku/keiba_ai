@@ -409,6 +409,7 @@ async function fetchFreshOdds(raceKey, btn) {
       race._morning_value = {};
       for (const h of (race.horses || [])) {
         race._morning_value[h.n] = h.value_gap || 0;
+        h._morning_odds = h.odds || null;  // 朝オッズを記録
       }
     }
 
@@ -663,8 +664,17 @@ function render() {
         // 人気
         const pop = h.pop != null ? h.pop : '-';
 
-        // オッズ（小数1桁。100倍以上は整数）
-        const odds = h.odds != null && h.odds !== 0 ? (h.odds >= 100 ? Math.round(h.odds) : h.odds.toFixed(1)) : '-';
+        // オッズ（小数1桁。100倍以上は整数）+ 朝との比較で↑↓
+        let oddsStr = '-';
+        if (h.odds != null && h.odds !== 0) {
+          oddsStr = h.odds >= 100 ? String(Math.round(h.odds)) : h.odds.toFixed(1);
+          const morning = h._morning_odds;
+          if (morning != null && morning !== 0) {
+            if (h.odds < morning - 0.05)      oddsStr += '<span style="color:#e74c3c;font-size:9px">↓</span>';
+            else if (h.odds > morning + 0.05) oddsStr += '<span style="color:#27ae60;font-size:9px">↑</span>';
+          }
+        }
+        const odds = oddsStr;
 
         // バリューギャップ表示
         const vg = h.value_gap;
