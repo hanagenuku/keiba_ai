@@ -438,8 +438,9 @@ function updateValueGaps(race, freshOdds) {
     if (od && od.tansho) {
       h.odds = od.tansho;  // オッズ列の表示用も更新
     }
-    if (od && od.fukusho && od.fukusho >= 1.0 && h.cal_prob != null) {
-      h.value_gap    = h.cal_prob - (0.8 / od.fukusho);
+    if (od && od.fukusho && od.fukusho >= 1.0 && h.fuku_pct != null) {
+      const placeProb = h.fuku_pct / 100;
+      h.value_gap    = placeProb - (0.8 / od.fukusho);
       h.fukusho_odds = od.fukusho;
       h.tansho_odds  = od.tansho || null;
     } else {
