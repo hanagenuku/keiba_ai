@@ -1,3 +1,7 @@
 data/*.db filter=lfs diff=lfs merge=lfs -text
 data/*.pkl filter=lfs diff=lfs merge=lfs -text
 data/*.csv filter=lfs diff=lfs merge=lfs -text
+# 以下3ファイルはAPIでpushした通常blob（LFS除外）
+data/xgb_fukusho_model.pkl -filter -diff -merge
+data/xgb_calibrator.pkl -filter -diff -merge
+data/horse_features.csv -filter -diff -merge
