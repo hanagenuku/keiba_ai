@@ -20,6 +20,8 @@ jobs:
   run:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout
@@ -28,8 +30,8 @@ jobs:
           lfs: false
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Download DB files via LFS
-        run: git lfs pull --include="data/*.db"
+      - name: Download required files via LFS
+        run: git lfs pull --include="data/*.db,data/*.pkl"
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -49,6 +51,5 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data/
           git diff --cached --quiet || git commit -m "auto: Weekend ${{ inputs.mode }} $(date +%Y%m%d)"
-          git checkout -- . || true
           git pull --rebase origin main
           git push

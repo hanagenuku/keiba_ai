@@ -20,6 +20,9 @@ jobs:
         with:
           lfs: false
 
+      - name: Download required files via LFS
+        run: git lfs pull --include="data/*.db,data/*.pkl"
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
@@ -38,6 +41,5 @@ jobs:
           git add data/xgb_fukusho_model.pkl data/xgb_calibrator.pkl \
                   data/xgb_feature_cols.json data/horse_features.csv || true
           git diff --cached --quiet || git commit -m "auto: monthly retrain $(date +%Y%m)"
-          git checkout -- . || true
           git pull --rebase origin main
           git push
