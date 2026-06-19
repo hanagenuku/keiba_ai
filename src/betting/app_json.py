@@ -21,7 +21,7 @@ def _build_odds_cn(race):
     cn_info = race.get('_odds_cn')
     if not cn_info:
         return None
-    odds_base = cn_info['base'].replace('pw01dde01', 'pw01oxw1')
+    odds_base = cn_info['base'].replace('pw01dde01', 'pw151ouS3')
     return f"{odds_base}{cn_info['race_num']:02d}{cn_info['date_str']}/{cn_info['sx']}"
 
 
