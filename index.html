@@ -246,23 +246,26 @@ async function _getLatestTimestamp() {
 
 function _startPolling(btn, origText, baselineTs) {
   let elapsed = 0;
-  const MAX_WAIT = 15 * 60 * 1000; // 15分でタイムアウト
-  const INTERVAL = 30 * 1000;      // 30秒ごと
+  const MAX_WAIT = 15 * 60;  // 15分（秒）
+  const CHECK_INTERVAL = 30; // 30秒ごとにサーバー確認
 
   _pollingTimer = setInterval(async () => {
-    elapsed += INTERVAL;
-    const mins = Math.floor(elapsed / 60000);
-    const secs = Math.floor((elapsed % 60000) / 1000);
+    elapsed += 1;
+    const mins = Math.floor(elapsed / 60);
+    const secs = elapsed % 60;
     btn.textContent = `実行中... ${mins}:${String(secs).padStart(2,'0')}`;
 
-    const ts = await _getLatestTimestamp();
-    if (ts && ts !== baselineTs) {
-      clearInterval(_pollingTimer);
-      _pollingTimer = null;
-      btn.textContent = origText;
-      btn.disabled = false;
-      await loadData();
-      return;
+    // 30秒ごとにlatest.jsonをチェック
+    if (elapsed % CHECK_INTERVAL === 0) {
+      const ts = await _getLatestTimestamp();
+      if (ts && ts !== baselineTs) {
+        clearInterval(_pollingTimer);
+        _pollingTimer = null;
+        btn.textContent = origText;
+        btn.disabled = false;
+        await loadData();
+        return;
+      }
     }
 
     if (elapsed >= MAX_WAIT) {
@@ -272,7 +275,7 @@ function _startPolling(btn, origText, baselineTs) {
       btn.disabled = false;
       alert('⚠️ 15分経過しましたが完了を確認できませんでした。\nページを手動で更新してください。');
     }
-  }, INTERVAL);
+  }, 1000); // 1秒ごとに実行
 }
 
 async function triggerAction(workflow, mode) {
