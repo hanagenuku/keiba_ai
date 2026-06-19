@@ -233,11 +233,56 @@ function findRace(raceKey) {
   return null;
 }
 
+let _pollingTimer = null;
+
+async function _getLatestTimestamp() {
+  try {
+    const res = await fetch(DATA_URL + '?t=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) return null;
+    const j = await res.json();
+    return j.generated_at || j.date || null;
+  } catch(_) { return null; }
+}
+
+function _startPolling(btn, origText, baselineTs) {
+  let elapsed = 0;
+  const MAX_WAIT = 15 * 60 * 1000; // 15分でタイムアウト
+  const INTERVAL = 30 * 1000;      // 30秒ごと
+
+  _pollingTimer = setInterval(async () => {
+    elapsed += INTERVAL;
+    const mins = Math.floor(elapsed / 60000);
+    const secs = Math.floor((elapsed % 60000) / 1000);
+    btn.textContent = `実行中... ${mins}:${String(secs).padStart(2,'0')}`;
+
+    const ts = await _getLatestTimestamp();
+    if (ts && ts !== baselineTs) {
+      clearInterval(_pollingTimer);
+      _pollingTimer = null;
+      btn.textContent = origText;
+      btn.disabled = false;
+      await loadData();
+      return;
+    }
+
+    if (elapsed >= MAX_WAIT) {
+      clearInterval(_pollingTimer);
+      _pollingTimer = null;
+      btn.textContent = origText;
+      btn.disabled = false;
+      alert('⚠️ 15分経過しましたが完了を確認できませんでした。\nページを手動で更新してください。');
+    }
+  }, INTERVAL);
+}
+
 async function triggerAction(workflow, mode) {
   const btn = event.target;
   btn.disabled = true;
   const origText = btn.textContent;
-  btn.textContent = '実行中...';
+  btn.textContent = '実行中... 0:00';
+
+  // トリガー前のタイムスタンプを記録
+  const baselineTs = await _getLatestTimestamp();
 
   try {
     let url = GAS_URL + '?action=trigger&workflow=' + workflow;
@@ -255,13 +300,15 @@ async function triggerAction(workflow, mode) {
     }
 
     if (data.status === 'ok') {
-      alert('✅ ' + data.message + '\n\n5〜10分後にページを更新してください');
+      // ポーリング開始（ボタンはそのまま無効化）
+      _startPolling(btn, origText, baselineTs);
     } else {
       alert('❌ エラー: ' + (data.message || JSON.stringify(data)));
+      btn.textContent = origText;
+      btn.disabled = false;
     }
   } catch(err) {
     alert('❌ 通信エラー: ' + err.message);
-  } finally {
     btn.textContent = origText;
     btn.disabled = false;
   }
