@@ -199,6 +199,10 @@ def fetch_races_on_date(sess, target_date, hist_db_path):
             print('❌')
             continue
         print(f'✅ {r01:02X}')
+        # オッズページ専用のr01を探索（suffixがシャトウバと異なる）
+        odds_base = _to_odds_base(base)
+        odds_r01 = find_r01_odds(odds_base, date_str, sess)
+        print(f'  オッズR01: {odds_r01:02X}' if odds_r01 is not None else '  オッズR01: 未発見')
         for r in range(1, 13):
             sx = calc_suffix(r01, r)
             _, soup = _try_fetch_shutuba(sess, base, r, date_str, sx)
@@ -241,7 +245,7 @@ def fetch_races_on_date(sess, target_date, hist_db_path):
                 continue
 
             # オッズ取得用のCNAME情報を保持（fetch_odds_for_race で使用）
-            race['_odds_cn'] = {'base': base, 'date_str': date_str, 'sx': sx, 'race_num': r}
+            race['_odds_cn'] = {'base': base, 'date_str': date_str, 'sx': sx, 'race_num': r, 'odds_r01': odds_r01}
 
             all_races.append(race)
             print(f'  R{r:02d}: {race.get("race_name", "")} '
