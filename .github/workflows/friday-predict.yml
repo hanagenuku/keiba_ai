@@ -16,7 +16,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          lfs: true
+          lfs: false
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Python
