@@ -42,7 +42,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data/latest.json data/history.db data/keiba.db
           git diff --cached --quiet || git commit -m "auto: Friday prediction $(date +%Y%m%d)"
-          GIT_LFS_SKIP_SMUDGE=1 git pull --rebase origin main
+          GIT_LFS_SKIP_SMUDGE=1 git pull --rebase --autostash origin main
           git push
 
       - name: Write status (always)
@@ -55,5 +55,5 @@ jobs:
           echo "{\"status\":\"$STATUS\",\"workflow\":\"friday-predict\",\"updated_at\":\"$TS\"}" > data/workflow_status.json
           git add data/workflow_status.json
           git diff --cached --quiet || git commit -m "auto: workflow status $STATUS $TS"
-          GIT_LFS_SKIP_SMUDGE=1 git pull --rebase origin main || true
+          GIT_LFS_SKIP_SMUDGE=1 git pull --rebase --autostash origin main || true
           git push || true
