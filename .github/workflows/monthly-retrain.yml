@@ -41,5 +41,5 @@ jobs:
           git add data/xgb_fukusho_model.pkl data/xgb_calibrator.pkl \
                   data/xgb_feature_cols.json data/horse_features.csv || true
           git diff --cached --quiet || git commit -m "auto: monthly retrain $(date +%Y%m)"
-          git pull --rebase origin main
+          GIT_LFS_SKIP_SMUDGE=1 git pull --rebase origin main
           git push
