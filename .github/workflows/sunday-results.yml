@@ -19,6 +19,9 @@ jobs:
           lfs: false
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Download DB files via LFS
+        run: git lfs pull --include="data/*.db"
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
