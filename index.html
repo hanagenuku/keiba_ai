@@ -266,7 +266,7 @@ function _stopPolling(btn, origText) {
 }
 
 function _startPolling(btn, origText, baselineTs, startTime = Date.now()) {
-  const MAX_WAIT = 15 * 60;
+  const MAX_WAIT = 35 * 60;
   const CHECK_INTERVAL = 30;
 
   // localStorage に保存（ページ再読み込み後も復元できるように）
@@ -294,7 +294,7 @@ function _startPolling(btn, origText, baselineTs, startTime = Date.now()) {
         return;
       }
 
-      if (ts && ts !== baselineTs) {
+      if (wfStatus === 'success' || (ts && ts !== baselineTs)) {
         _stopPolling(btn, origText);
         await loadData();
         return;
@@ -315,7 +315,7 @@ async function _restorePolling() {
   try {
     const { baselineTs, startTime, origText } = JSON.parse(saved);
     const elapsed = Math.floor((Date.now() - startTime) / 1000);
-    if (elapsed >= 15 * 60) { localStorage.removeItem(_POLL_KEY); return; }
+    if (elapsed >= 35 * 60) { localStorage.removeItem(_POLL_KEY); return; }
 
     // 既に完了しているか確認
     const ts = await _getLatestTimestamp();
