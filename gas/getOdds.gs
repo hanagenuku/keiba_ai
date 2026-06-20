@@ -41,7 +41,7 @@ function getOddsDebugHandler(e) {
     var cn = (e.parameter.cn || '').toString();
     if (!cn) return jsonResponse({ status: 'error', message: 'cn required' });
 
-    var parts = cn.split('|');
+    var parts = cn.split('..');
     var fullCN = cn;
     var r01Info = null;
     if (parts.length === 3) {
@@ -96,9 +96,9 @@ function getOddsMockHandler(e) {
  *   → そのまま使用（後方互換）
  */
 function fetchOdds(cn) {
-  var parts = cn.split('|');
+  var parts = cn.split('..');
   if (parts.length === 3) {
-    // 新形式: {odds_base}|{race_num}|{date_str}
+    // 新形式: {odds_base}..{race_num}..{date_str}
     var oddsBase  = parts[0];
     var raceNum   = parseInt(parts[1], 10);
     var dateStr   = parts[2];

@@ -12,17 +12,17 @@ from src.features.engine import auto_comment, calc_all
 
 
 def _build_odds_cn(race):
-    """直前オッズ取得用のCNAME情報をGAS向けにパイプ区切り文字列で返す。
+    """直前オッズ取得用のCNAME情報をGAS向けにドット区切り文字列で返す。
 
     GAS側でsuffixをスキャン・キャッシュするため、
-    {odds_base}|{race_num:02d}|{date_str} の形式で返す。
+    {odds_base}..{race_num:02d}..{date_str} の形式で返す。
     race['_odds_cn'] が無い場合は None を返す。
     """
     cn_info = race.get('_odds_cn')
     if not cn_info:
         return None
     odds_base = cn_info['base'].replace('pw01dde01', 'pw151ouS3')
-    return f"{odds_base}|{cn_info['race_num']:02d}|{cn_info['date_str']}"
+    return f"{odds_base}..{cn_info['race_num']:02d}..{cn_info['date_str']}"
 
 
 def _assign_marks(scored, by_odds):

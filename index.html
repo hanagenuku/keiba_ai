@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="KEIBA-AI">
 <meta name="theme-color" content="#0a2e1a">
 <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%230a2e1a'/><text y='70' x='10' font-size='60'>🏇</text></svg>">
-<title>KEIBA-AI v7</title><!-- build:20260612-0001 -->
+<title>KEIBA-AI v7</title><!-- build:20260620-0001 -->
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
@@ -392,24 +392,11 @@ async function fetchFreshOdds(raceKey, btn) {
     let url = GAS_URL + '?action=getOdds&race_id=' + encodeURIComponent(race.race_id);
     if (race.odds_cn) url += '&cn=' + encodeURIComponent(race.odds_cn);
     let data;
-    let usedProxy = false;
-    try {
-      const res = await fetch(url);
-      data = await res.json();
-    } catch (_) {
-      usedProxy = true;
-      const proxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
-      const res2 = await fetch(proxy);
-      const j = await res2.json();
-      data = JSON.parse(j.contents);
-    }
+    const res = await fetch(url, {redirect:'follow'});
+    data = await res.json();
 
     if (data.status !== 'ok') throw new Error(data.message || 'オッズ取得失敗');
-
-    // DEBUG
-    { const keys=Object.keys(data.odds||{}); const f=data.odds[keys[0]]||{};
-      const h0=race.horses&&race.horses[0];
-      alert('proxy:'+usedProxy+' 馬数:'+keys.length+'\n馬'+keys[0]+'→単'+f.tansho+'複'+f.fukusho+'\ncn:'+race.odds_cn+'\nh[0].fuku_pct='+(h0&&h0.fuku_pct)); }
+    if (!data.odds || Object.keys(data.odds).length === 0) throw new Error('オッズ未取得(cn='+race.odds_cn+')');
 
     if (!race._morning_bets) {
       race._morning_bets = JSON.parse(JSON.stringify(race.bets || []));
