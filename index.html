@@ -325,8 +325,9 @@ async function _restorePolling() {
       return;
     }
 
-    // まだ実行中 → ボタンを探して復元
-    const btn = document.querySelector('.action-btn');
+    // まだ実行中 → 押されたボタンを探して復元
+    const btn = [...document.querySelectorAll('.action-btn')].find(b => b.textContent === origText)
+              || document.querySelector('.action-btn');
     if (btn) {
       btn.disabled = true;
       _startPolling(btn, origText, baselineTs, startTime);
