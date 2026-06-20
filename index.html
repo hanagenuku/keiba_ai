@@ -404,6 +404,11 @@ async function fetchFreshOdds(raceKey, btn) {
 
     if (data.status !== 'ok') throw new Error(data.message || 'オッズ取得失敗');
 
+    // DEBUG
+    { const keys=Object.keys(data.odds||{}); const f=data.odds[keys[0]]||{};
+      const h0=race.horses&&race.horses[0];
+      alert('馬数:'+keys.length+' 馬'+keys[0]+'→単'+f.tansho+'複'+f.fukusho+'\nh[0].n='+( h0&&h0.n)+' fuku_pct='+(h0&&h0.fuku_pct)); }
+
     if (!race._morning_bets) {
       race._morning_bets = JSON.parse(JSON.stringify(race.bets || []));
       race._morning_value = {};
