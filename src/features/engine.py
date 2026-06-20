@@ -1383,6 +1383,37 @@ def calc_features_for_xgb(h, race):
     feats['f_competitiveness']      = float(f_comp_avg)
     feats['f_competitive_best']     = float(f_comp_best)
 
+    # ── スピード指数（±200m以内の過去走のみ使用）────────────────────────
+    # 今走距離と近い条件の過去走に絞ることで距離跨ぎの誤評価を防ぐ
+    if _SPEED_INDEX_CALC is not None:
+        figs = []
+        for r in hist:
+            rd = int(r.get('distance') or 0)
+            if rd == 0 or abs(rd - dist) > 200:
+                continue
+            fig = _SPEED_INDEX_CALC.calc_speed_figure(
+                finish_time    = r.get('finish_time'),
+                distance       = rd,
+                surface        = r.get('surface') or surf,
+                track_condition= r.get('track_condition') or '良',
+                date           = r.get('date') or '',
+                racecourse     = r.get('racecourse') or rc,
+            )
+            if fig is not None:
+                figs.append(fig)
+        if figs:
+            feats['f_speed_fig_last'] = float(figs[0])
+            feats['f_speed_fig_avg']  = float(sum(figs) / len(figs))
+            feats['f_speed_fig_max']  = float(max(figs))
+        else:
+            feats['f_speed_fig_last'] = float('nan')
+            feats['f_speed_fig_avg']  = float('nan')
+            feats['f_speed_fig_max']  = float('nan')
+    else:
+        feats['f_speed_fig_last'] = float('nan')
+        feats['f_speed_fig_avg']  = float('nan')
+        feats['f_speed_fig_max']  = float('nan')
+
     return feats
 
 
@@ -1437,6 +1468,10 @@ def add_relative_features(all_xfeats):
     # finish_time_avg: 低いほど速い（データなし馬は float('nan') → ワーストランク扱い）
     _assign('f_finish_time_avg',  float('nan'),  'rl_f_finish_time',  reverse=False)
     _assign('f_time_diff_avg',    float('nan'),  'rl_f_time_diff',    reverse=False)
+    # スピード指数（高いほど速い = 強い）
+    _assign('f_speed_fig_last', float('nan'), 'rl_f_speed_fig_last')
+    _assign('f_speed_fig_avg',  float('nan'), 'rl_f_speed_fig_avg')
+    _assign('f_speed_fig_max',  float('nan'), 'rl_f_speed_fig_max')
     # 前走メンバーレベル（高いほど強い相手と戦った実績）
     _assign('f_member_level_avg',  5.0, 'rl_f_member_level_avg')
     _assign('f_member_level_last', 5.0, 'rl_f_member_level_last')
