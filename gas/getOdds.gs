@@ -36,6 +36,47 @@ function getOddsHandler(e) {
   }
 }
 
+function getOddsDebugHandler(e) {
+  try {
+    var cn = (e.parameter.cn || '').toString();
+    if (!cn) return jsonResponse({ status: 'error', message: 'cn required' });
+
+    var parts = cn.split('|');
+    var fullCN = cn;
+    var r01Info = null;
+    if (parts.length === 3) {
+      var oddsBase = parts[0], raceNum = parseInt(parts[1], 10), dateStr = parts[2];
+      var r01 = findR01Cached(oddsBase, dateStr);
+      r01Info = r01;
+      if (r01 === null) return jsonResponse({ status: 'error', message: 'r01 not found', cn: cn });
+      var sx = calcSuffix(r01, raceNum);
+      fullCN = oddsBase + ('0' + raceNum).slice(-2) + dateStr + 'Z/' + sx;
+    }
+
+    var res = UrlFetchApp.fetch(JRA_ODDS_URL, {
+      method: 'post',
+      payload: { cname: fullCN, CNAME: fullCN },
+      muteHttpExceptions: true,
+      headers: { 'User-Agent': UA }
+    });
+    var html = res.getContentText('Shift_JIS');
+    var hasError = html.indexOf('パラメータエラー') !== -1;
+    var rows = html.match(/<tr[\s\S]*?<\/tr>/gi) || [];
+    var rowSamples = [];
+    for (var ri = 0; ri < rows.length && rowSamples.length < 5; ri++) {
+      var cellsRaw = rows[ri].match(/<t[dh][\s\S]*?<\/t[dh]>/gi) || [];
+      if (cellsRaw.length >= 4) {
+        rowSamples.push({ count: cellsRaw.length, cells: cellsRaw.map(normalizeCell).slice(0, 8) });
+      }
+    }
+    var odds = fetchOddsFromCN(fullCN);
+    return jsonResponse({ status: 'ok', fullCN: fullCN, r01: r01Info, hasError: hasError,
+                          rowSamples: rowSamples, parsedOdds: odds });
+  } catch (err) {
+    return jsonResponse({ status: 'error', message: err.toString() });
+  }
+}
+
 function getOddsMockHandler(e) {
   var timeStr = Utilities.formatDate(new Date(), 'Asia/Tokyo', 'HH:mm');
   return jsonResponse({
@@ -146,31 +187,36 @@ function fetchOddsFromCN(cn) {
     var rows = html.match(/<tr[\s\S]*?<\/tr>/gi) || [];
     for (var ri = 0; ri < rows.length; ri++) {
       var cellsRaw = rows[ri].match(/<t[dh][\s\S]*?<\/t[dh]>/gi) || [];
-      if (cellsRaw.length === 0) continue;
+      if (cellsRaw.length < 4) continue;
       var cells = cellsRaw.map(normalizeCell);
 
-      // Python と同じ: セル数10なら枠列あり(offset=1)、9なら offset=0
-      if (cells.length !== 9 && cells.length !== 10) continue;
-      var offset = (cells.length === 10) ? 1 : 0;
+      // offset=0 or 1 で馬番を探す（枠番列がある場合offset=1）
+      var offset = -1;
+      for (var ofs = 0; ofs <= 1; ofs++) {
+        if (ofs >= cells.length) break;
+        var mTest = cells[ofs].match(/^(\d{1,2})$/);
+        if (mTest) {
+          var n = parseInt(mTest[1], 10);
+          if (n >= 1 && n <= 18) { offset = ofs; break; }
+        }
+      }
+      if (offset === -1) continue;
 
-      var m = cells[offset].match(/^(\d{1,2})$/);
-      if (!m) continue;
-      var horseNum = parseInt(m[1], 10);
-      if (horseNum < 1 || horseNum > 18) continue;
+      var horseNum = parseInt(cells[offset].match(/^(\d{1,2})$/)[1], 10);
 
       var tansho  = null;
       var fukusho = null;
       for (var ci = offset + 1; ci < cells.length; ci++) {
         var cell = cells[ci];
-        // 複勝: "X.X - Y.Y"
-        var fm = cell.match(/^(\d{1,4}\.\d)\s*[-~〜～]\s*(\d{1,4}\.\d)$/);
+        // 複勝: "X.X - Y.Y" （区切りは半角/全角ハイフン・チルダ等）
+        var fm = cell.match(/(\d{1,4}(?:\.\d+)?)\s*[－\-~〜～―ー]\s*(\d{1,4}(?:\.\d+)?)/);
         if (fm) {
           fukusho = Math.round((parseFloat(fm[1]) + parseFloat(fm[2])) / 2 * 10) / 10;
           continue;
         }
-        // 単勝: "X.X"
-        var tm = cell.match(/^(\d{1,4}\.\d)$/);
-        if (tm && tansho === null) tansho = parseFloat(tm[1]);
+        // 単勝: "X.X" または整数
+        var tm = cell.match(/^(\d{1,4}(?:\.\d+)?)$/);
+        if (tm && parseFloat(tm[1]) >= 1.0 && tansho === null) tansho = parseFloat(tm[1]);
       }
 
       if (tansho !== null || fukusho !== null) {
