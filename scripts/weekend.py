@@ -18,6 +18,7 @@ from src.utils.db import (init_db, get_db_path, get_history_db_path,
 from src.betting.make_bets import init_betting, make_bets, log_bet_simulation
 from src.betting.ev_filter import ability_first_loose
 from src.betting.app_json import to_app_json
+from src.betting.shadow import record_all_shadow_bets
 from src.scraper.jra_scraper import fetch_races_on_date, fetch_results
 from src.tools.bias import analyze_bias, build_avg_bias
 
@@ -159,6 +160,17 @@ def main():
         with open(BIAS_PATH, 'w', encoding='utf-8') as f:
             json.dump(avg_bias, f, ensure_ascii=False, indent=2)
         print(f'✅ バイアス保存: {BIAS_PATH}')
+
+        # 土曜分の shadow_bets 記録
+        if all_results:
+            import sqlite3 as _sq
+            _conn = _sq.connect(get_db_path(ROOT))
+            _rec_ids = {r[0] for r in _conn.execute(
+                'SELECT DISTINCT race_id FROM bets WHERE date=?', (target_date,)).fetchall()}
+            _conn.close()
+            record_all_shadow_bets(all_results, ROOT,
+                                   bias_data=avg_bias,
+                                   recommended_race_ids=_rec_ids)
 
         # 翌日（日曜）予想
         predict_next_day(sess, hist_path, avg_bias, jst_now)

@@ -122,12 +122,46 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
 .action-btn{background:#1a5c3a;color:#fff;border:none;border-radius:6px;padding:8px 12px;font-size:11px;font-weight:700;white-space:nowrap;cursor:pointer;flex-shrink:0}
 .action-btn:active{background:#0d3d25}
 .action-btn:disabled{background:#95a5a6}
+/* ナビ */
+.nav-bar{display:flex;background:var(--g1);padding:0 12px;border-bottom:2px solid var(--gold)}
+.nav-btn{flex:1;padding:8px 0;background:transparent;border:none;color:rgba(255,255,255,0.6);font-size:13px;font-weight:700;cursor:pointer}
+.nav-btn.on{color:var(--gold2);border-bottom:2px solid var(--gold2)}
+/* 成績ページ */
+.stat-card{background:var(--card);border-radius:12px;border:1px solid var(--border);padding:14px;margin-bottom:10px}
+.stat-title{font-size:11px;font-weight:700;color:var(--sub);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px}
+.stat-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #f0ece4;font-size:13px}
+.stat-row:last-child{border-bottom:none}
+.stat-key{color:var(--sub)}
+.stat-val{font-weight:700;color:var(--g1)}
+.stat-val.pos{color:#27ae60}
+.stat-val.neg{color:#c0392b}
+/* ROIバー */
+.roi-bar-wrap{margin:4px 0 2px;height:8px;background:#eee;border-radius:4px;overflow:hidden}
+.roi-bar{height:100%;border-radius:4px;background:var(--g2)}
+.roi-bar.neg{background:#e74c3c}
+/* RL精度グリッド */
+.rl-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:4px}
+.rl-cell{background:#f8f6f0;border-radius:8px;padding:8px;text-align:center}
+.rl-cell-label{font-size:10px;color:var(--sub);margin-bottom:2px}
+.rl-cell-val{font-size:20px;font-weight:900;color:var(--g1)}
+/* 直近レース表 */
+.rtbl{width:100%;font-size:11px;border-collapse:collapse}
+.rtbl th{background:var(--g1);color:#fff;padding:5px 3px;font-size:10px;font-weight:700}
+.rtbl td{padding:4px 3px;border-bottom:1px solid #f0ece4;text-align:center}
+.rtbl tr.hit td{background:rgba(39,174,96,0.08)}
+.rtbl .miss{color:#bbb}
+.hit-mark{color:#27ae60;font-weight:800}
+.miss-mark{color:#e74c3c}
 </style>
 </head>
 <body>
 <div class="hdr">
   <div><div class="hdr-logo">KEIBA-AI</div><div class="hdr-sub">AI RACING PREDICTION</div></div>
   <div class="hdr-right"><div class="hdr-date" id="hdate">読込中...</div><div class="hdr-venues" id="hvenues">---</div></div>
+</div>
+<div class="nav-bar">
+  <button class="nav-btn on" id="nav-predict" onclick="switchPage('predict')">🏇 予想</button>
+  <button class="nav-btn" id="nav-stats" onclick="switchPage('stats')">📊 成績</button>
 </div>
 <div class="action-bar">
   <button class="action-btn" onclick="triggerAction('friday-predict')">📊 金曜予想</button>
@@ -140,17 +174,21 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
   <span>📱 ホーム画面に追加して使えます（Safari→共有→ホーム画面に追加）</span>
   <button onclick="this.parentElement.style.display='none'">✕</button>
 </div>
+<div id="page-predict">
 <div id="result-area"></div>
 <div class="summary" id="summary"></div>
 <div class="list" id="race-list"></div>
+</div>
+<div id="page-stats" style="display:none;padding:8px 10px 90px"></div>
 <div class="btm">
   <div class="btm-item"><div class="btm-lbl">推定投資</div><div class="btm-val" id="b-inv">-</div></div>
   <div class="btm-item"><div class="btm-lbl">推奨レース</div><div class="btm-val" id="b-rec">-</div></div>
   <div class="btm-item"><div class="btm-lbl">ROI予測</div><div class="btm-val" id="b-roi">-</div></div>
 </div>
 <script>
-const DATA_URL = 'https://hanagenuku.github.io/keiba_ai/data/latest.json';
-const GAS_URL  = 'https://script.google.com/macros/s/AKfycbxcpXYNxHPS4wFmnX-EOyWaTU8AKt1ZQhJAL6dz5sTeEWoR319EfCqqDB0B1NHTHAYW/exec';
+const DATA_URL  = 'https://hanagenuku.github.io/keiba_ai/data/latest.json';
+const STATS_URL = 'https://hanagenuku.github.io/keiba_ai/data/stats.json';
+const GAS_URL   = 'https://script.google.com/macros/s/AKfycbxcpXYNxHPS4wFmnX-EOyWaTU8AKt1ZQhJAL6dz5sTeEWoR319EfCqqDB0B1NHTHAYW/exec';
 const VALUE_GAP_THRESHOLD = 0.10;
 const BET_AMOUNT_REN  = 500;
 const BET_AMOUNT_WIDE = 300;
@@ -729,6 +767,143 @@ function render() {
     html += '</div>';
   }
   document.getElementById('race-list').innerHTML = html;
+}
+
+// ── ページ切り替え ───────────────────────────────────────────────────────
+let _currentPage = 'predict';
+
+function switchPage(page) {
+  _currentPage = page;
+  document.getElementById('page-predict').style.display = page === 'predict' ? '' : 'none';
+  document.getElementById('page-stats').style.display   = page === 'stats'   ? '' : 'none';
+  document.getElementById('nav-predict').classList.toggle('on', page === 'predict');
+  document.getElementById('nav-stats').classList.toggle('on', page === 'stats');
+  if (page === 'stats') loadStats();
+}
+
+// ── 成績ページ ───────────────────────────────────────────────────────────
+let _statsCache = null;
+
+async function loadStats() {
+  const el = document.getElementById('page-stats');
+  if (_statsCache) { renderStats(_statsCache); return; }
+  el.innerHTML = '<div class="loading"><div class="loading-spin">📊</div><div>成績データ読み込み中...</div></div>';
+  try {
+    const res = await fetch(STATS_URL + '?t=' + Date.now(), {cache:'no-store'});
+    if (!res.ok) throw new Error('stats.json が見つかりません（まだ生成されていません）');
+    _statsCache = await res.json();
+    renderStats(_statsCache);
+  } catch(e) {
+    el.innerHTML = '<div class="error-box">⚠️ ' + e.message + '<br><br>土曜/日曜結果を取得すると自動生成されます。</div>';
+  }
+}
+
+function renderStats(S) {
+  const el = document.getElementById('page-stats');
+  let h = '';
+
+  // ── RL精度 ──────────────────────────────────────────────────────────
+  const rl = S.rl_accuracy || {};
+  h += '<div class="stat-card"><div class="stat-title">🎯 RL予測精度（全レース）</div>';
+  if (rl.total_races > 0) {
+    h += `<div style="font-size:11px;color:var(--sub);margin-bottom:8px">集計対象: ${rl.total_races}レース</div>`;
+    h += '<div class="rl-grid">';
+    h += _rlCell('RL1位 勝率', rl.rl1_win_rate + '%');
+    h += _rlCell('RL1位 3着内', rl.rl1_top3_rate + '%');
+    h += _rlCell('RL2位 3着内', rl.rl2_top3_rate + '%');
+    h += _rlCell('RL3位 3着内', rl.rl3_top3_rate + '%');
+    h += '</div>';
+    // 波乱度別
+    if (rl.by_chaos && Object.keys(rl.by_chaos).length) {
+      h += '<div style="margin-top:10px;font-size:11px;font-weight:700;color:var(--sub);margin-bottom:6px">波乱度別 RL1位成績</div>';
+      const gradeLabel = {A:'堅い',B:'中荒れ',C:'大荒れ'};
+      const gradeColor = {A:'#2980b9',B:'#e67e22',C:'#c0392b'};
+      for (const [g, d] of Object.entries(rl.by_chaos)) {
+        h += `<div class="stat-row"><span class="stat-key"><span style="background:${gradeColor[g]||'#999'};color:#fff;font-size:9px;padding:1px 5px;border-radius:3px">${g} ${gradeLabel[g]||''}</span> ${d.total}R</span>`;
+        h += `<span class="stat-val">勝率${d.rl1_win_rate}% / 3着内${d.rl1_top3_rate}%</span></div>`;
+      }
+    }
+  } else {
+    h += '<div style="color:var(--sub);font-size:12px">データ蓄積中（土日結果取得後に表示されます）</div>';
+  }
+  h += '</div>';
+
+  // ── 券種別実績 ──────────────────────────────────────────────────────
+  const byType = S.by_type || [];
+  h += '<div class="stat-card"><div class="stat-title">💴 券種別実績</div>';
+  if (byType.length) {
+    for (const t of byType) {
+      const roi = t.roi;
+      const barW = Math.min(100, Math.abs(roi - 100));
+      h += `<div style="margin-bottom:8px">`;
+      h += `<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:2px">`;
+      h += `<span style="font-weight:700">${t.type}</span>`;
+      h += `<span style="color:var(--sub)">${t.hit}/${t.total}件 (${t.hit_rate}%)</span>`;
+      h += `<span class="stat-val ${roi>=100?'pos':'neg'}">${roi}%</span></div>`;
+      h += `<div class="roi-bar-wrap"><div class="roi-bar ${roi<100?'neg':''}" style="width:${Math.min(100,roi)}%"></div></div>`;
+      h += `<div style="font-size:10px;color:var(--sub)">投資¥${t.invested.toLocaleString()} / 回収¥${t.recovered.toLocaleString()}</div>`;
+      h += '</div>';
+    }
+  } else {
+    h += '<div style="color:var(--sub);font-size:12px">データなし</div>';
+  }
+  h += '</div>';
+
+  // ── 月別ROI ─────────────────────────────────────────────────────────
+  const weekly = S.weekly_roi || [];
+  h += '<div class="stat-card"><div class="stat-title">📈 月別ROI</div>';
+  if (weekly.length) {
+    for (const w of [...weekly].reverse()) {
+      const roi = w.roi;
+      h += `<div class="stat-row">`;
+      h += `<span class="stat-key">${w.month}</span>`;
+      h += `<span style="font-size:11px;color:var(--sub)">${w.hit}/${w.total}件</span>`;
+      h += `<span class="stat-val ${roi>=100?'pos':'neg'}">${roi}%</span>`;
+      h += '</div>';
+    }
+  } else {
+    h += '<div style="color:var(--sub);font-size:12px">データなし</div>';
+  }
+  h += '</div>';
+
+  // ── 直近レース一覧 ───────────────────────────────────────────────────
+  const recent = S.recent_races || [];
+  h += '<div class="stat-card"><div class="stat-title">📋 直近レース（RL vs 実着順）</div>';
+  if (recent.length) {
+    h += '<div style="overflow-x:auto"><table class="rtbl">';
+    h += '<tr><th>日付</th><th>会場</th><th>R</th><th>波</th><th>RL1</th><th>RL2</th><th>RL3</th><th>1着</th><th>2着</th><th>3着</th><th>複</th><th>推</th></tr>';
+    for (const r of recent) {
+      const top3 = new Set([r.win, r.sec, r.thr]);
+      const rl1ok = top3.has(r.rl1);
+      const rl1win = r.rl1 === r.win;
+      const gradeColor = {A:'#2980b9',B:'#e67e22',C:'#c0392b'}[r.chaos] || '#999';
+      h += `<tr class="${rl1ok?'hit':''}">`;
+      h += `<td>${(r.date||'').slice(5)}</td>`;
+      h += `<td>${r.racecourse||''}</td>`;
+      h += `<td>${r.race_num}</td>`;
+      h += `<td><span style="background:${gradeColor};color:#fff;font-size:9px;padding:1px 4px;border-radius:2px">${r.chaos||'?'}</span></td>`;
+      h += `<td style="font-weight:800;color:${rl1win?'#27ae60':rl1ok?'#e67e22':'#c0392b'}">#${r.rl1||'-'}</td>`;
+      h += `<td class="${top3.has(r.rl2)?'hit-mark':'miss'}">#${r.rl2||'-'}</td>`;
+      h += `<td class="${top3.has(r.rl3)?'hit-mark':'miss'}">#${r.rl3||'-'}</td>`;
+      h += `<td style="font-weight:800">#${r.win||'-'}</td>`;
+      h += `<td>#${r.sec||'-'}</td>`;
+      h += `<td>#${r.thr||'-'}</td>`;
+      h += `<td>${r.fuku_hit?'<span class="hit-mark">○</span>':'<span class="miss-mark">✗</span>'}</td>`;
+      h += `<td>${r.rec?'⭐':''}</td>`;
+      h += '</tr>';
+    }
+    h += '</table></div>';
+    if (S.generated_at) h += `<div style="font-size:10px;color:var(--sub);margin-top:6px;text-align:right">更新: ${S.generated_at}</div>`;
+  } else {
+    h += '<div style="color:var(--sub);font-size:12px">データなし（土日結果取得後に表示されます）</div>';
+  }
+  h += '</div>';
+
+  el.innerHTML = h;
+}
+
+function _rlCell(label, val) {
+  return `<div class="rl-cell"><div class="rl-cell-label">${label}</div><div class="rl-cell-val">${val}</div></div>`;
 }
 
 loadData().then(() => _restorePolling());
