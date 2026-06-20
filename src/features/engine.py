@@ -1340,12 +1340,28 @@ def calc_features_for_xgb(h, race):
     else:
         feats['f_class_jump'] = 0.0
 
-    # 走破タイム平均・勝ち馬差平均（過去走）
-    ft_list = [float(r.get('finish_time') or 0) for r in hist if r.get('finish_time')]
-    feats['f_finish_time_avg'] = float(sum(ft_list) / len(ft_list)) if ft_list else 0.0
-    td_list = [float(r.get('time_diff_sec') or 0) for r in hist
-               if r.get('time_diff_sec') is not None and r.get('time_diff_sec') != 0]
-    feats['f_time_diff_avg'] = float(sum(td_list) / len(td_list)) if td_list else 0.0
+    # 走破タイム平均・勝ち馬差平均（距離正規化: m/s換算で比較）
+    # finish_time を速度(m/s)に変換して距離差を吸収
+    spd_list = []
+    for r in hist:
+        ft = r.get('finish_time')
+        rd = int(r.get('distance') or 0)
+        if ft and rd:
+            spd_list.append(rd / float(ft))
+    # f_finish_time_avg は後方互換のため「今走距離 / 平均速度」で秒に戻す
+    if spd_list:
+        avg_spd = sum(spd_list) / len(spd_list)
+        feats['f_finish_time_avg'] = float(dist / avg_spd) if avg_spd else float('nan')
+    else:
+        feats['f_finish_time_avg'] = float('nan')
+    # time_diff_sec を距離1000mあたりの差(秒/km)に正規化
+    td_list = []
+    for r in hist:
+        td = r.get('time_diff_sec')
+        rd = int(r.get('distance') or 0)
+        if td is not None and td != 0 and rd:
+            td_list.append(float(td) / (rd / 1000.0))
+    feats['f_time_diff_avg'] = float(sum(td_list) / len(td_list)) if td_list else float('nan')
 
     # ── 前走メンバーレベル（対戦相手のその後の成績で強度を評価）────────
     ml_levels = []
@@ -1418,9 +1434,9 @@ def add_relative_features(all_xfeats):
     # Stage 3 新特徴量の相対化
     _assign('f_heavy_track_rate', 0.33, 'cl_f_heavy_track')
     _assign('f_weight_load',      5.0,  'cl_f_weight_load')
-    # finish_time_avg: 低いほど速い
-    _assign('f_finish_time_avg',  0.0,  'rl_f_finish_time',  reverse=False)
-    _assign('f_time_diff_avg',    0.0,  'rl_f_time_diff',    reverse=False)
+    # finish_time_avg: 低いほど速い（データなし馬は float('nan') → ワーストランク扱い）
+    _assign('f_finish_time_avg',  float('nan'),  'rl_f_finish_time',  reverse=False)
+    _assign('f_time_diff_avg',    float('nan'),  'rl_f_time_diff',    reverse=False)
     # 前走メンバーレベル（高いほど強い相手と戦った実績）
     _assign('f_member_level_avg',  5.0, 'rl_f_member_level_avg')
     _assign('f_member_level_last', 5.0, 'rl_f_member_level_last')
