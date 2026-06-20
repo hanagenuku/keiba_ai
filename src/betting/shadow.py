@@ -9,7 +9,8 @@ shadow_bets テーブルに記録する。
             まだ当日結果を含まない状態で呼ぶこと（post-hocな再現予測）。
 """
 from src.utils.db import _connect, get_db_path
-from src.features.engine import calc_all, classify_race_chaos
+from src.features.engine import calc_all
+from src.betting.ev_filter import classify_race_chaos
 
 
 def record_all_shadow_bets(all_results, base_dir, bias_data=None,
