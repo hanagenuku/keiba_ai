@@ -4,19 +4,6 @@
   "track_speed": -0.48,
   "summary": "フラット",
   "by_course": {
-    "阪神": {
-      "inner_outer": -0.1,
-      "pace_bias": -0.88,
-      "track_speed": -0.64,
-      "summary": "時計遅め",
-      "style_dist": {
-        "先行": 8,
-        "差し": 13,
-        "追込": 10,
-        "逃げ": 2
-      },
-      "race_count": 11
-    },
     "函館": {
       "inner_outer": 0.41,
       "pace_bias": 0.13,
@@ -42,6 +29,19 @@
         "追込": 4
       },
       "race_count": 12
+    },
+    "阪神": {
+      "inner_outer": -0.1,
+      "pace_bias": -0.88,
+      "track_speed": -0.64,
+      "summary": "時計遅め",
+      "style_dist": {
+        "先行": 8,
+        "差し": 13,
+        "追込": 10,
+        "逃げ": 2
+      },
+      "race_count": 11
     }
   },
   "date": "2026-06-20"
