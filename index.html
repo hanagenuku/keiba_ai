@@ -347,16 +347,8 @@ async function triggerAction(workflow, mode) {
     let url = GAS_URL + '?action=trigger&workflow=' + workflow;
     if (mode) url += '&mode=' + mode;
 
-    let data;
-    try {
-      const res = await fetch(url);
-      data = await res.json();
-    } catch(_) {
-      const proxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
-      const res2 = await fetch(proxy);
-      const j = await res2.json();
-      data = JSON.parse(j.contents);
-    }
+    const res = await fetch(url, {redirect:'follow'});
+    const data = await res.json();
 
     if (data.status === 'ok') {
       _startPolling(btn, origText, baselineTs, startTime);
