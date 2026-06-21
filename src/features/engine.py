@@ -1340,27 +1340,26 @@ def calc_features_for_xgb(h, race):
     else:
         feats['f_class_jump'] = 0.0
 
-    # 走破タイム平均・勝ち馬差平均（距離正規化: m/s換算で比較）
-    # finish_time を速度(m/s)に変換して距離差を吸収
+    # 走破タイム平均・勝ち馬差平均（±200m以内の過去走のみ使用）
+    # 距離が近いレースに絞ることで異距離混在による誤評価を防ぐ
     spd_list = []
+    td_list  = []
     for r in hist:
-        ft = r.get('finish_time')
         rd = int(r.get('distance') or 0)
-        if ft and rd:
+        if rd == 0 or abs(rd - dist) > 200:
+            continue
+        ft = r.get('finish_time')
+        if ft:
             spd_list.append(rd / float(ft))
-    # f_finish_time_avg は後方互換のため「今走距離 / 平均速度」で秒に戻す
+        td = r.get('time_diff_sec')
+        if td is not None and td != 0:
+            td_list.append(float(td) / (rd / 1000.0))
+    # 今走距離 / 平均速度 で秒換算に戻す（XGBモデルの入力スケールを維持）
     if spd_list:
         avg_spd = sum(spd_list) / len(spd_list)
         feats['f_finish_time_avg'] = float(dist / avg_spd) if avg_spd else float('nan')
     else:
         feats['f_finish_time_avg'] = float('nan')
-    # time_diff_sec を距離1000mあたりの差(秒/km)に正規化
-    td_list = []
-    for r in hist:
-        td = r.get('time_diff_sec')
-        rd = int(r.get('distance') or 0)
-        if td is not None and td != 0 and rd:
-            td_list.append(float(td) / (rd / 1000.0))
     feats['f_time_diff_avg'] = float(sum(td_list) / len(td_list)) if td_list else float('nan')
 
     # ── 前走メンバーレベル（対戦相手のその後の成績で強度を評価）────────
