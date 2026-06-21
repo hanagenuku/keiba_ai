@@ -12,6 +12,124 @@ sys.path.insert(0, ROOT)
 from src.utils.db import get_db_path, get_history_db_path
 
 
+def _dist_cat(d):
+    if not d: return '不明'
+    if d <= 1400: return '短距離(〜1400)'
+    if d <= 1800: return 'マイル(1401-1800)'
+    if d <= 2200: return '中距離(1801-2200)'
+    return '長距離(2201〜)'
+
+
+def _head_cat(n):
+    if not n: return '不明'
+    if n <= 8:  return '少頭数(〜8頭)'
+    if n <= 13: return '中頭数(9-13頭)'
+    return '多頭数(14頭〜)'
+
+
+def _class_cat(c):
+    if not c: return 'その他'
+    if any(x in c for x in ['G1', 'G２', 'G2', 'G３', 'G3', '重賞', 'グランプリ']):
+        return '重賞'
+    if any(x in c for x in ['OP', 'オープン', 'リステッド']):
+        return 'OP/L'
+    if '3勝' in c or '1600万' in c: return '3勝クラス'
+    if '2勝' in c or '1000万' in c: return '2勝クラス'
+    if '1勝' in c or '500万' in c:  return '1勝クラス'
+    if '未勝利' in c: return '未勝利'
+    if '新馬' in c:   return '新馬'
+    return 'その他'
+
+
+def _calc_upset_patterns(shadows):
+    """AIの盲点パターンを shadow_bets から集計する。
+
+    「upset」= AI上位3頭(rl1/rl2/rl3)に入っていない馬が実際の複勝内(1-3着)に来たケース。
+    「full_miss」= AIの上位3頭が1頭も複勝内に入らなかったケース。
+    様々な軸で集計し、盲点の大きい組み合わせをランキング表示する。
+    """
+    groups = {}
+
+    def add(dim, key, upset, full_miss, longshot):
+        g = groups.setdefault((dim, key), {'total': 0, 'upset': 0, 'full_miss': 0, 'longshot': 0})
+        g['total']    += 1
+        g['upset']    += int(upset)
+        g['full_miss']+= int(full_miss)
+        g['longshot'] += int(longshot)
+
+    for s in shadows:
+        ai3  = {s['rl1_num'], s['rl2_num'], s['rl3_num']} - {None}
+        act3 = {s['winner_num'], s['second_num'], s['third_num']} - {None}
+        if not ai3 or not act3:
+            continue
+
+        upset     = bool(act3 - ai3)           # AI外が複勝内に1頭以上
+        full_miss = len(ai3 & act3) == 0       # AI上位3頭が全滅
+        longshot  = bool(                       # 10倍超の馬が複勝内
+            (s['winner_odds'] or 0) >= 10.0 and s['winner_num'] not in ai3
+        )
+
+        chaos = s['chaos_grade'] or 'B'
+        heads = _head_cat(s['num_horses'])
+        surf  = s['surface'] or '不明'
+        dist  = _dist_cat(s['distance'])
+        rc    = s['racecourse'] or '不明'
+        cls   = _class_cat(s['race_class'])
+
+        add('chaos',     chaos, upset, full_miss, longshot)
+        add('heads',     heads, upset, full_miss, longshot)
+        add('surface',   surf,  upset, full_miss, longshot)
+        add('distance',  dist,  upset, full_miss, longshot)
+        add('racecourse', rc,   upset, full_miss, longshot)
+        add('class',     cls,   upset, full_miss, longshot)
+
+        # 複合軸（盲点ランキング用）
+        add('combo', f'{surf}・{dist}',                 upset, full_miss, longshot)
+        add('combo', f'{chaos}グレード・{heads}',        upset, full_miss, longshot)
+        add('combo', f'{rc}・{chaos}グレード',           upset, full_miss, longshot)
+        add('combo', f'{surf}・{chaos}グレード・{heads}', upset, full_miss, longshot)
+
+    def to_stat(v):
+        n = v['total']
+        return {
+            'total':          n,
+            'upset_rate':     round(v['upset']     / n * 100, 1) if n else 0,
+            'full_miss_rate': round(v['full_miss'] / n * 100, 1) if n else 0,
+            'longshot_rate':  round(v['longshot']  / n * 100, 1) if n else 0,
+        }
+
+    def dim_list(dim):
+        return sorted(
+            [{'label': k[1], **to_stat(v)}
+             for k, v in groups.items() if k[0] == dim],
+            key=lambda x: x['label']
+        )
+
+    # 盲点ランキング: 複合軸でデータ5件以上、upset_rate降順
+    blind_spots = sorted(
+        [{'label': k[1], **to_stat(v)}
+         for k, v in groups.items()
+         if k[0] == 'combo' and v['total'] >= 5],
+        key=lambda x: -x['upset_rate']
+    )[:10]
+
+    total_g = {k: v for k, v in groups.items() if k[0] == 'chaos'}
+    total   = sum(v['total']  for v in total_g.values())
+    upset_t = sum(v['upset']  for v in total_g.values())
+
+    return {
+        'total_races':        total,
+        'overall_upset_rate': round(upset_t / total * 100, 1) if total else 0,
+        'by_chaos':     dim_list('chaos'),
+        'by_heads':     dim_list('heads'),
+        'by_surface':   dim_list('surface'),
+        'by_distance':  dim_list('distance'),
+        'by_racecourse': dim_list('racecourse'),
+        'by_class':     dim_list('class'),
+        'blind_spots':  blind_spots,
+    }
+
+
 def generate_stats(base_dir=None):
     base_dir = base_dir or ROOT
     db_path = get_db_path(base_dir)
@@ -75,8 +193,10 @@ def generate_stats(base_dir=None):
     # ── shadow_bets: RL精度集計 ───────────────────────────────────────────
     shadows = conn.execute(
         '''SELECT date, racecourse, race_num, race_class, num_horses, chaos_grade,
+                  surface, distance,
                   rl1_num, rl2_num, rl3_num,
                   winner_num, second_num, third_num,
+                  winner_odds,
                   shadow_tansho_hit,  shadow_tansho_payout,
                   shadow_fukusho_hit, shadow_fukusho_payout,
                   shadow_umaren_hit,  shadow_umaren_payout,
@@ -147,6 +267,9 @@ def generate_stats(base_dir=None):
         }
         for s in list(shadows)[:50]
     ]
+
+    # ── AIの盲点パターン ─────────────────────────────────────────────────
+    stats['upset_patterns'] = _calc_upset_patterns(shadows)
 
     # ── 結果取得ステータス ────────────────────────────────────────────────
     hist_path = get_history_db_path(base_dir)

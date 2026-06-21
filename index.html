@@ -895,6 +895,63 @@ function renderStats(S) {
   }
   h += '</div>';
 
+  // ── AIの盲点パターン ─────────────────────────────────────────────────
+  const up = S.upset_patterns || {};
+  h += '<div class="stat-card"><div class="stat-title">🔍 AIの盲点パターン（穴馬が来やすい条件）</div>';
+  if ((up.total_races || 0) < 5) {
+    h += '<div style="color:var(--sub);font-size:12px">データ蓄積中（土日結果が増えると自動表示されます）</div>';
+  } else {
+    h += `<div style="font-size:11px;color:var(--sub);margin-bottom:10px">集計対象: ${up.total_races}レース　全体AI外れ率: <strong>${up.overall_upset_rate}%</strong>（AI上位3頭の外に馬券内馬が出た割合）</div>`;
+
+    // 盲点ランキング（複合条件）
+    if ((up.blind_spots || []).length) {
+      h += '<div style="font-size:11px;font-weight:700;color:#c0392b;margin-bottom:6px">⚠️ 要注意パターン（AI外れ率 高い順）</div>';
+      h += '<table style="width:100%;font-size:11px;border-collapse:collapse">';
+      h += '<tr style="background:var(--g1);color:#fff"><th style="padding:4px 6px;text-align:left">条件</th><th style="padding:4px;text-align:center">件数</th><th style="padding:4px;text-align:center">AI外れ率</th><th style="padding:4px;text-align:center">全滅率</th><th style="padding:4px;text-align:center">穴馬率</th></tr>';
+      for (const b of (up.blind_spots || [])) {
+        const danger = b.upset_rate >= 70 ? '#c0392b' : b.upset_rate >= 55 ? '#e67e22' : '#2c3e50';
+        h += `<tr style="border-bottom:1px solid #f0ece4">`;
+        h += `<td style="padding:5px 6px;font-weight:600">${b.label}</td>`;
+        h += `<td style="padding:5px 4px;text-align:center;color:var(--sub)">${b.total}R</td>`;
+        h += `<td style="padding:5px 4px;text-align:center;font-weight:800;color:${danger}">${b.upset_rate}%</td>`;
+        h += `<td style="padding:5px 4px;text-align:center;color:#c0392b">${b.full_miss_rate}%</td>`;
+        h += `<td style="padding:5px 4px;text-align:center;color:#8e44ad">${b.longshot_rate}%</td>`;
+        h += '</tr>';
+      }
+      h += '</table><div style="font-size:10px;color:var(--sub);margin-top:4px">穴馬率 = 10倍超の馬が勝ちかつAI外だった割合</div>';
+    }
+
+    // 波乱度別
+    h += '<div style="margin-top:12px;font-size:11px;font-weight:700;color:var(--sub);margin-bottom:6px">波乱度別 AI外れ率</div>';
+    const gradeColor2 = {A:'#2980b9', B:'#e67e22', C:'#c0392b'};
+    for (const g of (up.by_chaos || [])) {
+      const gc = gradeColor2[g.label] || '#999';
+      h += `<div class="stat-row"><span class="stat-key"><span style="background:${gc};color:#fff;font-size:9px;padding:1px 5px;border-radius:3px">${g.label}</span> ${g.total}R</span>`;
+      h += `<span class="stat-val" style="color:${g.upset_rate>=70?'#c0392b':g.upset_rate>=50?'#e67e22':'#27ae60'}">外れ${g.upset_rate}% / 全滅${g.full_miss_rate}%</span></div>`;
+    }
+
+    // 芝/ダート・距離・頭数を横並びに
+    const _dimRows = [
+      {title:'馬場別', data: up.by_surface},
+      {title:'距離別', data: up.by_distance},
+      {title:'頭数別', data: up.by_heads},
+      {title:'会場別', data: up.by_racecourse},
+    ];
+    h += '<div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+    for (const dim of _dimRows) {
+      h += `<div><div style="font-size:10px;font-weight:700;color:var(--sub);margin-bottom:4px">${dim.title}</div>`;
+      for (const g of (dim.data || [])) {
+        h += `<div style="display:flex;justify-content:space-between;font-size:11px;padding:2px 0;border-bottom:1px solid #f0ece4">`;
+        h += `<span style="color:var(--text)">${g.label}</span>`;
+        h += `<span style="font-weight:700;color:${g.upset_rate>=70?'#c0392b':g.upset_rate>=50?'#e67e22':'#555'}">${g.upset_rate}%</span>`;
+        h += `</div>`;
+      }
+      h += '</div>';
+    }
+    h += '</div>';
+  }
+  h += '</div>';
+
   // ── 直近レース一覧 ───────────────────────────────────────────────────
   const recent = S.recent_races || [];
   h += '<div class="stat-card"><div class="stat-title">📋 直近レース（RL vs 実着順）</div>';
