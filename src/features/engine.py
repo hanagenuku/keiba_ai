@@ -18,6 +18,7 @@ _XGB_CALIBRATOR     = None
 _PACE_MODEL         = None
 _SPEED_INDEX_CALC   = None  # SpeedIndexCalculator
 _MEMBER_LEVEL_CACHE = {}    # race_id → float (前走メンバーレベルキャッシュ)
+_KEIBA_DB_PATH      = None  # race_predictions 参照用
 _W                 = {
     'rl':       0.35,   # Phase 2: スピード指数ベースRLスコア
     'distance': 0.20,
@@ -49,7 +50,9 @@ def init_engine(base_dir,
     global _XGB_FUKUSHO_MODEL, _XGB_FEATURE_COLS, _CALIBRATOR, _XGB_CALIBRATOR, _PACE_MODEL
     global _W, _horse_dist_dict, _horse_course_dict, _horse_venue_dist_dict, _post_zone_bias
     global _jockey_dict, _trainer_dict, _hist_db_path, _SPEED_INDEX_CALC, _MEMBER_LEVEL_CACHE
-    _hist_db_path = os.path.join(base_dir, 'data', 'history.db')
+    global _KEIBA_DB_PATH
+    _hist_db_path  = os.path.join(base_dir, 'data', 'history.db')
+    _KEIBA_DB_PATH = os.path.join(base_dir, 'data', 'keiba.db')
 
     # スピード指数キャッシュをロード（なければ history.db から自動構築）
     try:
@@ -1168,6 +1171,37 @@ def apply_career_flags(total, career):
     return round(total + adj, 2)
 
 
+def calc_prediction_gap_features(horse_name, race_date):
+    """過去レースでのAI予測(rl_rank)と実着順の乖離を特徴量として返す。
+
+    データが溜まるまでデフォルト値(0.0)を返すので既存モデルに影響しない。
+    race_date: 'YYYY-MM-DD' または 'YYYYMMDD'
+    """
+    if not _KEIBA_DB_PATH:
+        return 0.0, 0.0, 0.0
+    try:
+        import sqlite3 as _sq
+        # 日付を YYYY-MM-DD に正規化
+        rd = str(race_date).replace('-', '')[:8]
+        date_norm = f'{rd[:4]}-{rd[4:6]}-{rd[6:8]}' if len(rd) == 8 else str(race_date)
+        conn = _sq.connect(_KEIBA_DB_PATH)
+        rows = conn.execute("""
+            SELECT prediction_gap FROM race_predictions
+            WHERE horse_name = ? AND date < ? AND actual_place IS NOT NULL
+            ORDER BY date DESC LIMIT 3
+        """, (horse_name, date_norm)).fetchall()
+        conn.close()
+        gaps = [r[0] for r in rows if r[0] is not None]
+        if not gaps:
+            return 0.0, 0.0, 0.0
+        avg  = sum(gaps) / len(gaps)
+        worst = max(gaps, key=abs)
+        std  = (sum((g - avg) ** 2 for g in gaps) / len(gaps)) ** 0.5 if len(gaps) > 1 else 0.0
+        return round(avg, 2), round(worst, 2), round(std, 2)
+    except Exception:
+        return 0.0, 0.0, 0.0
+
+
 def calc_features_for_xgb(h, race):
     """XGBoost複勝予測モデルへの入力特徴量を生成"""
     import numpy as _np
@@ -1413,6 +1447,14 @@ def calc_features_for_xgb(h, race):
         feats['f_speed_fig_avg']  = float('nan')
         feats['f_speed_fig_max']  = float('nan')
 
+    # ── 予測乖離特徴量（race_predictions テーブルから取得）──────────────
+    horse_name = h.get('name', '')
+    race_date  = race.get('date', '')
+    gap_avg, gap_worst, gap_std = calc_prediction_gap_features(horse_name, race_date)
+    feats['f_pred_gap_avg']         = float(gap_avg)
+    feats['f_pred_gap_worst']       = float(gap_worst)
+    feats['f_pred_gap_consistency'] = float(gap_std)
+
     return feats
 
 
@@ -1474,6 +1516,9 @@ def add_relative_features(all_xfeats):
     # 前走メンバーレベル（高いほど強い相手と戦った実績）
     _assign('f_member_level_avg',  5.0, 'rl_f_member_level_avg')
     _assign('f_member_level_last', 5.0, 'rl_f_member_level_last')
+    # 予測乖離（正=AI過小評価、負=AI過大評価。乖離なし馬は 0）
+    _assign('f_pred_gap_avg',   0.0, 'rl_f_pred_gap_avg',   reverse=False)
+    _assign('f_pred_gap_worst', 0.0, 'rl_f_pred_gap_worst', reverse=False)
 
     # f_rl_rank / f_cl_rank: 複合スコアで順位付け
     for xf in all_xfeats:

@@ -88,6 +88,13 @@
     "rl_f_speed_fig_avg_vs_field",
     "rl_f_speed_fig_max_rank",
     "rl_f_speed_fig_max_vs_field",
+    "f_pred_gap_avg",
+    "f_pred_gap_worst",
+    "f_pred_gap_consistency",
+    "rl_f_pred_gap_avg_rank",
+    "rl_f_pred_gap_avg_vs_field",
+    "rl_f_pred_gap_worst_rank",
+    "rl_f_pred_gap_worst_vs_field",
     "f_rl_rank",
     "f_cl_rank"
   ],
