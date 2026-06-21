@@ -19,6 +19,7 @@ _PACE_MODEL         = None
 _SPEED_INDEX_CALC   = None  # SpeedIndexCalculator
 _MEMBER_LEVEL_CACHE = {}    # race_id → float (前走メンバーレベルキャッシュ)
 _KEIBA_DB_PATH      = None  # race_predictions 参照用
+_CORRECTION_TABLE   = None  # 自動補正テーブル（correction.py）
 _W                 = {
     'rl':       0.35,   # Phase 2: スピード指数ベースRLスコア
     'distance': 0.20,
@@ -50,9 +51,21 @@ def init_engine(base_dir,
     global _XGB_FUKUSHO_MODEL, _XGB_FEATURE_COLS, _CALIBRATOR, _XGB_CALIBRATOR, _PACE_MODEL
     global _W, _horse_dist_dict, _horse_course_dict, _horse_venue_dist_dict, _post_zone_bias
     global _jockey_dict, _trainer_dict, _hist_db_path, _SPEED_INDEX_CALC, _MEMBER_LEVEL_CACHE
-    global _KEIBA_DB_PATH
+    global _KEIBA_DB_PATH, _CORRECTION_TABLE
     _hist_db_path  = os.path.join(base_dir, 'data', 'history.db')
     _KEIBA_DB_PATH = os.path.join(base_dir, 'data', 'keiba.db')
+
+    # 補正テーブルをロード
+    try:
+        from src.features.correction import load_correction_table
+        _CORRECTION_TABLE = load_correction_table(base_dir)
+        total_s = _CORRECTION_TABLE.get('total_samples', 0)
+        if total_s >= 100:
+            print(f'  📐 補正テーブル: {total_s}件 ({_CORRECTION_TABLE.get("updated_at", "不明")})')
+        else:
+            _CORRECTION_TABLE = None
+    except Exception as _ce:
+        _CORRECTION_TABLE = None
 
     # スピード指数キャッシュをロード（なければ history.db から自動構築）
     try:
@@ -1897,6 +1910,32 @@ def calc_all(race, bias_data=None):
         h['total'] = round(
             h['total'] * (1 - RELATIVE_WEIGHT) + rel * RELATIVE_WEIGHT + pace_bonus, 2
         )
+
+    # ★ 補正レイヤー（correction_table.json が存在し十分なデータがある場合のみ適用）
+    if _CORRECTION_TABLE is not None:
+        from src.features.correction import (classify_rl, classify_pop,
+                                             DEFAULT_FACTOR, MIN_SAMPLES,
+                                             FACTOR_MIN, FACTOR_MAX)
+        rl_pop = _CORRECTION_TABLE.get('rl_pop', {})
+        # 暫定RL順位（current total の降順）
+        for i, h in enumerate(sorted(out, key=lambda x: x['total'], reverse=True)):
+            h['_prelim_rl_rank'] = i + 1
+        # 補正係数を total に乗算
+        orig_sum = sum(h['total'] for h in out)
+        for h in out:
+            key = f'{classify_rl(h["_prelim_rl_rank"])}_{classify_pop(h.get("popularity", 99))}'
+            entry = rl_pop.get(key, {})
+            if entry.get('n', 0) >= MIN_SAMPLES:
+                factor = max(FACTOR_MIN, min(FACTOR_MAX, entry.get('factor', DEFAULT_FACTOR)))
+            else:
+                factor = DEFAULT_FACTOR
+            h['total_raw'] = h['total']
+            h['total'] = h['total'] * factor
+        # 正規化（softmax のスケールを維持）
+        new_sum = sum(h['total'] for h in out)
+        if new_sum > 0.01:
+            for h in out:
+                h['total'] = round(h['total'] * orig_sum / new_sum, 2)
 
     all_totals = [h['total'] for h in out]
     win_probs = softmax_probs(all_totals, temperature=2.0)

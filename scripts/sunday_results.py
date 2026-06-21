@@ -11,7 +11,9 @@ sys.path.insert(0, ROOT)
 from scripts._session import create_session
 from scripts.weekend import fetch_and_save_results
 from src.betting.shadow import record_all_shadow_bets
+from src.features.correction import update_correction_table
 from src.features.engine import init_engine
+from src.tools.shap_diagnosis import generate_shap_report
 from src.utils.db import (init_db, get_db_path, get_history_db_path,
                            backup_db, checkpoint_db)
 
@@ -65,6 +67,13 @@ def main():
 
     if all_results:
         record_all_shadow_bets(all_results, ROOT)
+
+    # ② 補正テーブルを EMA で更新（race_predictions に4週分以上蓄積されてから有効）
+    update_correction_table(ROOT, db_path, weeks=8)
+
+    # ③ SHAP診断レポート生成
+    jst_date = jst_now.strftime('%Y-%m-%d')
+    generate_shap_report(ROOT, db_path, target_date=jst_date)
 
     since_date = (jst_now - timedelta(days=7)).strftime('%Y-%m-%d')
     print_roi_breakdown(db_path, since_date)
