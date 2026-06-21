@@ -619,10 +619,13 @@ def parse_result_soup(soup, racecourse, race_num, date, place_code):
     try:
         tables = soup.find_all('table')
         header = tables[0].get_text(' ', strip=True)
+        date_norm = f'{date[:4]}-{date[4:6]}-{date[6:8]}' if len(date) == 8 else date
         info = {
             'racecourse': racecourse,
             'race_num': race_num,
             'race_id': f'{date}_{place_code}_{race_num:02d}',
+            'id':      f'{date}_{place_code}_{race_num:02d}',
+            'date':    date_norm,
         }
         dm = re.search(r'([\d,]+)\s*[メ]ートル\s*[（(]\s*([芝ダ])', header)
         info['distance'] = int(dm.group(1).replace(',', '')) if dm else 0

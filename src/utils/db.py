@@ -519,13 +519,14 @@ def save_race_predictions(race, scored_horses, base_dir=None, db_path=None):
     path = db_path or get_db_path(base_dir)
     conn = _connect(path)
     for h in scored_horses:
+        _race_id = race.get('id') or race.get('race_id', '')
         conn.execute("""
             INSERT OR REPLACE INTO race_predictions
             (date, race_id, racecourse, race_num, horse_num, horse_name,
              popularity, tansho_odds, rl_rank, win_prob, cal_prob, fuku_prob)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
-            race.get('date', ''), race.get('id', ''),
+            race.get('date', ''), _race_id,
             race.get('racecourse', ''), race.get('race_num', 0),
             h.get('horse_num', h.get('num', 0)), h.get('name', ''),
             h.get('popularity', 99), h.get('win_odds') or h.get('odds'),
@@ -545,7 +546,8 @@ def update_prediction_results(all_results, base_dir=None, db_path=None):
     conn = _connect(path)
     updated = 0
     for race in all_results:
-        race_id = race.get('id', '')
+        # results オブジェクトは 'race_id' キー、shutuba は 'id' キーを使う
+        race_id = race.get('race_id') or race.get('id', '')
         for h in race.get('finishers', []):
             place = h.get('place')
             num   = h.get('num') or h.get('horse_num')
