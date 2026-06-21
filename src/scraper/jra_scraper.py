@@ -24,8 +24,10 @@ def calc_suffix(r01, r):
 
 
 def find_r01_shutuba(base, date, sess):
-    """R01出走表のsuffixを探索する。障害レースページは除外して平地R01を探す。"""
-    _shogai_kws = ['障害', '(J)', '（J）', 'J・G', 'J-G']
+    """R01出走表のsuffixを探索する。障害レースも含めて最初に見つかったR01のsuffixを返す。
+
+    障害レースのフィルタリングは呼び出し側（_parse_shutuba）で行う。
+    """
     consecutive_errors = 0
     for s in range(256):
         cn = f'{base}01{date}/{s:02X}'
@@ -36,11 +38,6 @@ def find_r01_shutuba(base, date, sess):
             consecutive_errors = 0
             soup = BeautifulSoup(r.text, 'lxml')
             if soup.find_all('table'):
-                # 障害レースページは除外（suffix計算の基点として使えない）
-                header = soup.find_all('table')[0].get_text(' ', strip=True)
-                if any(kw in header for kw in _shogai_kws):
-                    time.sleep(0.05)
-                    continue
                 return s
         else:
             consecutive_errors += 1
@@ -51,8 +48,10 @@ def find_r01_shutuba(base, date, sess):
 
 
 def find_r01_result(base, date, sess):
-    """R01結果ページのsuffixを探索する。障害レースページは除外して平地R01を探す。"""
-    _shogai_kws = ['障害', '(J)', '（J）', 'J・G', 'J-G']
+    """R01結果ページのsuffixを探索する。障害レースも含めて最初に見つかったR01のsuffixを返す。
+
+    障害レースのフィルタリングは parse_result_soup 内で行う（Noneを返す）。
+    """
     consecutive_errors = 0
     for s in range(256):
         cn = f'{base}01{date}/{s:02X}'
@@ -62,10 +61,6 @@ def find_r01_result(base, date, sess):
             consecutive_errors = 0
             soup = BeautifulSoup(r.text, 'lxml')
             if soup.find_all('table'):
-                header = soup.find_all('table')[0].get_text(' ', strip=True)
-                if any(kw in header for kw in _shogai_kws):
-                    time.sleep(0.05)
-                    continue
                 return s
         else:
             consecutive_errors += 1
