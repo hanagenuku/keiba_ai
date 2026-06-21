@@ -802,6 +802,35 @@ function renderStats(S) {
   const el = document.getElementById('page-stats');
   let h = '';
 
+  // ── 結果取得ステータス ───────────────────────────────────────────────
+  const rs = S.results_status || {};
+  const rsDate  = rs.last_date || null;
+  const rsRaces = rs.races || 0;
+  const rsVenues = rs.venues || [];
+  const rsRunAt  = rs.workflow_run_at || null;
+  const rsResult = rs.workflow_result || null;
+
+  h += '<div class="stat-card"><div class="stat-title">📡 最終結果取得状況</div>';
+  if (rsDate) {
+    h += `<div class="stat-row"><span class="stat-key">最終保存日</span><span class="stat-val">${rsDate}</span></div>`;
+    h += `<div class="stat-row"><span class="stat-key">取得レース数</span><span class="stat-val">${rsRaces}R</span></div>`;
+    if (rsVenues.length) {
+      const vStr = rsVenues.map(v => `${v.name}(${v.races}R)`).join('&nbsp; ');
+      h += `<div class="stat-row"><span class="stat-key">取得会場</span><span class="stat-val" style="font-size:11px">${vStr}</span></div>`;
+    }
+  } else {
+    h += '<div style="color:var(--sub);font-size:12px">結果未取得</div>';
+  }
+  if (rsRunAt) {
+    const jstMs = new Date(rsRunAt).getTime() + 9 * 3600 * 1000;
+    const jstStr = new Date(jstMs).toISOString().replace('T',' ').slice(0,16) + ' JST';
+    const isOk = rsResult === 'success' && rsRaces > 0;
+    const statusLabel = rsRaces > 0 ? '✅ 取得成功' : '⚠️ 取得失敗（0R）';
+    h += `<div class="stat-row"><span class="stat-key">最終実行</span><span class="stat-val" style="font-size:11px">${jstStr}</span></div>`;
+    h += `<div class="stat-row"><span class="stat-key">実行結果</span><span class="stat-val ${isOk?'pos':'neg'}">${statusLabel}</span></div>`;
+  }
+  h += '</div>';
+
   // ── RL精度 ──────────────────────────────────────────────────────────
   const rl = S.rl_accuracy || {};
   h += '<div class="stat-card"><div class="stat-title">🎯 RL予測精度（全レース）</div>';

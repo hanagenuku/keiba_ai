@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""keiba.db から stats.json を生成してアプリ向けに公開する"""
+"""keiba.db / history.db から stats.json を生成してアプリ向けに公開する"""
 import json
 import os
 import sqlite3
@@ -9,7 +9,7 @@ from datetime import datetime
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
-from src.utils.db import get_db_path
+from src.utils.db import get_db_path, get_history_db_path
 
 
 def generate_stats(base_dir=None):
@@ -147,6 +147,40 @@ def generate_stats(base_dir=None):
         }
         for s in list(shadows)[:50]
     ]
+
+    # ── 結果取得ステータス ────────────────────────────────────────────────
+    hist_path = get_history_db_path(base_dir)
+    rs: dict = {'last_date': None, 'races': 0, 'venues': [],
+                'workflow_run_at': None, 'workflow_result': None}
+    if os.path.exists(hist_path):
+        try:
+            hconn = sqlite3.connect(hist_path)
+            hconn.row_factory = sqlite3.Row
+            row = hconn.execute('SELECT MAX(date) as d FROM race_history').fetchone()
+            last_date = row['d'] if row else None
+            if last_date:
+                rows = hconn.execute(
+                    'SELECT racecourse, COUNT(*) as cnt FROM race_history '
+                    'WHERE date=? GROUP BY racecourse ORDER BY cnt DESC',
+                    (last_date,)
+                ).fetchall()
+                rs['last_date'] = last_date
+                rs['races'] = sum(r['cnt'] for r in rows)
+                rs['venues'] = [{'name': r['racecourse'], 'races': r['cnt']} for r in rows]
+            hconn.close()
+        except Exception:
+            pass
+
+    wf_path = os.path.join(base_dir, 'data', 'workflow_status.json')
+    if os.path.exists(wf_path):
+        try:
+            with open(wf_path, encoding='utf-8') as f:
+                wf = json.load(f)
+            rs['workflow_run_at'] = wf.get('updated_at')
+            rs['workflow_result'] = wf.get('status')
+        except Exception:
+            pass
+    stats['results_status'] = rs
 
     stats['generated_at'] = datetime.now().strftime('%Y-%m-%d %H:%M')
     conn.close()
