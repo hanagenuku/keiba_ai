@@ -20,23 +20,23 @@
     },
     {
       "month": "2026-06",
-      "invested": 56700,
-      "recovered": 54765,
-      "roi": 96.6,
-      "hit": 17,
-      "total": 76,
-      "hit_rate": 22.4
+      "invested": 68100,
+      "recovered": 57960,
+      "roi": 85.1,
+      "hit": 20,
+      "total": 91,
+      "hit_rate": 22.0
     }
   ],
   "by_type": [
     {
       "type": "ワイド",
-      "invested": 13850,
+      "invested": 14300,
       "recovered": 7890,
-      "roi": 57.0,
+      "roi": 55.2,
       "hit": 6,
-      "total": 39,
-      "hit_rate": 15.4
+      "total": 40,
+      "hit_rate": 15.0
     },
     {
       "type": "三連複",
@@ -49,21 +49,21 @@
     },
     {
       "type": "単勝",
-      "invested": 82750,
-      "recovered": 45960,
-      "roi": 55.5,
-      "hit": 8,
-      "total": 126,
-      "hit_rate": 6.3
+      "invested": 88150,
+      "recovered": 47130,
+      "roi": 53.5,
+      "hit": 9,
+      "total": 132,
+      "hit_rate": 6.8
     },
     {
       "type": "複勝",
-      "invested": 77500,
-      "recovered": 51825,
-      "roi": 66.9,
-      "hit": 31,
-      "total": 119,
-      "hit_rate": 26.1
+      "invested": 81250,
+      "recovered": 53850,
+      "roi": 66.3,
+      "hit": 33,
+      "total": 124,
+      "hit_rate": 26.6
     },
     {
       "type": "馬単",
@@ -76,12 +76,12 @@
     },
     {
       "type": "馬連",
-      "invested": 13600,
+      "invested": 15400,
       "recovered": 0,
       "roi": 0.0,
       "hit": 1,
-      "total": 25,
-      "hit_rate": 4.0
+      "total": 28,
+      "hit_rate": 3.6
     }
   ],
   "rl_accuracy": {
@@ -93,5 +93,5 @@
     "by_chaos": {}
   },
   "recent_races": [],
-  "generated_at": "2026-06-20 14:16"
+  "generated_at": "2026-06-21 06:33"
 }
