@@ -227,7 +227,8 @@ def _evaluate(p, y, label=''):
 # ── isotonic 学習 ─────────────────────────────────────────────
 
 def _fit_isotonic(pairs_df, n_bins=20):
-    """ビン統計から IsotonicCalibrator を構築（PAV単調化）。"""
+    """ビン統計から IsotonicCalibrator を構築（sklearn PAV使用）。"""
+    from sklearn.isotonic import IsotonicRegression as _IR
     df = pairs_df.copy().sort_values('raw_prob').reset_index(drop=True)
     bin_size = max(1, len(df) // n_bins)
 
@@ -243,16 +244,10 @@ def _fit_isotonic(pairs_df, n_bins=20):
     if len(bins_x) < 3:
         return None
 
-    # PAV: 単調増加を強制
-    y_mono = list(bins_y)
-    changed = True
-    while changed:
-        changed = False
-        for i in range(len(y_mono) - 1):
-            if y_mono[i] > y_mono[i + 1]:
-                avg = (y_mono[i] + y_mono[i + 1]) / 2
-                y_mono[i] = y_mono[i + 1] = avg
-                changed = True
+    # sklearn の IsotonicRegression で単調増加を強制（C実装で高速）
+    ir = _IR(increasing=True, out_of_bounds='clip')
+    ir.fit(bins_x, bins_y)
+    y_mono = ir.predict(bins_x).tolist()
 
     return IsotonicCalibrator(bins_x, y_mono)
 
