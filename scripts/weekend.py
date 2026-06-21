@@ -74,8 +74,30 @@ def fetch_and_save_results(sess, hist_path, target_date):
     return all_results
 
 
-def predict_next_day(sess, hist_path, avg_bias, jst_now):
+def _already_generated(app_path, mode_type, today_str):
+    """latest.json が今日の same type で既に生成済みかどうかを確認する。"""
+    if not os.path.exists(app_path):
+        return False
+    try:
+        with open(app_path, encoding='utf-8') as f:
+            data = json.load(f)
+        gen_at = data.get('generated_at', '')
+        gen_type = data.get('type', '')
+        gen_date = gen_at[:10]  # 'YYYY-MM-DD'
+        return gen_date == today_str and gen_type == mode_type
+    except Exception:
+        return False
+
+
+def predict_next_day(sess, hist_path, avg_bias, jst_now, force=False):
     next_date = (jst_now + timedelta(days=1)).strftime('%Y%m%d')
+    today_str = jst_now.strftime('%Y-%m-%d')
+
+    if not force and _already_generated(APP_PATH, 'sunday', today_str):
+        print(f'⏭ 日曜予想は本日({today_str})生成済みのためスキップ。'
+              f'再生成するには --force オプションを使用してください。')
+        return
+
     print(f'📅 取得日: {next_date}（翌日）')
 
     races = fetch_races_on_date(sess, next_date, hist_path)
@@ -123,6 +145,8 @@ def predict_next_day(sess, hist_path, avg_bias, jst_now):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--mode', choices=['saturday', 'sunday'], required=True)
+    parser.add_argument('--force', action='store_true',
+                        help='当日予想済みでも強制的に再生成する')
     args = parser.parse_args()
 
     db_path = get_db_path(ROOT)
@@ -177,7 +201,7 @@ def main():
                                    recommended_race_ids=_rec_ids)
 
         # 翌日（日曜）予想
-        predict_next_day(sess, hist_path, avg_bias, jst_now)
+        predict_next_day(sess, hist_path, avg_bias, jst_now, force=args.force)
 
     checkpoint_db(db_path)
     checkpoint_db(hist_path)
