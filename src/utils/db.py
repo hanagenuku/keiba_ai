@@ -104,6 +104,26 @@ def init_db(base_dir=None, db_path=None):
             actual_bet_hit INTEGER,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP
         );
+        CREATE TABLE IF NOT EXISTS race_predictions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            date TEXT,
+            race_id TEXT,
+            racecourse TEXT,
+            race_num INTEGER,
+            horse_num INTEGER,
+            horse_name TEXT,
+            popularity INTEGER,
+            tansho_odds REAL,
+            rl_rank INTEGER,
+            win_prob REAL,
+            cal_prob REAL,
+            fuku_prob REAL,
+            actual_place INTEGER,
+            prediction_gap INTEGER,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE INDEX IF NOT EXISTS idx_rp_horse ON race_predictions(horse_name, date);
+        CREATE INDEX IF NOT EXISTS idx_rp_race  ON race_predictions(race_id);
     ''')
     conn.commit()
     conn.close()
@@ -489,3 +509,55 @@ def update_bet_results(race_id, results, base_dir=None, db_path=None):
         )
     conn.commit()
     conn.close()
+
+
+def save_race_predictions(race, scored_horses, base_dir=None, db_path=None):
+    """全レース・全馬の予測スナップショットを race_predictions に保存。
+
+    予測時（金曜/土日の予想生成後）に呼ぶ。推奨・非推奨を問わず全レース保存。
+    """
+    path = db_path or get_db_path(base_dir)
+    conn = _connect(path)
+    for h in scored_horses:
+        conn.execute("""
+            INSERT OR REPLACE INTO race_predictions
+            (date, race_id, racecourse, race_num, horse_num, horse_name,
+             popularity, tansho_odds, rl_rank, win_prob, cal_prob, fuku_prob)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            race.get('date', ''), race.get('id', ''),
+            race.get('racecourse', ''), race.get('race_num', 0),
+            h.get('horse_num', h.get('num', 0)), h.get('name', ''),
+            h.get('popularity', 99), h.get('win_odds') or h.get('odds'),
+            h.get('rl_rank', 99), h.get('win_prob', 0),
+            h.get('cal_prob', 0), h.get('fuku_pct', 0),
+        ))
+    conn.commit()
+    conn.close()
+
+
+def update_prediction_results(all_results, base_dir=None, db_path=None):
+    """レース結果判明後に actual_place と prediction_gap を更新。
+
+    結果取得時（土曜夜/日曜夜）に fetch_and_save_results の後で呼ぶ。
+    """
+    path = db_path or get_db_path(base_dir)
+    conn = _connect(path)
+    updated = 0
+    for race in all_results:
+        race_id = race.get('id', '')
+        for h in race.get('finishers', []):
+            place = h.get('place')
+            num   = h.get('num') or h.get('horse_num')
+            if not race_id or place is None or num is None:
+                continue
+            conn.execute("""
+                UPDATE race_predictions
+                SET actual_place    = ?,
+                    prediction_gap  = rl_rank - ?
+                WHERE race_id = ? AND horse_num = ?
+            """, (place, place, race_id, num))
+            updated += conn.execute('SELECT changes()').fetchone()[0]
+    conn.commit()
+    conn.close()
+    return updated

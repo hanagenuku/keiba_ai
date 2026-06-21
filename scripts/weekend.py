@@ -14,7 +14,8 @@ from src.features.engine import init_engine
 from src.utils.db import (init_db, get_db_path, get_history_db_path,
                            backup_db, checkpoint_db,
                            save_race_db, save_bets_db,
-                           save_history_db, save_results_db, check_and_update_bets)
+                           save_history_db, save_results_db, check_and_update_bets,
+                           save_race_predictions, update_prediction_results)
 from src.betting.make_bets import init_betting, make_bets, log_bet_simulation
 from src.betting.ev_filter import ability_first_loose
 from src.betting.app_json import to_app_json
@@ -52,6 +53,8 @@ def fetch_and_save_results(sess, hist_path, target_date):
 
         save_history_db(all_results, ROOT)
         save_results_db(all_results, ROOT)
+        updated = update_prediction_results(all_results, ROOT)
+        print(f'   race_predictions 更新: {updated}件')
 
         import sqlite3
         conn = sqlite3.connect(hist_path)
@@ -105,6 +108,7 @@ def predict_next_day(sess, hist_path, avg_bias, jst_now):
         save_race_db(race, ROOT)
         save_bets_db(race['date'], race['id'], bets, ROOT)
         log_bet_simulation(race['date'], c, ROOT)
+        save_race_predictions(race, c.get('scored', []), ROOT)
 
     print(f'💰 投資合計: ¥{total_inv:,}')
 
