@@ -26,12 +26,14 @@ def calc_suffix(r01, r):
 def find_r01_shutuba(base, date, sess):
     """R01出走表のsuffixを探索する。障害レースページは除外して平地R01を探す。"""
     _shogai_kws = ['障害', '(J)', '（J）', 'J・G', 'J-G']
+    consecutive_errors = 0
     for s in range(256):
         cn = f'{base}01{date}/{s:02X}'
         r = sess.post(f'{JRA_BASE}/JRADB/accessD.html',
                       data={'cname': cn, 'CNAME': cn}, timeout=10)
         r.encoding = 'shift_jis'
         if 'パラメータエラー' not in r.text:
+            consecutive_errors = 0
             soup = BeautifulSoup(r.text, 'lxml')
             if soup.find_all('table'):
                 # 障害レースページは除外（suffix計算の基点として使えない）
@@ -40,6 +42,10 @@ def find_r01_shutuba(base, date, sess):
                     time.sleep(0.05)
                     continue
                 return s
+        else:
+            consecutive_errors += 1
+            if consecutive_errors >= 3:
+                break
         time.sleep(0.05)
     return None
 
@@ -47,11 +53,13 @@ def find_r01_shutuba(base, date, sess):
 def find_r01_result(base, date, sess):
     """R01結果ページのsuffixを探索する。障害レースページは除外して平地R01を探す。"""
     _shogai_kws = ['障害', '(J)', '（J）', 'J・G', 'J-G']
+    consecutive_errors = 0
     for s in range(256):
         cn = f'{base}01{date}/{s:02X}'
         r = sess.post(f'{JRA_BASE}/JRADB/accessS.html', data={'CNAME': cn}, timeout=10)
         r.encoding = 'shift_jis'
         if 'パラメータエラー' not in r.text:
+            consecutive_errors = 0
             soup = BeautifulSoup(r.text, 'lxml')
             if soup.find_all('table'):
                 header = soup.find_all('table')[0].get_text(' ', strip=True)
@@ -59,6 +67,10 @@ def find_r01_result(base, date, sess):
                     time.sleep(0.05)
                     continue
                 return s
+        else:
+            consecutive_errors += 1
+            if consecutive_errors >= 3:
+                break
         time.sleep(0.05)
     return None
 
