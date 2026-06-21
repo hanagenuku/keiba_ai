@@ -23,7 +23,8 @@ def print_roi_breakdown(db_path, since_date):
     import pandas as pd
     conn = sqlite3.connect(db_path)
     df = pd.read_sql_query(
-        "SELECT b.*, r.racecourse FROM bets b "
+        "SELECT b.date, b.race_id, b.bet_type, b.amount, b.is_hit, b.payout, "
+        "r.racecourse FROM bets b "
         "LEFT JOIN races r ON r.id = b.race_id "
         "WHERE b.is_hit != -1 AND b.date >= ?",
         conn, params=(since_date,),
