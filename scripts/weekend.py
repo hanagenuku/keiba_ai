@@ -18,6 +18,7 @@ from src.utils.db import (init_db, get_db_path, get_history_db_path,
                            save_race_predictions, update_prediction_results)
 from src.betting.make_bets import init_betting, make_bets, log_bet_simulation
 from src.betting.ev_filter import select_quality_races
+from src.features.engine import calc_all
 from src.betting.app_json import to_app_json
 from src.betting.shadow import record_all_shadow_bets
 from src.scraper.jra_scraper import fetch_races_on_date, fetch_results
@@ -109,6 +110,14 @@ def predict_next_day(sess, hist_path, avg_bias, jst_now, force=False):
         surf_counts[s] = surf_counts.get(s, 0) + 1
     print(f'   コース内訳: {surf_counts}')
 
+    # 全レース・全馬のRL予測を先にまとめて保存（結果との比較用）
+    print(f'💾 全レース予測を race_predictions に保存中...')
+    for race in races:
+        scored_all = calc_all(race, avg_bias)
+        if scored_all:
+            save_race_predictions(race, scored_all, ROOT)
+    print(f'   {len(races)}レース完了')
+
     selected = select_quality_races(races, avg_bias)
     print(f'⭐ 厳選: {len(selected)}レース'
           + ('（推奨レースなし）' if not selected else ''))
@@ -117,6 +126,8 @@ def predict_next_day(sess, hist_path, avg_bias, jst_now, force=False):
     for i, c in enumerate(selected, 1):
         race = c['race']
         top1 = c['top1']
+        scored = c.get('scored', [])
+        scored_by_num = {h.get('num', h.get('horse_num')): h for h in scored}
         bets = make_bets(c)
         invest = sum(b['amount'] for b in bets)
         total_inv += invest
@@ -129,9 +140,10 @@ def predict_next_day(sess, hist_path, avg_bias, jst_now, force=False):
         print(f'  投資: ¥{invest:,}')
 
         save_race_db(race, ROOT)
-        save_bets_db(race['date'], race['id'], bets, ROOT)
+        save_bets_db(race['date'], race['id'], bets, ROOT,
+                     race=race, scored_by_num=scored_by_num)
         log_bet_simulation(race['date'], c, ROOT)
-        save_race_predictions(race, c.get('scored', []), ROOT)
+        save_race_predictions(race, scored, ROOT)
 
     print(f'💰 投資合計: ¥{total_inv:,}')
 

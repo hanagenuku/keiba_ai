@@ -142,10 +142,29 @@ def save_race_db(race, base_dir=None, db_path=None):
     conn.close()
 
 
-def save_bets_db(date_str, race_id, bets, base_dir=None, db_path=None):
-    """ベットをDBに保存（重複スキップ方式）"""
+def save_bets_db(date_str, race_id, bets, base_dir=None, db_path=None,
+                 race=None, scored_by_num=None):
+    """ベットをDBに保存（重複スキップ方式）
+
+    race          : レース辞書（racecourse/distance/surface の取得に使用）
+    scored_by_num : {horse_num: scored_horse} — ai_score/popularity/running_style の取得に使用
+    """
     path = db_path or get_db_path(base_dir)
     conn = _connect(path)
+    rc  = (race or {}).get('racecourse', '')
+    dst = (race or {}).get('distance', 0)
+    srf = (race or {}).get('surface', '')
+    snb = scored_by_num or {}
+
+    def _extra(horse_num):
+        h = snb.get(horse_num, {})
+        return (
+            h.get('total', 0),          # ai_score
+            h.get('rl_rank', 99),       # ev_rank（RL順位を代用）
+            h.get('running_style', ''),
+            h.get('popularity') or h.get('_pop') or 99,
+        )
+
     for b in bets:
         if b['type'] == '三連複' and 'tickets' in b:
             for t in b['tickets']:
@@ -155,9 +174,14 @@ def save_bets_db(date_str, race_id, bets, base_dir=None, db_path=None):
                 ).fetchone()
                 if existing:
                     continue
+                ai_sc, ev_r, rs, pop = _extra(t[0])
                 conn.execute(
-                    'INSERT INTO bets (date,race_id,bet_type,horse_num,horse_name,odds_est,amount,horse_num2) VALUES (?,?,?,?,?,?,?,?)',
-                    (date_str, race_id, '三連複', t[0], b.get('horse_name', ''), b.get('odds_est', 0), 100, t[1]),
+                    'INSERT INTO bets (date,race_id,bet_type,horse_num,horse_name,odds_est,amount,horse_num2,'
+                    'racecourse,distance,surface,running_style,popularity,ai_score,ev_rank) '
+                    'VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
+                    (date_str, race_id, '三連複', t[0], b.get('horse_name', ''),
+                     b.get('odds_est', 0), 100, t[1],
+                     rc, dst, srf, rs, pop, ai_sc, ev_r),
                 )
             continue
         existing = conn.execute(
@@ -167,10 +191,14 @@ def save_bets_db(date_str, race_id, bets, base_dir=None, db_path=None):
         if existing:
             continue
         horse_num2 = b['nums'][1] if len(b['nums']) > 1 else 0
+        ai_sc, ev_r, rs, pop = _extra(b['nums'][0])
         conn.execute(
-            'INSERT INTO bets (date,race_id,bet_type,horse_num,horse_name,odds_est,amount,horse_num2) VALUES (?,?,?,?,?,?,?,?)',
+            'INSERT INTO bets (date,race_id,bet_type,horse_num,horse_name,odds_est,amount,horse_num2,'
+            'racecourse,distance,surface,running_style,popularity,ai_score,ev_rank) '
+            'VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
             (date_str, race_id, b['type'], b['nums'][0],
-             b.get('horse_name', ''), b.get('odds_est', 0), b['amount'], horse_num2),
+             b.get('horse_name', ''), b.get('odds_est', 0), b['amount'], horse_num2,
+             rc, dst, srf, rs, pop, ai_sc, ev_r),
         )
     conn.commit()
     conn.close()
