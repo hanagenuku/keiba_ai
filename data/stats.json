@@ -93,5 +93,32 @@
     "by_chaos": {}
   },
   "recent_races": [],
-  "generated_at": "2026-06-21 12:27"
+  "upset_patterns": {
+    "total_races": 0,
+    "overall_upset_rate": 0,
+    "by_chaos": [],
+    "by_heads": [],
+    "by_surface": [],
+    "by_distance": [],
+    "by_racecourse": [],
+    "by_class": [],
+    "blind_spots": []
+  },
+  "results_status": {
+    "last_date": "2026-06-21",
+    "races": 21,
+    "venues": [
+      {
+        "name": "函館",
+        "races": 11
+      },
+      {
+        "name": "阪神",
+        "races": 10
+      }
+    ],
+    "workflow_run_at": "2026-06-21T12:27:22Z",
+    "workflow_result": "success"
+  },
+  "generated_at": "2026-06-22 04:25"
 }
