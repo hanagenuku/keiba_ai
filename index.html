@@ -98,6 +98,16 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
 .best{font-size:10px;color:var(--sub)}
 .bamt{font-size:13px;font-weight:800;color:var(--g1);margin-left:auto;flex-shrink:0}
 .cmt{margin-top:10px;padding:9px 12px;background:rgba(10,46,26,0.05);border-left:3px solid var(--g2);border-radius:0 8px 8px 0;font-size:12px;color:#444;line-height:1.7;white-space:pre-line}
+/* 三連複フォーメーション */
+.formation-box{background:rgba(26,92,58,0.05);border:1px solid rgba(26,92,58,0.2);border-radius:8px;padding:10px 14px;margin:8px 0}
+.formation-title{font-size:12px;font-weight:700;color:#1a5c3a;margin-bottom:6px}
+.formation-row{font-size:11px;padding:3px 0;display:flex;align-items:flex-start;gap:6px}
+.row-label{display:inline-block;min-width:30px;font-size:10px;font-weight:700;color:#fff;text-align:center;border-radius:3px;padding:1px 4px;flex-shrink:0}
+.axis-label{background:#c0392b}
+.second-label{background:#e67e22}
+.third-label{background:#2980b9}
+.axis-horse{font-weight:700}
+.formation-payout{font-size:10px;color:#666;margin-top:6px;padding-top:6px;border-top:1px dashed #ddd}
 .result-banner{margin:8px 10px;padding:10px 14px;background:var(--card);border-radius:10px;border:1px solid var(--border)}
 .result-banner.hit{border-color:#27ae60}
 .rb-title{font-size:11px;font-weight:700;color:var(--sub);margin-bottom:4px}
@@ -653,6 +663,23 @@ function redrawRace(raceKey, race) {
   render();
 }
 
+function formationHtml(f) {
+  if (!f) return '';
+  let h = '<div class="formation-box">';
+  h += '<div class="formation-title">三連複フォーメーション（' + f.total_points + '点 × ¥100 = ¥' + f.total_amount.toLocaleString() + '）</div>';
+  h += '<div class="formation-row"><span class="row-label axis-label">軸</span><span class="axis-horse">#' + f.axis.num + ' ' + f.axis.name + '（' + f.axis.pop + '番人気 ' + f.axis.odds + '倍）</span></div>';
+  h += '<div class="formation-row"><span class="row-label second-label">2列</span><span>' + f.second_row.map(x => '#' + x.num + ' ' + x.name).join('、') + '</span></div>';
+  h += '<div class="formation-row"><span class="row-label third-label">3列</span><span>' + f.third_row.map(x => '#' + x.num).join('、') + '</span></div>';
+  const pr = f.payout_range;
+  const tiers = {堅: 0, 中穴: 0, 大穴: 0};
+  for (const b of (f.bets || [])) { if (b.tier in tiers) tiers[b.tier]++; }
+  h += '<div class="formation-payout">';
+  h += '想定配当: ¥' + pr.min.toLocaleString() + '〜¥' + pr.max.toLocaleString() + '　';
+  h += '堅' + tiers['堅'] + '点 / 中穴' + tiers['中穴'] + '点 / 大穴' + tiers['大穴'] + '点';
+  h += '</div></div>';
+  return h;
+}
+
 function render() {
   if (!D) return;
   const races = (D.races||{})[venue] || [];
@@ -762,7 +789,11 @@ function render() {
       if ((race.bets||[]).length === 0 && race._update_time) {
         html += '<div style="padding:6px 0;font-size:11px;color:#999">このレースは見送り</div>';
       }
-      html += '</div><div class="cmt">'+(race.cmt||'').replace(/</g,'&lt;')+'</div></div></div>';
+      html += '</div>';
+      if (race.rec && race.formation) {
+        html += formationHtml(race.formation);
+      }
+      html += '<div class="cmt">'+(race.cmt||'').replace(/</g,'&lt;')+'</div></div></div>';
     }
     html += '</div>';
   }

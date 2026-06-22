@@ -5,11 +5,8 @@
 from src.betting.ev_filter import (VENUE_ORDER, VALUE_GAP_THRESHOLD,
                                     calc_market_probs, calc_value_score,
                                     classify_race_chaos, detect_value_horses,
-                                    is_maiden_race,
-                                    calc_synthetic_odds,
-                                    adjust_bets_for_synthetic_odds)
-from src.betting.make_bets import classify_chaos_grade
-from src.betting.make_bets import calc_ev, make_bets
+                                    is_maiden_race)
+from src.betting.make_bets import classify_chaos_grade, calc_ev, make_bets, build_formation
 from src.features.engine import auto_comment, calc_all
 
 
@@ -180,15 +177,8 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
         c['top1'] = top1
         _race_odds = market_odds_map.get(race['id'], {})
         bets   = make_bets(c, _race_odds or None)
-        # 合成オッズ調整（ソフト版: 1.5倍未満のみスキップ、それ以外は注意表示）
-        _vh_for_syn = detect_value_horses(
-            [{**h, 'horse_num': h.get('horse_num', h.get('num')),
-              'cal_prob': h.get('cal_prob', h.get('pn', 0))}
-             for h in scored], _race_odds)
-        _syn_odds = calc_synthetic_odds(bets, _vh_for_syn)
-        bets, _syn_note = adjust_bets_for_synthetic_odds(bets, _vh_for_syn)
         if not bets:
-            continue  # skip（合成オッズ < 1.5倍）
+            continue
         total_inv += sum(b['amount'] for b in bets)
         rc     = race['racecourse']
         if rc not in races_by_venue:
@@ -237,7 +227,7 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
             _bet_reason = (f'中頭数({_num_horses}頭)+大荒れ・' +
                            ('複勝少額' if _vh_count > 0 else 'スキップ'))
 
-        races_by_venue[rc].append({
+        _entry = {
             'r':       race['race_num'],
             'race_id': race['id'],
             'odds_cn': _build_odds_cn(race),
@@ -253,16 +243,19 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
                 'style': top1.get('running_style', '差し'),
             },
             'horses':      _build_horses_list(scored, top1, by_odds, _vg_map, _odds_lookup),
-            'bets':          _build_bet_list(bets),
-            'chaos_level':   c.get('chaos_level', classify_race_chaos(scored)),
-            'chaos_grade':   _grade,
-            'num_horses':    _num_horses,
-            'value_horses':  _vh_list,
-            'bet_reason':    _bet_reason,
-            'synthetic_odds': round(_syn_odds, 2),
-            'synthetic_note': _syn_note,
+            'bets':        _build_bet_list(bets),
+            'chaos_level': c.get('chaos_level', classify_race_chaos(scored)),
+            'chaos_grade': _grade,
+            'num_horses':  _num_horses,
+            'value_horses': _vh_list,
+            'bet_reason':  _bet_reason,
             'cmt': auto_comment(c, bias_data),
-        })
+        }
+        # _build_horses_list が scored に _pop をセットした後でフォーメーション生成
+        for _h in scored:
+            _h['popularity'] = _h.get('_pop', 99)
+        _entry['formation'] = build_formation(scored, race)
+        races_by_venue[rc].append(_entry)
 
     # ── 非厳選レース（全レース買い目つき）─────────────────────────
     for race in sorted(races_all,
