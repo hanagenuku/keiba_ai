@@ -665,17 +665,49 @@ function redrawRace(raceKey, race) {
 
 function formationHtml(f) {
   if (!f) return '';
+  const PAT_LABEL = {
+    'A_1ax4box':  '軸1頭×4頭BOX',
+    'B_standard': '軸1頭×2列×3列',
+    'C_2ax5flow': '2頭軸×流し',
+    'D_4box':     '4頭BOX',
+    'E_1ax6box':  '軸1頭×6頭BOX',
+  };
+  const patLabel = PAT_LABEL[f.pattern] || 'フォーメーション';
   let h = '<div class="formation-box">';
-  h += '<div class="formation-title">三連複フォーメーション（' + f.total_points + '点 × ¥100 = ¥' + f.total_amount.toLocaleString() + '）</div>';
-  h += '<div class="formation-row"><span class="row-label axis-label">軸</span><span class="axis-horse">#' + f.axis.num + ' ' + f.axis.name + '（' + f.axis.pop + '番人気 ' + f.axis.odds + '倍）</span></div>';
-  h += '<div class="formation-row"><span class="row-label second-label">2列</span><span>' + f.second_row.map(x => '#' + x.num + ' ' + x.name).join('、') + '</span></div>';
-  h += '<div class="formation-row"><span class="row-label third-label">3列</span><span>' + f.third_row.map(x => '#' + x.num).join('、') + '</span></div>';
+  h += '<div class="formation-title">三連複 ' + patLabel
+     + '（' + f.total_points + '点×¥100=¥' + f.total_amount.toLocaleString() + '）';
+  if (f.syn_odds) h += ' <span style="background:#117a65;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px">合成' + f.syn_odds.toFixed(1) + '倍</span>';
+  h += '</div>';
+
+  if (f.axis) {
+    const axLabel = f.axis2 ? '軸①' : '軸';
+    h += '<div class="formation-row"><span class="row-label axis-label">' + axLabel + '</span>'
+       + '<span class="axis-horse">#' + f.axis.num + ' ' + f.axis.name + '（' + f.axis.pop + '番人気）</span></div>';
+  }
+  if (f.axis2) {
+    h += '<div class="formation-row"><span class="row-label axis-label">軸②</span>'
+       + '<span class="axis-horse">#' + f.axis2.num + ' ' + f.axis2.name + '（' + f.axis2.pop + '番人気）</span></div>';
+  }
+  if (f.second_row && f.second_row.length > 0) {
+    h += '<div class="formation-row"><span class="row-label second-label">2列</span>'
+       + '<span>' + f.second_row.map(x => '#' + x.num + ' ' + x.name).join('、') + '</span></div>';
+  }
+  if (f.third_row && f.third_row.length > 0) {
+    const isBox  = (f.pattern === 'D_4box');
+    const isFlow = (f.pattern === 'C_2ax5flow' || (f.pattern === 'E_1ax6box'));
+    const rowLbl = isBox ? 'BOX' : (isFlow ? '相手' : '3列');
+    h += '<div class="formation-row"><span class="row-label third-label">' + rowLbl + '</span>'
+       + '<span>' + f.third_row.map(x => '#' + x.num).join('、') + '</span></div>';
+  }
+  // Pattern D: axis_numsがないのでthird_rowに全頭入っている（上で表示済み）
+
   const pr = f.payout_range;
-  const tiers = {堅: 0, 中穴: 0, 大穴: 0};
-  for (const b of (f.bets || [])) { if (b.tier in tiers) tiers[b.tier]++; }
+  const tierCount = {};
+  for (const b of (f.bets || [])) tierCount[b.tier] = (tierCount[b.tier] || 0) + 1;
+  const tierStr = Object.entries(tierCount).map(([k,v]) => k + v + '点').join(' / ');
   h += '<div class="formation-payout">';
-  h += '想定配当: ¥' + pr.min.toLocaleString() + '〜¥' + pr.max.toLocaleString() + '　';
-  h += '堅' + tiers['堅'] + '点 / 中穴' + tiers['中穴'] + '点 / 大穴' + tiers['大穴'] + '点';
+  h += '想定配当: ¥' + pr.min.toLocaleString() + '〜¥' + pr.max.toLocaleString();
+  if (tierStr) h += '　' + tierStr;
   h += '</div></div>';
   return h;
 }

@@ -254,7 +254,7 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
         # _build_horses_list が scored に _pop をセットした後でフォーメーション生成
         for _h in scored:
             _h['popularity'] = _h.get('_pop', 99)
-        _entry['formation'] = build_formation(scored, race)
+        _entry['formation'] = build_formation(scored, race, chaos_grade=_grade)
         races_by_venue[rc].append(_entry)
 
     # ── 非厳選レース（全レース買い目つき）─────────────────────────

@@ -505,9 +505,10 @@ def make_bets(c, market_odds_map=None):
 
 
 # ── 三連複フォーメーション設定 ────────────────────────────────────────────────
-FORMATION_UNIT = 100
+FORMATION_UNIT       = 100
 FORMATION_MAX_POINTS = 15
 FORMATION_AXIS_POP_LIMIT = 12
+FORMATION_SYN_TARGET = 3.5   # 合成オッズの目標値
 
 
 def _fnum(h):
@@ -522,50 +523,63 @@ def _fodds(h):
     return h.get('win_odds', h.get('odds', 5)) or 5
 
 
-def build_formation(horses, race):
-    """三連複フォーメーションの買い目を生成する。
+def _pick_n(pool_rl, pool_pop, exclude, n):
+    """AI順位優先・市場人気で補完しながら重複なくn頭選ぶ。"""
+    seen = set(exclude)
+    result = []
+    for h in pool_rl:
+        if _fnum(h) not in seen:
+            result.append(_fnum(h))
+            seen.add(_fnum(h))
+        if len(result) >= n:
+            break
+    for h in pool_pop:
+        if _fnum(h) not in seen:
+            result.append(_fnum(h))
+            seen.add(_fnum(h))
+        if len(result) >= n:
+            break
+    return result[:n]
 
-    Returns:
-        JSON-ready dict、または None（頭数不足・条件未達）
+
+def _calc_syn_odds(tickets, h_map):
+    """三連複フォーメーションの合成オッズ（的中時リターン/総投資額）を推定する。
+
+    合成オッズ = 平均推定払戻 / 総投資額
+    払戻推定: (o1*o2*o3)^0.5 * 100 （実績ベース近似）
     """
-    if len(horses) < 6:
-        return None
+    if not tickets:
+        return 0.0
+    total_est = 0.0
+    for nums in tickets:
+        o = [_fodds(h_map.get(n, {})) for n in nums]
+        est_pay = max(500, (o[0] * o[1] * o[2]) ** 0.5 * 100)
+        total_est += est_pay
+    avg_payout = total_est / len(tickets)
+    return avg_payout / (len(tickets) * FORMATION_UNIT)
 
-    by_rl  = sorted(horses, key=lambda h: h.get('rl_rank', 99))
-    by_pop = sorted(horses, key=lambda h: _fpop(h))
 
-    axis = select_axis(by_rl, by_pop)
-    if axis is None:
-        return None
+def _tickets_payout_range(tickets, h_map):
+    """全買い目の想定配当から min/mid/max を返す（円）。"""
+    payouts = []
+    for nums in tickets:
+        o = [_fodds(h_map.get(n, {})) for n in nums]
+        payouts.append(max(300, int((o[0] * o[1] * o[2]) ** 0.33 * 80)))
+    if not payouts:
+        return {'min': 300, 'mid': 3000, 'max': 10000}
+    ps = sorted(payouts)
+    return {'min': ps[0], 'mid': ps[len(ps) // 2], 'max': ps[-1]}
 
-    second_row = select_second_row(by_rl, by_pop, axis)
-    third_row  = select_third_row(by_rl, by_pop, axis, second_row)
 
-    if len(second_row) < 1 or len(third_row) < 2:
-        return None
-
-    bets = generate_formation_bets(axis, second_row, third_row)
-    if len(bets) > FORMATION_MAX_POINTS:
-        bets = bets[:FORMATION_MAX_POINTS]
-
-    payout_range = estimate_payout_range(axis, second_row, third_row)
-
-    def _hinfo(h):
-        return {
-            'num':  _fnum(h),
-            'name': h.get('name', ''),
-            'pop':  _fpop(h),
-            'odds': round(_fodds(h), 1),
-        }
-
+def _make_pattern(name, tickets, axis_nums, second_nums, third_nums, h_map):
+    syn = _calc_syn_odds(tickets, h_map)
     return {
-        'axis':         _hinfo(axis),
-        'second_row':   [_hinfo(h) for h in second_row],
-        'third_row':    [_hinfo(h) for h in third_row],
-        'bets':         bets,
-        'total_points': len(bets),
-        'total_amount': len(bets) * FORMATION_UNIT,
-        'payout_range': payout_range,
+        'name':        name,
+        'tickets':     [sorted(t) for t in tickets],
+        'axis_nums':   axis_nums,
+        'second_nums': second_nums,
+        'third_nums':  third_nums,
+        'syn_odds':    round(syn, 2),
     }
 
 
@@ -574,30 +588,165 @@ def select_axis(by_rl, by_pop):
     rl1 = by_rl[0]
     if _fpop(rl1) <= FORMATION_AXIS_POP_LIMIT:
         return rl1
-
     top3 = by_rl[:3]
-    best_in_top3 = min(top3, key=lambda h: _fpop(h))
-    if _fpop(best_in_top3) <= 8:
-        return best_in_top3
-
-    market_top3 = by_pop[:3]
-    return min(market_top3, key=lambda h: h.get('rl_rank', 99))
+    best = min(top3, key=lambda h: _fpop(h))
+    if _fpop(best) <= 8:
+        return best
+    return min(by_pop[:3], key=lambda h: h.get('rl_rank', 99))
 
 
+def _select_best_candidate(candidates, chaos_grade, gap12, rl2_pop):
+    """chaos_grade / gap12 / rl2_pop のルールに基づいて候補パターンを選ぶ。"""
+    def find(name):
+        return next((p for p in candidates if p['name'] == name), None)
+
+    if chaos_grade == 'C' and gap12 < 0.03:
+        return find('D_4box') or find('E_1ax6box') or candidates[0]
+    if chaos_grade == 'C':
+        return find('E_1ax6box') or find('B_standard') or candidates[0]
+    if chaos_grade == 'A' and gap12 >= 0.03 and rl2_pop <= 5:
+        return find('C_2ax5flow') or find('A_1ax4box') or find('B_standard') or candidates[0]
+    if chaos_grade == 'A' and gap12 >= 0.05:
+        return find('A_1ax4box') or find('C_2ax5flow') or find('B_standard') or candidates[0]
+    if chaos_grade == 'B' and gap12 >= 0.04 and rl2_pop <= 4:
+        return find('C_2ax5flow') or find('B_standard') or candidates[0]
+    return find('B_standard') or candidates[0]
+
+
+def build_formation(horses, race, chaos_grade='B'):
+    """三連複フォーメーションをパターン自動選択して生成する。
+
+    chaos_grade と AI自信度（RL1-2位のpn差）から最適パターンを選択。
+
+    パターン一覧:
+      A_1ax4box  : 軸1頭×4頭BOX（6点）  ← chaos A + gap≥0.05
+      B_standard : 軸1頭×2列2頭×3列4頭（〜10点）← 標準
+      C_2ax5flow : 2頭軸×5頭流し（5点）  ← chaos A/B + RL2位も人気上位
+      D_4box     : 4頭BOX（4点）          ← chaos C + 混戦（軸不明）
+      E_1ax6box  : 軸1頭×6頭BOX（15点）  ← chaos C + 軸は1頭ある
+    """
+    if len(horses) < 4:
+        return None
+
+    by_rl  = sorted(horses, key=lambda h: h.get('rl_rank', 99))
+    by_pop = sorted(horses, key=lambda h: _fpop(h))
+    num_horses = race.get('num_horses', len(horses))
+    h_map = {_fnum(h): h for h in horses}
+
+    p1    = by_rl[0].get('pn', 0.05) if by_rl           else 0.05
+    p2    = by_rl[1].get('pn', 0.03) if len(by_rl) > 1  else 0.03
+    gap12 = p1 - p2
+
+    axis = select_axis(by_rl, by_pop)
+    if axis is None:
+        return None
+    ax1 = _fnum(axis)
+
+    candidates = []
+
+    # ── パターンC: 2頭軸×5頭流し（5点）──────────────────────────────────────
+    rl2 = by_rl[1] if len(by_rl) > 1 else None
+    if rl2 and chaos_grade in ('A', 'B') and gap12 >= 0.03 and _fpop(rl2) <= 5:
+        ax2   = _fnum(rl2)
+        mates = _pick_n(by_rl[2:], by_pop, {ax1, ax2}, 5)
+        if len(mates) >= 2:
+            tickets = [[ax1, ax2, m] for m in mates]
+            candidates.append(_make_pattern('C_2ax5flow', tickets, [ax1, ax2], [], mates, h_map))
+
+    # ── パターンA: 軸1頭×4頭BOX（6点）────────────────────────────────────────
+    if chaos_grade == 'A' and gap12 >= 0.05 and num_horses <= 14:
+        mates = _pick_n(by_rl[1:], by_pop, {ax1}, 4)
+        if len(mates) >= 3:
+            tickets = [[ax1] + list(c) for c in combinations(mates, 2)]
+            candidates.append(_make_pattern('A_1ax4box', tickets, [ax1], mates[:2], mates[2:], h_map))
+
+    # ── パターンB: 軸1頭×2列2頭×3列4頭（〜10点）─────────────────────────────
+    if len(horses) >= 6:
+        second = []
+        for h in by_rl[1:6]:
+            if _fnum(h) != ax1 and _fpop(h) <= 6:
+                second.append(_fnum(h))
+            if len(second) >= 2:
+                break
+        if len(second) < 2:
+            for h in by_pop[:4]:
+                if _fnum(h) != ax1 and _fnum(h) not in second:
+                    second.append(_fnum(h))
+                if len(second) >= 2:
+                    break
+        third = _pick_n(by_rl, by_pop, {ax1} | set(second), 4)
+        all_mates = second + third
+        if len(all_mates) >= 2:
+            tickets = [[ax1] + list(c) for c in combinations(all_mates, 2)]
+            candidates.append(_make_pattern('B_standard', tickets, [ax1], second, third, h_map))
+
+    # ── パターンD: 4頭BOX（4点）──────────────────────────────────────────────
+    if chaos_grade == 'C' and gap12 < 0.03 and len(horses) >= 4:
+        box4    = [_fnum(h) for h in by_rl[:4]]
+        tickets = [list(c) for c in combinations(box4, 3)]
+        candidates.append(_make_pattern('D_4box', tickets, [], [], box4, h_map))
+
+    # ── パターンE: 軸1頭×6頭BOX（15点）──────────────────────────────────────
+    if chaos_grade == 'C' and len(horses) >= 8:
+        mates6  = _pick_n(by_rl[1:], by_pop, {ax1}, 6)
+        if len(mates6) >= 4:
+            tickets = [[ax1] + list(c) for c in combinations(mates6, 2)][:FORMATION_MAX_POINTS]
+            candidates.append(_make_pattern('E_1ax6box', tickets, [ax1], mates6[:2], mates6[2:], h_map))
+
+    if not candidates:
+        return None
+
+    # ── ルールベースで最適パターンを選択 ─────────────────────────────────────
+    rl2_pop = _fpop(by_rl[1]) if len(by_rl) > 1 else 99
+    best = _select_best_candidate(candidates, chaos_grade, gap12, rl2_pop)
+
+    if len(best['tickets']) > FORMATION_MAX_POINTS:
+        best['tickets']  = best['tickets'][:FORMATION_MAX_POINTS]
+        best['syn_odds'] = round(_calc_syn_odds(best['tickets'], h_map), 2)
+
+    payout_range = _tickets_payout_range(best['tickets'], h_map)
+
+    def _hinfo(n):
+        h = h_map.get(n, {})
+        return {'num': n, 'name': h.get('name', ''), 'pop': _fpop(h), 'odds': round(_fodds(h), 1)}
+
+    second_set = set(best['second_nums'])
+    axis_set   = set(best['axis_nums'])
+
+    def _tier(nums):
+        if len(best['axis_nums']) >= 2:
+            return '軸流し'
+        if not best['axis_nums']:
+            return 'BOX'
+        non_axis = [n for n in nums if n not in axis_set]
+        in_s = sum(1 for n in non_axis if n in second_set)
+        return '堅' if in_s == 2 else ('中穴' if in_s == 1 else '大穴')
+
+    return {
+        'pattern':      best['name'],
+        'axis':         _hinfo(best['axis_nums'][0]) if best['axis_nums'] else None,
+        'axis2':        _hinfo(best['axis_nums'][1]) if len(best['axis_nums']) > 1 else None,
+        'second_row':   [_hinfo(n) for n in best['second_nums']],
+        'third_row':    [_hinfo(n) for n in best['third_nums']],
+        'bets':         [{'type': '三連複F', 'nums': t, 'amount': FORMATION_UNIT,
+                          'tier': _tier(t)} for t in best['tickets']],
+        'total_points': len(best['tickets']),
+        'total_amount': len(best['tickets']) * FORMATION_UNIT,
+        'payout_range': payout_range,
+        'syn_odds':     best['syn_odds'],
+    }
+
+
+# 旧API後方互換（呼び出し元がまだ残っていれば）
 def select_second_row(by_rl, by_pop, axis):
-    """2列目（2〜3頭）: AI上位 + 市場8番人気以内。"""
+    ax = _fnum(axis)
     second = []
-    axis_num = _fnum(axis)
-
     for h in by_rl[:6]:
-        if _fnum(h) == axis_num:
-            continue
-        if _fpop(h) <= 8:
+        if _fnum(h) != ax and _fpop(h) <= 8:
             second.append(h)
         if len(second) >= 3:
             break
-
-    used = {axis_num} | {_fnum(h) for h in second}
+    used = {ax} | {_fnum(h) for h in second}
     if len(second) < 2:
         for h in by_pop[:5]:
             if _fnum(h) not in used:
@@ -605,39 +754,32 @@ def select_second_row(by_rl, by_pop, axis):
                 used.add(_fnum(h))
             if len(second) >= 2:
                 break
-
     return second[:3]
 
 
 def select_third_row(by_rl, by_pop, axis, second_row):
-    """3列目（4〜6頭）: AI中位 + 市場人気保険馬。"""
     used = {_fnum(axis)} | {_fnum(h) for h in second_row}
     third = []
-
     for h in by_rl[:10]:
         if _fnum(h) not in used:
             third.append(h)
             used.add(_fnum(h))
         if len(third) >= 4:
             break
-
     for h in by_pop[:6]:
         if _fnum(h) not in used:
             third.append(h)
             used.add(_fnum(h))
         if len(third) >= 6:
             break
-
     return third[:6]
 
 
 def generate_formation_bets(axis, second_row, third_row):
-    """三連複フォーメーション全買い目を生成する。"""
     axis_num    = _fnum(axis)
     second_nums = [_fnum(h) for h in second_row]
     third_nums  = [_fnum(h) for h in third_row]
     all_nums    = second_nums + third_nums
-
     bets = []
     for combo in combinations(all_nums, 2):
         if combo[0] == axis_num or combo[1] == axis_num:
@@ -645,39 +787,29 @@ def generate_formation_bets(axis, second_row, third_row):
         nums = sorted([axis_num, combo[0], combo[1]])
         in_second = sum(1 for n in combo if n in second_nums)
         tier = '堅' if in_second == 2 else ('中穴' if in_second == 1 else '大穴')
-        bets.append({
-            'type':   '三連複F',
-            'nums':   nums,
-            'amount': FORMATION_UNIT,
-            'tier':   tier,
-            'reason': f'軸#{axis_num} ' + '×'.join(f'#{n}' for n in combo),
-        })
+        bets.append({'type': '三連複F', 'nums': nums, 'amount': FORMATION_UNIT,
+                     'tier': tier, 'reason': f'軸#{axis_num} ' + '×'.join(f'#{n}' for n in combo)})
     return bets
 
 
 def estimate_payout_range(axis, second_row, third_row):
-    """想定配当の範囲を推定する（円）。"""
     a_o = _fodds(axis)
-
     if len(second_row) >= 2:
         s = [_fodds(h) for h in second_row[:2]]
         min_pay = max(300, int((a_o * s[0] * s[1]) ** 0.33 * 80))
     else:
         min_pay = 500
-
     if second_row and third_row:
         m1 = _fodds(second_row[0])
         m2 = _fodds(third_row[len(third_row) // 2])
         mid_pay = max(1000, int((a_o * m1 * m2) ** 0.33 * 80))
     else:
         mid_pay = 3000
-
     if len(third_row) >= 2:
         t = sorted([_fodds(h) for h in third_row], reverse=True)
         max_pay = max(5000, int((a_o * t[0] * t[1]) ** 0.33 * 80))
     else:
         max_pay = 10000
-
     return {'min': min_pay, 'mid': mid_pay, 'max': max_pay}
 
 
