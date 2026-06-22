@@ -2,6 +2,8 @@
 EVフィルタ：予想候補レースの厳選ロジック。
 ノートブックの ability_first_loose を分離。
 """
+import copy
+
 from src.betting.make_bets import calc_ev
 from src.features.engine import calc_all, calc_chaos_score
 from src.utils.config import VENUE_ORDER
@@ -13,6 +15,22 @@ WIN_PROB_MIN      = 0.06
 SKIP_CLASSES      = ('未勝利', '新馬')
 VALUE_EV_MIN      = 1.2   # バリュー判定の最低期待値
 VALUE_GAP_THRESHOLD = 0.10  # detect_value_horses のバリューギャップ閾値
+
+# ── 合成オッズ閾値 ────────────────────────────────────────────────────────
+SYNTHETIC_SAFE_MIN = 2.5    # 2.5倍未満: 低配当警戒域
+SYNTHETIC_SAFE_MAX = 6.0    # 6.0倍超 : 高配当警戒域
+SYNTHETIC_SKIP_MIN = 1.5    # 1.5倍未満: 旨みなし → スキップ
+SYNTHETIC_RISK_MAX = 10.0   # 10.0倍超 : 高リスク表示
+
+# 各券種の相対的中確率（複勝を1.0基準とした近似値）
+_REL_HIT_PROB = {
+    '複勝':  1.0,
+    '単勝':  0.8,
+    'ワイド': 0.5,
+    '馬連':  0.3,
+    '馬単':  0.25,
+    '三連複': 0.1,
+}
 
 
 def detect_value_horses(horses, market_odds_map):
@@ -264,3 +282,217 @@ def ability_first_with_value(races, bias_data=None, top_n=6):
         x['race']['race_num'],
     ))
     return selected
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  select_quality_races: 品質閾値ベースのレース厳選
+# ══════════════════════════════════════════════════════════════════════════════
+
+def select_quality_races(races, bias_data=None,
+                         min_ev=1.20,
+                         min_gap=0.02,
+                         min_win_prob=0.10,
+                         odds_range=(1.5, 25.0),
+                         max_races=10,
+                         min_races=0):
+    """品質閾値を満たすレースだけを推奨する。
+
+    ability_first_loose() の厳格版。固定数ではなく質で切る（0〜max_races）。
+    ability_first_with_value() のバリュー検出ロジックを統合：
+    EVは本命だけでなくフィールド内の最良馬から算出する。
+
+    priority の計算式: ev_max × (1 + gap × 10)
+    （EVを主軸にし、gap は抜け感ボーナスとして乗算）
+
+    Parameters
+    ----------
+    min_ev       : フィールド最良馬のEV下限（デフォルト1.20）
+    min_gap      : RL1位〜2位の totalスコア差下限（デフォルト0.02）
+    min_win_prob : RL1位馬の AI勝率下限（デフォルト0.10）
+    odds_range   : 本命オッズの許容範囲（デフォルト 1.5〜25.0）
+    max_races    : 最大推奨レース数（デフォルト10）
+    min_races    : 最小推奨レース数（デフォルト0 → 0件も許容）
+    """
+    odds_min, odds_max = odds_range
+    cands = []
+
+    for race in races:
+        scored = calc_all(race, bias_data)
+        if len(scored) < 3:
+            continue
+
+        rc = race.get('race_class', race.get('class', '')) or ''
+        if any(s in rc for s in SKIP_CLASSES) or is_maiden_race(race):
+            continue
+
+        top1 = scored[0]
+        top2 = scored[1]
+        gap  = top1['total'] - top2['total']
+
+        if gap < min_gap:
+            continue
+
+        odds = top1.get('win_odds') or 99
+        if odds < odds_min or odds > odds_max:
+            continue
+
+        win_prob = top1.get('pn', 0)
+        if win_prob < min_win_prob:
+            continue
+
+        # ── EVはフィールド全馬から最良を選択（ability_first_with_value 統合）──
+        market_probs = calc_market_probs(scored)
+        best_ev    = 0.0
+        best_horse = top1
+        for i, h in enumerate(scored):
+            ai_prob = h.get('pn', 0) or 0
+            m_prob  = market_probs[i]
+            h_odds  = h.get('win_odds') or 0
+            vs      = calc_value_score(ai_prob, m_prob, h_odds)
+            h['prob_gap'] = vs['prob_gap']
+            h['ev']       = vs['ev']
+            h['is_value'] = vs['is_value']
+            if vs['ev'] > best_ev:
+                best_ev    = vs['ev']
+                best_horse = h
+
+        fuku_prob = top1.get('top3_prob', min(0.80, win_prob * 3))
+        ev_fuku   = calc_ev(fuku_prob, odds * 0.28)
+        ev_tan    = calc_ev(win_prob, odds)
+        ev_max    = max(best_ev, ev_fuku, ev_tan)
+
+        if ev_max < min_ev:
+            continue
+
+        by_odds  = sorted(scored, key=lambda h: h.get('win_odds') or 99)
+        pop_rank = next((i + 1 for i, h in enumerate(by_odds)
+                         if h['name'] == top1['name']), 99)
+
+        cands.append({
+            'race':            race,
+            'scored':          scored,
+            'top1':            top1,
+            'odds':            odds,
+            'popularity_rank': pop_rank,
+            'score_gap':       gap,
+            'priority':        ev_max * (1 + gap * 10),   # EV主軸・gap ボーナス
+            'ev_fuku':         ev_fuku,
+            'ev_tan':          ev_tan,
+            'ev_max':          ev_max,
+            'best_ev_horse':   best_horse.get('name', ''),
+            'chaos_score':     calc_chaos_score(race, scored),
+            'chaos_level':     classify_race_chaos(scored),
+        })
+
+    cands.sort(key=lambda x: x['priority'], reverse=True)
+    selected = cands[:max_races]
+    selected.sort(key=lambda x: (
+        VENUE_ORDER.get(x['race']['racecourse'], 99),
+        x['race']['race_num'],
+    ))
+    return selected
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  合成オッズ計算・買い目調整
+# ══════════════════════════════════════════════════════════════════════════════
+
+def calc_synthetic_odds(bets, value_horses=None):
+    """1レースの買い目全体の合成オッズを計算する。
+
+    合成オッズ = 複勝ベースの期待リターン / 総投資額
+    各券種の的中確率は複勝に対する相対値で近似する。
+
+    Returns
+    -------
+    float: 合成オッズ（0.0 なら計算不能）
+    """
+    total_invest = sum(b['amount'] for b in bets)
+    if total_invest == 0:
+        return 0.0
+
+    vh_by_num = {}
+    if value_horses:
+        for h in value_horses:
+            num = h.get('horse_num', h.get('num'))
+            if num is not None:
+                vh_by_num[num] = h
+
+    expected_return = 0.0
+    for b in bets:
+        bet_type = b['type']
+        amount   = b['amount']
+        rel_prob = _REL_HIT_PROB.get(bet_type, 0.3)
+
+        est_payout = None
+        if vh_by_num:
+            try:
+                from src.betting.make_bets import estimate_payout as _ep
+                nums      = b.get('nums', [])[:3]
+                odds_list = [vh_by_num.get(n, {}) for n in nums]
+                est_payout = _ep(bet_type, odds_list)    # 100円あたりの払戻額
+            except Exception:
+                pass
+
+        if est_payout is not None:
+            payout = amount * est_payout / 100
+        elif bet_type == '複勝':
+            odds_est = b.get('odds_est') or b.get('odds') or 0
+            payout   = amount * max(1.1, odds_est * 0.28)
+        else:
+            odds_est = b.get('odds_est') or b.get('odds') or 0
+            payout   = amount * max(1.0, odds_est)
+
+        expected_return += payout * rel_prob
+
+    return round(expected_return / total_invest, 3)
+
+
+def adjust_bets_for_synthetic_odds(bets, value_horses=None):
+    """合成オッズを計算し、範囲外なら金額を調整する（ソフト版）。
+
+    調整方針:
+      2.5〜6.0倍  : 調整不要
+      1.5〜2.5倍  : 複勝を減額・馬連を増額して調整を試みる。
+                     調整後も2倍未満なら note='low'（スキップしない）
+      6.0〜10.0倍 : 馬連・三連複を減額・複勝を増額して調整を試みる。
+                     調整後も6倍超なら note='high'（スキップしない）
+      1.5倍未満   : 旨みなし → [] / note='skip'
+      10.0倍超    : note='risk'（スキップしない）
+
+    Returns
+    -------
+    (adjusted_bets, note)
+      note: None / 'low' / 'high' / 'risk' / 'skip'
+    """
+    bets = copy.deepcopy(bets)
+    synthetic = calc_synthetic_odds(bets, value_horses)
+
+    if synthetic <= 0:
+        return bets, None
+
+    if synthetic < SYNTHETIC_SKIP_MIN:
+        return [], 'skip'
+
+    if synthetic > SYNTHETIC_RISK_MAX:
+        return bets, 'risk'
+
+    if synthetic < SYNTHETIC_SAFE_MIN:
+        for b in bets:
+            if b['type'] == '複勝':
+                b['amount'] = max(100, int(b['amount'] * 0.6 / 100) * 100)
+            elif b['type'] in ('馬連', 'ワイド'):
+                b['amount'] = max(100, int(b['amount'] * 1.5 / 100) * 100)
+        new_syn = calc_synthetic_odds(bets, value_horses)
+        return bets, ('low' if new_syn < 2.0 else None)
+
+    if synthetic > SYNTHETIC_SAFE_MAX:
+        for b in bets:
+            if b['type'] in ('馬連', '三連複', '馬単'):
+                b['amount'] = max(100, int(b['amount'] * 0.6 / 100) * 100)
+            elif b['type'] == '複勝':
+                b['amount'] = max(100, int(b['amount'] * 1.5 / 100) * 100)
+        new_syn = calc_synthetic_odds(bets, value_horses)
+        return bets, ('high' if new_syn > SYNTHETIC_SAFE_MAX else None)
+
+    return bets, None

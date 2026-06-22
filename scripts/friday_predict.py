@@ -14,7 +14,7 @@ from src.utils.db import (init_db, get_db_path, get_history_db_path,
                            backup_db, checkpoint_db,
                            save_race_db, save_bets_db)
 from src.betting.make_bets import init_betting, make_bets, log_bet_simulation
-from src.betting.ev_filter import ability_first_loose
+from src.betting.ev_filter import select_quality_races
 from src.betting.app_json import to_app_json
 from src.scraper.jra_scraper import fetch_races_on_date
 
@@ -80,10 +80,10 @@ def main():
     if len(surf_counts) == 1 and 'ダート' in surf_counts and len(races) > 6:
         print('⚠ 警告: 全レースがダート判定されています。surfaceパーサーにバグの可能性あり')
 
-    selected = ability_first_loose(races, avg_bias, top_n=TOP_N_RACES)
+    selected = select_quality_races(races, avg_bias)
     print(f'⭐ 厳選: {len(selected)}レース')
     if not selected:
-        print('⚠ 厳選レースなし（EV基準を満たすレースがありません）')
+        print('⚠ 厳選レースなし（品質閾値を満たすレースがありません）')
 
     total_inv = 0
     for i, c in enumerate(selected, 1):

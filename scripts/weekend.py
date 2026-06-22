@@ -17,7 +17,7 @@ from src.utils.db import (init_db, get_db_path, get_history_db_path,
                            save_history_db, save_results_db, check_and_update_bets,
                            save_race_predictions, update_prediction_results)
 from src.betting.make_bets import init_betting, make_bets, log_bet_simulation
-from src.betting.ev_filter import ability_first_loose
+from src.betting.ev_filter import select_quality_races
 from src.betting.app_json import to_app_json
 from src.betting.shadow import record_all_shadow_bets
 from src.scraper.jra_scraper import fetch_races_on_date, fetch_results
@@ -109,8 +109,9 @@ def predict_next_day(sess, hist_path, avg_bias, jst_now, force=False):
         surf_counts[s] = surf_counts.get(s, 0) + 1
     print(f'   コース内訳: {surf_counts}')
 
-    selected = ability_first_loose(races, avg_bias, top_n=TOP_N_RACES)
-    print(f'⭐ 厳選: {len(selected)}レース')
+    selected = select_quality_races(races, avg_bias)
+    print(f'⭐ 厳選: {len(selected)}レース'
+          + ('（推奨レースなし）' if not selected else ''))
 
     total_inv = 0
     for i, c in enumerate(selected, 1):
