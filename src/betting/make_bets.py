@@ -583,6 +583,26 @@ def _make_pattern(name, tickets, axis_nums, second_nums, third_nums, h_map):
     }
 
 
+def _trim_to_syn_target(tickets, h_map, target_syn=2.5, min_tickets=4):
+    """推定払戻の低い組み合わせを除去して合成オッズを改善する。
+
+    高払戻の組み合わせを残しながら、target_syn に達するか min_tickets になるまで削る。
+    """
+    if not tickets or len(tickets) <= min_tickets:
+        return tickets
+
+    def est_pay(nums):
+        o = [_fodds(h_map.get(n, {})) for n in nums]
+        return max(500, (o[0] * o[1] * o[2]) ** 0.5 * 100)
+
+    current = sorted(tickets, key=est_pay, reverse=True)
+    while len(current) > min_tickets:
+        if _calc_syn_odds(current, h_map) >= target_syn:
+            break
+        current.pop()
+    return current
+
+
 def select_axis(by_rl, by_pop):
     """軸馬を選定する。RL1位基本。人気12超なら代替を探す。"""
     rl1 = by_rl[0]
@@ -703,6 +723,20 @@ def build_formation(horses, race, chaos_grade='B'):
     if len(best['tickets']) > FORMATION_MAX_POINTS:
         best['tickets']  = best['tickets'][:FORMATION_MAX_POINTS]
         best['syn_odds'] = round(_calc_syn_odds(best['tickets'], h_map), 2)
+
+    # 合成オッズが低すぎる場合は低払戻の組み合わせを除去して点数を絞る
+    if best['syn_odds'] < 1.5:
+        trimmed = _trim_to_syn_target(best['tickets'], h_map, target_syn=2.5, min_tickets=4)
+        if len(trimmed) != len(best['tickets']):
+            surviving = {n for t in trimmed for n in t}
+            best = {
+                'name':        best['name'],
+                'tickets':     trimmed,
+                'axis_nums':   best['axis_nums'],
+                'second_nums': [n for n in best['second_nums'] if n in surviving],
+                'third_nums':  [n for n in best['third_nums'] if n in surviving],
+                'syn_odds':    round(_calc_syn_odds(trimmed, h_map), 2),
+            }
 
     payout_range = _tickets_payout_range(best['tickets'], h_map)
 
