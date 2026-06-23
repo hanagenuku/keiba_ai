@@ -5,7 +5,12 @@ JRA競馬AI予想システム。Google Colab + Google Drive で運用。
 
 ## リポジトリ
 - GitHub: `hanagenuku/keiba_ai`
-- 運用ブランチ: `main`（すべての変更はmainに直接push。Colabの強制アップデートセルもmainから取得）
+- 本番ブランチ: `main`（Colabの強制アップデートセル・GAS・各ワークフローは `main` から取得）
+- **コード変更の運用フロー（2026-06-23 変更）**:
+  作業ブランチ → **Pull Request 作成 → CI(テスト)確認 → main へマージ**。
+  `main` への直接pushは原則しない（コードレビュー・CIを必ず通すため）。
+  ただし GitHub Actions（金曜/週末/日曜ワークフロー）が自動生成する
+  **データコミット**（latest.json / *.db / stats等）は従来どおり bot が `main` へ直接pushする。
 
 ## Colabノートブック構成
 | ファイル | 用途 |
@@ -170,6 +175,44 @@ print('done')
 
 ## 現在の作業状況（セッション引き継ぎ用）
 
+### 最終更新: 2026-06-23
+
+---
+
+### 2026-06-23 セッション：データパイプライン総点検＋修正（branch: `claude/racing-data-pipeline-review-4easwb`）
+
+土日のスクレイピング→保存→乖離学習の全フローを点検し、以下の欠落・潜在バグを修正。
+
+#### 修正（このブランチ）
+**A. 土曜予想が race_predictions に保存されない問題（最重要）**
+- 原因: `scripts/friday_predict.py` が `save_race_predictions()` を呼んでおらず、土曜の全レース予測がDBに残らない → 補正テーブル(correction_table.json)が日曜分のみで学習されていた
+- 修正: friday_predict.py に全レース予測スナップショット保存ループを追加（weekend.py の日曜側と対称化）。これで土日フルのデータで乖離学習が回る
+
+**B. ラップタイム未取得**
+- `src/scraper/jra_scraper.py`: `_extract_lap_times()` を新設。結果ページの「ラップタイム」見出しから区間タイム（200m毎）を抽出し、`first_3f`/`last_3f` を算出
+- `parse_result_soup()` の戻り値に `lap_times`(ハイフン連結) / `first_3f` / `last_3f` を追加
+- `src/utils/db.py save_history_db()`: race_history へ lap_times / first_3f / last_3f を INSERT/UPDATE（従来 first_3f は None 固定だった）
+
+**C. race_predictions に枠順(bracket)を蓄積**
+- race_predictions スキーマに `bracket INTEGER` を追加（CREATE + ALTERマイグレーション）
+- `update_prediction_results()` で結果ページの確定枠を COALESCE 充填（出馬表パースは枠未取得のため予測時は NULL）
+
+**D. race_predictions 重複行バグ（乖離学習の二重カウント）**
+- 原因: (race_id, horse_num) に一意制約が無く、INSERT OR REPLACE が実質ただのINSERT → 同一レース複数回保存で重複行
+- 修正: init_db で重複行を DELETE 後 `idx_rp_uniq` UNIQUE INDEX を作成。以後は正しく上書き
+
+**E. bets テーブル拡張列が init_db に無い潜在バグ**
+- save_bets_db が書く racecourse/distance/surface/running_style/popularity/ai_score/ev_rank を init_db のマイグレーションに追加（新規DB・CIテストでのクラッシュを解消）。tests 17件 全passに復帰
+
+#### 未対応（設計判断・外部依存が必要）
+| 項目 | 理由 |
+|------|------|
+| 直前取得ボタンの再予想保存 | `fetchFreshOdds()`(index.html) は GAS(外部) を叩きブラウザ内で再計算するのみ。中央集約には GAS 側に書き込みエンドポイント追加が必要（本リポジトリ外）。**朝予想 vs 直前予想 vs 結果 の検証ができていない＝最も価値ある直前確定オッズが学習に使えていない** |
+| body_weight/bracket/win_odds の埋まり率 | parse_result_soup は texts列の位置ヒューリスティック。実機の結果ページで埋まり率を要検証（来週末の実行ログで確認） |
+| apply_correction() デッドコード | correction.py の関数は未使用。同等ロジックは engine.py にインライン実装済み（動作はする）。整理は任意 |
+
+---
+
 ### 最終更新: 2026-06-21
 
 ---
@@ -285,9 +328,8 @@ horse_history （67,843件）
 ```
 
 ### セッション開始時の確認事項
-- PATをユーザーから取得（毎セッション必要）
-- すべての変更は **main ブランチ**に直接push
-- **ローカルgitリポジトリは使用しない**
+- コード変更は **作業ブランチ → Pull Request → CI確認 → main へマージ** の順で進める（main直push禁止）
+- 自動データコミット（ワークフローのlatest.json/*.db等）は bot が main へ直接pushする（従来どおり）
 - GitHubに**ないファイル**はユーザーに確認してから作業する
 
 ---

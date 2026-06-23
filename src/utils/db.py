@@ -111,6 +111,7 @@ def init_db(base_dir=None, db_path=None):
             racecourse TEXT,
             race_num INTEGER,
             horse_num INTEGER,
+            bracket INTEGER,
             horse_name TEXT,
             popularity INTEGER,
             tansho_odds REAL,
@@ -125,6 +126,38 @@ def init_db(base_dir=None, db_path=None):
         CREATE INDEX IF NOT EXISTS idx_rp_horse ON race_predictions(horse_name, date);
         CREATE INDEX IF NOT EXISTS idx_rp_race  ON race_predictions(race_id);
     ''')
+    # 既存DB向けマイグレーション（重複カラムエラーは無視）
+    for sql in [
+        "ALTER TABLE race_predictions ADD COLUMN bracket INTEGER",
+        # save_bets_db が書き込む拡張列（新規DBでは CREATE TABLE に無いため追加）
+        "ALTER TABLE bets ADD COLUMN racecourse TEXT",
+        "ALTER TABLE bets ADD COLUMN distance INTEGER",
+        "ALTER TABLE bets ADD COLUMN surface TEXT",
+        "ALTER TABLE bets ADD COLUMN running_style TEXT",
+        "ALTER TABLE bets ADD COLUMN popularity INTEGER",
+        "ALTER TABLE bets ADD COLUMN ai_score REAL",
+        "ALTER TABLE bets ADD COLUMN ev_rank INTEGER",
+    ]:
+        try:
+            conn.execute(sql)
+        except sqlite3.OperationalError:
+            pass
+    # race_predictions の重複行を排除し (race_id, horse_num) に一意制約を張る。
+    # 一意制約が無いと INSERT OR REPLACE が実質ただのINSERTになり、
+    # 同一レースを複数回保存した際に重複行が溜まって乖離学習が二重カウントされる。
+    try:
+        conn.execute("""
+            DELETE FROM race_predictions
+            WHERE id NOT IN (
+                SELECT MAX(id) FROM race_predictions GROUP BY race_id, horse_num
+            )
+        """)
+        conn.execute(
+            "CREATE UNIQUE INDEX IF NOT EXISTS idx_rp_uniq "
+            "ON race_predictions(race_id, horse_num)"
+        )
+    except sqlite3.OperationalError:
+        pass
     conn.commit()
     conn.close()
 
@@ -302,11 +335,12 @@ def save_history_db(all_results, base_dir=None, db_path=None):
 
         cur = conn.execute(
             "INSERT OR IGNORE INTO race_history "
-            "(race_id,date,racecourse,distance,surface,first_3f,race_name,race_class,"
-            " track_condition,num_finishers,weather,pace_label) "
-            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+            "(race_id,date,racecourse,distance,surface,first_3f,last_3f,lap_times,"
+            " race_name,race_class,track_condition,num_finishers,weather,pace_label) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
             (race_id, date_str, r.get('racecourse', ''),
-             r.get('distance', 0), r.get('surface', ''), None,
+             r.get('distance', 0), r.get('surface', ''),
+             r.get('first_3f'), r.get('last_3f'), r.get('lap_times', ''),
              r.get('race_name', ''), r.get('race_class', ''),
              r.get('track_condition', '良'), r.get('num_finishers', 0),
              r.get('weather'), r.get('pace_label')),
@@ -320,11 +354,15 @@ def save_history_db(all_results, base_dir=None, db_path=None):
             "  track_condition= COALESCE(?, track_condition), "
             "  num_finishers  = COALESCE(?, num_finishers), "
             "  weather        = COALESCE(?, weather), "
-            "  pace_label     = COALESCE(?, pace_label) "
+            "  pace_label     = COALESCE(?, pace_label), "
+            "  first_3f       = COALESCE(?, first_3f), "
+            "  last_3f        = COALESCE(?, last_3f), "
+            "  lap_times      = COALESCE(NULLIF(?, ''), lap_times) "
             "WHERE race_id = ?",
             (r.get('race_name', ''), r.get('race_class', ''),
              r.get('track_condition'), r.get('num_finishers'),
              r.get('weather'), r.get('pace_label'),
+             r.get('first_3f'), r.get('last_3f'), r.get('lap_times', ''),
              race_id),
         )
 
@@ -550,13 +588,13 @@ def save_race_predictions(race, scored_horses, base_dir=None, db_path=None):
         _race_id = race.get('id') or race.get('race_id', '')
         conn.execute("""
             INSERT OR REPLACE INTO race_predictions
-            (date, race_id, racecourse, race_num, horse_num, horse_name,
+            (date, race_id, racecourse, race_num, horse_num, bracket, horse_name,
              popularity, tansho_odds, rl_rank, win_prob, cal_prob, fuku_prob)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             race.get('date', ''), _race_id,
             race.get('racecourse', ''), race.get('race_num', 0),
-            h.get('horse_num', h.get('num', 0)), h.get('name', ''),
+            h.get('horse_num', h.get('num', 0)), h.get('bracket'), h.get('name', ''),
             h.get('popularity', 99), h.get('win_odds') or h.get('odds'),
             h.get('rl_rank', 99), h.get('win_prob', 0),
             h.get('cal_prob', 0), h.get('fuku_pct', 0),
@@ -581,12 +619,15 @@ def update_prediction_results(all_results, base_dir=None, db_path=None):
             num   = h.get('num') or h.get('horse_num')
             if not race_id or place is None or num is None:
                 continue
+            # 枠順は結果ページが確定値なので、ここで race_predictions に充填する
+            # （出馬表パースは枠を取得しないため、予測時点では NULL のまま）。
             conn.execute("""
                 UPDATE race_predictions
                 SET actual_place    = ?,
-                    prediction_gap  = rl_rank - ?
+                    prediction_gap  = rl_rank - ?,
+                    bracket         = COALESCE(?, bracket)
                 WHERE race_id = ? AND horse_num = ?
-            """, (place, place, race_id, num))
+            """, (place, place, h.get('bracket'), race_id, num))
             updated += conn.execute('SELECT changes()').fetchone()[0]
     conn.commit()
     conn.close()
