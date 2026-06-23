@@ -5,7 +5,12 @@ JRA競馬AI予想システム。Google Colab + Google Drive で運用。
 
 ## リポジトリ
 - GitHub: `hanagenuku/keiba_ai`
-- 運用ブランチ: `main`（すべての変更はmainに直接push。Colabの強制アップデートセルもmainから取得）
+- 本番ブランチ: `main`（Colabの強制アップデートセル・GAS・各ワークフローは `main` から取得）
+- **コード変更の運用フロー（2026-06-23 変更）**:
+  作業ブランチ → **Pull Request 作成 → CI(テスト)確認 → main へマージ**。
+  `main` への直接pushは原則しない（コードレビュー・CIを必ず通すため）。
+  ただし GitHub Actions（金曜/週末/日曜ワークフロー）が自動生成する
+  **データコミット**（latest.json / *.db / stats等）は従来どおり bot が `main` へ直接pushする。
 
 ## Colabノートブック構成
 | ファイル | 用途 |
@@ -323,9 +328,8 @@ horse_history （67,843件）
 ```
 
 ### セッション開始時の確認事項
-- PATをユーザーから取得（毎セッション必要）
-- すべての変更は **main ブランチ**に直接push
-- **ローカルgitリポジトリは使用しない**
+- コード変更は **作業ブランチ → Pull Request → CI確認 → main へマージ** の順で進める（main直push禁止）
+- 自動データコミット（ワークフローのlatest.json/*.db等）は bot が main へ直接pushする（従来どおり）
 - GitHubに**ないファイル**はユーザーに確認してから作業する
 
 ---
