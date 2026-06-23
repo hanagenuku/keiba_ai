@@ -207,9 +207,36 @@ print('done')
 #### 未対応（設計判断・外部依存が必要）
 | 項目 | 理由 |
 |------|------|
-| 直前取得ボタンの再予想保存 | `fetchFreshOdds()`(index.html) は GAS(外部) を叩きブラウザ内で再計算するのみ。中央集約には GAS 側に書き込みエンドポイント追加が必要（本リポジトリ外）。**朝予想 vs 直前予想 vs 結果 の検証ができていない＝最も価値ある直前確定オッズが学習に使えていない** |
 | body_weight/bracket/win_odds の埋まり率 | parse_result_soup は texts列の位置ヒューリスティック。実機の結果ページで埋まり率を要検証（来週末の実行ログで確認） |
 | apply_correction() デッドコード | correction.py の関数は未使用。同等ロジックは engine.py にインライン実装済み（動作はする）。整理は任意 |
+
+---
+
+### 2026-06-23 セッション②：直前確定オッズの中央集約（branch: `claude/chokuzen-odds-logging` / PR）
+
+「朝予想 vs 直前確定オッズ vs 結果」を後から突き合わせるため、直前オッズを中央DBに蓄積する仕組みを実装。
+
+#### 仕組み
+1. **GAS**: スマホの「直前オッズ取得」ボタン → `getOddsHandler` が `logOdds()` を呼び、
+   Googleスプレッドシート(`keiba_odds_log` / 初回自動作成)へ `captured_at, race_id, horse_num, tansho, fukusho` を追記。
+   新エンドポイント `getOddsLog`（`?action=getOddsLog&since=...`）でJSON取得。
+   - 追加/変更ファイル: `gas/oddsLog.gs`(新規) / `gas/getOdds.gs`(logOdds呼び出し追加)
+2. **DB**: `keiba.db` に `odds_snapshots` テーブル新設（`UNIQUE(race_id, horse_num, captured_at)` で重複取込防止）。
+   `save_odds_snapshots()` / `get_latest_odds_snapshot_time()` を追加（`src/utils/db.py`）。
+3. **取込**: `scripts/ingest_odds_log.py` が `GAS_URL?action=getOddsLog&since=<最新>` を叩き odds_snapshots へ保存。
+   `weekend.yml` / `sunday-results.yml` にステップ追加（`env: GAS_URL=${{ secrets.GAS_URL }}`）。
+   GAS_URL未設定なら安全にスキップ（no-op）。
+
+#### ⚠️ 有効化に必要な手動作業（ユーザー）
+- [ ] `gas/oddsLog.gs` をGASプロジェクトに追加し、`doGet` に `if (action === 'getOddsLog') return getOddsLogHandler(e);` を追記
+- [ ] `gas/getOdds.gs` の更新分（logOdds呼び出し）も反映
+- [ ] GASを再デプロイ（新バージョン）。初回のスプレッドシート自動作成時に権限承認が必要
+- [ ] GitHubリポジトリの Secrets に `GAS_URL`（GAS WebアプリURL）を登録
+- [ ] 来週末、直前ボタンを数回押す → 日曜結果ワークフローで odds_snapshots に入ることを確認
+
+#### 後続タスク（データが溜まってから）
+- 朝(race_predictions) × 直前(odds_snapshots) × 結果(history) を突き合わせる分析・補正
+  （直前オッズでの value_gap 再計算 → 「朝は妙味でも直前で消える/出る」傾向の学習）
 
 ---
 

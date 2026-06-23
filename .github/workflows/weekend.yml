@@ -45,6 +45,11 @@ jobs:
       - name: Run weekend script
         run: python scripts/weekend.py --mode ${{ inputs.mode }}
 
+      - name: Ingest pre-race odds log
+        run: python scripts/ingest_odds_log.py
+        env:
+          GAS_URL: ${{ secrets.GAS_URL }}
+
       - name: Generate stats
         run: python scripts/generate_stats.py
 

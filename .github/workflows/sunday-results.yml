@@ -36,6 +36,11 @@ jobs:
       - name: Get Sunday results
         run: python scripts/sunday_results.py
 
+      - name: Ingest pre-race odds log
+        run: python scripts/ingest_odds_log.py
+        env:
+          GAS_URL: ${{ secrets.GAS_URL }}
+
       - name: Generate stats
         run: python scripts/generate_stats.py
 
