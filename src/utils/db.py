@@ -125,6 +125,18 @@ def init_db(base_dir=None, db_path=None):
         );
         CREATE INDEX IF NOT EXISTS idx_rp_horse ON race_predictions(horse_name, date);
         CREATE INDEX IF NOT EXISTS idx_rp_race  ON race_predictions(race_id);
+        CREATE TABLE IF NOT EXISTS odds_snapshots (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            race_id     TEXT,
+            horse_num   INTEGER,
+            tansho      REAL,
+            fukusho     REAL,
+            captured_at TEXT,
+            source      TEXT DEFAULT 'chokuzen',
+            created_at  TEXT DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(race_id, horse_num, captured_at)
+        );
+        CREATE INDEX IF NOT EXISTS idx_os_race ON odds_snapshots(race_id);
     ''')
     # 既存DB向けマイグレーション（重複カラムエラーは無視）
     for sql in [
@@ -632,3 +644,44 @@ def update_prediction_results(all_results, base_dir=None, db_path=None):
     conn.commit()
     conn.close()
     return updated
+
+
+def get_latest_odds_snapshot_time(db_path):
+    """odds_snapshots の最新 captured_at を返す（GAS取込の since に使う）。"""
+    conn = _connect(db_path)
+    try:
+        row = conn.execute('SELECT MAX(captured_at) FROM odds_snapshots').fetchone()
+    except sqlite3.OperationalError:
+        row = None
+    conn.close()
+    return row[0] if row and row[0] else ''
+
+
+def save_odds_snapshots(rows, base_dir=None, db_path=None):
+    """直前オッズログ（GASの getOddsLog が返す行）を odds_snapshots に保存する。
+
+    rows: [{race_id, horse_num, tansho, fukusho, captured_at}, ...]
+    (race_id, horse_num, captured_at) の一意制約で重複取込は無視する。
+
+    Returns: 新規保存した行数
+    """
+    path = db_path or get_db_path(base_dir)
+    conn = _connect(path)
+    n = 0
+    for r in rows:
+        race_id = str(r.get('race_id', ''))
+        captured_at = str(r.get('captured_at', ''))
+        num = r.get('horse_num')
+        if not race_id or not captured_at or num is None:
+            continue
+        cur = conn.execute(
+            "INSERT OR IGNORE INTO odds_snapshots "
+            "(race_id, horse_num, tansho, fukusho, captured_at, source) "
+            "VALUES (?, ?, ?, ?, ?, ?)",
+            (race_id, int(num), r.get('tansho'), r.get('fukusho'),
+             captured_at, r.get('source', 'chokuzen')),
+        )
+        n += cur.rowcount
+    conn.commit()
+    conn.close()
+    return n

@@ -30,6 +30,8 @@ function getOddsHandler(e) {
 
     var odds = fetchOdds(cn);
     var timeStr = Utilities.formatDate(new Date(), 'Asia/Tokyo', 'HH:mm');
+    // 直前オッズを学習用にスプレッドシートへ記録（失敗してもレスポンスは返す）
+    try { logOdds(raceId, odds); } catch (logErr) { /* ログ失敗は無視 */ }
     return jsonResponse({ status: 'ok', race_id: raceId, updated_at: timeStr, odds: odds });
   } catch (err) {
     return jsonResponse({ status: 'error', message: err.toString() });

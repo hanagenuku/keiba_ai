@@ -5,7 +5,8 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from src.utils.db import init_db, save_bets_db, get_db_path
+from src.utils.db import (init_db, save_bets_db, get_db_path,
+                          save_odds_snapshots, get_latest_odds_snapshot_time)
 
 
 def test_init_db_creates_tables():
@@ -21,6 +22,28 @@ def test_init_db_creates_tables():
         assert 'bets' in tables
         assert 'results' in tables
         assert 'bet_simulation' in tables
+        assert 'odds_snapshots' in tables
+
+
+def test_save_odds_snapshots_dedup():
+    with tempfile.TemporaryDirectory() as tmp:
+        os.makedirs(os.path.join(tmp, 'data'))
+        init_db(base_dir=tmp)
+        assert get_latest_odds_snapshot_time(get_db_path(tmp)) == ''
+        rows = [
+            {'race_id': '20260620_05_11', 'horse_num': 3, 'tansho': 2.8,
+             'fukusho': 1.5, 'captured_at': '2026-06-20 14:30:00'},
+            {'race_id': '20260620_05_11', 'horse_num': 5, 'tansho': 6.0,
+             'fukusho': 2.1, 'captured_at': '2026-06-20 14:30:00'},
+        ]
+        assert save_odds_snapshots(rows, base_dir=tmp) == 2
+        # 同一 (race_id, horse_num, captured_at) は重複取込されない
+        assert save_odds_snapshots(rows, base_dir=tmp) == 0
+        # 別時刻のスナップショットは別行として追加される
+        rows2 = [{'race_id': '20260620_05_11', 'horse_num': 3, 'tansho': 2.5,
+                  'fukusho': 1.4, 'captured_at': '2026-06-20 14:45:00'}]
+        assert save_odds_snapshots(rows2, base_dir=tmp) == 1
+        assert get_latest_odds_snapshot_time(get_db_path(tmp)) == '2026-06-20 14:45:00'
 
 
 def test_save_bets_db_fukusho():
