@@ -12,10 +12,11 @@ from scripts._session import create_session
 from src.features.engine import init_engine
 from src.utils.db import (init_db, get_db_path, get_history_db_path,
                            backup_db, checkpoint_db,
-                           save_race_db, save_bets_db)
+                           save_race_db, save_bets_db, save_race_predictions)
 from src.betting.make_bets import init_betting, make_bets, log_bet_simulation
 from src.betting.ev_filter import select_quality_races
 from src.betting.app_json import to_app_json
+from src.features.engine import calc_all
 from src.scraper.jra_scraper import fetch_races_on_date
 
 JST = timezone(timedelta(hours=9))
@@ -79,6 +80,16 @@ def main():
     print(f'   コース内訳: {surf_counts}')
     if len(surf_counts) == 1 and 'ダート' in surf_counts and len(races) > 6:
         print('⚠ 警告: 全レースがダート判定されています。surfaceパーサーにバグの可能性あり')
+
+    # 全レース・全馬のRL予測を先にまとめて保存（結果との乖離学習用）。
+    # 厳選レースだけでなく全レースを残すことで、土曜分も race_predictions に蓄積され、
+    # 補正テーブル（correction_table.json）が土日フルのデータで更新される。
+    print('💾 全レース予測を race_predictions に保存中...')
+    for race in races:
+        scored_all = calc_all(race, avg_bias)
+        if scored_all:
+            save_race_predictions(race, scored_all, ROOT)
+    print(f'   {len(races)}レース完了')
 
     selected = select_quality_races(races, avg_bias)
     print(f'⭐ 厳選: {len(selected)}レース')

@@ -610,6 +610,35 @@ def _extract_weather_pace(header_text):
     return weather, pace
 
 
+def _extract_lap_times(soup):
+    """結果ページからラップタイム（ハロンごとの区間タイム）を抽出する。
+
+    JRA結果ページは「ラップタイム」見出しに続けて
+    "12.5 - 10.9 - 11.4 - 11.8 - ..." の形式で各200m区間タイムを掲載する。
+
+    Returns:
+        (lap_times: list[float], first_3f: float|None, last_3f: float|None)
+        抽出できない場合は ([], None, None)。
+    """
+    text = unicodedata.normalize('NFKC', soup.get_text(' ', strip=True))
+    idx = text.find('ラップタイム')
+    if idx < 0:
+        return [], None, None
+    # 見出し以降・「ペース」または200文字までを対象に区間タイムを収集
+    segment = text[idx:idx + 300]
+    end = segment.find('ペース')
+    if end > 0:
+        segment = segment[:end]
+    laps = [float(m) for m in re.findall(r'(\d{1,2}\.\d)', segment)]
+    # ラップは概ね 9.0〜15.0 秒/200m の範囲。範囲外（誤検出）は除外
+    laps = [v for v in laps if 8.0 <= v <= 16.0]
+    if len(laps) < 3:
+        return [], None, None
+    first_3f = round(sum(laps[:3]), 1)
+    last_3f = round(sum(laps[-3:]), 1)
+    return laps, first_3f, last_3f
+
+
 def parse_result_soup(soup, racecourse, race_num, date, place_code):
     try:
         tables = soup.find_all('table')
@@ -650,6 +679,11 @@ def parse_result_soup(soup, racecourse, race_num, date, place_code):
         weather, pace = _extract_weather_pace(header)
         info['weather'] = weather
         info['pace_label'] = pace
+        # ラップタイム（区間タイム）と前半/後半3F
+        laps, first_3f, last_3f = _extract_lap_times(soup)
+        info['lap_times'] = '-'.join(f'{v:.1f}' for v in laps) if laps else ''
+        info['first_3f'] = first_3f
+        info['last_3f'] = last_3f
         finishers = []
         for row in tables[0].find_all('tr'):
             cells = row.find_all('td')
