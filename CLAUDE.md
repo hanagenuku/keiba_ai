@@ -228,10 +228,10 @@ print('done')
    GAS_URL未設定なら安全にスキップ（no-op）。
 
 #### ⚠️ 有効化に必要な手動作業（ユーザー）
-- [ ] `gas/oddsLog.gs` をGASプロジェクトに追加し、`doGet` に `if (action === 'getOddsLog') return getOddsLogHandler(e);` を追記
-- [ ] `gas/getOdds.gs` の更新分（logOdds呼び出し）も反映
-- [ ] GASを再デプロイ（新バージョン）。初回のスプレッドシート自動作成時に権限承認が必要
-- [ ] GitHubリポジトリの Secrets に `GAS_URL`（GAS WebアプリURL）を登録
+- [x] `gas/oddsLog.gs` をGASプロジェクトに追加し、`doGet` に `if (action === 'getOddsLog') return getOddsLogHandler(e);` を追記（2026-06-23 完了）
+- [x] `gas/getOdds.gs` の更新分（getOddsLoggedHandler ラッパー経由）も反映（2026-06-23 完了）
+- [x] GASを再デプロイ（新バージョン）＋ SpreadsheetApp 権限承認（2026-06-23 完了）
+- [x] GitHubリポジトリの Secrets に `GAS_URL`（GAS WebアプリURL）を登録（2026-06-23 完了）
 - [ ] 来週末、直前ボタンを数回押す → 日曜結果ワークフローで odds_snapshots に入ることを確認
 
 #### 後続タスク（データが溜まってから）
@@ -240,7 +240,7 @@ print('done')
 
 ---
 
-### 最終更新: 2026-06-21
+### 最終更新: 2026-06-23
 
 ---
 
