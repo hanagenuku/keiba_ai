@@ -1,28 +1,41 @@
 /**
- * 直前オッズのロギング（Google スプレッドシート）
+ * 直前オッズのロギング + 取得エンドポイント（Google スプレッドシート）
  *
- * スマホアプリの「直前オッズ取得」ボタンが押されるたびに getOddsHandler から
- * logOdds() が呼ばれ、race_id × 馬番 × 単勝 × 複勝 × 取得時刻 を1行ずつ追記する。
+ * スマホアプリの「直前オッズ取得」ボタンが押されるたびに、その時点の単勝・複勝
+ * オッズを Google スプレッドシート keiba_odds_log（初回自動作成）へ追記する。
  * これにより「朝予想 vs 直前確定オッズ vs 結果」の検証データが中央に蓄積される。
- *
  * 取り込みは GitHub Actions（weekend / sunday-results）の中で
  * scripts/ingest_odds_log.py が getOddsLog エンドポイントを叩いて行う。
  *
- * 【導入方法】
- * 1. このファイルを GAS プロジェクトに追加（コピペ）する。
- * 2. doGet() に分岐を1行追加する:
- *      if (action === 'getOddsLog') return getOddsLogHandler(e);
- * 3. スプレッドシートは初回の getOdds 呼び出し時に自動作成され、
- *    その ID が Script Properties (ODDS_LOG_SHEET_ID) に自動保存される。
- *    手動でのシート作成は不要。
+ * 【導入方法】doGet() の分岐を次のように変更/追加する（既存 getOddsHandler は無改造）:
+ *   if (action === 'getOdds')    return getOddsLoggedHandler(e);  // ← getOddsHandler から変更
+ *   if (action === 'getOddsLog') return getOddsLogHandler(e);     // ← 新規追加
+ *
+ * getOddsLoggedHandler は既存の getOddsHandler をそのまま呼び、返ってきたオッズを
+ * ログに残してから同じレスポンスを返すだけ。getOddsHandler 本体には触れないので安全。
  */
 
 var ODDS_LOG_SHEET_NAME = 'odds_log';
 var ODDS_LOG_PROP_KEY = 'ODDS_LOG_SHEET_ID';
 
 /**
+ * 既存 getOddsHandler をラップし、返ってきたオッズをスプレッドシートへ記録する。
+ * doGet の getOdds 分岐をこの関数に向けるだけでロギングが有効になる。
+ */
+function getOddsLoggedHandler(e) {
+  var resp = getOddsHandler(e);
+  try {
+    var data = JSON.parse(resp.getContent());
+    if (data && data.status === 'ok' && data.odds) {
+      logOdds(data.race_id, data.odds);
+    }
+  } catch (err) { /* ログ失敗はレスポンスに影響させない */ }
+  return resp;
+}
+
+/**
  * ロギング用シートを取得する。無ければ新規スプレッドシートを自動作成し、
- * その ID を Script Properties に保存する。
+ * その ID を Script Properties に保存する（手動でのシート作成は不要）。
  */
 function getOddsLogSheet_() {
   var props = PropertiesService.getScriptProperties();
