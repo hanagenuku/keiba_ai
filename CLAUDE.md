@@ -176,6 +176,51 @@ print('done')
 
 ## 現在の作業状況（セッション引き継ぎ用）
 
+### 最終更新: 2026-06-25
+
+---
+
+### 2026-06-25 セッション：コース適性・cal_prob修正・不利メモシステム（PRベース運用）
+
+このセッションは全て **作業ブランチ → PR → CI green → squash merge** で main に反映済み。
+
+#### ① コース適性特徴量6種（PR #10 マージ済み）
+- `data/course_profiles.json` 新規（全10競馬場×芝/ダート=20コースの直線長・回り・坂を定義）
+- `engine.py`: `load_course_profiles` / `get_course_profile` / `calc_course_aptitude_features` 追加
+- `calc_features_for_xgb` に6特徴量統合（f_same_course_rate / f_same_turn_rate / f_straight_match / f_uphill_match / f_agari_at_similar / f_course_coverage）
+- `init_engine` に `_BASE_DIR` 保持。course_profiles.json 不在/未定義コースはデフォルト0でフォールバック
+- ※ AUC変化の確認は次回XGB再学習時（build_training_data は **xf 展開で自動取込・手動編集不要）
+
+#### ② cal_prob保存バグ修正（PR #11 マージ済み・予想精度に直結）
+- 原因: `calc_all` がキャリブレ済み複勝確率 cal_prob を計算後に出力辞書へ保持せず捨てていた
+  → `race_predictions.cal_prob/fuku_prob` が常に0で保存 → correction.py の乖離学習が空回り
+- 修正: `engine.py` out.append に `cal_prob` を追加（win_probはsoftmaxで上書きされるため別キー保持）
+- 修正: `db.py save_race_predictions` の fuku_prob を非存在の fuku_pct ではなく Harville top3_prob(0-1) から保存
+- これで「予測複勝確率 vs 実着順」の実値が蓄積され、RL順位×人気帯の系統的バイアスを週次補正できる
+
+#### ③ 不利メモ入力システム（PR #12 マージ済み・スキーマ駆動）
+- 目的: レース映像を見て出遅れ・不利・展開ロスを手動入力し特徴量化（JRDBのIDM記憶要素を簡易再現）
+- `data/note_schema.json`（初期6項目）/ `race_notes` テーブル（JSON格納・UNIQUE(date,race_id,horse_num)で上書き）
+- `db.py`: save_race_notes / get_latest_note_time / calc_handicap_from_notes / recalc_all_handicaps
+- `engine.py`: calc_unlucky_features（直近補正値合計・前走・最大・カバレッジ。学習反映はデータ蓄積後）
+- `gas/raceNotes.gs`（新規）/ `scripts/ingest_notes_log.py`（新規）/ index.html に📝動的入力UI
+- weekend.yml / sunday-results.yml に取込ステップ追加（GAS_URL流用・未設定ならスキップ）
+- **GAS設定 2026-06-25 完了**: raceNotes.gs 追加 + doGet に saveNote/getNotesLog/getNotes 追記 + 再デプロイ。
+  権限はオッズ設定で承認済みのため流用（同一プロジェクト・同一スコープ）。
+  `?action=getNotesLog` が `{"status":"ok","count":0,"rows":[]}` を返すことを確認済み。
+
+#### 重要：週次予想は GitHub Actions で動く（Colab不要）
+- スマホアプリの予想ボタン → GAS → GitHub Actions（friday-predict.yml / weekend.yml）が main をcheckoutして実行
+- **コード変更は次回ボタン押下で自動反映**。data/*.json（course_profiles/note_schema）も**リポジトリに含まれるためActionsに自動で乗る** → Drive配置・強制アップデートセルは不要
+- Drive配置/強制アップデートセルが要るのは **Colabでのチューニング・再学習時のみ**
+- friday-predict 試験起動（2026-06-25木）: パイプライン正常・新コード読込OK。0レースは木曜=非開催日のため（想定通り）
+
+#### 残: 不利メモの運用
+- [ ] 週末、気になったレースの映像を見て📝で不利入力（週10〜20頭）→ race_notes に蓄積
+- [ ] 学習反映はデータ2〜3ヶ月蓄積後
+
+---
+
 ### 最終更新: 2026-06-23
 
 ---
