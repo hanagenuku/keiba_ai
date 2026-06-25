@@ -137,6 +137,23 @@ def init_db(base_dir=None, db_path=None):
             UNIQUE(race_id, horse_num, captured_at)
         );
         CREATE INDEX IF NOT EXISTS idx_os_race ON odds_snapshots(race_id);
+        CREATE TABLE IF NOT EXISTS race_notes (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            date            TEXT NOT NULL,
+            race_id         TEXT,
+            racecourse      TEXT,
+            race_num        INTEGER,
+            horse_num       INTEGER NOT NULL,
+            horse_name      TEXT,
+            notes_data      TEXT NOT NULL,
+            total_handicap  REAL,
+            schema_version  INTEGER,
+            free_memo       TEXT,
+            created_at      TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at      TEXT,
+            UNIQUE(date, race_id, horse_num)
+        );
+        CREATE INDEX IF NOT EXISTS idx_notes_horse ON race_notes(horse_name, date);
     ''')
     # 既存DB向けマイグレーション（重複カラムエラーは無視）
     for sql in [
@@ -685,6 +702,134 @@ def save_odds_snapshots(rows, base_dir=None, db_path=None):
              captured_at, r.get('source', 'chokuzen')),
         )
         n += cur.rowcount
+    conn.commit()
+    conn.close()
+    return n
+
+
+# ── 不利メモ（race_notes）: 手動入力の不利・出遅れ・展開ロスを蓄積する ──────────
+
+def get_note_schema_path(base_dir):
+    return os.path.join(base_dir, 'data', 'note_schema.json')
+
+
+def load_note_schema(base_dir=None, schema_path=None):
+    """note_schema.json を読み込む。無ければ空スキーマを返す（安全に no-op）。"""
+    path = schema_path or (get_note_schema_path(base_dir) if base_dir else None)
+    if not path or not os.path.exists(path):
+        return {'version': 0, 'categories': [], 'free_memo': True}
+    with open(path, encoding='utf-8') as f:
+        return json.load(f)
+
+
+def calc_handicap_from_notes(notes, schema):
+    """notes_data(dict) とスキーマから補正値合計を計算する。
+
+    feature=true の項目のみを value × weight で合算する。スキーマに無い
+    キーや欠損キーは 0 扱い。スキーマが変わっても保存済み notes から再計算できる。
+    """
+    if not isinstance(notes, dict):
+        return 0.0
+    total = 0.0
+    for cat in schema.get('categories', []):
+        if not cat.get('feature'):
+            continue
+        try:
+            val = float(notes.get(cat['id'], 0) or 0)
+        except (TypeError, ValueError):
+            val = 0.0
+        total += val * float(cat.get('weight', 1.0))
+    return round(total, 2)
+
+
+def save_race_notes(rows, base_dir=None, db_path=None, schema=None):
+    """不利メモログ（GASの getNotesLog が返す行）を race_notes に保存する。
+
+    rows: [{date, race_id, racecourse, race_num, horse_num, horse_name,
+            notes_data(JSON文字列 or dict), free_memo, captured_at}, ...]
+    (date, race_id, horse_num) の一意制約で同じ馬は最新入力に上書きする。
+    total_handicap はスキーマから自動計算してキャッシュする。
+
+    Returns: 保存（新規 or 上書き）した行数
+    """
+    path = db_path or get_db_path(base_dir)
+    if schema is None:
+        schema = load_note_schema(base_dir) if base_dir else {'categories': []}
+    schema_version = schema.get('version', 0)
+    conn = _connect(path)
+    n = 0
+    for r in rows:
+        date = str(r.get('date', '')).strip()
+        num = r.get('horse_num')
+        if not date or num is None or str(num) == '':
+            continue
+        raw = r.get('notes_data', {})
+        if isinstance(raw, str):
+            try:
+                notes = json.loads(raw) if raw.strip() else {}
+            except (ValueError, TypeError):
+                notes = {}
+        else:
+            notes = raw or {}
+        total = calc_handicap_from_notes(notes, schema)
+        captured_at = str(r.get('captured_at', '')) or None
+        conn.execute(
+            "INSERT INTO race_notes "
+            "(date, race_id, racecourse, race_num, horse_num, horse_name, "
+            " notes_data, total_handicap, schema_version, free_memo, updated_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+            "ON CONFLICT(date, race_id, horse_num) DO UPDATE SET "
+            " racecourse=excluded.racecourse, race_num=excluded.race_num, "
+            " horse_name=excluded.horse_name, notes_data=excluded.notes_data, "
+            " total_handicap=excluded.total_handicap, "
+            " schema_version=excluded.schema_version, "
+            " free_memo=excluded.free_memo, updated_at=excluded.updated_at",
+            (date, str(r.get('race_id', '')), r.get('racecourse', ''),
+             r.get('race_num'), int(num), r.get('horse_name', ''),
+             json.dumps(notes, ensure_ascii=False), total, schema_version,
+             r.get('free_memo', ''), captured_at),
+        )
+        n += 1
+    conn.commit()
+    conn.close()
+    return n
+
+
+def get_latest_note_time(db_path):
+    """race_notes の最新 updated_at を返す（増分取込の since に使う）。無ければ ''。"""
+    conn = _connect(db_path)
+    try:
+        row = conn.execute(
+            "SELECT MAX(updated_at) FROM race_notes"
+        ).fetchone()
+    except sqlite3.OperationalError:
+        row = None
+    conn.close()
+    return row[0] if row and row[0] else ''
+
+
+def recalc_all_handicaps(base_dir=None, db_path=None, schema_path=None):
+    """note_schema.json 変更後、保存済み race_notes の total_handicap を再計算する。
+
+    保存済みの notes_data(JSON) から再計算するので、weight や項目が変わっても
+    過去データを壊さず追従できる。Returns: 更新した行数。
+    """
+    path = db_path or get_db_path(base_dir)
+    schema = load_note_schema(base_dir, schema_path)
+    conn = _connect(path)
+    rows = conn.execute("SELECT id, notes_data FROM race_notes").fetchall()
+    n = 0
+    for row_id, notes_json in rows:
+        try:
+            notes = json.loads(notes_json) if notes_json else {}
+        except (ValueError, TypeError):
+            notes = {}
+        total = calc_handicap_from_notes(notes, schema)
+        conn.execute(
+            "UPDATE race_notes SET total_handicap=?, schema_version=? WHERE id=?",
+            (total, schema.get('version', 0), row_id),
+        )
+        n += 1
     conn.commit()
     conn.close()
     return n

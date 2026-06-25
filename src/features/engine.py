@@ -1061,6 +1061,51 @@ def f_trainer(h):
     return min(10, max(0, h.get('trainer_rate', 0.12) / 0.20 * 10))
 
 
+def calc_unlucky_features(horse_name, race_date, db_path=None):
+    """手動入力した不利メモ（race_notes）を特徴量化する。
+
+    過去走の total_handicap（不利・出遅れ・展開ロスの補正値合計）を集計する。
+    補正値はスキーマ駆動で保存時にキャッシュ済みなので、ここでは集計するだけ。
+    データが無い馬・未入力の馬はすべて 0 を返すため、メモが空でも安全に動作する。
+
+    Returns
+    -------
+    dict:
+        f_unlucky_recent : 直近3走の補正値合計の平均
+        f_unlucky_last   : 前走の補正値
+        f_unlucky_max    : 過去5走で最大の補正値
+        f_note_coverage  : メモが入力されている走数（信頼度の目安）
+    """
+    default = {'f_unlucky_recent': 0.0, 'f_unlucky_last': 0.0,
+               'f_unlucky_max': 0.0, 'f_note_coverage': 0}
+    path = db_path or _KEIBA_DB_PATH
+    if not horse_name or not path or not os.path.exists(path):
+        return default
+    import sqlite3 as _sq
+    try:
+        conn = _sq.connect(path)
+        rows = conn.execute(
+            "SELECT total_handicap FROM race_notes "
+            "WHERE horse_name = ? AND date < ? "
+            "ORDER BY date DESC LIMIT 5",
+            (horse_name, race_date),
+        ).fetchall()
+        conn.close()
+    except _sq.OperationalError:
+        return default
+
+    handicaps = [r[0] for r in rows if r[0] is not None]
+    if not handicaps:
+        return default
+    recent3 = handicaps[:3]
+    return {
+        'f_unlucky_recent': round(sum(recent3) / len(recent3), 2),
+        'f_unlucky_last': handicaps[0],
+        'f_unlucky_max': max(handicaps),
+        'f_note_coverage': len(handicaps),
+    }
+
+
 def f_weight(h):
     return max(0, min(10, (58.0 - h.get('weight_load', 56.0)) * 2))
 

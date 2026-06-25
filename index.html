@@ -128,6 +128,26 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
 .odds-btn:active{background:#1a252f}
 .odds-btn:disabled{background:#95a5a6}
 .odds-time{font-size:10px;color:#888;margin-left:8px}
+.note-btn{background:#8e44ad;color:#fff;border:none;border-radius:6px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;margin-left:8px}
+.note-btn:active{background:#6c3483}
+.note-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center;z-index:1000}
+.note-modal{background:#fff;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;border-radius:14px 14px 0 0;padding:16px}
+.note-modal h3{margin:0 0 10px;font-size:15px}
+.note-sel{width:100%;padding:9px;font-size:14px;border:1px solid #ccc;border-radius:8px;margin-bottom:12px}
+.note-row{margin-bottom:12px}
+.note-row > label{display:block;font-size:12px;font-weight:700;color:#555;margin-bottom:5px}
+.note-options{display:flex;gap:6px;flex-wrap:wrap}
+.note-options .opt{flex:1;min-width:56px}
+.note-options .opt input{display:none}
+.note-options .opt span{display:block;text-align:center;padding:8px 4px;font-size:13px;border:1px solid #ccc;border-radius:8px;cursor:pointer;background:#fafafa}
+.note-options .opt input:checked + span{background:#8e44ad;color:#fff;border-color:#8e44ad;font-weight:700}
+.note-memo{width:100%;min-height:48px;padding:8px;font-size:13px;border:1px solid #ccc;border-radius:8px;box-sizing:border-box}
+.note-preview{font-size:13px;font-weight:700;color:#8e44ad;margin:10px 0;text-align:right}
+.note-actions{display:flex;gap:8px;margin-top:6px}
+.note-actions button{flex:1;padding:11px;font-size:14px;font-weight:700;border:none;border-radius:8px;cursor:pointer}
+.note-save{background:#8e44ad;color:#fff}
+.note-save:disabled{background:#b09cc4}
+.note-cancel{background:#eee;color:#333}
 .action-bar{display:flex;gap:6px;padding:8px 12px;overflow-x:auto;-webkit-overflow-scrolling:touch}
 .action-btn{background:#1a5c3a;color:#fff;border:none;border-radius:6px;padding:8px 12px;font-size:11px;font-weight:700;white-space:nowrap;cursor:pointer;flex-shrink:0}
 .action-btn:active{background:#0d3d25}
@@ -783,6 +803,7 @@ function render() {
       if (race.race_id) {
         html += '<div style="padding:6px 14px;text-align:center">';
         html += '<button class="odds-btn" onclick="fetchFreshOdds(\''+k+'\', this)">🔄 直前オッズ取得</button>';
+        html += '<button class="note-btn" onclick="openNoteEditor(\''+k+'\')">📝 不利メモ</button>';
         html += '<span class="odds-time" id="odds-time-'+k+'">'+(race._update_time ? ('更新: '+race._update_time) : '')+'</span>';
         html += '</div>';
       }
@@ -830,6 +851,154 @@ function render() {
     html += '</div>';
   }
   document.getElementById('race-list').innerHTML = html;
+}
+
+// ── 不利メモ入力（race_notes / スキーマ駆動） ─────────────────────────────
+const NOTE_SCHEMA_URL = 'https://hanagenuku.github.io/keiba_ai/data/note_schema.json';
+let _noteSchema = null;
+
+// race_id（20260622... 先頭YYYYMMDD）から YYYY-MM-DD を作る
+function raceDateFromId(raceId) {
+  const m = (raceId || '').match(/^(\d{4})(\d{2})(\d{2})/);
+  return m ? (m[1] + '-' + m[2] + '-' + m[3]) : '';
+}
+
+async function fetchNoteSchema() {
+  if (_noteSchema) return _noteSchema;
+  const res = await fetch(NOTE_SCHEMA_URL + '?t=' + Date.now(), {cache:'no-store'});
+  if (!res.ok) throw new Error('note_schema.json が取得できません');
+  _noteSchema = await res.json();
+  return _noteSchema;
+}
+
+async function openNoteEditor(raceKey) {
+  const race = findRace(raceKey);
+  if (!race || !race.race_id) { alert('レースIDが見つかりません'); return; }
+  let schema;
+  try {
+    schema = await fetchNoteSchema();
+  } catch (err) {
+    alert('スキーマ取得エラー: ' + err.message);
+    return;
+  }
+  const horses = race.horses || [];
+  const date = raceDateFromId(race.race_id);
+
+  let opts = horses.map(h => '<option value="'+h.n+'">#'+h.n+' '+h.name+'</option>').join('');
+  let html = '<div class="note-overlay" id="note-overlay" onclick="if(event.target===this)closeNoteEditor()">';
+  html += '<div class="note-modal">';
+  html += '<h3>📝 不利メモ（'+date+' '+(race.name||'')+'）</h3>';
+  html += '<select class="note-sel" id="note-horse" onchange="onNoteHorseChange()">'+opts+'</select>';
+  html += '<div id="note-form"></div>';
+  html += '</div></div>';
+
+  const wrap = document.createElement('div');
+  wrap.innerHTML = html;
+  document.body.appendChild(wrap.firstChild);
+
+  // モーダルにレース情報を保持
+  const ov = document.getElementById('note-overlay');
+  ov._race = race; ov._date = date; ov._schema = schema;
+  onNoteHorseChange();
+}
+
+function closeNoteEditor() {
+  const ov = document.getElementById('note-overlay');
+  if (ov) ov.remove();
+}
+
+async function onNoteHorseChange() {
+  const ov = document.getElementById('note-overlay');
+  if (!ov) return;
+  const schema = ov._schema, race = ov._race, date = ov._date;
+  const horseNum = parseInt(document.getElementById('note-horse').value, 10);
+  const horse = (race.horses||[]).find(h => h.n === horseNum) || {};
+
+  // 既存メモを取得（失敗しても空で続行）
+  let existing = null;
+  try {
+    const url = GAS_URL + '?action=getNotes&date=' + encodeURIComponent(date)
+              + '&race_id=' + encodeURIComponent(race.race_id)
+              + '&horse_num=' + horseNum;
+    const res = await fetch(url, {redirect:'follow'});
+    const data = await res.json();
+    if (data.status === 'ok') existing = data.note;
+  } catch (e) { /* 既存取得失敗は無視 */ }
+
+  const ex = existing && existing.notes_data ? existing.notes_data : {};
+  let html = '';
+  for (const cat of schema.categories) {
+    html += '<div class="note-row"><label>'+cat.label+'</label><div class="note-options">';
+    for (const opt of cat.options) {
+      const checked = (ex[cat.id] === opt.value) ? 'checked' : '';
+      html += '<label class="opt"><input type="radio" name="nt_'+cat.id+'" value="'+opt.value+'" '+checked
+            + ' onchange="updateNotePreview()"><span>'+opt.label+'</span></label>';
+    }
+    html += '</div></div>';
+  }
+  if (schema.free_memo) {
+    html += '<div class="note-row"><label>メモ</label><textarea class="note-memo" id="note-free">'
+          + (existing && existing.free_memo ? existing.free_memo : '') + '</textarea></div>';
+  }
+  html += '<div class="note-preview">補正値: <span id="note-hcap">0</span></div>';
+  html += '<div class="note-actions">';
+  html += '<button class="note-cancel" onclick="closeNoteEditor()">閉じる</button>';
+  html += '<button class="note-save" id="note-save-btn" onclick="saveNote(this)">保存 #'+horseNum+' '+(horse.name||'')+'</button>';
+  html += '</div>';
+  document.getElementById('note-form').innerHTML = html;
+  updateNotePreview();
+}
+
+function collectNoteValues() {
+  const ov = document.getElementById('note-overlay');
+  const schema = ov._schema;
+  const notes = {};
+  let total = 0;
+  for (const cat of schema.categories) {
+    const sel = document.querySelector('input[name="nt_'+cat.id+'"]:checked');
+    if (sel) {
+      const v = parseFloat(sel.value);
+      notes[cat.id] = v;
+      if (cat.feature) total += v * (cat.weight || 1.0);
+    }
+  }
+  return { notes, total: Math.round(total * 100) / 100 };
+}
+
+function updateNotePreview() {
+  const el = document.getElementById('note-hcap');
+  if (el) el.textContent = collectNoteValues().total;
+}
+
+async function saveNote(btn) {
+  const ov = document.getElementById('note-overlay');
+  const race = ov._race, date = ov._date;
+  const horseNum = parseInt(document.getElementById('note-horse').value, 10);
+  const horse = (race.horses||[]).find(h => h.n === horseNum) || {};
+  const { notes } = collectNoteValues();
+  const freeEl = document.getElementById('note-free');
+  const freeMemo = freeEl ? freeEl.value : '';
+
+  btn.disabled = true; const orig = btn.textContent; btn.textContent = '保存中...';
+  try {
+    const url = GAS_URL + '?action=saveNote'
+      + '&date=' + encodeURIComponent(date)
+      + '&race_id=' + encodeURIComponent(race.race_id)
+      + '&racecourse=' + encodeURIComponent(venue || '')
+      + '&race_num=' + encodeURIComponent(race.r || '')
+      + '&horse_num=' + horseNum
+      + '&horse_name=' + encodeURIComponent(horse.name || '')
+      + '&notes_data=' + encodeURIComponent(JSON.stringify(notes))
+      + '&free_memo=' + encodeURIComponent(freeMemo);
+    const res = await fetch(url, {redirect:'follow'});
+    const data = await res.json();
+    if (data.status !== 'ok') throw new Error(data.message || '保存失敗');
+    btn.textContent = '✓ 保存しました';
+    setTimeout(() => { btn.disabled = false; btn.textContent = orig; }, 1200);
+  } catch (err) {
+    alert('保存エラー: ' + err.message);
+    btn.disabled = false; btn.textContent = orig;
+  }
 }
 
 // ── ページ切り替え ───────────────────────────────────────────────────────

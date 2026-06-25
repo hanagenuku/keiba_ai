@@ -37,13 +37,14 @@ data/
   month_suffix_map.json
 ```
 
-## 最新の重み（2026-05-22チューニング ※旧キーのまま・再チューニング必要）
+## 最新の重み（rl/maturity/rotation 含む新キーで再チューニング済み）
 ```
-distance:0.2667  pace:0.2666  trainer:0.2541  recent:0.1625
-jockey:0.0100  blood:0.0100  post:0.0100  bias:0.0100  weight:0.0100
+jockey:0.2943  distance:0.2552  pace:0.2003  trainer:0.1702
+rl:0.01  maturity:0.01  rotation:0.01  recent:0.01
+blood:0.01  post:0.01  bias:0.01  weight:0.01
 ```
-Acc@1: 19.6%  ECE: 0.0270
-※Phase 2-3 実装後に rl/maturity/rotation が追加されたため再チューニング必須。
+※ Phase 2-3 の新キー(rl/maturity/rotation)を含めて再チューニング済み。
+※ ただし rl/maturity がほぼ無効化（0.01）されている点は要確認（後述「重みの妥当性確認」）。
 
 ## 強制アップデートセル（チューニングノートのセル1とセル2の間に挿入）
 ```python
@@ -157,7 +158,7 @@ print('done')
 ## 残っている課題
 | 課題 | 深刻度 | 備考 |
 |------|--------|------|
-| optimal_weights.json が旧キー（rl/maturity/rotation なし） | 高 | チューニング再実行が必要 |
+| optimal_weights.json で rl/maturity がほぼ無効化（0.01） | 中 | 再チューニング自体は完了済み。実力スコアが効いていないのが意図通りか要検証（後述「重みの妥当性確認」） |
 | 過去データノートのセル7（pkl再生成）未実行 | 中 | チューニング前に必ず実行すること |
 | horse_history.body_weight が 6.5% しか埋まっていない | 中 | Stage3の列順ズレが原因の可能性。tx[13]の内容を確認して修正が必要 |
 | horse_history.bracket が 0% | 中 | tx[1]が枠番でない可能性（horse_numと混在？）。列マッピング要確認 |
@@ -228,10 +229,10 @@ print('done')
    GAS_URL未設定なら安全にスキップ（no-op）。
 
 #### ⚠️ 有効化に必要な手動作業（ユーザー）
-- [ ] `gas/oddsLog.gs` をGASプロジェクトに追加し、`doGet` に `if (action === 'getOddsLog') return getOddsLogHandler(e);` を追記
-- [ ] `gas/getOdds.gs` の更新分（logOdds呼び出し）も反映
-- [ ] GASを再デプロイ（新バージョン）。初回のスプレッドシート自動作成時に権限承認が必要
-- [ ] GitHubリポジトリの Secrets に `GAS_URL`（GAS WebアプリURL）を登録
+- [x] `gas/oddsLog.gs` をGASプロジェクトに追加し、`doGet` に `if (action === 'getOddsLog') return getOddsLogHandler(e);` を追記（2026-06-23 完了）
+- [x] `gas/getOdds.gs` の更新分（getOddsLoggedHandler ラッパー経由）も反映（2026-06-23 完了）
+- [x] GASを再デプロイ（新バージョン）＋ SpreadsheetApp 権限承認（2026-06-23 完了）
+- [x] GitHubリポジトリの Secrets に `GAS_URL`（GAS WebアプリURL）を登録（2026-06-23 完了）
 - [ ] 来週末、直前ボタンを数回押す → 日曜結果ワークフローで odds_snapshots に入ることを確認
 
 #### 後続タスク（データが溜まってから）
@@ -240,7 +241,7 @@ print('done')
 
 ---
 
-### 最終更新: 2026-06-21
+### 最終更新: 2026-06-23
 
 ---
 
@@ -329,18 +330,35 @@ Opusに聞きたいこと：
 **`DESIGN.md`（このリポジトリのルート）を必ず参照すること。**
 DESIGN.md の Phase 0〜3 はすべて実装完了（2026-05-25）。
 
+### 完了済み（旧「次にやること」より）
+- ✅ **スピード指数 XGB再学習**: 2026-06-18 21:51 に実行済み・本番反映済み。
+  `data/xgb_feature_cols.json` の `trained_at` で確認可能。
+  特徴量98個に `f_speed_fig_last/avg/max` および相対ランクを含む。
+- ✅ **重み再チューニング**: optimal_weights.json は rl/maturity/rotation の新キーで再チューニング済み。
+
 ### 次にやること（優先順）
-1. **スピード指数 XGB再学習**（新特徴量追加後の再学習）← 実装完了・実行待ち
-   - KEIBA_XGB_retrain_v2.ipynb のセル2でキャッシュ再構築 → セル3でデータ再生成 → セル4A〜C
-   - 合格基準: AUC≥0.78（スピード指数なし 0.7648 より改善）/ Brier≤0.165
-   - セル2冒頭で `rebuild_speed_index_cache(BASE_DIR)` を追加してから実行すること
-2. **KEIBA_XGB_retrain_v2.ipynb 実行**（Step A = 66特徴量ベースライン確認）← まず実行
-   - セル4A の AUC/Brier を確認してから Step B/C（スピード指数追加）に進む
-3. **Stage3 列マッピング修正**（bracket/win_odds/body_weight が 0〜6.5%）← 要調査
+1. **重みの妥当性確認**（後述「重みの妥当性確認」セクション）← 任意・週末作業ではない
+   - rl/maturity がほぼ無効化（0.01）されているのが意図通りか検証する
+2. **Stage3 列マッピング修正**（bracket/win_odds/body_weight が 0〜6.5%）← 要調査
    - JRA結果ページの実際の列順を確認し、`parse_result_page()` の tx インデックスを修正
    - 修正後に Stage3 を再実行（再開ロジックあり・完了済み開催日は自動スキップ）
-3. **チューニングノート実行**（rl/maturity/rotation を含む重み最適化）→ optimal_weights.json 更新
-4. **週末の実運用**で動作確認・ROI計測
+3. **週末の実運用**で動作確認・ROI計測
+
+### 重みの妥当性確認（rl/maturity がほぼ無効化されている件）
+現在 `optimal_weights.json` は jockey:0.29 / distance:0.26 / pace:0.20 / trainer:0.17 中心で、
+実装した実力スコア rl/maturity が 0.01（ほぼ無効）になっている。チューナーが過去データで
+「実力スコアを足しても的中率が上がらない」と判断した結果だが、以下で意図通りか確認する。
+
+1. **チューニングノートのログを再確認**
+   - `tune_weights.py` 実行時の Acc@1 / ECE を、rl/maturity を強制的に入れた版と比べる。
+   - rl/maturity を 0.01 → 0.15 程度に手動で上げて、過去データでの Acc@1 が落ちないかを検証。
+2. **特徴量の重複を疑う**
+   - XGB 側に既に f_speed_fig 系（スピード指数＝実力）が入っているため、ルール側の f_rl が
+     XGB と情報的に重複し、重み最適化で不要と判断された可能性。これは「無効化されて当然」で問題なし。
+3. **判断基準**
+   - rl を上げて Acc@1 が改善 → tune_weights の探索範囲/初期値の問題。再チューニング。
+   - rl を上げても改善しない → 現状（0.01）が正しい。実力情報は XGB が担っているので
+     ルール側 f_rl は冗長、という結論で確定。CLAUDE.md にその旨を記録して課題クローズ。
 
 ### Stage3 再スクレイプ 完了状況（2026-06-03）
 ```
