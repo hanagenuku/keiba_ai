@@ -1978,6 +1978,7 @@ def calc_all(race, bias_data=None):
             'scores':      sc,
             'total':       round(total, 2),
             'win_prob':    prob,
+            'cal_prob':    prob,   # キャリブレーション済み複勝確率（win_probはsoftmaxで後ほど上書きされるため別キーで保持）
             'career':      career,
             'market_prob': market_prob,
             'pop_gap':     round(prob - market_prob, 4),

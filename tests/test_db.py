@@ -6,7 +6,8 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from src.utils.db import (init_db, save_bets_db, get_db_path,
-                          save_odds_snapshots, get_latest_odds_snapshot_time)
+                          save_odds_snapshots, get_latest_odds_snapshot_time,
+                          save_race_predictions)
 
 
 def test_init_db_creates_tables():
@@ -58,6 +59,46 @@ def test_save_bets_db_fukusho():
         assert len(rows) == 1
         assert rows[0][3] == '複勝'  # bet_type
         assert rows[0][4] == 3       # horse_num
+
+
+def test_save_race_predictions_stores_real_probs():
+    # 旧バグ: cal_prob/fuku_prob が常に0で保存され乖離学習が機能しなかった。
+    # calc_all 出力の cal_prob と top3_prob が実値で保存されることを確認する。
+    with tempfile.TemporaryDirectory() as tmp:
+        os.makedirs(os.path.join(tmp, 'data'))
+        init_db(base_dir=tmp)
+        race = {'id': '20260101_05_11', 'date': '2026-01-01',
+                'racecourse': '東京', 'race_num': 11}
+        out = [
+            {'horse_num': 1, 'name': 'A', 'win_prob': 0.45, 'cal_prob': 0.62,
+             'top3_prob': 0.88, 'rl_rank': 1, 'popularity': 1, 'win_odds': 3.0},
+            {'horse_num': 2, 'name': 'B', 'win_prob': 0.30, 'cal_prob': 0.40,
+             'top3_prob': 0.71, 'rl_rank': 2, 'popularity': 2, 'win_odds': 6.0},
+        ]
+        save_race_predictions(race, out, base_dir=tmp)
+        conn = sqlite3.connect(get_db_path(tmp))
+        rows = conn.execute(
+            'SELECT cal_prob, fuku_prob FROM race_predictions ORDER BY rl_rank'
+        ).fetchall()
+        conn.close()
+        assert rows[0] == (0.62, 0.88)   # cal_prob と top3_prob が実値
+        assert all(c > 0 and f > 0 for c, f in rows)  # 0埋めバグの回帰防止
+
+
+def test_save_race_predictions_fuku_pct_fallback():
+    # 旧経路（fuku_pct が 0-100 で来る）は /100 で 0-1 に吸収される
+    with tempfile.TemporaryDirectory() as tmp:
+        os.makedirs(os.path.join(tmp, 'data'))
+        init_db(base_dir=tmp)
+        race = {'id': '20260101_05_12', 'date': '2026-01-01',
+                'racecourse': '東京', 'race_num': 12}
+        out = [{'horse_num': 1, 'name': 'A', 'win_prob': 0.4, 'cal_prob': 0.5,
+                'fuku_pct': 85.0, 'rl_rank': 1, 'popularity': 1, 'win_odds': 3.0}]
+        save_race_predictions(race, out, base_dir=tmp)
+        conn = sqlite3.connect(get_db_path(tmp))
+        v = conn.execute('SELECT fuku_prob FROM race_predictions').fetchone()[0]
+        conn.close()
+        assert abs(v - 0.85) < 1e-6
 
 
 def test_save_bets_db_no_duplicate():
