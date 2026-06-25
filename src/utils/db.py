@@ -609,7 +609,10 @@ def save_race_predictions(race, scored_horses, base_dir=None, db_path=None):
             h.get('horse_num', h.get('num', 0)), h.get('bracket'), h.get('name', ''),
             h.get('popularity', 99), h.get('win_odds') or h.get('odds'),
             h.get('rl_rank', 99), h.get('win_prob', 0),
-            h.get('cal_prob', 0), h.get('fuku_pct', 0),
+            h.get('cal_prob', 0),
+            # 複勝確率(0-1)。Harville top3_prob を優先。旧経路の fuku_pct(0-100)は /100 で吸収
+            h.get('top3_prob') if h.get('top3_prob') is not None
+            else (h.get('fuku_pct', 0) or 0) / 100.0,
         ))
     conn.commit()
     conn.close()
