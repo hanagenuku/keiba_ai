@@ -1,0 +1,171 @@
+{
+  "version": 1,
+  "courses": {
+    "東京_芝": {
+      "straight_length": 525,
+      "straight_class": "long",
+      "turn": "left",
+      "has_uphill": true,
+      "uphill_severity": "medium",
+      "course_type": "spacious"
+    },
+    "東京_ダート": {
+      "straight_length": 501,
+      "straight_class": "long",
+      "turn": "left",
+      "has_uphill": true,
+      "uphill_severity": "medium",
+      "course_type": "spacious"
+    },
+    "中山_芝": {
+      "straight_length": 310,
+      "straight_class": "short",
+      "turn": "right",
+      "has_uphill": true,
+      "uphill_severity": "steep",
+      "course_type": "tight"
+    },
+    "中山_ダート": {
+      "straight_length": 308,
+      "straight_class": "short",
+      "turn": "right",
+      "has_uphill": true,
+      "uphill_severity": "steep",
+      "course_type": "tight"
+    },
+    "阪神_芝": {
+      "straight_length": 474,
+      "straight_class": "medium",
+      "turn": "right",
+      "has_uphill": true,
+      "uphill_severity": "steep",
+      "course_type": "spacious"
+    },
+    "阪神_ダート": {
+      "straight_length": 353,
+      "straight_class": "medium",
+      "turn": "right",
+      "has_uphill": false,
+      "uphill_severity": "none",
+      "course_type": "standard"
+    },
+    "京都_芝": {
+      "straight_length": 404,
+      "straight_class": "medium",
+      "turn": "right",
+      "has_uphill": false,
+      "uphill_severity": "none",
+      "course_type": "spacious"
+    },
+    "京都_ダート": {
+      "straight_length": 329,
+      "straight_class": "short",
+      "turn": "right",
+      "has_uphill": false,
+      "uphill_severity": "none",
+      "course_type": "standard"
+    },
+    "新潟_芝": {
+      "straight_length": 659,
+      "straight_class": "very_long",
+      "turn": "left",
+      "has_uphill": false,
+      "uphill_severity": "none",
+      "course_type": "spacious"
+    },
+    "新潟_ダート": {
+      "straight_length": 354,
+      "straight_class": "medium",
+      "turn": "left",
+      "has_uphill": false,
+      "uphill_severity": "none",
+      "course_type": "standard"
+    },
+    "中京_芝": {
+      "straight_length": 412,
+      "straight_class": "medium",
+      "turn": "left",
+      "has_uphill": true,
+      "uphill_severity": "steep",
+      "course_type": "standard"
+    },
+    "中京_ダート": {
+      "straight_length": 410,
+      "straight_class": "medium",
+      "turn": "left",
+      "has_uphill": true,
+      "uphill_severity": "medium",
+      "course_type": "standard"
+    },
+    "札幌_芝": {
+      "straight_length": 266,
+      "straight_class": "short",
+      "turn": "right",
+      "has_uphill": false,
+      "uphill_severity": "none",
+      "course_type": "flat_tight"
+    },
+    "札幌_ダート": {
+      "straight_length": 264,
+      "straight_class": "short",
+      "turn": "right",
+      "has_uphill": false,
+      "uphill_severity": "none",
+      "course_type": "flat_tight"
+    },
+    "函館_芝": {
+      "straight_length": 262,
+      "straight_class": "short",
+      "turn": "right",
+      "has_uphill": false,
+      "uphill_severity": "none",
+      "course_type": "flat_tight"
+    },
+    "函館_ダート": {
+      "straight_length": 260,
+      "straight_class": "short",
+      "turn": "right",
+      "has_uphill": false,
+      "uphill_severity": "none",
+      "course_type": "flat_tight"
+    },
+    "福島_芝": {
+      "straight_length": 292,
+      "straight_class": "short",
+      "turn": "right",
+      "has_uphill": false,
+      "uphill_severity": "none",
+      "course_type": "tight"
+    },
+    "福島_ダート": {
+      "straight_length": 295,
+      "straight_class": "short",
+      "turn": "right",
+      "has_uphill": false,
+      "uphill_severity": "none",
+      "course_type": "tight"
+    },
+    "小倉_芝": {
+      "straight_length": 293,
+      "straight_class": "short",
+      "turn": "right",
+      "has_uphill": false,
+      "uphill_severity": "none",
+      "course_type": "flat_tight"
+    },
+    "小倉_ダート": {
+      "straight_length": 291,
+      "straight_class": "short",
+      "turn": "right",
+      "has_uphill": false,
+      "uphill_severity": "none",
+      "course_type": "flat_tight"
+    }
+  },
+  "straight_class_values": {
+    "very_long": 4,
+    "long": 3,
+    "medium": 2,
+    "short": 1
+  }
+}
