@@ -41,6 +41,11 @@ jobs:
         env:
           GAS_URL: ${{ secrets.GAS_URL }}
 
+      - name: Ingest race notes log
+        run: python scripts/ingest_notes_log.py
+        env:
+          GAS_URL: ${{ secrets.GAS_URL }}
+
       - name: Generate stats
         run: python scripts/generate_stats.py
 

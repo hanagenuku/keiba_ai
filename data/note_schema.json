@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "categories": [
+    {
+      "id": "start",
+      "label": "出遅れ",
+      "type": "level",
+      "options": [
+        {"value": 0, "label": "なし"},
+        {"value": 1, "label": "小"},
+        {"value": 2, "label": "大"}
+      ],
+      "weight": 1.0,
+      "feature": true
+    },
+    {
+      "id": "corner4",
+      "label": "4角不利",
+      "type": "level",
+      "options": [
+        {"value": 0, "label": "なし"},
+        {"value": 1, "label": "小"},
+        {"value": 2, "label": "大"}
+      ],
+      "weight": 1.0,
+      "feature": true
+    },
+    {
+      "id": "blocked",
+      "label": "直線詰まり",
+      "type": "level",
+      "options": [
+        {"value": 0, "label": "なし"},
+        {"value": 1, "label": "小"},
+        {"value": 3, "label": "大"}
+      ],
+      "weight": 1.0,
+      "feature": true
+    },
+    {
+      "id": "no_route",
+      "label": "進路なし",
+      "type": "binary",
+      "options": [
+        {"value": 0, "label": "なし"},
+        {"value": 2, "label": "あり"}
+      ],
+      "weight": 1.0,
+      "feature": true
+    },
+    {
+      "id": "pace_disadvantage",
+      "label": "展開不利",
+      "type": "binary",
+      "options": [
+        {"value": 0, "label": "なし"},
+        {"value": 1, "label": "あり"}
+      ],
+      "weight": 1.0,
+      "feature": true
+    },
+    {
+      "id": "condition",
+      "label": "馬体気配",
+      "type": "level",
+      "options": [
+        {"value": 1, "label": "良"},
+        {"value": 0, "label": "普通"},
+        {"value": -1, "label": "不安"}
+      ],
+      "weight": 1.0,
+      "feature": true
+    }
+  ],
+  "free_memo": true
+}
