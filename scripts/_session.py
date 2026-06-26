@@ -11,6 +11,8 @@ def create_session():
     sess = requests.Session()
     sess.headers.update(HEADERS)
     retry = Retry(total=3, backoff_factor=2, status_forcelist=[500, 502, 503, 504])
-    sess.mount('https://', HTTPAdapter(max_retries=retry))
+    # suffix探索を並列化するため接続プールを広げる（同時接続数 ≒ スキャンの並列度）
+    adapter = HTTPAdapter(max_retries=retry, pool_connections=32, pool_maxsize=32)
+    sess.mount('https://', adapter)
     sess.get(f'{JRA_BASE}/keiba/thisweek/', timeout=15)
     return sess

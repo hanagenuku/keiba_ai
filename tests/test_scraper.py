@@ -98,6 +98,25 @@ def test_find_r01_shutuba_returns_none_when_absent(monkeypatch):
     assert find_r01_shutuba('pw01dde010320260201', '20260627', sess) is None
 
 
+class _MultiHitSession:
+    """複数のsuffixでtableを返す擬似JRADB（最小suffix採用の確認用）。"""
+    def __init__(self, hit_suffixes):
+        self.hits = {f'{s:02X}' for s in hit_suffixes}
+
+    def post(self, url, data=None, headers=None, timeout=None):
+        cn = (data or {}).get('cname') or (data or {}).get('CNAME') or ''
+        sx = cn.split('/')[-1].upper()
+        if sx in self.hits:
+            return _FakeResp('<table><tr><td>x</td></tr></table>')
+        return _FakeResp('パラメータエラー')
+
+
+def test_find_r01_shutuba_returns_min_hit():
+    # 0x10, 0x40, 0x80 がヒットするとき最小の 0x10 を返す（直列版と挙動一致）
+    sess = _MultiHitSession([0x10, 0x40, 0x80])
+    assert find_r01_shutuba('pw01dde010320260201', '20260627', sess) == 0x10
+
+
 if __name__ == '__main__':
     test_parse_header_basic()
     print('✅ test_parse_header_basic passed')
