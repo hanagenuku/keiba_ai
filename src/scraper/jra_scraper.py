@@ -4,6 +4,7 @@ import sqlite3
 import statistics
 import unicodedata
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
 from bs4 import BeautifulSoup
 
 from src.utils.config import JRA_BASE, HEADERS, PLACE_NAMES
@@ -23,48 +24,54 @@ def calc_suffix(r01, r):
         return f'{(r01 + 8 * 181 + 245 + (r - 10) * 181) % 256:02X}'
 
 
-def find_r01_shutuba(base, date, sess):
-    """R01出走表のsuffixを探索する。障害レースも含めて最初に見つかったR01のsuffixを返す。
+def _scan_r01_suffix(sess, access_path, cn_for, use_cname_only=False,
+                     workers=24, timeout=8):
+    """0x00〜0xFF を並列スキャンし、レーステーブルが返る最小suffixを返す。
 
-    suffixは0x00〜0xFFを総当たりする（オッズ側 find_r01_odds と同じ全走査方式）。
-    JRADBは間違ったsuffixに対してパラメータエラーを返すが、R01の正しいsuffixが
-    0〜255のどこにあるかは不定。途中で打ち切ると suffix が大きいときに取りこぼし、
-    出馬表が常に取得できなくなるため、早期breakせず最後まで走査する。
-    障害レースのフィルタリングは呼び出し側（_parse_shutuba）で行う。
+    JRADBは誤ったsuffixに対して『パラメータエラー』を返すため全走査が必要だが、
+    直列だと256回×通信で十数分かかる。GAS側(fetchAll)と同様にスレッド並列で叩き、
+    数秒で完了させる。ヒットが複数あっても最小suffixを採用し直列版と挙動を揃える。
+    全リクエストが例外（JRADB不通/夜間閉鎖）の場合は None を返す。
+
+    cn_for          : suffix(int) → CNAME文字列 を返す関数
+    use_cname_only  : 結果ページ(accessS)は data={'CNAME':...} のみ送る
     """
-    for s in range(256):
-        cn = f'{base}01{date}/{s:02X}'
+    def probe(s):
+        cn = cn_for(s)
+        data = {'CNAME': cn} if use_cname_only else {'cname': cn, 'CNAME': cn}
         try:
-            r = sess.post(f'{JRA_BASE}/JRADB/accessD.html',
-                          data={'cname': cn, 'CNAME': cn}, headers=HEADERS, timeout=10)
+            r = sess.post(access_path, data=data, headers=HEADERS, timeout=timeout)
             r.encoding = 'shift_jis'
         except Exception:
-            continue
+            return s, None  # 通信失敗（JRADB不通の可能性）
         if 'パラメータエラー' not in r.text and BeautifulSoup(r.text, 'lxml').find_all('table'):
-            return s
-        time.sleep(0.05)
-    return None
+            return s, True
+        return s, False
+
+    hits = []
+    with ThreadPoolExecutor(max_workers=workers) as ex:
+        for s, ok in ex.map(probe, range(256)):
+            if ok:
+                hits.append(s)
+    return min(hits) if hits else None
+
+
+def find_r01_shutuba(base, date, sess):
+    """R01出走表のsuffixを並列探索する。最小ヒットを返す（障害含む）。
+
+    障害レースのフィルタリングは呼び出し側（_parse_shutuba）で行う。
+    """
+    return _scan_r01_suffix(sess, f'{JRA_BASE}/JRADB/accessD.html',
+                            lambda s: f'{base}01{date}/{s:02X}')
 
 
 def find_r01_result(base, date, sess):
-    """R01結果ページのsuffixを探索する。障害レースも含めて最初に見つかったR01のsuffixを返す。
+    """R01結果ページのsuffixを並列探索する。最小ヒットを返す（障害含む）。
 
-    suffixは0x00〜0xFFを総当たりする（find_r01_shutuba / find_r01_odds と同じ全走査方式）。
-    早期打ち切りは suffix が大きいとき取りこぼすため行わない。
     障害レースのフィルタリングは parse_result_soup 内で行う（Noneを返す）。
     """
-    for s in range(256):
-        cn = f'{base}01{date}/{s:02X}'
-        try:
-            r = sess.post(f'{JRA_BASE}/JRADB/accessS.html',
-                          data={'CNAME': cn}, headers=HEADERS, timeout=10)
-            r.encoding = 'shift_jis'
-        except Exception:
-            continue
-        if 'パラメータエラー' not in r.text and BeautifulSoup(r.text, 'lxml').find_all('table'):
-            return s
-        time.sleep(0.05)
-    return None
+    return _scan_r01_suffix(sess, f'{JRA_BASE}/JRADB/accessS.html',
+                            lambda s: f'{base}01{date}/{s:02X}', use_cname_only=True)
 
 
 def _try_fetch_shutuba(sess, base, r, date_str, sx):
@@ -93,23 +100,12 @@ def _to_odds_base(base):
 
 
 def find_r01_odds(odds_base, date_str, sess):
-    """単勝・複勝オッズページ(accessO.html)のR01 suffixを探索する。
+    """単勝・複勝オッズページ(accessO.html)のR01 suffixを並列探索する。
 
     CNAMEは「レース番号(01) + 日付 + Z + / + suffix」の形式（実機検証済み）。
-    suffixを0x00〜0xFFで総当たりし、テーブルが取得できた値を返す。
     """
-    for s in range(256):
-        cn = f'{odds_base}01{date_str}Z/{s:02X}'
-        try:
-            r = sess.post(f'{JRA_BASE}/JRADB/accessO.html',
-                          data={'cname': cn, 'CNAME': cn}, headers=HEADERS, timeout=10)
-            r.encoding = 'shift_jis'
-        except Exception:
-            continue
-        if 'パラメータエラー' not in r.text and BeautifulSoup(r.text, 'lxml').find_all('table'):
-            return s
-        time.sleep(0.05)
-    return None
+    return _scan_r01_suffix(sess, f'{JRA_BASE}/JRADB/accessO.html',
+                            lambda s: f'{odds_base}01{date_str}Z/{s:02X}')
 
 
 def fetch_odds_for_race(sess, odds_base, race_num, date_str, sx):
