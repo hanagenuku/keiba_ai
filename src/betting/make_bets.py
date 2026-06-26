@@ -84,22 +84,31 @@ def calc_kelly(win_prob, odds, bankroll=None, max_ratio=0.05):
 
 
 def classify_chaos_grade(horses, chaos_score):
-    """波乱度スコアとRL1位馬の人気から A/B/C を判定する。
+    """波乱度スコアとRL1位馬の人気から A/B/C を判定する（唯一の波乱度分類器）。
 
     判定ルール（優先順）:
         chaos_score < 0.30 かつ rl_rank=1 の人気 <= 2  → 'A'（堅い）
         chaos_score > 0.55 または rl_rank=1 の人気 >= 6 → 'C'（大荒れ）
         それ以外 → 'B'（中荒れ）
 
+    popularity が未設定の場合は win_odds 順位で代替する。
+
     Args:
-        horses      : 全馬の予測結果。必須キー: rl_rank, popularity
+        horses      : 全馬の予測結果。必須キー: rl_rank
         chaos_score : engine.py の calc_chaos_score() の出力（0〜1）
 
     Returns:
         'A'（堅い）/ 'B'（中荒れ）/ 'C'（大荒れ）
     """
     top = next((h for h in horses if h.get('rl_rank') == 1), None)
-    top_pop = top.get('popularity', 99) if top else 99
+    if top is None:
+        return 'B'
+    top_pop = top.get('popularity') or top.get('_pop')
+    if not top_pop:
+        by_odds = sorted(horses, key=lambda h: h.get('win_odds') or 99)
+        top_num = top.get('horse_num', top.get('num'))
+        top_pop = next((i + 1 for i, h in enumerate(by_odds)
+                        if h.get('horse_num', h.get('num')) == top_num), 99)
 
     if chaos_score < 0.30 and top_pop <= 2:
         return 'A'
@@ -252,7 +261,7 @@ def _select_bet_candidates(by_rl, top1, top2, top3, chaos_grade, value_horses, n
             ]
         else:  # C
             if n2 is None:
-                return []
+                return [fuku(n1, f'多頭数({num_horses}頭)+混戦・馬連候補不足→複勝')]
             bets = [ren(f'多頭数({num_horses}頭)+混戦・馬連(RL1×2)')]
             if n3 is not None:
                 bets.append(san([n1, n2, n3],
@@ -288,7 +297,7 @@ def _select_bet_candidates(by_rl, top1, top2, top3, chaos_grade, value_horses, n
     if vh:
         v_num = vh[0].get('horse_num', vh[0].get('num'))
         return [fuku(v_num, f'中頭数({num_horses}頭)+大荒れ・バリュー馬#{v_num}複勝少額')]
-    return []  # バリューなし → スキップ
+    return [fuku(n1, f'中頭数({num_horses}頭)+大荒れ・バリューなし→RL1位複勝参考')]
 
 
 def make_bets(c, market_odds_map=None):
