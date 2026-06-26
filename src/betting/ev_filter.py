@@ -4,7 +4,7 @@ EVフィルタ：予想候補レースの厳選ロジック。
 """
 import copy
 
-from src.betting.make_bets import calc_ev
+from src.betting.make_bets import calc_ev, classify_chaos_grade
 from src.features.engine import calc_all, calc_chaos_score
 from src.utils.config import VENUE_ORDER
 
@@ -49,7 +49,8 @@ def detect_value_horses(horses, market_odds_map):
     result = []
     for h in horses:
         hnum  = h.get('horse_num', h.get('num'))
-        cal_prob = h.get('cal_prob', h.get('pn', 0)) or 0.0
+        # ⑤ 複勝確率は top3_prob（Harville）を正とする。cal_prob は別途保持。
+        fuku_prob = h.get('top3_prob', h.get('cal_prob', h.get('pn', 0))) or 0.0
         odds  = market_odds_map.get(hnum) if market_odds_map else None
 
         tansho_odds = None
@@ -64,7 +65,7 @@ def detect_value_horses(horses, market_odds_map):
         else:
             market_prob = 0.0
 
-        value_gap = round(cal_prob - market_prob, 4) if market_odds_map else 0.0
+        value_gap = round(fuku_prob - market_prob, 4) if market_odds_map else 0.0
         entry = dict(h)
         entry['value_gap']   = value_gap
         entry['market_prob'] = round(market_prob, 4)
@@ -183,7 +184,11 @@ def ability_first_loose(races, bias_data=None, top_n=6):
         by_odds  = sorted(scored, key=lambda h: h.get('win_odds') or 99)
         pop_rank = next((i + 1 for i, h in enumerate(by_odds)
                          if h['name'] == top1['name']), 99)
-        chaos_lvl = classify_race_chaos(scored)
+        # ④ 波乱度分類器を classify_chaos_grade に統一（popularity を win_odds 順位で補完）
+        for _rank, _h in enumerate(by_odds, 1):
+            _h.setdefault('popularity', _rank)
+        chaos_score_val = calc_chaos_score(race, scored)
+        chaos_lvl = classify_chaos_grade(scored, chaos_score_val)
         cands.append({
             'race':            race,
             'scored':          scored,
@@ -195,7 +200,7 @@ def ability_first_loose(races, bias_data=None, top_n=6):
             'ev_fuku':         ev_fuku,
             'ev_tan':          ev_tan,
             'ev_max':          ev_max,
-            'chaos_score':     calc_chaos_score(race, scored),
+            'chaos_score':     chaos_score_val,
             'chaos_level':     chaos_lvl,
         })
 
@@ -254,9 +259,12 @@ def ability_first_with_value(races, bias_data=None, top_n=6):
         by_odds  = sorted(scored, key=lambda h: h.get('win_odds') or 99)
         pop_rank = next((i + 1 for i, h in enumerate(by_odds)
                          if h['name'] == top1['name']), 99)
+        for _rank, _h in enumerate(by_odds, 1):
+            _h.setdefault('popularity', _rank)
 
         ev_fuku = calc_ev(min(1.0, (top1.get('pn', 0) or 0) * 3), odds * 0.28)
         ev_tan  = calc_ev(top1.get('pn', 0) or 0, odds)
+        chaos_score_val2 = calc_chaos_score(race, scored)
 
         cands.append({
             'race':            race,
@@ -271,8 +279,8 @@ def ability_first_with_value(races, bias_data=None, top_n=6):
             'ev_max':          max(ev_fuku, ev_tan),
             'best_ev':         best_ev,
             'value_horses':    value_horses,
-            'chaos_score':     calc_chaos_score(race, scored),
-            'chaos_level':     classify_race_chaos(scored),
+            'chaos_score':     chaos_score_val2,
+            'chaos_level':     classify_chaos_grade(scored, chaos_score_val2),
         })
 
     cands.sort(key=lambda x: x['priority'], reverse=True)
@@ -367,6 +375,9 @@ def select_quality_races(races, bias_data=None,
         by_odds  = sorted(scored, key=lambda h: h.get('win_odds') or 99)
         pop_rank = next((i + 1 for i, h in enumerate(by_odds)
                          if h['name'] == top1['name']), 99)
+        for _rank, _h in enumerate(by_odds, 1):
+            _h.setdefault('popularity', _rank)
+        chaos_score_val3 = calc_chaos_score(race, scored)
 
         cands.append({
             'race':            race,
@@ -380,8 +391,8 @@ def select_quality_races(races, bias_data=None,
             'ev_tan':          ev_tan,
             'ev_max':          ev_max,
             'best_ev_horse':   best_horse.get('name', ''),
-            'chaos_score':     calc_chaos_score(race, scored),
-            'chaos_level':     classify_race_chaos(scored),
+            'chaos_score':     chaos_score_val3,
+            'chaos_level':     classify_chaos_grade(scored, chaos_score_val3),
         })
 
     cands.sort(key=lambda x: x['priority'], reverse=True)
