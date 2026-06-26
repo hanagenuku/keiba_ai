@@ -26,23 +26,22 @@ def calc_suffix(r01, r):
 def find_r01_shutuba(base, date, sess):
     """R01出走表のsuffixを探索する。障害レースも含めて最初に見つかったR01のsuffixを返す。
 
+    suffixは0x00〜0xFFを総当たりする（オッズ側 find_r01_odds と同じ全走査方式）。
+    JRADBは間違ったsuffixに対してパラメータエラーを返すが、R01の正しいsuffixが
+    0〜255のどこにあるかは不定。途中で打ち切ると suffix が大きいときに取りこぼし、
+    出馬表が常に取得できなくなるため、早期breakせず最後まで走査する。
     障害レースのフィルタリングは呼び出し側（_parse_shutuba）で行う。
     """
-    consecutive_errors = 0
     for s in range(256):
         cn = f'{base}01{date}/{s:02X}'
-        r = sess.post(f'{JRA_BASE}/JRADB/accessD.html',
-                      data={'cname': cn, 'CNAME': cn}, timeout=10)
-        r.encoding = 'shift_jis'
-        if 'パラメータエラー' not in r.text:
-            consecutive_errors = 0
-            soup = BeautifulSoup(r.text, 'lxml')
-            if soup.find_all('table'):
-                return s
-        else:
-            consecutive_errors += 1
-            if consecutive_errors >= 3:
-                break
+        try:
+            r = sess.post(f'{JRA_BASE}/JRADB/accessD.html',
+                          data={'cname': cn, 'CNAME': cn}, headers=HEADERS, timeout=10)
+            r.encoding = 'shift_jis'
+        except Exception:
+            continue
+        if 'パラメータエラー' not in r.text and BeautifulSoup(r.text, 'lxml').find_all('table'):
+            return s
         time.sleep(0.05)
     return None
 
@@ -50,22 +49,20 @@ def find_r01_shutuba(base, date, sess):
 def find_r01_result(base, date, sess):
     """R01結果ページのsuffixを探索する。障害レースも含めて最初に見つかったR01のsuffixを返す。
 
+    suffixは0x00〜0xFFを総当たりする（find_r01_shutuba / find_r01_odds と同じ全走査方式）。
+    早期打ち切りは suffix が大きいとき取りこぼすため行わない。
     障害レースのフィルタリングは parse_result_soup 内で行う（Noneを返す）。
     """
-    consecutive_errors = 0
     for s in range(256):
         cn = f'{base}01{date}/{s:02X}'
-        r = sess.post(f'{JRA_BASE}/JRADB/accessS.html', data={'CNAME': cn}, timeout=10)
-        r.encoding = 'shift_jis'
-        if 'パラメータエラー' not in r.text:
-            consecutive_errors = 0
-            soup = BeautifulSoup(r.text, 'lxml')
-            if soup.find_all('table'):
-                return s
-        else:
-            consecutive_errors += 1
-            if consecutive_errors >= 3:
-                break
+        try:
+            r = sess.post(f'{JRA_BASE}/JRADB/accessS.html',
+                          data={'CNAME': cn}, headers=HEADERS, timeout=10)
+            r.encoding = 'shift_jis'
+        except Exception:
+            continue
+        if 'パラメータエラー' not in r.text and BeautifulSoup(r.text, 'lxml').find_all('table'):
+            return s
         time.sleep(0.05)
     return None
 
