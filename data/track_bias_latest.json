@@ -1,22 +1,9 @@
 {
-  "inner_outer": 0.25,
-  "pace_bias": -0.32,
+  "inner_outer": 0.2,
+  "pace_bias": -0.26,
   "track_speed": -0.82,
   "summary": "時計遅め",
   "by_course": {
-    "小倉": {
-      "inner_outer": 0.61,
-      "pace_bias": -0.52,
-      "track_speed": -0.83,
-      "summary": "時計遅め",
-      "style_dist": {
-        "逃げ": 3,
-        "先行": 9,
-        "追込": 7,
-        "差し": 14
-      },
-      "race_count": 11
-    },
     "函館": {
       "inner_outer": -0.01,
       "pace_bias": -0.53,
@@ -42,6 +29,19 @@
         "差し": 11
       },
       "race_count": 10
+    },
+    "小倉": {
+      "inner_outer": 0.46,
+      "pace_bias": -0.34,
+      "track_speed": -0.84,
+      "summary": "時計遅め",
+      "style_dist": {
+        "逃げ": 4,
+        "先行": 9,
+        "差し": 14,
+        "追込": 6
+      },
+      "race_count": 11
     }
   },
   "date": "2026-06-27"
