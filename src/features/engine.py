@@ -2111,6 +2111,13 @@ def calc_all(race, bias_data=None):
         if MARKET_CORRECTION_ENABLED:
             for i, h in enumerate(sorted(out, key=lambda x: x.get('cal_prob', 0), reverse=True)):
                 h['rl_rank'] = i + 1
+            # 補正前の win_prob / top3_prob を保存（補正効果検証用・レース別切り替え用）
+            _pre_totals   = [h['total'] for h in out]
+            _pre_wps      = softmax_probs(_pre_totals, temperature=2.0)
+            _pre_harville = calc_harville_probs(_pre_wps)
+            for h, p, (_t2, _t3) in zip(out, _pre_wps, _pre_harville):
+                h['win_prob_raw']   = round(p, 6)
+                h['top3_prob_raw']  = round(_t3, 6)
             out = apply_market_correction(out)
     except Exception:
         pass

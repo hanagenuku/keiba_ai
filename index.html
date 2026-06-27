@@ -193,6 +193,10 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
 .rl-raw{text-decoration:line-through;opacity:0.5;font-size:9px;margin-right:1px}
 .rl-arrow{font-size:9px;margin:0 1px}
 .rl-corrected{font-weight:700}
+.race-correction-toggle{display:inline-flex;align-items:center;padding:3px 10px;border-radius:12px;font-size:10px;font-weight:700;cursor:pointer;user-select:none;margin:2px 14px 4px}
+.race-correction-toggle:active{opacity:0.6}
+.rc-on{color:#d35400}
+.rc-off{color:#7f8c8d}
 </style>
 </head>
 <body>
@@ -251,6 +255,17 @@ let D = null;
 let venue = null;
 const opened = {};
 const oddsCooldown = {};
+const raceCorrection = {};  // race_id → true(補正ON) / false(補正OFF)
+
+function getRaceCorrectionEnabled(raceId) {
+  if (raceId in raceCorrection) return raceCorrection[raceId];
+  return D ? (D.market_correction_enabled !== false) : true;
+}
+
+function toggleRaceCorrection(raceId) {
+  raceCorrection[raceId] = !getRaceCorrectionEnabled(raceId);
+  render();
+}
 
 async function loadData() {
   document.getElementById('race-list').innerHTML = '<div class="loading"><div class="loading-spin">🏇</div><div>予想データを読み込み中...</div></div>';
@@ -573,7 +588,9 @@ function estimatePayout(bet, horsesMap) {
 }
 
 function recalcBets(race) {
-  const horses = (race.horses || []).slice().sort((a, b) => (a.rl_rank || 99) - (b.rl_rank || 99));
+  const corrOn = getRaceCorrectionEnabled(race.race_id);
+  const rlField = corrOn ? 'rl_rank' : 'rl_rank_raw';
+  const horses = (race.horses || []).slice().sort((a, b) => ((a[rlField] || a.rl_rank || 99) - (b[rlField] || b.rl_rank || 99)));
   const numHorses = race.num_horses || horses.length;
   const chaosGrade = race.chaos_grade || 'B';
   const hasOdds = horses.some(h => h.fukusho_odds != null);
@@ -774,12 +791,21 @@ function render() {
     const k = venue+race.r;
     const isOpen = opened[k];
     const isRec = race.rec;
+    const corrEnabled = getRaceCorrectionEnabled(race.race_id);
+    // 補正OFF時は rl_rank_raw==1 の馬を本命として表示
+    const rawHonmeiHorse = !corrEnabled && (race.horses||[]).find(h => h.rl_rank_raw === 1);
+    const displayHonmei = corrEnabled ? race.honmei : (rawHonmeiHorse
+      ? { n: rawHonmeiHorse.n, name: rawHonmeiHorse.name, odds: rawHonmeiHorse.odds, style: rawHonmeiHorse.style }
+      : race.honmei);
     html += '<div class="rc'+(isRec?' rec':'')+'"><div class="rc-head" onclick="toggle(\''+k+'\')"><div class="rc-num">'+race.r+'</div><div class="rc-info"><div class="rc-name">'+race.name+'</div><div class="rc-meta">'+race.dist+'</div></div><div class="rc-right">'+(isRec?'<span class="conf">AI '+race.conf+'%</span><span class="rec-lbl">★推奨</span>':'')+'<span class="arr'+(isOpen?' open':'')+'">▼</span></div></div>';
-    if (race.honmei) {
-      html += '<div class="hstrip" onclick="toggle(\''+k+'\')"><span class="hbadge">◎本命</span><span class="hname">#'+race.honmei.n+' '+race.honmei.name+'</span><span class="hodds">'+race.honmei.odds+'倍 / '+race.honmei.style+'</span></div>';
-      if (race.honmei_changed_by_correction && race.honmei_raw) {
+    if (displayHonmei) {
+      html += '<div class="hstrip" onclick="toggle(\''+k+'\')"><span class="hbadge">◎本命</span><span class="hname">#'+displayHonmei.n+' '+displayHonmei.name+'</span><span class="hodds">'+(displayHonmei.odds||'-')+'倍 / '+(displayHonmei.style||'-')+'</span></div>';
+      if (corrEnabled && race.honmei_changed_by_correction && race.honmei_raw) {
         html += '<div class="correction-note">🔧 補正により本命変更: #'+race.honmei_raw+'（AI素）→ #'+race.honmei.n+'（補正後）</div>';
       }
+    }
+    if (D.market_correction_enabled) {
+      html += '<div class="race-correction-toggle" onclick="toggleRaceCorrection(\''+race.race_id+'\')"><span class="'+(corrEnabled?'rc-on':'rc-off')+'">🔧 補正'+(corrEnabled?'ON':'OFF（AI素）')+'</span></div>';
     }
     if (isOpen) {
       html += '<div class="detail open"><div class="det-inner"><div class="sec">出走馬・AI評価</div>';
@@ -795,9 +821,13 @@ function render() {
       }
       html += '<table class="htbl"><tr><th style="width:20px">番</th><th class="col-name">馬名</th><th class="col-pop" style="width:22px">人</th><th class="col-odds" style="width:34px">ｵｯｽﾞ</th><th class="col-mk">特記</th><th class="col-rl" style="width:24px">RL</th><th style="width:32px">勝率</th><th style="width:32px">複勝</th><th class="col-val" style="width:32px">Val</th></tr>';
       for (const h of (race.horses||[])) {
-        const isH = race.honmei && h.n === race.honmei.n;
+        const isH = displayHonmei && h.n === displayHonmei.n;
+        // RL表示: 補正ONなら旧→新の矢印あり、補正OFFなら生のRL順位のみ
         let rl;
-        if (!h.rl_rank || h.rl_rank >= 99) {
+        if (!corrEnabled) {
+          const rawRl = h.rl_rank_raw != null && h.rl_rank_raw < 99 ? h.rl_rank_raw : h.rl_rank;
+          rl = rawRl && rawRl < 99 ? rawRl : '-';
+        } else if (!h.rl_rank || h.rl_rank >= 99) {
           rl = '-';
         } else if (h.correction_applied && h.rl_rank_raw && h.rl_rank_raw !== h.rl_rank && h.rl_rank_raw < 99) {
           const arrow = h.rl_rank < h.rl_rank_raw ? '↑' : '↓';
@@ -806,9 +836,12 @@ function render() {
         } else {
           rl = h.rl_rank;
         }
-        const tan = h.tan_pct != null ? h.tan_pct+'%' : '-';
-        const fuku = h.fuku_pct != null ? h.fuku_pct+'%' : '-';
-        const hi = h.fuku_pct != null && h.fuku_pct >= 38;
+        // 補正OFF時は補正前の確率を表示
+        const dispTanPct  = corrEnabled ? h.tan_pct  : (h.tan_pct_raw  != null ? h.tan_pct_raw  : h.tan_pct);
+        const dispFukuPct = corrEnabled ? h.fuku_pct : (h.fuku_pct_raw != null ? h.fuku_pct_raw : h.fuku_pct);
+        const tan = dispTanPct != null ? dispTanPct+'%' : '-';
+        const fuku = dispFukuPct != null ? dispFukuPct+'%' : '-';
+        const hi = dispFukuPct != null && dispFukuPct >= 38;
 
         // 人気
         const pop = h.pop != null ? h.pop : '-';

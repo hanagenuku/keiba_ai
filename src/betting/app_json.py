@@ -114,8 +114,18 @@ def _build_horses_list(scored, top1, by_odds, value_gap_map=None, odds_lookup=No
             'cal_prob': round(h.get('cal_prob', pn), 4),
             'mark':     marks[h['num']],
             # 市場補正フィールド（market_correction.py）
-            'cal_prob_raw':       round(h.get('cal_prob_raw', h.get('cal_prob', pn)), 4),
+            # 補正前（AI素）
             'rl_rank_raw':        h.get('rl_rank_raw', h.get('rl_rank', 99)),
+            'win_prob_raw':       round(h.get('win_prob_raw', pn), 6),
+            'fuku_pct_raw':       round(h.get('top3_prob_raw', h.get('top3_prob', pn)) * 100, 1),
+            'tan_pct_raw':        round(min(60, h.get('win_prob_raw', pn) * 100), 1),
+            'cal_prob_raw':       round(h.get('cal_prob_raw', h.get('cal_prob', pn)), 4),
+            # 補正後（市場補正済み）— 表示切替で使う
+            'rl_rank_corrected':  h.get('rl_rank', 99),
+            'win_prob_corrected': round(pn, 6),
+            'fuku_pct_corrected': round(h.get('top3_prob', pn) * 100, 1),
+            'cal_prob_corrected': round(h.get('cal_prob', pn), 4),
+            # 補正係数
             'correction_factor':  round(h.get('correction_factor', 1.0), 3),
             'correction_applied': h.get('correction_applied', False),
         }
