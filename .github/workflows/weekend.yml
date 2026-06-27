@@ -48,7 +48,10 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run weekend script
-        run: python scripts/weekend.py --mode ${{ inputs.mode }}${{ inputs.force == 'true' && ' --force' || '' }}
+        run: |
+          FORCE_FLAG=""
+          if [ "${{ inputs.force }}" = "true" ]; then FORCE_FLAG="--force"; fi
+          python scripts/weekend.py --mode ${{ inputs.mode }} $FORCE_FLAG
 
       - name: Ingest pre-race odds log
         run: python scripts/ingest_odds_log.py
