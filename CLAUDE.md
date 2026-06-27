@@ -174,7 +174,64 @@ print('done')
 5. **月1〜2回**: チューニングノートブック実行
 6. **チューニング後**: save_version(BASE_DIR, ...) でバージョン保存
 
+## 市場補正レイヤー（2026-06-27 導入）
+
+### 概要
+XGBoostの予測（cal_prob）を市場人気で補正する層。
+「AIが高評価だが市場が極端に低評価」の馬を抑制する。
+
+### 発動条件
+`MARKET_CORRECTION_ENABLED = True`（環境変数 `MARKET_CORRECTION` で制御。デフォルトON）
+
+### 補正の内容
+- RL上位 × 不人気(10番人気以上) → cal_prob × 0.30（大幅抑制）
+- RL上位 × 人気(1-3番人気) → cal_prob × 1.0（信頼そのまま）
+- RL下位 × 人気(1-3番人気) → cal_prob × 1.2（強調）
+（詳細は `src/features/market_correction.py` の `CORRECTION_FACTORS`）
+
+### 実装の仕組み
+- `engine.py` の `calc_all()` 内で、softmax 前に `apply_market_correction()` を呼ぶ
+- `total`（softmax入力）と `cal_prob`（表示用）の両方に同じ補正係数を乗算
+- `total` は合計保存で正規化、`cal_prob` は合計3.0で正規化
+- 補正前の値: `cal_prob_raw`（馬辞書）、`rl_rank_raw`（馬辞書）で参照可能
+
+### アプリでの表示
+- `🔧 市場補正 ON` バッジがバイアスバーの下に常時表示（忘れ防止）
+- 補正で順位が変わった馬はRL欄に「旧位↑新位」「旧位↓新位」と表示
+- 補正で本命が変わったレースは「🔧 補正により本命変更: #旧→#新」の注記が出る
+
+### 導入理由
+6/27の32レースで AI RL1の3着内率46.9% vs 市場1番人気75%。
+AIが市場と異なる本命を出した25Rで市場が6倍正確だったため、暫定補正を導入。
+
+### 今後の方針（暫定対応）
+- これは手動の補正係数（6/27データ基準）。完璧でなくていい、明らかな暴走を抑える
+- データ4週間分蓄積後に `correction_table.json` による自動更新へ移行予定
+- `CORRECTION_FACTORS` の調整はフォワードテストの結果を見て随時更新
+
+---
+
 ## 現在の作業状況（セッション引き継ぎ用）
+
+### 最終更新: 2026-06-27
+
+---
+
+### 2026-06-27 セッション：市場補正レイヤー導入
+
+6/27（土）の32レース分析で AI RL1の3着内率15.6% vs 市場1番人気46.9%、
+AIが市場と異なる本命を出した25Rで市場が12勝 vs AI 2勝という結果を受けて、
+市場補正レイヤーを暫定導入。
+
+#### 実装内容（branch: `claude/racing-data-pipeline-review-4easwb` → PR → main）
+- `src/features/market_correction.py` 新規作成（`CORRECTION_FACTORS` / `apply_market_correction()`）
+- `src/features/engine.py`: `calc_all()` の softmax 前に `apply_market_correction()` を統合
+- `src/betting/app_json.py`: `cal_prob_raw`/`rl_rank_raw`/`correction_factor`/`correction_applied` を馬エントリに追加、`market_correction_enabled`/`honmei_changed_by_correction` をレースエントリに追加、トップレベル JSONに `market_correction_enabled` を追加
+- `index.html`: 「🔧 市場補正 ON/OFF」バッジ常時表示、補正で順位変動した馬はRL欄に旧→新表示、本命変更時の注記
+- `tests/test_market_correction.py` 新規作成（7テスト全通過）
+- `CLAUDE.md`: 市場補正レイヤーセクション追加
+
+---
 
 ### 最終更新: 2026-06-25
 

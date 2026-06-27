@@ -184,6 +184,15 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
 .rtbl .miss{color:#bbb}
 .hit-mark{color:#27ae60;font-weight:800}
 .miss-mark{color:#e74c3c}
+.correction-badge{display:flex;align-items:center;gap:8px;padding:5px 12px;margin:4px 14px;border-radius:6px;font-size:11px;font-weight:700}
+.correction-on{background:rgba(230,126,34,0.15);color:#d35400;border:1px solid rgba(230,126,34,0.3)}
+.correction-off{background:rgba(127,140,141,0.15);color:#7f8c8d;border:1px solid rgba(127,140,141,0.2)}
+.correction-tip{font-size:9px;font-weight:400;opacity:0.8}
+.correction-note{background:rgba(230,126,34,0.1);color:#d35400;font-size:10px;padding:4px 10px;margin:4px 0;border-radius:4px;border-left:3px solid #e67e22}
+.rl-up{color:#27ae60}.rl-down{color:#c0392b}
+.rl-raw{text-decoration:line-through;opacity:0.5;font-size:9px;margin-right:1px}
+.rl-arrow{font-size:9px;margin:0 1px}
+.rl-corrected{font-weight:700}
 </style>
 </head>
 <body>
@@ -210,6 +219,7 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
   </div>
 </div>
 <div class="bias"><span class="bias-txt" id="bias-txt">バイアス読込中...</span><span class="bias-tag" id="bias-tag">-</span></div>
+<div id="correction-badge-area"></div>
 <div class="tabs" id="tabs"></div>
 <div id="pwa-hint" style="display:none" class="pwa">
   <span>📱 ホーム画面に追加して使えます（Safari→共有→ホーム画面に追加）</span>
@@ -273,6 +283,14 @@ function initApp() {
   const allRaces = Object.values(D.races||{}).flat();
   const recCount = allRaces.filter(r=>r.rec).length;
   document.getElementById('summary').innerHTML = '<div class="sum-card"><div class="sum-label">推奨レース</div><div class="sum-val gold">'+recCount+'R</div></div><div class="sum-card"><div class="sum-label">全会場</div><div class="sum-val">'+(D.venues||[]).length+'場</div></div><div class="sum-card"><div class="sum-label">推定投資</div><div class="sum-val">¥'+(D.stats?.invest||0).toLocaleString()+'</div></div>';
+  const mcArea = document.getElementById('correction-badge-area');
+  if (mcArea) {
+    if (D.market_correction_enabled) {
+      mcArea.innerHTML = '<div class="correction-badge correction-on">🔧 市場補正 ON<span class="correction-tip">AIの独自判断を市場人気で補正中</span></div>';
+    } else {
+      mcArea.innerHTML = '<div class="correction-badge correction-off">🔧 市場補正 OFF（AI素の判断）</div>';
+    }
+  }
   const tabs = document.getElementById('tabs');
   tabs.innerHTML = '';
   (D.venues||[]).forEach((v,i) => {
@@ -759,6 +777,9 @@ function render() {
     html += '<div class="rc'+(isRec?' rec':'')+'"><div class="rc-head" onclick="toggle(\''+k+'\')"><div class="rc-num">'+race.r+'</div><div class="rc-info"><div class="rc-name">'+race.name+'</div><div class="rc-meta">'+race.dist+'</div></div><div class="rc-right">'+(isRec?'<span class="conf">AI '+race.conf+'%</span><span class="rec-lbl">★推奨</span>':'')+'<span class="arr'+(isOpen?' open':'')+'">▼</span></div></div>';
     if (race.honmei) {
       html += '<div class="hstrip" onclick="toggle(\''+k+'\')"><span class="hbadge">◎本命</span><span class="hname">#'+race.honmei.n+' '+race.honmei.name+'</span><span class="hodds">'+race.honmei.odds+'倍 / '+race.honmei.style+'</span></div>';
+      if (race.honmei_changed_by_correction && race.honmei_raw) {
+        html += '<div class="correction-note">🔧 補正により本命変更: #'+race.honmei_raw+'（AI素）→ #'+race.honmei.n+'（補正後）</div>';
+      }
     }
     if (isOpen) {
       html += '<div class="detail open"><div class="det-inner"><div class="sec">出走馬・AI評価</div>';
@@ -775,7 +796,16 @@ function render() {
       html += '<table class="htbl"><tr><th style="width:20px">番</th><th class="col-name">馬名</th><th class="col-pop" style="width:22px">人</th><th class="col-odds" style="width:34px">ｵｯｽﾞ</th><th class="col-mk">特記</th><th class="col-rl" style="width:24px">RL</th><th style="width:32px">勝率</th><th style="width:32px">複勝</th><th class="col-val" style="width:32px">Val</th></tr>';
       for (const h of (race.horses||[])) {
         const isH = race.honmei && h.n === race.honmei.n;
-        const rl = h.rl_rank && h.rl_rank<99 ? h.rl_rank : '-';
+        let rl;
+        if (!h.rl_rank || h.rl_rank >= 99) {
+          rl = '-';
+        } else if (h.correction_applied && h.rl_rank_raw && h.rl_rank_raw !== h.rl_rank && h.rl_rank_raw < 99) {
+          const arrow = h.rl_rank < h.rl_rank_raw ? '↑' : '↓';
+          const cls = h.rl_rank < h.rl_rank_raw ? 'rl-up' : 'rl-down';
+          rl = '<span class="'+cls+'"><span class="rl-raw">'+h.rl_rank_raw+'</span><span class="rl-arrow">'+arrow+'</span><span class="rl-corrected">'+h.rl_rank+'</span></span>';
+        } else {
+          rl = h.rl_rank;
+        }
         const tan = h.tan_pct != null ? h.tan_pct+'%' : '-';
         const fuku = h.fuku_pct != null ? h.fuku_pct+'%' : '-';
         const hi = h.fuku_pct != null && h.fuku_pct >= 38;
