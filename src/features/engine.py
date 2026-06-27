@@ -713,13 +713,22 @@ PREP_RACE_PROFILES = {
 }
 
 
-def build_member_level_cache(base_dir):
+def build_member_level_cache(base_dir, cutoff_date=None):
     """対戦相手のその後の成績から前走メンバーレベルキャッシュを構築して保存する。
 
     各レースのスコア = (対戦相手の その後の勝利数×3 + 複勝数) / その後のレース数
     → 0-10スケールに変換（×2.5）し、高い = 強い相手と戦った実績
 
     計算はすべてメモリ上で行いDBクエリを最小化する。
+
+    Parameters
+    ----------
+    base_dir    : プロジェクトルート
+    cutoff_date : str or None
+        データリーク防止用カットオフ日付（'YYYY-MM-DD' 形式）。
+        指定すると、各レースのメンバーレベル計算に使う「その後の成績」を
+        この日付より前に限定する（学習データ構築時に使用）。
+        None（デフォルト）のとき全データを使用（推論時・運用時）。
     """
     import sqlite3 as _sq
     from collections import defaultdict
@@ -733,6 +742,14 @@ def build_member_level_cache(base_dir):
         'WHERE place IS NOT NULL AND place < 99 ORDER BY date'
     ).fetchall()
     conn.close()
+
+    # cutoff_date を文字列に正規化（比較はISO文字列で行う）
+    cutoff_str = None
+    if cutoff_date is not None:
+        cutoff_str = str(cutoff_date).replace('-', '')[:8]
+        # 'YYYYMMDD' → 'YYYY-MM-DD' 形式に正規化
+        if len(cutoff_str) == 8:
+            cutoff_str = f'{cutoff_str[:4]}-{cutoff_str[4:6]}-{cutoff_str[6:8]}'
 
     # horse → [(date, race_id, place)] の時系列辞書
     horse_timeline = defaultdict(list)
@@ -760,8 +777,12 @@ def build_member_level_cache(base_dir):
 
         for horse_name, _, _ in horses_in_race:
             timeline = horse_timeline.get(horse_name, [])
-            # この日付より後のレースを最大5件
-            subsequent = [(p, rid) for d, rid, p in timeline if d > race_date][:5]
+            # この日付より後のレースを最大5件（cutoff_date が指定された場合はその日付未満に限定）
+            if cutoff_str is not None:
+                subsequent = [(p, rid) for d, rid, p in timeline
+                              if d > race_date and d < cutoff_str][:5]
+            else:
+                subsequent = [(p, rid) for d, rid, p in timeline if d > race_date][:5]
             if not subsequent:
                 continue
             wins = sum(1 for p, _ in subsequent if p == 1)
@@ -1381,6 +1402,9 @@ def calc_features_for_xgb(h, race):
     surf  = race.get('surface', '芝')
     dist  = int(race.get('distance', 1600) or 1600)
     n     = max(len(race.get('horses', [])), 8)
+
+    # 初出走フラグ（新馬・初出走は過去走なし → fillna(5.0) と区別するため）
+    feats['f_is_debut'] = float(1 if not hist else 0)
 
     c3_list = [r.get('corner_3') for r in hist
                if r.get('corner_3') is not None and r.get('corner_3') == r.get('corner_3')]
@@ -2118,6 +2142,9 @@ def calc_all(race, bias_data=None):
             for h, p, (_t2, _t3) in zip(out, _pre_wps, _pre_harville):
                 h['win_prob_raw']   = round(p, 6)
                 h['top3_prob_raw']  = round(_t3, 6)
+            # 補正前のwin_prob順位 → 補正後と比較して「本当に補正で変わったか」を示す
+            for i, h in enumerate(sorted(out, key=lambda x: x.get('win_prob_raw', 0), reverse=True)):
+                h['rl_rank_win_raw'] = i + 1
             out = apply_market_correction(out)
     except Exception:
         pass

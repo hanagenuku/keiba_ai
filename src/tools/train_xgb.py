@@ -163,8 +163,15 @@ def train_xgb(base_dir,
     with open(new_model_path, 'wb') as f:
         pickle.dump(model, f)
     with open(new_cols_path, 'w', encoding='utf-8') as f:
-        json.dump({'feature_cols': feat_cols, 'trained_at': str(pd.Timestamp.now())}, f,
-                  ensure_ascii=False, indent=2)
+        json.dump({
+            'feature_cols': feat_cols,
+            'trained_at':   str(pd.Timestamp.now()),
+            'val_auc':      round(auc, 4),
+            'val_brier':    round(brier, 4),
+            'val_logloss':  round(ll, 4),
+            'n_train':      len(train_df),
+            'n_val':        len(val_df),
+        }, f, ensure_ascii=False, indent=2)
     print(f'\n新モデル保存: {new_model_path}')
     print(f'特徴量リスト: {new_cols_path}')
 

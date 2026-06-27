@@ -1,5 +1,6 @@
 {
   "feature_cols": [
+    "f_is_debut",
     "f_pos_avg_3",
     "f_pos_std_3",
     "f_p_front",
@@ -106,5 +107,10 @@
     "f_rl_rank",
     "f_cl_rank"
   ],
-  "trained_at": "2026-06-25 22:48:43.959494"
+  "trained_at": "2026-06-27 21:08:59.437683",
+  "val_auc": 0.722,
+  "val_brier": 0.1998,
+  "val_logloss": 0.5853,
+  "n_train": 59421,
+  "n_val": 8422
 }

@@ -164,9 +164,15 @@ def build_training_data(base_dir, output_csv='data/horse_features.csv',
         print(f'Backed up existing CSV → {bak_path}')
 
     # メンバーレベルキャッシュを必ず最新で再構築（新データ取り込み後は再生成が必要）
+    # ── データリーク防止: train_xgb の val_start より前のデータのみを
+    #    「その後の成績」として使う。これにより Val 期間のデータが Train の
+    #    member_level 特徴量に漏れ込まない。
+    # train_xgb のデフォルト val_start='2026-04-01' に合わせてカットオフを設定。
+    # より厳密には train_end+1 日でよい（'2026-04-01' = train_end '2026-03-31' の翌日）。
+    MEMBER_LEVEL_CUTOFF = '2026-04-01'
     ml_path = os.path.join(base_dir, 'data', 'member_level_cache.pkl')
-    print('🔨 メンバーレベルキャッシュ再構築中...')
-    build_member_level_cache(base_dir)
+    print(f'🔨 メンバーレベルキャッシュ再構築中... (cutoff={MEMBER_LEVEL_CUTOFF})')
+    build_member_level_cache(base_dir, cutoff_date=MEMBER_LEVEL_CUTOFF)
     print(f'✅ メンバーレベルキャッシュ保存: {ml_path}')
 
     # エンジン初期化（jockey_dict / trainer_dict + キャッシュを読み込む）
