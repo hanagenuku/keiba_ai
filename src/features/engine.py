@@ -2103,6 +2103,18 @@ def calc_all(race, bias_data=None):
             for h in out:
                 h['total'] = round(h['total'] * orig_sum / new_sum, 2)
 
+    # ★ 市場補正レイヤー（2026-06-27 導入）
+    # cal_prob降順で暫定RL順位を付与し、補正係数を total と cal_prob に乗算する。
+    # softmax はこの補正後の total を使うため、win_prob/Harville/EV に反映される。
+    try:
+        from src.features.market_correction import apply_market_correction, MARKET_CORRECTION_ENABLED
+        if MARKET_CORRECTION_ENABLED:
+            for i, h in enumerate(sorted(out, key=lambda x: x.get('cal_prob', 0), reverse=True)):
+                h['rl_rank'] = i + 1
+            out = apply_market_correction(out)
+    except Exception:
+        pass
+
     all_totals = [h['total'] for h in out]
     win_probs = softmax_probs(all_totals, temperature=2.0)
     # 旧IsotonicCalibratorは同一確率フロアを生じさせるためスキップ
