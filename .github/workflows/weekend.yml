@@ -11,6 +11,11 @@ on:
         options:
           - saturday
           - sunday
+      force:
+        description: '予想を強制再生成する（--force）'
+        required: false
+        default: false
+        type: boolean
 
 concurrency:
   group: keiba-weekly
@@ -43,7 +48,7 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run weekend script
-        run: python scripts/weekend.py --mode ${{ inputs.mode }}
+        run: python scripts/weekend.py --mode ${{ inputs.mode }}${{ inputs.force == 'true' && ' --force' || '' }}
 
       - name: Ingest pre-race odds log
         run: python scripts/ingest_odds_log.py
