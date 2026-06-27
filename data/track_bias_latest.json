@@ -4,19 +4,6 @@
   "track_speed": -0.79,
   "summary": "時計遅め",
   "by_course": {
-    "函館": {
-      "inner_outer": -0.01,
-      "pace_bias": -0.53,
-      "track_speed": -0.61,
-      "summary": "時計遅め",
-      "style_dist": {
-        "先行": 8,
-        "逃げ": 5,
-        "差し": 15,
-        "追込": 8
-      },
-      "race_count": 12
-    },
     "福島": {
       "inner_outer": 0.16,
       "pace_bias": 0.1,
@@ -40,6 +27,19 @@
         "先行": 10,
         "差し": 15,
         "追込": 7
+      },
+      "race_count": 12
+    },
+    "函館": {
+      "inner_outer": -0.01,
+      "pace_bias": -0.53,
+      "track_speed": -0.61,
+      "summary": "時計遅め",
+      "style_dist": {
+        "先行": 8,
+        "逃げ": 5,
+        "差し": 15,
+        "追込": 8
       },
       "race_count": 12
     }
