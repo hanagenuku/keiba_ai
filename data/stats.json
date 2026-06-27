@@ -85,26 +85,26 @@
     }
   ],
   "rl_accuracy": {
-    "total_races": 34,
-    "rl1_win_rate": 20.6,
-    "rl1_top3_rate": 41.2,
-    "rl2_top3_rate": 29.4,
-    "rl3_top3_rate": 23.5,
+    "total_races": 68,
+    "rl1_win_rate": 14.7,
+    "rl1_top3_rate": 27.9,
+    "rl2_top3_rate": 26.5,
+    "rl3_top3_rate": 17.6,
     "by_chaos": {
       "A": {
-        "total": 7,
-        "rl1_win_rate": 0.0,
-        "rl1_top3_rate": 28.6
+        "total": 12,
+        "rl1_win_rate": 8.3,
+        "rl1_top3_rate": 25.0
       },
       "B": {
-        "total": 18,
-        "rl1_win_rate": 16.7,
-        "rl1_top3_rate": 27.8
+        "total": 43,
+        "rl1_win_rate": 9.3,
+        "rl1_top3_rate": 16.3
       },
       "C": {
-        "total": 9,
-        "rl1_win_rate": 44.4,
-        "rl1_top3_rate": 77.8
+        "total": 13,
+        "rl1_win_rate": 38.5,
+        "rl1_top3_rate": 69.2
       }
     }
   },
@@ -720,183 +720,520 @@
       "fuku_pay": 130.0,
       "wide_hit": 0,
       "rec": 0
+    },
+    {
+      "date": "2026-06-27",
+      "racecourse": "福島",
+      "race_num": 2,
+      "race_class": "未勝利",
+      "chaos": "B",
+      "rl1": null,
+      "rl2": null,
+      "rl3": null,
+      "win": 15,
+      "sec": 14,
+      "thr": 7,
+      "tan_hit": 0,
+      "fuku_hit": 0,
+      "fuku_pay": null,
+      "wide_hit": 0,
+      "rec": 0
+    },
+    {
+      "date": "2026-06-27",
+      "racecourse": "福島",
+      "race_num": 3,
+      "race_class": "1勝",
+      "chaos": "B",
+      "rl1": null,
+      "rl2": null,
+      "rl3": null,
+      "win": 10,
+      "sec": 6,
+      "thr": 5,
+      "tan_hit": 0,
+      "fuku_hit": 0,
+      "fuku_pay": null,
+      "wide_hit": 0,
+      "rec": 0
+    },
+    {
+      "date": "2026-06-27",
+      "racecourse": "福島",
+      "race_num": 5,
+      "race_class": "新馬",
+      "chaos": "B",
+      "rl1": 5,
+      "rl2": 11,
+      "rl3": 7,
+      "win": 3,
+      "sec": 6,
+      "thr": 9,
+      "tan_hit": 0,
+      "fuku_hit": 0,
+      "fuku_pay": null,
+      "wide_hit": 0,
+      "rec": 0
+    },
+    {
+      "date": "2026-06-27",
+      "racecourse": "福島",
+      "race_num": 6,
+      "race_class": "新馬",
+      "chaos": "B",
+      "rl1": 8,
+      "rl2": 7,
+      "rl3": 4,
+      "win": 2,
+      "sec": 9,
+      "thr": 5,
+      "tan_hit": 0,
+      "fuku_hit": 0,
+      "fuku_pay": null,
+      "wide_hit": 0,
+      "rec": 0
+    },
+    {
+      "date": "2026-06-27",
+      "racecourse": "福島",
+      "race_num": 7,
+      "race_class": "未勝利",
+      "chaos": "C",
+      "rl1": 5,
+      "rl2": 12,
+      "rl3": 2,
+      "win": 3,
+      "sec": 16,
+      "thr": 4,
+      "tan_hit": 0,
+      "fuku_hit": 0,
+      "fuku_pay": null,
+      "wide_hit": 0,
+      "rec": 0
+    },
+    {
+      "date": "2026-06-27",
+      "racecourse": "福島",
+      "race_num": 8,
+      "race_class": "未勝利",
+      "chaos": "B",
+      "rl1": null,
+      "rl2": null,
+      "rl3": null,
+      "win": 2,
+      "sec": 9,
+      "thr": 13,
+      "tan_hit": 0,
+      "fuku_hit": 0,
+      "fuku_pay": null,
+      "wide_hit": 0,
+      "rec": 0
+    },
+    {
+      "date": "2026-06-27",
+      "racecourse": "福島",
+      "race_num": 9,
+      "race_class": "2勝",
+      "chaos": "B",
+      "rl1": null,
+      "rl2": null,
+      "rl3": null,
+      "win": 9,
+      "sec": 6,
+      "thr": 14,
+      "tan_hit": 0,
+      "fuku_hit": 0,
+      "fuku_pay": null,
+      "wide_hit": 0,
+      "rec": 0
+    },
+    {
+      "date": "2026-06-27",
+      "racecourse": "福島",
+      "race_num": 10,
+      "race_class": "2勝",
+      "chaos": "B",
+      "rl1": 11,
+      "rl2": 9,
+      "rl3": 5,
+      "win": 3,
+      "sec": 1,
+      "thr": 9,
+      "tan_hit": 0,
+      "fuku_hit": 0,
+      "fuku_pay": null,
+      "wide_hit": 0,
+      "rec": 0
+    },
+    {
+      "date": "2026-06-27",
+      "racecourse": "福島",
+      "race_num": 11,
+      "race_class": "3勝",
+      "chaos": "A",
+      "rl1": 1,
+      "rl2": 3,
+      "rl3": 7,
+      "win": 4,
+      "sec": 8,
+      "thr": 3,
+      "tan_hit": 0,
+      "fuku_hit": 0,
+      "fuku_pay": null,
+      "wide_hit": 0,
+      "rec": 0
+    },
+    {
+      "date": "2026-06-27",
+      "racecourse": "福島",
+      "race_num": 12,
+      "race_class": "1勝",
+      "chaos": "B",
+      "rl1": null,
+      "rl2": null,
+      "rl3": null,
+      "win": 6,
+      "sec": 2,
+      "thr": 7,
+      "tan_hit": 0,
+      "fuku_hit": 0,
+      "fuku_pay": null,
+      "wide_hit": 0,
+      "rec": 0
+    },
+    {
+      "date": "2026-06-27",
+      "racecourse": "小倉",
+      "race_num": 1,
+      "race_class": "未勝利",
+      "chaos": "B",
+      "rl1": 6,
+      "rl2": 4,
+      "rl3": 5,
+      "win": 1,
+      "sec": 2,
+      "thr": 5,
+      "tan_hit": 0,
+      "fuku_hit": 0,
+      "fuku_pay": null,
+      "wide_hit": 0,
+      "rec": 0
+    },
+    {
+      "date": "2026-06-27",
+      "racecourse": "小倉",
+      "race_num": 2,
+      "race_class": "未勝利",
+      "chaos": "C",
+      "rl1": 1,
+      "rl2": 7,
+      "rl3": 4,
+      "win": 14,
+      "sec": 3,
+      "thr": 9,
+      "tan_hit": 0,
+      "fuku_hit": 0,
+      "fuku_pay": null,
+      "wide_hit": 0,
+      "rec": 0
+    },
+    {
+      "date": "2026-06-27",
+      "racecourse": "小倉",
+      "race_num": 3,
+      "race_class": "未勝利",
+      "chaos": "B",
+      "rl1": 2,
+      "rl2": 4,
+      "rl3": 14,
+      "win": 2,
+      "sec": 3,
+      "thr": 4,
+      "tan_hit": 1,
+      "fuku_hit": 1,
+      "fuku_pay": 460.0,
+      "wide_hit": 1,
+      "rec": 0
+    },
+    {
+      "date": "2026-06-27",
+      "racecourse": "小倉",
+      "race_num": 4,
+      "race_class": "未勝利",
+      "chaos": "B",
+      "rl1": null,
+      "rl2": null,
+      "rl3": null,
+      "win": 4,
+      "sec": 8,
+      "thr": 5,
+      "tan_hit": 0,
+      "fuku_hit": 0,
+      "fuku_pay": null,
+      "wide_hit": 0,
+      "rec": 0
+    },
+    {
+      "date": "2026-06-27",
+      "racecourse": "小倉",
+      "race_num": 5,
+      "race_class": "新馬",
+      "chaos": "A",
+      "rl1": 3,
+      "rl2": 5,
+      "rl3": 9,
+      "win": 6,
+      "sec": 2,
+      "thr": 5,
+      "tan_hit": 0,
+      "fuku_hit": 0,
+      "fuku_pay": null,
+      "wide_hit": 0,
+      "rec": 0
+    },
+    {
+      "date": "2026-06-27",
+      "racecourse": "小倉",
+      "race_num": 6,
+      "race_class": "未勝利",
+      "chaos": "B",
+      "rl1": 4,
+      "rl2": 2,
+      "rl3": 14,
+      "win": 9,
+      "sec": 16,
+      "thr": 8,
+      "tan_hit": 0,
+      "fuku_hit": 0,
+      "fuku_pay": null,
+      "wide_hit": 0,
+      "rec": 0
     }
   ],
   "upset_patterns": {
-    "total_races": 23,
-    "overall_upset_rate": 91.3,
+    "total_races": 46,
+    "overall_upset_rate": 95.7,
     "by_chaos": [
       {
         "label": "A",
-        "total": 7,
-        "upset_rate": 85.7,
-        "full_miss_rate": 57.1,
+        "total": 12,
+        "upset_rate": 91.7,
+        "full_miss_rate": 41.7,
         "longshot_rate": 0.0
       },
       {
         "label": "B",
-        "total": 7,
+        "total": 21,
         "upset_rate": 100.0,
-        "full_miss_rate": 14.3,
+        "full_miss_rate": 28.6,
         "longshot_rate": 0.0
       },
       {
         "label": "C",
-        "total": 9,
-        "upset_rate": 88.9,
-        "full_miss_rate": 0.0,
+        "total": 13,
+        "upset_rate": 92.3,
+        "full_miss_rate": 15.4,
         "longshot_rate": 0.0
       }
     ],
     "by_heads": [
       {
         "label": "中頭数(9-13頭)",
-        "total": 12,
+        "total": 24,
         "upset_rate": 100.0,
         "full_miss_rate": 16.7,
         "longshot_rate": 0.0
       },
       {
         "label": "多頭数(14頭〜)",
-        "total": 8,
-        "upset_rate": 87.5,
-        "full_miss_rate": 37.5,
+        "total": 16,
+        "upset_rate": 93.8,
+        "full_miss_rate": 50.0,
         "longshot_rate": 0.0
       },
       {
         "label": "少頭数(〜8頭)",
-        "total": 3,
-        "upset_rate": 66.7,
-        "full_miss_rate": 0.0,
+        "total": 6,
+        "upset_rate": 83.3,
+        "full_miss_rate": 16.7,
         "longshot_rate": 0.0
       }
     ],
     "by_surface": [
       {
         "label": "ダート",
-        "total": 9,
+        "total": 18,
         "upset_rate": 100.0,
         "full_miss_rate": 22.2,
         "longshot_rate": 0.0
       },
       {
         "label": "芝",
-        "total": 14,
-        "upset_rate": 85.7,
-        "full_miss_rate": 21.4,
+        "total": 28,
+        "upset_rate": 92.9,
+        "full_miss_rate": 32.1,
         "longshot_rate": 0.0
       }
     ],
     "by_distance": [
       {
         "label": "マイル(1401-1800)",
-        "total": 8,
+        "total": 16,
         "upset_rate": 100.0,
-        "full_miss_rate": 25.0,
+        "full_miss_rate": 18.8,
         "longshot_rate": 0.0
       },
       {
         "label": "中距離(1801-2200)",
-        "total": 3,
+        "total": 6,
         "upset_rate": 100.0,
         "full_miss_rate": 33.3,
         "longshot_rate": 0.0
       },
       {
         "label": "短距離(〜1400)",
-        "total": 12,
-        "upset_rate": 83.3,
-        "full_miss_rate": 16.7,
+        "total": 24,
+        "upset_rate": 91.7,
+        "full_miss_rate": 33.3,
         "longshot_rate": 0.0
       }
     ],
     "by_racecourse": [
       {
         "label": "函館",
-        "total": 10,
-        "upset_rate": 80.0,
+        "total": 20,
+        "upset_rate": 90.0,
         "full_miss_rate": 30.0,
         "longshot_rate": 0.0
       },
       {
         "label": "小倉",
-        "total": 8,
+        "total": 16,
         "upset_rate": 100.0,
         "full_miss_rate": 25.0,
         "longshot_rate": 0.0
       },
       {
         "label": "福島",
-        "total": 5,
+        "total": 10,
         "upset_rate": 100.0,
-        "full_miss_rate": 0.0,
+        "full_miss_rate": 30.0,
         "longshot_rate": 0.0
       }
     ],
     "by_class": [
       {
         "label": "1勝クラス",
-        "total": 5,
+        "total": 10,
         "upset_rate": 100.0,
-        "full_miss_rate": 40.0,
+        "full_miss_rate": 20.0,
         "longshot_rate": 0.0
       },
       {
         "label": "2勝クラス",
-        "total": 2,
+        "total": 4,
         "upset_rate": 100.0,
         "full_miss_rate": 0.0,
         "longshot_rate": 0.0
       },
       {
         "label": "3勝クラス",
-        "total": 1,
+        "total": 2,
         "upset_rate": 100.0,
         "full_miss_rate": 0.0,
         "longshot_rate": 0.0
       },
       {
         "label": "OP/L",
-        "total": 1,
+        "total": 2,
         "upset_rate": 100.0,
-        "full_miss_rate": 0.0,
+        "full_miss_rate": 50.0,
         "longshot_rate": 0.0
       },
       {
         "label": "新馬",
-        "total": 4,
-        "upset_rate": 75.0,
-        "full_miss_rate": 0.0,
+        "total": 8,
+        "upset_rate": 87.5,
+        "full_miss_rate": 37.5,
         "longshot_rate": 0.0
       },
       {
         "label": "未勝利",
-        "total": 10,
-        "upset_rate": 90.0,
-        "full_miss_rate": 30.0,
+        "total": 20,
+        "upset_rate": 95.0,
+        "full_miss_rate": 35.0,
         "longshot_rate": 0.0
       }
     ],
     "blind_spots": [
       {
-        "label": "ダート・マイル(1401-1800)",
+        "label": "Bグレード・中頭数(9-13頭)",
+        "total": 11,
+        "upset_rate": 100.0,
+        "full_miss_rate": 27.3,
+        "longshot_rate": 0.0
+      },
+      {
+        "label": "ダート・短距離(〜1400)",
+        "total": 8,
+        "upset_rate": 100.0,
+        "full_miss_rate": 50.0,
+        "longshot_rate": 0.0
+      },
+      {
+        "label": "Aグレード・中頭数(9-13頭)",
+        "total": 6,
+        "upset_rate": 100.0,
+        "full_miss_rate": 16.7,
+        "longshot_rate": 0.0
+      },
+      {
+        "label": "芝・マイル(1401-1800)",
+        "total": 6,
+        "upset_rate": 100.0,
+        "full_miss_rate": 50.0,
+        "longshot_rate": 0.0
+      },
+      {
+        "label": "Aグレード・多頭数(14頭〜)",
         "total": 5,
+        "upset_rate": 100.0,
+        "full_miss_rate": 80.0,
+        "longshot_rate": 0.0
+      },
+      {
+        "label": "ダート・マイル(1401-1800)",
+        "total": 10,
         "upset_rate": 100.0,
         "full_miss_rate": 0.0,
         "longshot_rate": 0.0
       },
       {
         "label": "Cグレード・中頭数(9-13頭)",
-        "total": 6,
+        "total": 7,
         "upset_rate": 100.0,
         "full_miss_rate": 0.0,
         "longshot_rate": 0.0
       },
       {
-        "label": "芝・短距離(〜1400)",
-        "total": 8,
-        "upset_rate": 75.0,
-        "full_miss_rate": 0.0,
+        "label": "芝・中距離(1801-2200)",
+        "total": 6,
+        "upset_rate": 100.0,
+        "full_miss_rate": 33.3,
+        "longshot_rate": 0.0
+      },
+      {
+        "label": "小倉・Bグレード",
+        "total": 6,
+        "upset_rate": 100.0,
+        "full_miss_rate": 16.7,
+        "longshot_rate": 0.0
+      },
+      {
+        "label": "小倉・Cグレード",
+        "total": 7,
+        "upset_rate": 100.0,
+        "full_miss_rate": 14.3,
         "longshot_rate": 0.0
       }
     ]
@@ -918,8 +1255,8 @@
         "races": 10
       }
     ],
-    "workflow_run_at": "2026-06-27T07:23:54Z",
+    "workflow_run_at": "2026-06-27T08:27:32Z",
     "workflow_result": "success"
   },
-  "generated_at": "2026-06-27 08:27"
+  "generated_at": "2026-06-27 09:39"
 }
