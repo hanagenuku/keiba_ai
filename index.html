@@ -607,7 +607,7 @@ function estimatePayout(bet, horsesMap) {
 
 function recalcBets(race) {
   const corrOn = getRaceCorrectionEnabled(race.race_id);
-  const rlField = corrOn ? 'rl_rank' : 'rl_rank_raw';
+  const rlField = corrOn ? 'rl_rank' : 'rl_rank_win_raw';
   const horses = (race.horses || []).slice().sort((a, b) => ((a[rlField] || a.rl_rank || 99) - (b[rlField] || b.rl_rank || 99)));
   const numHorses = race.num_horses || horses.length;
   const chaosGrade = race.chaos_grade || 'B';
@@ -838,17 +838,18 @@ function render() {
       html += '<table class="htbl"><tr><th style="width:20px">番</th><th class="col-name">馬名</th><th class="col-pop" style="width:22px">人</th><th class="col-odds" style="width:34px">ｵｯｽﾞ</th><th class="col-mk">特記</th><th class="col-rl" style="width:24px">RL</th><th style="width:32px">勝率</th><th style="width:32px">複勝</th><th class="col-val" style="width:32px">Val</th></tr>';
       for (const h of (race.horses||[])) {
         const isH = displayHonmei && h.n === displayHonmei.n;
-        // RL表示: 補正ONなら旧→新の矢印あり、補正OFFなら生のRL順位のみ
+        // RL表示: 補正ONなら「補正前win_prob順位 → 補正後win_prob順位」矢印、補正OFFなら補正前順位のみ
         let rl;
+        // rl_rank_win_rawが存在すればそれを使う（新データ）、なければrl_rank_rawで代替
+        const winRawRl = (h.rl_rank_win_raw != null && h.rl_rank_win_raw < 99) ? h.rl_rank_win_raw : (h.rl_rank_raw != null && h.rl_rank_raw < 99 ? h.rl_rank_raw : h.rl_rank);
         if (!corrEnabled) {
-          const rawRl = h.rl_rank_raw != null && h.rl_rank_raw < 99 ? h.rl_rank_raw : h.rl_rank;
-          rl = rawRl && rawRl < 99 ? rawRl : '-';
+          rl = winRawRl && winRawRl < 99 ? winRawRl : '-';
         } else if (!h.rl_rank || h.rl_rank >= 99) {
           rl = '-';
-        } else if (h.correction_applied && h.rl_rank_raw && h.rl_rank_raw !== h.rl_rank && h.rl_rank_raw < 99) {
-          const arrow = h.rl_rank < h.rl_rank_raw ? '↑' : '↓';
-          const cls = h.rl_rank < h.rl_rank_raw ? 'rl-up' : 'rl-down';
-          rl = '<span class="'+cls+'"><span class="rl-raw">'+h.rl_rank_raw+'</span><span class="rl-arrow">'+arrow+'</span><span class="rl-corrected">'+h.rl_rank+'</span></span>';
+        } else if (h.correction_applied && winRawRl && winRawRl !== h.rl_rank && winRawRl < 99) {
+          const arrow = h.rl_rank < winRawRl ? '↑' : '↓';
+          const cls = h.rl_rank < winRawRl ? 'rl-up' : 'rl-down';
+          rl = '<span class="'+cls+'"><span class="rl-raw">'+winRawRl+'</span><span class="rl-arrow">'+arrow+'</span><span class="rl-corrected">'+h.rl_rank+'</span></span>';
         } else {
           rl = h.rl_rank;
         }

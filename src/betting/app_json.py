@@ -116,6 +116,7 @@ def _build_horses_list(scored, top1, by_odds, value_gap_map=None, odds_lookup=No
             # 市場補正フィールド（market_correction.py）
             # 補正前（AI素）
             'rl_rank_raw':        h.get('rl_rank_raw', h.get('rl_rank', 99)),
+            'rl_rank_win_raw':    h.get('rl_rank_win_raw', h.get('rl_rank', 99)),
             'win_prob_raw':       round(h.get('win_prob_raw', pn), 6),
             'fuku_pct_raw':       round(h.get('top3_prob_raw', h.get('top3_prob', pn)) * 100, 1),
             'tan_pct_raw':        round(min(60, h.get('win_prob_raw', pn) * 100), 1),

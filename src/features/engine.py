@@ -2118,6 +2118,9 @@ def calc_all(race, bias_data=None):
             for h, p, (_t2, _t3) in zip(out, _pre_wps, _pre_harville):
                 h['win_prob_raw']   = round(p, 6)
                 h['top3_prob_raw']  = round(_t3, 6)
+            # 補正前のwin_prob順位 → 補正後と比較して「本当に補正で変わったか」を示す
+            for i, h in enumerate(sorted(out, key=lambda x: x.get('win_prob_raw', 0), reverse=True)):
+                h['rl_rank_win_raw'] = i + 1
             out = apply_market_correction(out)
     except Exception:
         pass
