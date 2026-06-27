@@ -148,10 +148,12 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
 .note-save{background:#8e44ad;color:#fff}
 .note-save:disabled{background:#b09cc4}
 .note-cancel{background:#eee;color:#333}
-.action-bar{display:flex;gap:6px;padding:8px 12px;overflow-x:auto;-webkit-overflow-scrolling:touch}
-.action-btn{background:#1a5c3a;color:#fff;border:none;border-radius:6px;padding:8px 12px;font-size:11px;font-weight:700;white-space:nowrap;cursor:pointer;flex-shrink:0}
+.action-bar{display:flex;gap:6px;padding:8px 12px;overflow-x:auto;-webkit-overflow-scrolling:touch;align-items:flex-start}
+.action-wrap{display:flex;flex-direction:column;align-items:center;flex-shrink:0}
+.action-btn{background:#1a5c3a;color:#fff;border:none;border-radius:6px;padding:8px 12px;font-size:11px;font-weight:700;white-space:nowrap;cursor:pointer;width:100%}
 .action-btn:active{background:#0d3d25}
 .action-btn:disabled{background:#95a5a6}
+.action-sub{font-size:9px;color:#888;margin-top:3px;white-space:nowrap;pointer-events:none}
 /* ナビ */
 .nav-bar{display:flex;background:var(--g1);padding:0 12px;border-bottom:2px solid var(--gold)}
 .nav-btn{flex:1;padding:8px 0;background:transparent;border:none;color:rgba(255,255,255,0.6);font-size:13px;font-weight:700;cursor:pointer}
@@ -194,9 +196,18 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
   <button class="nav-btn" id="nav-stats" onclick="switchPage('stats')">📊 成績</button>
 </div>
 <div class="action-bar">
-  <button class="action-btn" onclick="triggerAction('friday-predict')">📊 金曜予想</button>
-  <button class="action-btn" onclick="triggerAction('weekend','saturday')">📋 土曜結果+日曜予想</button>
-  <button class="action-btn" onclick="triggerAction('sunday-results')">📋 日曜結果</button>
+  <div class="action-wrap">
+    <button class="action-btn" onclick="triggerAction('friday-predict')">📅 土曜レース予想</button>
+    <span class="action-sub">金曜夜〜土曜朝に実行</span>
+  </div>
+  <div class="action-wrap">
+    <button class="action-btn" onclick="triggerAction('weekend','saturday')">📋 土曜結果取得＋日曜レース予想</button>
+    <span class="action-sub">土曜夜に実行</span>
+  </div>
+  <div class="action-wrap">
+    <button class="action-btn" onclick="triggerAction('sunday-results')">📋 日曜結果取得</button>
+    <span class="action-sub">日曜夜に実行</span>
+  </div>
 </div>
 <div class="bias"><span class="bias-txt" id="bias-txt">バイアス読込中...</span><span class="bias-tag" id="bias-tag">-</span></div>
 <div class="tabs" id="tabs"></div>

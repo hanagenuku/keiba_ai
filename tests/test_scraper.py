@@ -79,7 +79,7 @@ class _FakeSession:
         cn = (data or {}).get('cname') or (data or {}).get('CNAME') or ''
         sx = cn.split('/')[-1].upper()
         if sx == f'{self.target:02X}':
-            return _FakeResp('<html><body><table><tr><td>出馬表</td></tr></table></body></html>')
+            return _FakeResp('<html><body><table><tr><td>馬名</td></tr></table></body></html>')
         return _FakeResp('パラメータエラー')
 
 
@@ -107,7 +107,7 @@ class _MultiHitSession:
         cn = (data or {}).get('cname') or (data or {}).get('CNAME') or ''
         sx = cn.split('/')[-1].upper()
         if sx in self.hits:
-            return _FakeResp('<table><tr><td>x</td></tr></table>')
+            return _FakeResp('<table><tr><td>馬名</td></tr></table>')
         return _FakeResp('パラメータエラー')
 
 
