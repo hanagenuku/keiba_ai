@@ -501,7 +501,7 @@ function updateValueGaps(race, freshOdds) {
   for (const h of (race.horses || [])) {
     const od = freshOdds[String(h.n)];
     if (od && od.tansho) {
-      h.odds = od.tansho;  // オッズ列の表示用も更新
+      h.odds = od.tansho;
     }
     if (od && od.fukusho && od.fukusho >= 1.0 && h.fuku_pct != null) {
       const placeProb = h.fuku_pct / 100;
@@ -514,6 +514,10 @@ function updateValueGaps(race, freshOdds) {
       h.tansho_odds  = null;
     }
   }
+  // 直前オッズで人気順を再計算（単勝オッズ昇順）
+  const ranked = (race.horses || []).filter(h => h.odds != null && h.odds > 0);
+  ranked.sort((a, b) => a.odds - b.odds);
+  ranked.forEach((h, i) => { h.pop = i + 1; });
 }
 
 function estimatePayout(bet, horsesMap) {
