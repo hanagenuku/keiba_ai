@@ -256,15 +256,40 @@ let venue = null;
 const opened = {};
 const oddsCooldown = {};
 const raceCorrection = {};  // race_id → true(補正ON) / false(補正OFF)
+let globalCorrectionDefault = false;  // デフォルトOFF。レース毎に個別ON可能
 
 function getRaceCorrectionEnabled(raceId) {
   if (raceId in raceCorrection) return raceCorrection[raceId];
-  return D ? (D.market_correction_enabled !== false) : true;
+  return globalCorrectionDefault;
 }
 
 function toggleRaceCorrection(raceId) {
   raceCorrection[raceId] = !getRaceCorrectionEnabled(raceId);
+  renderCorrectionBadge();
   render();
+}
+
+function toggleAllCorrection() {
+  globalCorrectionDefault = !globalCorrectionDefault;
+  // 個別設定をクリアして全レース一括切替
+  Object.keys(raceCorrection).forEach(k => delete raceCorrection[k]);
+  renderCorrectionBadge();
+  render();
+}
+
+function renderCorrectionBadge() {
+  const mcArea = document.getElementById('correction-badge-area');
+  if (!mcArea) return;
+  const allRaces = Object.values((D&&D.races)||{}).flat();
+  const onCount = allRaces.filter(r => getRaceCorrectionEnabled(r.race_id)).length;
+  const total = allRaces.length;
+  if (onCount === 0) {
+    mcArea.innerHTML = '<div class="correction-badge correction-off" onclick="toggleAllCorrection()" style="cursor:pointer" title="クリックで全レースON">🔧 市場補正 OFF（AI素）<span class="correction-tip">クリックで全レースON</span></div>';
+  } else if (onCount === total) {
+    mcArea.innerHTML = '<div class="correction-badge correction-on" onclick="toggleAllCorrection()" style="cursor:pointer" title="クリックで全レースOFF">🔧 市場補正 全ON<span class="correction-tip">クリックで全レースOFF</span></div>';
+  } else {
+    mcArea.innerHTML = '<div class="correction-badge correction-on" onclick="toggleAllCorrection()" style="cursor:pointer" title="クリックで全OFF">🔧 市場補正 '+onCount+'/'+total+'R ON<span class="correction-tip">クリックで全OFF</span></div>';
+  }
 }
 
 async function loadData() {
@@ -298,14 +323,7 @@ function initApp() {
   const allRaces = Object.values(D.races||{}).flat();
   const recCount = allRaces.filter(r=>r.rec).length;
   document.getElementById('summary').innerHTML = '<div class="sum-card"><div class="sum-label">推奨レース</div><div class="sum-val gold">'+recCount+'R</div></div><div class="sum-card"><div class="sum-label">全会場</div><div class="sum-val">'+(D.venues||[]).length+'場</div></div><div class="sum-card"><div class="sum-label">推定投資</div><div class="sum-val">¥'+(D.stats?.invest||0).toLocaleString()+'</div></div>';
-  const mcArea = document.getElementById('correction-badge-area');
-  if (mcArea) {
-    if (D.market_correction_enabled) {
-      mcArea.innerHTML = '<div class="correction-badge correction-on">🔧 市場補正 ON<span class="correction-tip">AIの独自判断を市場人気で補正中</span></div>';
-    } else {
-      mcArea.innerHTML = '<div class="correction-badge correction-off">🔧 市場補正 OFF（AI素の判断）</div>';
-    }
-  }
+  renderCorrectionBadge();
   const tabs = document.getElementById('tabs');
   tabs.innerHTML = '';
   (D.venues||[]).forEach((v,i) => {
@@ -804,9 +822,7 @@ function render() {
         html += '<div class="correction-note">🔧 補正により本命変更: #'+race.honmei_raw+'（AI素）→ #'+race.honmei.n+'（補正後）</div>';
       }
     }
-    if (D.market_correction_enabled) {
-      html += '<div class="race-correction-toggle" onclick="toggleRaceCorrection(\''+race.race_id+'\')"><span class="'+(corrEnabled?'rc-on':'rc-off')+'">🔧 補正'+(corrEnabled?'ON':'OFF（AI素）')+'</span></div>';
-    }
+    html += '<div class="race-correction-toggle" onclick="toggleRaceCorrection(\''+race.race_id+'\')"><span class="'+(corrEnabled?'rc-on':'rc-off')+'">🔧 補正'+(corrEnabled?'ON ✓':'OFF（AI素）')+'</span></div>';
     if (isOpen) {
       html += '<div class="detail open"><div class="det-inner"><div class="sec">出走馬・AI評価</div>';
       if (race.chaos_grade) {
