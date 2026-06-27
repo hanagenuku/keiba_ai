@@ -12,12 +12,17 @@ from src.features.market_correction import (
 )
 
 
-def _make_horses(specs):
+def _make_horses(specs, with_win_prob=False):
     """(cal_prob, rl_rank, popularity) のリストから馬辞書リストを作る。"""
-    return [
+    horses = [
         {'cal_prob': cp, 'rl_rank': rl, 'popularity': pop, 'total': cp * 10}
         for cp, rl, pop in specs
     ]
+    if with_win_prob:
+        for h in horses:
+            h['win_prob_raw'] = h['cal_prob'] * 0.9
+            h['top3_prob_raw'] = h['cal_prob'] * 2.5
+    return horses
 
 
 def test_rl1_unpopular_suppressed():
@@ -131,6 +136,36 @@ def test_low_popular_boosted():
         mc.MARKET_CORRECTION_ENABLED = orig_enabled
 
 
+def test_win_prob_raw_preserved():
+    """テスト8: win_prob_raw と top3_prob_raw が apply_market_correction を通じて保持される。"""
+    orig_enabled = mc.MARKET_CORRECTION_ENABLED
+    mc.MARKET_CORRECTION_ENABLED = True
+    try:
+        horses = _make_horses([(0.40, 1, 12), (0.30, 2, 1)], with_win_prob=True)
+        result = apply_market_correction(horses)
+        for h in result:
+            assert 'win_prob_raw' in h, "win_prob_raw が保持されていない"
+            assert 'top3_prob_raw' in h, "top3_prob_raw が保持されていない"
+    finally:
+        mc.MARKET_CORRECTION_ENABLED = orig_enabled
+
+
+def test_corrected_fields_present():
+    """テスト9: correction_applied / correction_factor が全馬に付与される。"""
+    orig_enabled = mc.MARKET_CORRECTION_ENABLED
+    mc.MARKET_CORRECTION_ENABLED = True
+    try:
+        horses = _make_horses([(0.40, 1, 12), (0.30, 2, 1), (0.20, 3, 3)])
+        result = apply_market_correction(horses)
+        for h in result:
+            assert 'correction_factor' in h
+            assert 'correction_applied' in h
+            assert 'rl_rank_raw' in h
+            assert 'cal_prob_raw' in h
+    finally:
+        mc.MARKET_CORRECTION_ENABLED = orig_enabled
+
+
 if __name__ == '__main__':
     test_rl1_unpopular_suppressed()
     print('✅ test_rl1_unpopular_suppressed passed')
@@ -146,3 +181,7 @@ if __name__ == '__main__':
     print('✅ test_band_classifiers passed')
     test_low_popular_boosted()
     print('✅ test_low_popular_boosted passed')
+    test_win_prob_raw_preserved()
+    print('✅ test_win_prob_raw_preserved passed')
+    test_corrected_fields_present()
+    print('✅ test_corrected_fields_present passed')
