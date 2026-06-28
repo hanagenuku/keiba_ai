@@ -1,0 +1,50 @@
+{
+  "rl_pop": {
+    "RL上位_不人気": {
+      "factor": 0.7221,
+      "n": 167,
+      "actual_rate": 0.4072,
+      "predicted_rate": 0.5639,
+      "raw_factor": 0.7221
+    },
+    "RL中位_不人気": {
+      "factor": 0.9424,
+      "n": 168,
+      "actual_rate": 0.25,
+      "predicted_rate": 0.2653,
+      "raw_factor": 0.9424
+    },
+    "RL下位_不人気": {
+      "factor": 1.849,
+      "n": 395,
+      "actual_rate": 0.1392,
+      "predicted_rate": 0.0753,
+      "raw_factor": 1.849
+    },
+    "RL下位_人気": {
+      "factor": 1.9409,
+      "n": 10,
+      "actual_rate": 0.2,
+      "predicted_rate": 0.103,
+      "raw_factor": 1.9409
+    },
+    "RL下位_低人気": {
+      "factor": 3.2083,
+      "n": 11,
+      "actual_rate": 0.2727,
+      "predicted_rate": 0.085,
+      "raw_factor": 3.2083
+    },
+    "RL上位_中人気": {
+      "factor": 0.1764,
+      "n": 10,
+      "actual_rate": 0.1,
+      "predicted_rate": 0.567,
+      "raw_factor": 0.1764
+    }
+  },
+  "updated_at": "2026-06-28 17:22",
+  "total_samples": 805,
+  "weeks": 8,
+  "ema_alpha": 0.3
+}
