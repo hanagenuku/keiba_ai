@@ -14,7 +14,7 @@ from src.utils.db import (init_db, get_db_path, get_history_db_path,
                            backup_db, checkpoint_db,
                            save_race_db, save_bets_db, save_race_predictions)
 from src.betting.make_bets import init_betting, make_bets, log_bet_simulation
-from src.betting.ev_filter import select_quality_races
+from src.betting.ev_filter import select_quality_races, build_market_odds_from_races
 from src.betting.app_json import to_app_json
 from src.features.engine import calc_all
 from src.scraper.jra_scraper import fetch_races_on_date
@@ -118,7 +118,9 @@ def main():
     print(f'💰 投資合計: ¥{total_inv:,}')
 
     jst_now = datetime.now(JST)
-    app_data = to_app_json(selected, races, avg_bias, jst_now, day_type='saturday')
+    market_odds_map = build_market_odds_from_races(races)
+    app_data = to_app_json(selected, races, avg_bias, jst_now,
+                           day_type='saturday', market_odds_map=market_odds_map)
     os.makedirs(os.path.dirname(APP_PATH), exist_ok=True)
     with open(APP_PATH, 'w', encoding='utf-8') as f:
         json.dump(app_data, f, ensure_ascii=False, indent=2)
