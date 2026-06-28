@@ -49,8 +49,9 @@ def detect_value_horses(horses, market_odds_map):
     result = []
     for h in horses:
         hnum  = h.get('horse_num', h.get('num'))
-        # ⑤ 複勝確率は top3_prob（Harville）を正とする。cal_prob は別途保持。
-        fuku_prob = h.get('top3_prob', h.get('cal_prob', h.get('pn', 0))) or 0.0
+        # 複勝確率は top3_prob（Harville）を正とする。フォールバックは pn（softmax）で
+        # app_json._build_horses_list の fuku_pct 計算と一致させる。
+        fuku_prob = h.get('top3_prob') or h.get('pn', 0)
         odds  = market_odds_map.get(hnum) if market_odds_map else None
 
         tansho_odds = None

@@ -106,7 +106,7 @@ def _build_horses_list(scored, top1, by_odds, value_gap_map=None, odds_lookup=No
             'style':    h.get('running_style', '差し'),
             'tan_pct':  round(min(60,  pn * 100),       1),
             'ren_pct':  round(min(80,  pn * 2.0 * 100), 1),
-            'fuku_pct': round(h.get('top3_prob', pn) * 100, 1),
+            'fuku_pct': round((h.get('top3_prob') or pn) * 100, 1),
             'rl_rank':  h.get('rl_rank', 99),
             'cl_rank':  h.get('cl_rank', 99),
             'ev':       round(h.get('ev', 0.0), 3),
