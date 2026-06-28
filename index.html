@@ -549,13 +549,15 @@ async function fetchFreshOdds(raceKey, btn) {
 }
 
 function updateValueGaps(race, freshOdds) {
+  const corrOn = getRaceCorrectionEnabled(race.race_id);
   for (const h of (race.horses || [])) {
     const od = freshOdds[String(h.n)];
     if (od && od.tansho) {
       h.odds = od.tansho;
     }
-    if (od && od.fukusho && od.fukusho >= 1.0 && h.fuku_pct != null) {
-      const placeProb = h.fuku_pct / 100;
+    const fuPct = corrOn ? h.fuku_pct : (h.fuku_pct_raw != null ? h.fuku_pct_raw : h.fuku_pct);
+    if (od && od.fukusho && od.fukusho >= 1.0 && fuPct != null) {
+      const placeProb = fuPct / 100;
       h.value_gap    = placeProb - (0.8 / od.fukusho);
       h.fukusho_odds = od.fukusho;
       h.tansho_odds  = od.tansho || null;
