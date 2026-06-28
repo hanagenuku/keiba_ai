@@ -101,13 +101,13 @@ def test_detect_value_horses_uses_top3_prob():
         f'value_gap should use top3_prob: got {by_num[1]["value_gap"]}, expected {expected_gap1}'
 
 
-def test_detect_value_horses_fallback_to_cal_prob():
-    """top3_prob がないとき cal_prob にフォールバックする"""
+def test_detect_value_horses_fallback_to_pn():
+    """top3_prob がないとき pn にフォールバックする（app_json.fuku_pct と同じフォールバック）"""
     horses = [{'num': 1, 'horse_num': 1, 'cal_prob': 0.50, 'pn': 0.30}]
     market = {1: 2.0}  # fukusho_odds=2.0, market_prob=0.4
     result = detect_value_horses(horses, market)
-    # cal_prob=0.50 - market_prob=0.4 = 0.10
-    assert abs(result[0]['value_gap'] - 0.10) < 0.001
+    # pn=0.30 - market_prob=0.4 = -0.10  (app_json の fuku_pct = pn*100 = 30% と一致)
+    assert abs(result[0]['value_gap'] - (-0.10)) < 0.001
 
 
 # ── select_bet_type: market_odds あり（ルールベースパス）───────────────────────
@@ -133,7 +133,7 @@ if __name__ == '__main__':
     print('✅ test_classify_chaos_grade_c_high_popularity passed')
     test_detect_value_horses_uses_top3_prob()
     print('✅ test_detect_value_horses_uses_top3_prob passed')
-    test_detect_value_horses_fallback_to_cal_prob()
-    print('✅ test_detect_value_horses_fallback_to_cal_prob passed')
+    test_detect_value_horses_fallback_to_pn()
+    print('✅ test_detect_value_horses_fallback_to_pn passed')
     test_select_bet_type_returns_bets_all_chaos_grades()
     print('✅ test_select_bet_type_returns_bets_all_chaos_grades passed')
