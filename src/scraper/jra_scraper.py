@@ -260,6 +260,25 @@ def fetch_races_on_date(sess, target_date, hist_db_path):
                         soup = soup2
                         sx = sx_simple
 
+            # 全レース共通：計算式が外れた場合に近傍±10をスキャン
+            if soup is None:
+                base_s = int(sx, 16)
+                found_delta = None
+                for delta in range(1, 11):
+                    for sign, cand in [(+delta, (base_s + delta) % 256),
+                                       (-delta, (base_s - delta) % 256)]:
+                        sx_c = f'{cand:02X}'
+                        _, soup_c = _try_fetch_shutuba(sess, base, r, date_str, sx_c)
+                        if soup_c is not None:
+                            soup = soup_c
+                            sx = sx_c
+                            found_delta = sign
+                            break
+                    if soup is not None:
+                        break
+                if found_delta is not None:
+                    print(f'  R{r:02d}: suffix補正 {found_delta:+d} → {sx}')
+
             if soup is None:
                 print(f'  R{r:02d}: suffix={sx} → パラメータエラー/ページなし')
                 continue
