@@ -113,22 +113,6 @@ def _build_horses_list(scored, top1, by_odds, value_gap_map=None, odds_lookup=No
             'prob_gap': round(h.get('prob_gap', 0.0), 4),
             'cal_prob': round(h.get('cal_prob', pn), 4),
             'mark':     marks[h['num']],
-            # 市場補正フィールド（market_correction.py）
-            # 補正前（AI素）
-            'rl_rank_raw':        h.get('rl_rank_raw', h.get('rl_rank', 99)),
-            'rl_rank_win_raw':    h.get('rl_rank_win_raw', h.get('rl_rank', 99)),
-            'win_prob_raw':       round(h.get('win_prob_raw', pn), 6),
-            'fuku_pct_raw':       round(h.get('top3_prob_raw', h.get('top3_prob', pn)) * 100, 1),
-            'tan_pct_raw':        round(min(60, h.get('win_prob_raw', pn) * 100), 1),
-            'cal_prob_raw':       round(h.get('cal_prob_raw', h.get('cal_prob', pn)), 4),
-            # 補正後（市場補正済み）— 表示切替で使う
-            'rl_rank_corrected':  h.get('rl_rank', 99),
-            'win_prob_corrected': round(pn, 6),
-            'fuku_pct_corrected': round(h.get('top3_prob', pn) * 100, 1),
-            'cal_prob_corrected': round(h.get('cal_prob', pn), 4),
-            # 補正係数
-            'correction_factor':  round(h.get('correction_factor', 1.0), 3),
-            'correction_applied': h.get('correction_applied', False),
         }
         od = odds_lookup.get(h['num'])
         if od:
@@ -158,25 +142,6 @@ def _build_bet_list(bets):
             'amt':   f'¥{b["amount"]}',
         })
     return result
-
-
-def _market_correction_status(scored):
-    """市場補正の状態と本命変更有無を返す。"""
-    try:
-        from src.features.market_correction import MARKET_CORRECTION_ENABLED
-        enabled = MARKET_CORRECTION_ENABLED
-    except Exception:
-        enabled = False
-    # 補正前本命（rl_rank_raw==1 の馬）と補正後本命（rl_rank==1 の馬）を比較
-    raw_honmei = next((h for h in scored if h.get('rl_rank_raw', 99) == 1), None)
-    cur_honmei = next((h for h in sorted(scored, key=lambda x: x.get('rl_rank', 99))), None)
-    changed = (enabled and raw_honmei is not None and cur_honmei is not None
-               and raw_honmei.get('num') != cur_honmei.get('num'))
-    return {
-        'market_correction_enabled': enabled,
-        'honmei_changed_by_correction': changed,
-        'honmei_raw': raw_honmei.get('num') if changed else None,
-    }
 
 
 def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', market_odds_map=None):
@@ -258,7 +223,6 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
         _types_str = '+'.join(dict.fromkeys(b['type'] for b in bets))
         _bet_reason = f'★期待値あり: {_types_str}'
 
-        _mc = _market_correction_status(scored)
         _entry = {
             'r':       race['race_num'],
             'race_id': race['id'],
@@ -282,7 +246,6 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
             'value_horses': _vh_list,
             'bet_reason':  _bet_reason,
             'cmt': auto_comment(c, bias_data),
-            **_mc,
         }
         # _build_horses_list が scored に _pop をセットした後でフォーメーション生成
         for _h in scored:
@@ -368,8 +331,6 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
         _types_str2 = '+'.join(dict.fromkeys(b['type'] for b in bets2))
         _bet_reason2 = f'参考: {_types_str2}'
 
-        # _build_horses_list が _pop をセットした後でフォーメーション生成
-        _mc2 = _market_correction_status(scored)
         _entry2 = {
             'r':           race['race_num'],
             'race_id':     race['id'],
@@ -393,7 +354,6 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
             'horses': _build_horses_list(scored, top1, by_odds, _vg_map2, _odds_lookup2),
             'bets':   _build_bet_list(bets2),
             'cmt':    auto_comment(c_ref, bias_data) + ('\n' + maiden_note if maiden_note else ''),
-            **_mc2,
         }
         for _h in scored:
             _h['popularity'] = _h.get('_pop', 99)
@@ -412,20 +372,15 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
     display_dt = jst_now + timedelta(days=1) if day_type == 'sunday' else jst_now
     jday = ['月', '火', '水', '木', '金', '土', '日'][display_dt.weekday()]
     rec_count = len(selected)
-    try:
-        from src.features.market_correction import MARKET_CORRECTION_ENABLED as _mc_enabled
-    except Exception:
-        _mc_enabled = False
     return {
-        'generated_at':               jst_now.isoformat(),
-        'date':                       f'{display_dt.month}月{display_dt.day}日({jday})',
-        'type':                       day_type,
-        'venues':                     all_venues,
-        'bias':                       {'txt': bias_txt, 'tag': bias_tag},
-        'recommended_count':          rec_count,
-        'message':                    ('本日の推奨レースはありません。閾値を満たすレースがありませんでした。'
-                                       if rec_count == 0 else None),
-        'stats':                      {'invest': total_inv, 'rec': rec_count, 'roi': 150},
-        'races':                      races_by_venue,
-        'market_correction_enabled':  _mc_enabled,
+        'generated_at':      jst_now.isoformat(),
+        'date':              f'{display_dt.month}月{display_dt.day}日({jday})',
+        'type':              day_type,
+        'venues':            all_venues,
+        'bias':              {'txt': bias_txt, 'tag': bias_tag},
+        'recommended_count': rec_count,
+        'message':           ('本日の推奨レースはありません。閾値を満たすレースがありませんでした。'
+                              if rec_count == 0 else None),
+        'stats':             {'invest': total_inv, 'rec': rec_count, 'roi': 150},
+        'races':             races_by_venue,
     }
