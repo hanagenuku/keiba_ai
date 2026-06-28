@@ -119,16 +119,6 @@ def init_db(base_dir=None, db_path=None):
             win_prob REAL,
             cal_prob REAL,
             fuku_prob REAL,
-            rl_rank_raw INTEGER,
-            win_prob_raw REAL,
-            cal_prob_raw REAL,
-            fuku_prob_raw REAL,
-            rl_rank_corrected INTEGER,
-            win_prob_corrected REAL,
-            cal_prob_corrected REAL,
-            fuku_prob_corrected REAL,
-            correction_factor REAL,
-            correction_enabled INTEGER,
             actual_place INTEGER,
             prediction_gap INTEGER,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP
@@ -168,17 +158,6 @@ def init_db(base_dir=None, db_path=None):
     # 既存DB向けマイグレーション（重複カラムエラーは無視）
     for sql in [
         "ALTER TABLE race_predictions ADD COLUMN bracket INTEGER",
-        # 市場補正レイヤー（2026-06-27）— 補正前後の両値を保存
-        "ALTER TABLE race_predictions ADD COLUMN rl_rank_raw INTEGER",
-        "ALTER TABLE race_predictions ADD COLUMN win_prob_raw REAL",
-        "ALTER TABLE race_predictions ADD COLUMN cal_prob_raw REAL",
-        "ALTER TABLE race_predictions ADD COLUMN fuku_prob_raw REAL",
-        "ALTER TABLE race_predictions ADD COLUMN rl_rank_corrected INTEGER",
-        "ALTER TABLE race_predictions ADD COLUMN win_prob_corrected REAL",
-        "ALTER TABLE race_predictions ADD COLUMN cal_prob_corrected REAL",
-        "ALTER TABLE race_predictions ADD COLUMN fuku_prob_corrected REAL",
-        "ALTER TABLE race_predictions ADD COLUMN correction_factor REAL",
-        "ALTER TABLE race_predictions ADD COLUMN correction_enabled INTEGER",
         # save_bets_db が書き込む拡張列（新規DBでは CREATE TABLE に無いため追加）
         "ALTER TABLE bets ADD COLUMN racecourse TEXT",
         "ALTER TABLE bets ADD COLUMN distance INTEGER",
@@ -638,33 +617,17 @@ def save_race_predictions(race, scored_horses, base_dir=None, db_path=None):
         _race_id = race.get('id') or race.get('race_id', '')
         _fuku = (h.get('top3_prob') if h.get('top3_prob') is not None
                  else (h.get('fuku_pct', 0) or 0) / 100.0)
-        _fuku_raw = (h.get('top3_prob_raw') if h.get('top3_prob_raw') is not None
-                     else _fuku)
         conn.execute("""
             INSERT OR REPLACE INTO race_predictions
             (date, race_id, racecourse, race_num, horse_num, bracket, horse_name,
-             popularity, tansho_odds, rl_rank, win_prob, cal_prob, fuku_prob,
-             rl_rank_raw, win_prob_raw, cal_prob_raw, fuku_prob_raw,
-             rl_rank_corrected, win_prob_corrected, cal_prob_corrected, fuku_prob_corrected,
-             correction_factor, correction_enabled)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             popularity, tansho_odds, rl_rank, win_prob, cal_prob, fuku_prob)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             race.get('date', ''), _race_id,
             race.get('racecourse', ''), race.get('race_num', 0),
             h.get('horse_num', h.get('num', 0)), h.get('bracket'), h.get('name', ''),
             h.get('popularity', 99), h.get('win_odds') or h.get('odds'),
-            # 実使用値（補正後）
             h.get('rl_rank', 99), h.get('win_prob', 0), h.get('cal_prob', 0), _fuku,
-            # 補正前（AI素）
-            h.get('rl_rank_raw', h.get('rl_rank', 99)),
-            h.get('win_prob_raw', h.get('win_prob', 0)),
-            h.get('cal_prob_raw', h.get('cal_prob', 0)),
-            _fuku_raw,
-            # 補正後（明示）
-            h.get('rl_rank', 99), h.get('win_prob', 0), h.get('cal_prob', 0), _fuku,
-            # 補正情報
-            h.get('correction_factor', 1.0),
-            1 if race.get('correction_enabled', True) else 0,
         ))
     conn.commit()
     conn.close()

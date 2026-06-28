@@ -184,19 +184,6 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
 .rtbl .miss{color:#bbb}
 .hit-mark{color:#27ae60;font-weight:800}
 .miss-mark{color:#e74c3c}
-.correction-badge{display:flex;align-items:center;gap:8px;padding:5px 12px;margin:4px 14px;border-radius:6px;font-size:11px;font-weight:700}
-.correction-on{background:rgba(230,126,34,0.15);color:#d35400;border:1px solid rgba(230,126,34,0.3)}
-.correction-off{background:rgba(127,140,141,0.15);color:#7f8c8d;border:1px solid rgba(127,140,141,0.2)}
-.correction-tip{font-size:9px;font-weight:400;opacity:0.8}
-.correction-note{background:rgba(230,126,34,0.1);color:#d35400;font-size:10px;padding:4px 10px;margin:4px 0;border-radius:4px;border-left:3px solid #e67e22}
-.rl-up{color:#27ae60}.rl-down{color:#c0392b}
-.rl-raw{text-decoration:line-through;opacity:0.5;font-size:9px;margin-right:1px}
-.rl-arrow{font-size:9px;margin:0 1px}
-.rl-corrected{font-weight:700}
-.race-correction-toggle{display:inline-flex;align-items:center;padding:3px 10px;border-radius:12px;font-size:10px;font-weight:700;cursor:pointer;user-select:none;margin:2px 14px 4px}
-.race-correction-toggle:active{opacity:0.6}
-.rc-on{color:#d35400}
-.rc-off{color:#7f8c8d}
 </style>
 </head>
 <body>
@@ -223,7 +210,6 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
   </div>
 </div>
 <div class="bias"><span class="bias-txt" id="bias-txt">バイアス読込中...</span><span class="bias-tag" id="bias-tag">-</span></div>
-<div id="correction-badge-area"></div>
 <div class="tabs" id="tabs"></div>
 <div id="pwa-hint" style="display:none" class="pwa">
   <span>📱 ホーム画面に追加して使えます（Safari→共有→ホーム画面に追加）</span>
@@ -255,43 +241,6 @@ let D = null;
 let venue = null;
 const opened = {};
 const oddsCooldown = {};
-const raceCorrection = {};  // race_id → true(補正ON) / false(補正OFF)
-let globalCorrectionDefault = false;  // デフォルトOFF。レース毎に個別ON可能
-
-function getRaceCorrectionEnabled(raceId) {
-  if (raceId in raceCorrection) return raceCorrection[raceId];
-  return globalCorrectionDefault;
-}
-
-function toggleRaceCorrection(raceId) {
-  raceCorrection[raceId] = !getRaceCorrectionEnabled(raceId);
-  renderCorrectionBadge();
-  render();
-}
-
-function toggleAllCorrection() {
-  globalCorrectionDefault = !globalCorrectionDefault;
-  // 個別設定をクリアして全レース一括切替
-  Object.keys(raceCorrection).forEach(k => delete raceCorrection[k]);
-  renderCorrectionBadge();
-  render();
-}
-
-function renderCorrectionBadge() {
-  const mcArea = document.getElementById('correction-badge-area');
-  if (!mcArea) return;
-  const allRaces = Object.values((D&&D.races)||{}).flat();
-  const onCount = allRaces.filter(r => getRaceCorrectionEnabled(r.race_id)).length;
-  const total = allRaces.length;
-  if (onCount === 0) {
-    mcArea.innerHTML = '<div class="correction-badge correction-off" onclick="toggleAllCorrection()" style="cursor:pointer" title="クリックで全レースON">🔧 市場補正 OFF（AI素）<span class="correction-tip">クリックで全レースON</span></div>';
-  } else if (onCount === total) {
-    mcArea.innerHTML = '<div class="correction-badge correction-on" onclick="toggleAllCorrection()" style="cursor:pointer" title="クリックで全レースOFF">🔧 市場補正 全ON<span class="correction-tip">クリックで全レースOFF</span></div>';
-  } else {
-    mcArea.innerHTML = '<div class="correction-badge correction-on" onclick="toggleAllCorrection()" style="cursor:pointer" title="クリックで全OFF">🔧 市場補正 '+onCount+'/'+total+'R ON<span class="correction-tip">クリックで全OFF</span></div>';
-  }
-}
-
 async function loadData() {
   document.getElementById('race-list').innerHTML = '<div class="loading"><div class="loading-spin">🏇</div><div>予想データを読み込み中...</div></div>';
   if (!DATA_URL) { document.getElementById('hdate').textContent='未設定'; return; }
@@ -323,7 +272,6 @@ function initApp() {
   const allRaces = Object.values(D.races||{}).flat();
   const recCount = allRaces.filter(r=>r.rec).length;
   document.getElementById('summary').innerHTML = '<div class="sum-card"><div class="sum-label">推奨レース</div><div class="sum-val gold">'+recCount+'R</div></div><div class="sum-card"><div class="sum-label">全会場</div><div class="sum-val">'+(D.venues||[]).length+'場</div></div><div class="sum-card"><div class="sum-label">推定投資</div><div class="sum-val">¥'+(D.stats?.invest||0).toLocaleString()+'</div></div>';
-  renderCorrectionBadge();
   const tabs = document.getElementById('tabs');
   tabs.innerHTML = '';
   (D.venues||[]).forEach((v,i) => {
@@ -606,9 +554,7 @@ function estimatePayout(bet, horsesMap) {
 }
 
 function recalcBets(race) {
-  const corrOn = getRaceCorrectionEnabled(race.race_id);
-  const rlField = corrOn ? 'rl_rank' : 'rl_rank_win_raw';
-  const horses = (race.horses || []).slice().sort((a, b) => ((a[rlField] || a.rl_rank || 99) - (b[rlField] || b.rl_rank || 99)));
+  const horses = (race.horses || []).slice().sort((a, b) => ((a.rl_rank || 99) - (b.rl_rank || 99)));
   const numHorses = race.num_horses || horses.length;
   const chaosGrade = race.chaos_grade || 'B';
   const hasOdds = horses.some(h => h.fukusho_odds != null);
@@ -809,20 +755,10 @@ function render() {
     const k = venue+race.r;
     const isOpen = opened[k];
     const isRec = race.rec;
-    const corrEnabled = getRaceCorrectionEnabled(race.race_id);
-    // 補正OFF時は rl_rank_raw==1 の馬を本命として表示
-    const rawHonmeiHorse = !corrEnabled && (race.horses||[]).find(h => h.rl_rank_raw === 1);
-    const displayHonmei = corrEnabled ? race.honmei : (rawHonmeiHorse
-      ? { n: rawHonmeiHorse.n, name: rawHonmeiHorse.name, odds: rawHonmeiHorse.odds, style: rawHonmeiHorse.style }
-      : race.honmei);
     html += '<div class="rc'+(isRec?' rec':'')+'"><div class="rc-head" onclick="toggle(\''+k+'\')"><div class="rc-num">'+race.r+'</div><div class="rc-info"><div class="rc-name">'+race.name+'</div><div class="rc-meta">'+race.dist+'</div></div><div class="rc-right">'+(isRec?'<span class="conf">AI '+race.conf+'%</span><span class="rec-lbl">★推奨</span>':'')+'<span class="arr'+(isOpen?' open':'')+'">▼</span></div></div>';
-    if (displayHonmei) {
-      html += '<div class="hstrip" onclick="toggle(\''+k+'\')"><span class="hbadge">◎本命</span><span class="hname">#'+displayHonmei.n+' '+displayHonmei.name+'</span><span class="hodds">'+(displayHonmei.odds||'-')+'倍 / '+(displayHonmei.style||'-')+'</span></div>';
-      if (corrEnabled && race.honmei_changed_by_correction && race.honmei_raw) {
-        html += '<div class="correction-note">🔧 補正により本命変更: #'+race.honmei_raw+'（AI素）→ #'+race.honmei.n+'（補正後）</div>';
-      }
+    if (race.honmei) {
+      html += '<div class="hstrip" onclick="toggle(\''+k+'\')"><span class="hbadge">◎本命</span><span class="hname">#'+race.honmei.n+' '+race.honmei.name+'</span><span class="hodds">'+(race.honmei.odds||'-')+'倍 / '+(race.honmei.style||'-')+'</span></div>';
     }
-    html += '<div class="race-correction-toggle" onclick="toggleRaceCorrection(\''+race.race_id+'\')"><span class="'+(corrEnabled?'rc-on':'rc-off')+'">🔧 補正'+(corrEnabled?'ON ✓':'OFF（AI素）')+'</span></div>';
     if (isOpen) {
       html += '<div class="detail open"><div class="det-inner"><div class="sec">出走馬・AI評価</div>';
       if (race.chaos_grade) {
@@ -837,28 +773,11 @@ function render() {
       }
       html += '<table class="htbl"><tr><th style="width:20px">番</th><th class="col-name">馬名</th><th class="col-pop" style="width:22px">人</th><th class="col-odds" style="width:34px">ｵｯｽﾞ</th><th class="col-mk">特記</th><th class="col-rl" style="width:24px">RL</th><th style="width:32px">勝率</th><th style="width:32px">複勝</th><th class="col-val" style="width:32px">Val</th></tr>';
       for (const h of (race.horses||[])) {
-        const isH = displayHonmei && h.n === displayHonmei.n;
-        // RL表示: 補正ONなら「補正前win_prob順位 → 補正後win_prob順位」矢印、補正OFFなら補正前順位のみ
-        let rl;
-        // rl_rank_win_rawが存在すればそれを使う（新データ）、なければrl_rank_rawで代替
-        const winRawRl = (h.rl_rank_win_raw != null && h.rl_rank_win_raw < 99) ? h.rl_rank_win_raw : (h.rl_rank_raw != null && h.rl_rank_raw < 99 ? h.rl_rank_raw : h.rl_rank);
-        if (!corrEnabled) {
-          rl = winRawRl && winRawRl < 99 ? winRawRl : '-';
-        } else if (!h.rl_rank || h.rl_rank >= 99) {
-          rl = '-';
-        } else if (h.correction_applied && winRawRl && winRawRl !== h.rl_rank && winRawRl < 99) {
-          const arrow = h.rl_rank < winRawRl ? '↑' : '↓';
-          const cls = h.rl_rank < winRawRl ? 'rl-up' : 'rl-down';
-          rl = '<span class="'+cls+'"><span class="rl-raw">'+winRawRl+'</span><span class="rl-arrow">'+arrow+'</span><span class="rl-corrected">'+h.rl_rank+'</span></span>';
-        } else {
-          rl = h.rl_rank;
-        }
-        // 補正OFF時は補正前の確率を表示
-        const dispTanPct  = corrEnabled ? h.tan_pct  : (h.tan_pct_raw  != null ? h.tan_pct_raw  : h.tan_pct);
-        const dispFukuPct = corrEnabled ? h.fuku_pct : (h.fuku_pct_raw != null ? h.fuku_pct_raw : h.fuku_pct);
-        const tan = dispTanPct != null ? dispTanPct+'%' : '-';
-        const fuku = dispFukuPct != null ? dispFukuPct+'%' : '-';
-        const hi = dispFukuPct != null && dispFukuPct >= 38;
+        const isH = race.honmei && h.n === race.honmei.n;
+        const rl = (!h.rl_rank || h.rl_rank >= 99) ? '-' : h.rl_rank;
+        const tan = h.tan_pct != null ? h.tan_pct+'%' : '-';
+        const fuku = h.fuku_pct != null ? h.fuku_pct+'%' : '-';
+        const hi = h.fuku_pct != null && h.fuku_pct >= 38;
 
         // 人気
         const pop = h.pop != null ? h.pop : '-';
