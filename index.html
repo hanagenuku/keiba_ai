@@ -230,7 +230,7 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
 const DATA_URL  = 'https://hanagenuku.github.io/keiba_ai/data/latest.json';
 const STATS_URL = 'https://hanagenuku.github.io/keiba_ai/data/stats.json';
 const GAS_URL   = 'https://script.google.com/macros/s/AKfycbxcpXYNxHPS4wFmnX-EOyWaTU8AKt1ZQhJAL6dz5sTeEWoR319EfCqqDB0B1NHTHAYW/exec';
-const VALUE_GAP_THRESHOLD = 0.10;
+const VALUE_GAP_THRESHOLD = 1.0;
 const BET_AMOUNT_REN  = 500;
 const BET_AMOUNT_WIDE = 300;
 const BET_AMOUNT_FUKU = 500;
@@ -502,11 +502,10 @@ function updateValueGaps(race, freshOdds) {
     if (od && od.tansho) {
       h.odds = od.tansho;
     }
-    if (od && od.fukusho && od.fukusho >= 1.0 && h.fuku_pct != null) {
-      const placeProb = h.fuku_pct / 100;
-      h.value_gap    = placeProb - (0.8 / od.fukusho);
-      h.fukusho_odds = od.fukusho;
-      h.tansho_odds  = od.tansho || null;
+    if (od && od.tansho && od.tansho >= 1.0 && h.tan_pct != null) {
+      h.value_gap    = (h.tan_pct / 100) * od.tansho;
+      h.fukusho_odds = od.fukusho || null;
+      h.tansho_odds  = od.tansho;
     } else {
       h.value_gap    = 0;
       h.fukusho_odds = null;
@@ -681,9 +680,9 @@ function buildValueChangeDetail(race) {
   for (const h of (race.horses || [])) {
     const oldVal = race._morning_value[h.n] || 0;
     const newVal = h.value_gap || 0;
-    if (Math.abs(newVal - oldVal) >= 0.05) {
-      const oldStr = oldVal === 0 ? '0%' : (oldVal > 0 ? '+' : '') + Math.round(oldVal*100) + '%';
-      const newStr = newVal === 0 ? '0%' : (newVal > 0 ? '+' : '') + Math.round(newVal*100) + '%';
+    if (Math.abs(newVal - oldVal) >= 0.1) {
+      const oldStr = oldVal === 0 ? '-' : oldVal.toFixed(2) + '×';
+      const newStr = newVal === 0 ? '-' : newVal.toFixed(2) + '×';
       const label = newVal >= VALUE_GAP_THRESHOLD ? '（出現！）'
                   : oldVal >= VALUE_GAP_THRESHOLD ? '（消滅）' : '';
       html += '  #' + h.n + ' Val: ' + oldStr + ' → ' + newStr + label + '<br>';
@@ -777,7 +776,7 @@ function render() {
         const rl = (!h.rl_rank || h.rl_rank >= 99) ? '-' : h.rl_rank;
         const tan = h.tan_pct != null ? h.tan_pct+'%' : '-';
         const fuku = h.fuku_pct != null ? h.fuku_pct+'%' : '-';
-        const hi = h.fuku_pct != null && h.fuku_pct >= 38;
+        const hi = h.fuku_pct != null && h.fuku_pct >= 13;
 
         // 人気
         const pop = h.pop != null ? h.pop : '-';
@@ -799,14 +798,14 @@ function render() {
         let valCell = '-';
         let valClass = 'val-none';
         if (vg != null && vg !== 0) {
-          if (vg >= 0.10) {
-            valCell = '+' + (vg * 100).toFixed(0) + '%';
+          if (vg >= 1.2) {
+            valCell = vg.toFixed(2) + '×';
             valClass = 'val-buy';
-          } else if (vg > 0) {
-            valCell = '+' + (vg * 100).toFixed(0) + '%';
+          } else if (vg >= 1.0) {
+            valCell = vg.toFixed(2) + '×';
             valClass = 'val-neutral';
           } else {
-            valCell = (vg * 100).toFixed(0) + '%';
+            valCell = vg.toFixed(2) + '×';
             valClass = 'val-over';
           }
         }
