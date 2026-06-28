@@ -1239,24 +1239,20 @@
     ]
   },
   "results_status": {
-    "last_date": "2026-06-27",
-    "races": 34,
+    "last_date": "2026-06-28",
+    "races": 4,
     "venues": [
       {
         "name": "小倉",
-        "races": 12
+        "races": 2
       },
       {
         "name": "函館",
-        "races": 12
-      },
-      {
-        "name": "福島",
-        "races": 10
+        "races": 2
       }
     ],
-    "workflow_run_at": "2026-06-27T12:37:47Z",
+    "workflow_run_at": "2026-06-27T13:06:59Z",
     "workflow_result": "success"
   },
-  "generated_at": "2026-06-27 13:06"
+  "generated_at": "2026-06-28 01:53"
 }
