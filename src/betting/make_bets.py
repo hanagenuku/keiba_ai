@@ -906,3 +906,89 @@ def log_bet_simulation(date_str, c, base_dir=None, db_path=None):
         )
     conn.commit()
     conn.close()
+
+
+def build_bets_from_simulation(horses, odds_map, n_sims=20000,
+                                min_ev=1.25, min_prob=0.01,
+                                max_trio=20, amount=100):
+    """
+    シミュレーション結果から、EV ベースで買い目を組む。
+
+    フォーメーション型に縛られず、確率×実オッズで期待値のある組み合わせを選ぶ。
+    horses の各要素は calc_all() の出力（'rating' キーを持つこと）。
+
+    Parameters
+    ----------
+    horses   : calc_all() の出力リスト（'horse_num' / 'rating' 必須）
+    odds_map : 実オッズ辞書 {'win':{馬番:o}, 'place':{}, 'quinella':{}, ...}
+    n_sims   : シミュレーション回数
+    min_ev   : EV下限
+    min_prob : 的中確率下限
+    max_trio : 三連複の最大点数
+    amount   : 1点あたり賭け金（円）
+
+    Returns
+    -------
+    bets        : [{'type','nums','prob','odds','ev','amount'}]
+    probs       : calc_ticket_probabilities の出力
+    ev_results  : calc_ev_all_tickets の出力
+    """
+    from src.betting.race_simulator import simulate_race, calc_ticket_probabilities
+    from src.betting.ev_calculator import calc_ev_all_tickets, select_value_bets
+
+    ratings   = [h.get('rating', 0.0) for h in horses]
+    horse_nums = [h.get('horse_num') or h.get('num') for h in horses]
+
+    orders = simulate_race(ratings, n_sims=n_sims)
+    probs  = calc_ticket_probabilities(orders, horse_nums)
+
+    ev_results  = calc_ev_all_tickets(probs, odds_map)
+    value_bets  = select_value_bets(ev_results, min_ev=min_ev, min_prob=min_prob)
+
+    bets = []
+
+    # 三連複: EV上位 max_trio 点
+    for e in value_bets.get('trio', [])[:max_trio]:
+        bets.append({
+            'type':   '三連複',
+            'nums':   list(e['key']),
+            'prob':   e['prob'],
+            'odds':   e['odds'],
+            'ev':     e['ev'],
+            'amount': amount,
+        })
+
+    # 馬連: EV上位 10 点
+    for e in value_bets.get('quinella', [])[:10]:
+        bets.append({
+            'type':   '馬連',
+            'nums':   list(e['key']),
+            'prob':   e['prob'],
+            'odds':   e['odds'],
+            'ev':     e['ev'],
+            'amount': amount,
+        })
+
+    # 単勝: EV上位 3 頭
+    for e in value_bets.get('win', [])[:3]:
+        bets.append({
+            'type':   '単勝',
+            'nums':   [e['key']],
+            'prob':   e['prob'],
+            'odds':   e['odds'],
+            'ev':     e['ev'],
+            'amount': amount,
+        })
+
+    # 複勝: EV上位 3 頭
+    for e in value_bets.get('place', [])[:3]:
+        bets.append({
+            'type':   '複勝',
+            'nums':   [e['key']],
+            'prob':   e['prob'],
+            'odds':   e['odds'],
+            'ev':     e['ev'],
+            'amount': amount,
+        })
+
+    return bets, probs, ev_results

@@ -1949,6 +1949,32 @@ def calc_rl_cl_ranks(scored_horses):
     return scored_horses
 
 
+def get_xgb_rating(xfeats_list, model=None, feature_cols=None):
+    """XGBの生マージン（log-odds, output_margin=True）を能力値として返す。
+
+    Parameters
+    ----------
+    xfeats_list : list of dict
+        各馬の特徴量辞書（calc_features_for_xgb の出力）
+    model       : XGBClassifier（省略時は init_engine でロード済みのモデルを使用）
+    feature_cols: 特徴量名リスト（省略時は _XGB_FEATURE_COLS を使用）
+
+    Returns
+    -------
+    list of float — 各馬の能力値（インデックスは xfeats_list と対応）
+    """
+    import pandas as _pd
+    import xgboost as _xgb
+    m  = model or _XGB_FUKUSHO_MODEL
+    fc = feature_cols or _XGB_FEATURE_COLS
+    if m is None or not fc:
+        return [0.0] * len(xfeats_list)
+    rows = [{c: xf.get(c, 5.0) for c in fc} for xf in xfeats_list]
+    X    = _pd.DataFrame(rows)[fc].fillna(5.0)
+    dmat = _xgb.DMatrix(X, feature_names=list(fc))
+    return [float(v) for v in m.get_booster().predict(dmat, output_margin=True)]
+
+
 def calc_all(race, bias_data=None):
     """全馬スコア計算（XGBoost or 重み合算フォールバック）"""
     out = []
@@ -2002,10 +2028,14 @@ def calc_all(race, bias_data=None):
         if use_xgb:
             try:
                 import pandas as _pd_xgb
+                import xgboost as _xgb_lib
                 xrow   = {c: xfeats.get(c, 5.0) for c in _XGB_FEATURE_COLS}
                 X_pred = _pd_xgb.DataFrame([xrow])[_XGB_FEATURE_COLS].fillna(5.0)
                 prob   = float(_XGB_FUKUSHO_MODEL.predict_proba(X_pred)[0][1])
                 raw_prob = prob
+                # 能力値（Phase1）: XGB生マージン（sigmoid前のlog-odds）
+                _dmat  = _xgb_lib.DMatrix(X_pred, feature_names=list(_XGB_FEATURE_COLS))
+                rating = float(_XGB_FUKUSHO_MODEL.get_booster().predict(_dmat, output_margin=True)[0])
                 # XGB専用キャリブレーターを適用（複勝確率表示用）
                 if _XGB_CALIBRATOR is not None:
                     import numpy as _np_cal
@@ -2020,10 +2050,12 @@ def calc_all(race, bias_data=None):
                 total = sum(sc.get(k, 5.0) * _W.get(k, 0) for k in _W if _W.get(k, 0) > 0)
                 total = apply_career_flags(total, career)
                 prob  = 1 / (1 + math.exp(-(total - 5.5) * .8))
+                rating = total - 5.0  # ルールベーススコアを0中心にシフト
         else:
             total = sum(sc.get(k, 5.0) * _W.get(k, 0) for k in _W if _W.get(k, 0) > 0)
             total = apply_career_flags(total, career)
             prob  = 1 / (1 + math.exp(-(total - 5.5) * .8))
+            rating = total - 5.0
             if _CALIBRATOR is not None:
                 prob = float(_CALIBRATOR.transform([prob])[0])
 
@@ -2038,6 +2070,7 @@ def calc_all(race, bias_data=None):
             'career':      career,
             'market_prob': market_prob,
             'pop_gap':     round(prob - market_prob, 4),
+            'rating':      round(rating, 4),  # 能力値（XGB生マージン or ルールベースtotal-5）
         })
 
     if not out:
