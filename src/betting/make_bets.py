@@ -910,7 +910,8 @@ def log_bet_simulation(date_str, c, base_dir=None, db_path=None):
 
 def build_bets_from_simulation(horses, odds_map, n_sims=20000,
                                 min_ev=1.25, min_prob=0.01,
-                                max_trio=20, amount=100):
+                                max_trio=20, amount=100,
+                                ratings_win=None):
     """
     シミュレーション結果から、EV ベースで買い目を組む。
 
@@ -919,28 +920,36 @@ def build_bets_from_simulation(horses, odds_map, n_sims=20000,
 
     Parameters
     ----------
-    horses   : calc_all() の出力リスト（'horse_num' / 'rating' 必須）
-    odds_map : 実オッズ辞書 {'win':{馬番:o}, 'place':{}, 'quinella':{}, ...}
-    n_sims   : シミュレーション回数
-    min_ev   : EV下限
-    min_prob : 的中確率下限
-    max_trio : 三連複の最大点数
-    amount   : 1点あたり賭け金（円）
+    horses      : calc_all() の出力リスト（'horse_num' / 'rating' 必須）
+    odds_map    : 実オッズ辞書 {'win':{馬番:o}, 'place':{}, 'quinella':{}, ...}
+    n_sims      : シミュレーション回数
+    min_ev      : EV下限
+    min_prob    : 的中確率下限
+    max_trio    : 三連複の最大点数
+    amount      : 1点あたり賭け金（円）
+    ratings_win : デュアルモデル用。単勝確率だけ別モデルの評価値（温度補正済み）を使う場合に渡す。
+                  None のとき horses['rating'] で単勝も計算（従来動作）。
 
     Returns
     -------
     bets        : [{'type','nums','prob','odds','ev','amount'}]
-    probs       : calc_ticket_probabilities の出力
+    probs       : calc_ticket_probabilities の出力（マージ済み）
     ev_results  : calc_ev_all_tickets の出力
     """
     from src.betting.race_simulator import simulate_race, calc_ticket_probabilities
     from src.betting.ev_calculator import calc_ev_all_tickets, select_value_bets
 
-    ratings   = [h.get('rating', 0.0) for h in horses]
+    ratings    = [h.get('rating', 0.0) for h in horses]
     horse_nums = [h.get('horse_num') or h.get('num') for h in horses]
 
     orders = simulate_race(ratings, n_sims=n_sims)
     probs  = calc_ticket_probabilities(orders, horse_nums)
+
+    # デュアルモデル: 単勝確率を別モデル（B2_ndcg）の結果で上書き
+    if ratings_win is not None:
+        orders_win  = simulate_race(list(ratings_win), n_sims=n_sims)
+        probs_win   = calc_ticket_probabilities(orders_win, horse_nums)
+        probs['win'] = probs_win['win']
 
     ev_results  = calc_ev_all_tickets(probs, odds_map)
     value_bets  = select_value_bets(ev_results, min_ev=min_ev, min_prob=min_prob)
