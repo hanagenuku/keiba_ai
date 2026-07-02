@@ -127,6 +127,79 @@ def _build_horses_list(scored, top1, by_odds, value_gap_map=None, odds_lookup=No
     return horses
 
 
+def _format_gumbel_bets(gb, scored):
+    """build_optimal_bets の出力をアプリ表示リストに変換する。"""
+    if not gb:
+        return []
+
+    name_map = {}
+    for h in scored:
+        k = h.get('horse_num') or h.get('num')
+        if k is not None:
+            name_map[int(k)] = h.get('name', '')
+
+    result = []
+
+    for b in gb.get('win', []):
+        num = b['key']
+        result.append({
+            'tag':   'tan',
+            'label': '単勝',
+            'horse': f'#{num} {name_map.get(num, "")}',
+            'est':   f'{b["odds"]:.1f}倍',
+            'ev':    round(b['ev'], 2),
+            'prob':  round(b['prob'], 3),
+            'amt':   f'¥{b["amount"]}',
+        })
+
+    for b in gb.get('place', []):
+        num = b['key']
+        result.append({
+            'tag':   'fuku',
+            'label': '複勝',
+            'horse': f'#{num} {name_map.get(num, "")}',
+            'est':   f'{b["odds"]:.1f}倍',
+            'ev':    round(b['ev'], 2),
+            'prob':  round(b['prob'], 3),
+            'amt':   f'¥{b["amount"]}',
+        })
+
+    for b in gb.get('quinella', []):
+        a, bb = b['key']
+        result.append({
+            'tag':   'umaren',
+            'label': '馬連',
+            'horse': f'#{a}-#{bb}',
+            'est':   f'{b["odds"]:.1f}倍',
+            'ev':    round(b['ev'], 2),
+            'prob':  round(b['prob'], 3),
+            'amt':   f'¥{b["amount"]}',
+        })
+
+    trio = gb.get('trio', [])
+    if trio:
+        pts  = len(trio)
+        s    = gb.get('summary', {})
+        pmin = s.get('payout_min', 0)
+        pmax = s.get('payout_max', 0)
+        syn  = s.get('syn_odds', 0)
+        avg_ev = round(sum(b['ev'] for b in trio) / pts, 2)
+        preview = ' / '.join('-'.join(f'#{n}' for n in b['key']) for b in trio[:2])
+        if pts > 2:
+            preview += f' 他{pts - 2}点'
+        result.append({
+            'tag':      'sanfuku',
+            'label':    f'三連複({pts}点)',
+            'horse':    preview,
+            'est':      f'¥{pmin:,}〜¥{pmax:,}',
+            'ev':       avg_ev,
+            'syn_odds': syn,
+            'amt':      f'¥{pts * 100}',
+        })
+
+    return result
+
+
 def _build_bet_list(bets):
     """ベット辞書リストをアプリ表示形式に変換する。三連複F はまとめて1行で表示。"""
     result = []
@@ -176,7 +249,7 @@ def _build_bet_list(bets):
     return result
 
 
-def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', market_odds_map=None):
+def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', market_odds_map=None, base_dir=None):
     """厳選レース＋全レース情報をアプリ用 JSON 形式で返す。
 
     Args:
@@ -214,7 +287,7 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
         _num_horses  = race.get('num_horses', len(scored))
         by_odds = sorted(scored, key=lambda h: h.get('win_odds') or 99)
 
-        # popularity を win_odds 順位で補完（classify_chaos_grade に必要）
+        # popularity を win_odds 順位で補完
         for _rank, _h in enumerate(by_odds, 1):
             _h.setdefault('popularity', _rank)
             _h.setdefault('_pop', _rank)
@@ -262,6 +335,14 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
         _types_str  = '+'.join(dict.fromkeys(b['type'] for b in bets))
         _bet_reason = f'★期待値あり: {_types_str}'
 
+        try:
+            from src.betting.bet_optimizer import make_bets_v2 as _mbv2
+            _gb, _, _, _ = _mbv2(scored, race, base_dir,
+                                  market_odds_map=market_odds_map, n_sims=3000)
+            _gumbel_bets = _format_gumbel_bets(_gb, scored)
+        except Exception:
+            _gumbel_bets = []
+
         _entry = {
             'r':       race['race_num'],
             'race_id': race['id'],
@@ -279,6 +360,7 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
             },
             'horses':       _horses_list,
             'bets':         _build_bet_list(bets),
+            'gumbel_bets':  _gumbel_bets,
             'formation':    _formation,
             'chaos_level':  _grade,
             'chaos_grade':  _grade,
@@ -374,6 +456,14 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
         _types_str2  = '+'.join(dict.fromkeys(b['type'] for b in bets2))
         _bet_reason2 = f'参考: {_types_str2}'
 
+        try:
+            from src.betting.bet_optimizer import make_bets_v2 as _mbv2
+            _gb2, _, _, _ = _mbv2(scored, race, base_dir,
+                                   market_odds_map=market_odds_map, n_sims=3000)
+            _gumbel_bets2 = _format_gumbel_bets(_gb2, scored)
+        except Exception:
+            _gumbel_bets2 = []
+
         _entry2 = {
             'r':           race['race_num'],
             'race_id':     race['id'],
@@ -394,10 +484,11 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
                 'score': top1['total'],
                 'style': top1.get('running_style', '差し'),
             },
-            'horses':    _horses_list2,
-            'bets':      _build_bet_list(bets2),
-            'formation': _formation2,
-            'cmt':       auto_comment(c_ref, bias_data) + ('\n' + maiden_note if maiden_note else ''),
+            'horses':      _horses_list2,
+            'bets':        _build_bet_list(bets2),
+            'gumbel_bets': _gumbel_bets2,
+            'formation':   _formation2,
+            'cmt':         auto_comment(c_ref, bias_data) + ('\n' + maiden_note if maiden_note else ''),
         }
         races_by_venue[rc].append(_entry2)
 

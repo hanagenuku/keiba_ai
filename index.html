@@ -856,6 +856,23 @@ function render() {
       if ((race.bets||[]).length === 0 && race._update_time) {
         html += '<div style="padding:6px 0;font-size:11px;color:#999">このレースは見送り</div>';
       }
+      if ((race.gumbel_bets||[]).length > 0) {
+        html += '<div class="sec" style="margin-top:10px;font-size:11px;color:#117a65">📊 EV買い目</div>';
+        for (const b of race.gumbel_bets) {
+          const tc = b.tag || 'fuku';
+          const synStr = b.syn_odds ? ' 合成'+b.syn_odds.toFixed(1)+'倍' : '';
+          const evBadge = b.ev != null
+            ? '<span style="font-size:10px;color:#117a65;font-weight:700;padding:1px 5px;background:rgba(17,122,101,0.12);border-radius:3px;flex-shrink:0">EV'+b.ev.toFixed(2)+'</span>'
+            : '';
+          html += '<div class="bet">';
+          html += '<span class="btype '+tc+'">'+b.label+'</span>';
+          html += '<span class="bhorse">'+b.horse+'</span>';
+          html += '<span class="best">'+b.est+(tc==='sanfuku'?synStr:'')+'</span>';
+          html += evBadge;
+          html += '<span class="bamt">'+b.amt+'</span>';
+          html += '</div>';
+        }
+      }
       html += '</div>';
       if (race.rec && race.formation) {
         html += formationHtml(race.formation);

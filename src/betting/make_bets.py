@@ -83,39 +83,6 @@ def calc_kelly(win_prob, odds, bankroll=None, max_ratio=0.05):
     return max(0, amount)
 
 
-def classify_chaos_grade(horses, chaos_score):
-    """波乱度スコアとRL1位馬の人気から A/B/C を判定する（唯一の波乱度分類器）。
-
-    判定ルール（優先順）:
-        chaos_score < 0.30 かつ rl_rank=1 の人気 <= 2  → 'A'（堅い）
-        chaos_score > 0.55 または rl_rank=1 の人気 >= 6 → 'C'（大荒れ）
-        それ以外 → 'B'（中荒れ）
-
-    popularity が未設定の場合は win_odds 順位で代替する。
-
-    Args:
-        horses      : 全馬の予測結果。必須キー: rl_rank
-        chaos_score : engine.py の calc_chaos_score() の出力（0〜1）
-
-    Returns:
-        'A'（堅い）/ 'B'（中荒れ）/ 'C'（大荒れ）
-    """
-    top = next((h for h in horses if h.get('rl_rank') == 1), None)
-    if top is None:
-        return 'B'
-    top_pop = top.get('popularity') or top.get('_pop')
-    if not top_pop:
-        by_odds = sorted(horses, key=lambda h: h.get('win_odds') or 99)
-        top_num = top.get('horse_num', top.get('num'))
-        top_pop = next((i + 1 for i, h in enumerate(by_odds)
-                        if h.get('horse_num', h.get('num')) == top_num), 99)
-
-    if chaos_score < 0.30 and top_pop <= 2:
-        return 'A'
-    if chaos_score > 0.55 or top_pop >= 6:
-        return 'C'
-    return 'B'
-
 
 def estimate_payout(bet_type, horse_odds_list):
     """券種ごとの推定払戻（100円あたり）を計算する。
@@ -910,7 +877,8 @@ def log_bet_simulation(date_str, c, base_dir=None, db_path=None):
 
 def build_bets_from_simulation(horses, odds_map, n_sims=20000,
                                 min_ev=1.25, min_prob=0.01,
-                                max_trio=20, amount=100):
+                                max_trio=20, amount=100,
+                                ratings_win=None):
     """
     シミュレーション結果から、EV ベースで買い目を組む。
 
@@ -919,28 +887,36 @@ def build_bets_from_simulation(horses, odds_map, n_sims=20000,
 
     Parameters
     ----------
-    horses   : calc_all() の出力リスト（'horse_num' / 'rating' 必須）
-    odds_map : 実オッズ辞書 {'win':{馬番:o}, 'place':{}, 'quinella':{}, ...}
-    n_sims   : シミュレーション回数
-    min_ev   : EV下限
-    min_prob : 的中確率下限
-    max_trio : 三連複の最大点数
-    amount   : 1点あたり賭け金（円）
+    horses      : calc_all() の出力リスト（'horse_num' / 'rating' 必須）
+    odds_map    : 実オッズ辞書 {'win':{馬番:o}, 'place':{}, 'quinella':{}, ...}
+    n_sims      : シミュレーション回数
+    min_ev      : EV下限
+    min_prob    : 的中確率下限
+    max_trio    : 三連複の最大点数
+    amount      : 1点あたり賭け金（円）
+    ratings_win : デュアルモデル用。単勝確率だけ別モデルの評価値（温度補正済み）を使う場合に渡す。
+                  None のとき horses['rating'] で単勝も計算（従来動作）。
 
     Returns
     -------
     bets        : [{'type','nums','prob','odds','ev','amount'}]
-    probs       : calc_ticket_probabilities の出力
+    probs       : calc_ticket_probabilities の出力（マージ済み）
     ev_results  : calc_ev_all_tickets の出力
     """
     from src.betting.race_simulator import simulate_race, calc_ticket_probabilities
     from src.betting.ev_calculator import calc_ev_all_tickets, select_value_bets
 
-    ratings   = [h.get('rating', 0.0) for h in horses]
+    ratings    = [h.get('rating', 0.0) for h in horses]
     horse_nums = [h.get('horse_num') or h.get('num') for h in horses]
 
     orders = simulate_race(ratings, n_sims=n_sims)
     probs  = calc_ticket_probabilities(orders, horse_nums)
+
+    # デュアルモデル: 単勝確率を別モデル（B2_ndcg）の結果で上書き
+    if ratings_win is not None:
+        orders_win  = simulate_race(list(ratings_win), n_sims=n_sims)
+        probs_win   = calc_ticket_probabilities(orders_win, horse_nums)
+        probs['win'] = probs_win['win']
 
     ev_results  = calc_ev_all_tickets(probs, odds_map)
     value_bets  = select_value_bets(ev_results, min_ev=min_ev, min_prob=min_prob)

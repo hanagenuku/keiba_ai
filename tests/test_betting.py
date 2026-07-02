@@ -5,7 +5,7 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from src.betting.make_bets import (
-    classify_chaos_grade, _select_bet_candidates, select_bet_type,
+    _select_bet_candidates, select_bet_type,
 )
 from src.betting.ev_filter import detect_value_horses
 
@@ -49,37 +49,6 @@ def test_select_bet_no_skip_a_5heads():
     )
     assert bets
     assert any(b['type'] == '馬連' for b in bets)
-
-
-# ── ④ classify_chaos_grade: popularity 未設定でも win_odds から推定 ────────────
-
-def test_classify_chaos_grade_uses_odds_fallback():
-    """popularity が未設定でも win_odds から人気順を推定して A/B/C を返す"""
-    # RL1位が1番人気相当（odds=2.0）・chaos_score低い → 'A' になるべき
-    horses = [
-        {'num': 1, 'horse_num': 1, 'rl_rank': 1, 'pn': 0.40, 'win_odds': 2.0},
-        {'num': 2, 'horse_num': 2, 'rl_rank': 2, 'pn': 0.25, 'win_odds': 5.0},
-        {'num': 3, 'horse_num': 3, 'rl_rank': 3, 'pn': 0.15, 'win_odds': 8.0},
-    ]
-    # popularity キーがない状態でも動作すること
-    for h in horses:
-        assert 'popularity' not in h
-    grade = classify_chaos_grade(horses, chaos_score=0.20)
-    assert grade == 'A'
-
-
-def test_classify_chaos_grade_c_high_popularity():
-    """RL1位が6番人気以上 → 'C'"""
-    horses = [
-        {'num': 3, 'horse_num': 3, 'rl_rank': 1, 'pn': 0.15, 'win_odds': 15.0},
-        {'num': 1, 'horse_num': 1, 'rl_rank': 2, 'pn': 0.30, 'win_odds': 3.0},
-        {'num': 2, 'horse_num': 2, 'rl_rank': 3, 'pn': 0.20, 'win_odds': 5.0},
-        {'num': 4, 'horse_num': 4, 'rl_rank': 4, 'pn': 0.12, 'win_odds': 7.0},
-        {'num': 5, 'horse_num': 5, 'rl_rank': 5, 'pn': 0.10, 'win_odds': 8.0},
-        {'num': 6, 'horse_num': 6, 'rl_rank': 6, 'pn': 0.08, 'win_odds': 10.0},
-    ]
-    grade = classify_chaos_grade(horses, chaos_score=0.40)
-    assert grade == 'C'
 
 
 # ── ⑤ detect_value_horses: value_gap は top3_prob ベース ─────────────────────
@@ -127,10 +96,6 @@ if __name__ == '__main__':
     print('✅ test_select_bet_no_skip_c_no_value_13heads passed')
     test_select_bet_no_skip_a_5heads()
     print('✅ test_select_bet_no_skip_a_5heads passed')
-    test_classify_chaos_grade_uses_odds_fallback()
-    print('✅ test_classify_chaos_grade_uses_odds_fallback passed')
-    test_classify_chaos_grade_c_high_popularity()
-    print('✅ test_classify_chaos_grade_c_high_popularity passed')
     test_detect_value_horses_uses_top3_prob()
     print('✅ test_detect_value_horses_uses_top3_prob passed')
     test_detect_value_horses_fallback_to_pn()
