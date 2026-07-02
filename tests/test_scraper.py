@@ -3,11 +3,12 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
+from bs4 import BeautifulSoup
 from src.scraper.parser import parse_header, get_class_from_racename, parse_hist
 from src.scraper.calendar import get_base_from_calendar
 from src.utils.config import KAISAI_CALENDAR
 import src.scraper.jra_scraper as jra_scraper
-from src.scraper.jra_scraper import find_r01_shutuba
+from src.scraper.jra_scraper import find_r01_shutuba, parse_result_soup
 
 
 def test_parse_header_basic():
@@ -96,6 +97,62 @@ def test_find_r01_shutuba_returns_none_when_absent(monkeypatch):
     monkeypatch.setattr(jra_scraper.time, 'sleep', lambda *_: None)
     sess = _FakeSession(target_suffix=999)  # 256内に存在しない → None
     assert find_r01_shutuba('pw01dde010320260201', '20260627', sess) is None
+
+
+# JRA result table: 着順,枠番,馬番,馬名,性齢,斤量,騎手,タイム,着差,通過順,上がり,単勝,人気,馬体重,調教師
+_RESULT_HTML = """
+<html><body>
+<table>
+<tr>
+  <th>レース情報</th>
+</tr>
+<tr>
+  <td colspan="15">2023年1月7日 中山 1600メートル（芝・右）3歳以上1勝クラス 天候:晴 馬場:良</td>
+</tr>
+<tr>
+  <td>1</td><td>3</td><td>5</td><td>テストウマ</td>
+  <td>牡4</td><td>57.0</td><td>テスト騎手</td>
+  <td>1:34.5</td><td></td><td>3-3-2-1</td><td>34.1</td>
+  <td>3.5</td><td>2</td><td>516(+4)</td><td>テスト調教師</td>
+</tr>
+<tr>
+  <td>2</td><td>1</td><td>1</td><td>ニバンウマ</td>
+  <td>牝5</td><td>55.0</td><td>サブ騎手</td>
+  <td>1:34.8</td><td>3/4</td><td>1-1-1-2</td><td>35.0</td>
+  <td>1.8</td><td>1</td><td>480(-2)</td><td>サブ調教師</td>
+</tr>
+<tr>
+  <td>3</td><td>5</td><td>9</td><td>サンバンウマ</td>
+  <td>牡6</td><td>57.0</td><td>サード騎手</td>
+  <td>1:35.0</td><td>1.1/4</td><td>5-5-4-3</td><td>33.8</td>
+  <td>12.4</td><td>5</td><td>500(0)</td><td>サード調教師</td>
+</tr>
+</table>
+</body></html>
+"""
+
+
+def test_parse_result_soup_win_odds():
+    soup = BeautifulSoup(_RESULT_HTML, 'lxml')
+    result = parse_result_soup(soup, '中山', 1, '20230107', '06')
+    assert result is not None
+    horses = result['finishers']
+    assert len(horses) == 3
+    # 単勝オッズ（texts[11]）が正しく取得されること
+    assert horses[0]['win_odds'] == 3.5
+    assert horses[1]['win_odds'] == 1.8
+    assert horses[2]['win_odds'] == 12.4
+    # 人気（texts[12]）が正しく取得されること
+    assert horses[0]['popularity'] == 2
+    assert horses[1]['popularity'] == 1
+    assert horses[2]['popularity'] == 5
+    # 調教師（texts[14]）が正しく取得されること
+    assert horses[0]['trainer'] == 'テスト調教師'
+    # 馬体重（texts[13]）が正しく取得されること
+    assert horses[0]['body_weight'] == 516
+    assert horses[0]['body_weight_diff'] == 4
+    assert horses[1]['body_weight'] == 480
+    assert horses[1]['body_weight_diff'] == -2
 
 
 class _MultiHitSession:

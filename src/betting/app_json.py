@@ -2,10 +2,11 @@
 アプリ用 JSON 生成。
 ノートブックの to_app_json を分離。
 """
-from src.betting.ev_filter import (VENUE_ORDER, VALUE_GAP_THRESHOLD,
+from src.betting.ev_filter import (VENUE_ORDER,
                                     calc_market_probs, calc_value_score,
-                                    detect_value_horses, is_maiden_race)
-from src.betting.make_bets import classify_chaos_grade, calc_ev, make_bets, build_formation
+                                    detect_value_horses, is_maiden_race,
+                                    classify_race_chaos)
+from src.betting.make_bets import calc_ev, make_bets, build_formation
 from src.features.engine import auto_comment, calc_all, calc_chaos_score
 
 
@@ -127,20 +128,51 @@ def _build_horses_list(scored, top1, by_odds, value_gap_map=None, odds_lookup=No
 
 
 def _build_bet_list(bets):
-    """ベット辞書リストをアプリ表示形式に変換する。"""
+    """ベット辞書リストをアプリ表示形式に変換する。三連複F はまとめて1行で表示。"""
     result = []
+    san_f = [b for b in bets if b['type'] == '三連複F']
+
     for b in bets:
+        if b['type'] == '三連複F':
+            continue  # 後でまとめて追加
+        if b['type'] == '三連複':
+            # 従来EV路（レガシー）からの三連複
+            tickets = b.get('tickets', [b['nums']])
+            pts = len(tickets)
+            result.append({
+                'tag':   'san',
+                'label': f'三連複({pts}点)',
+                'horse': b.get('horse_name', '-'.join(f'#{n}' for n in b['nums'][:3])),
+                'est':   f'{pts}点',
+                'amt':   f'¥{b["amount"]}',
+            })
+            continue
         tag = ('fuku' if b['type'] == '複勝' else
                'tan'  if b['type'] == '単勝' else 'wide')
-        est = (f'推定{b["odds_est"]:.1f}倍' if b['type'] == '複勝'
-               else f'{b["odds"]:.1f}倍')
+        est = (f'推定{b["odds_est"]:.1f}倍' if b.get('odds_est')
+               else f'{b.get("odds", 0):.1f}倍')
         result.append({
             'tag':   tag,
             'label': b['type'],
-            'horse': f'#{b["nums"][0]} {b["horse_name"]}',
+            'horse': f'#{b["nums"][0]} {b.get("horse_name", "")}',
             'est':   est,
             'amt':   f'¥{b["amount"]}',
         })
+
+    if san_f:
+        total_amt = sum(t['amount'] for t in san_f)
+        pts = len(san_f)
+        preview = ' / '.join('-'.join(f'#{n}' for n in t['nums']) for t in san_f[:2])
+        if pts > 2:
+            preview += f' 他{pts - 2}点'
+        result.append({
+            'tag':   'san',
+            'label': f'三連複({pts}点)',
+            'horse': preview,
+            'est':   f'{pts}点',
+            'amt':   f'¥{total_amt}',
+        })
+
     return result
 
 
@@ -190,37 +222,44 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
             if 'cal_prob' not in _h:  _h['cal_prob']  = _h.get('pn', 0)
 
         _chaos_score_val = c.get('chaos_score', calc_chaos_score(race, scored))
-        _grade    = classify_chaos_grade(scored, _chaos_score_val)
+        _grade    = classify_race_chaos(scored)  # ③ pnベース
         _vh_all   = detect_value_horses(scored, _race_odds)
         _vh_list  = [{'horse_num': _h.get('horse_num', _h.get('num')),
                       'horse_name': _h.get('name', ''),
                       'value_gap':  round(_h.get('value_gap', 0), 4),
+                      'ev_direct':  round(_h.get('ev_direct', 0), 3),
                       'cal_prob':   round(_h.get('cal_prob', _h.get('pn', 0)), 4),
                       'market_prob': round(_h.get('market_prob', 0), 4)}
-                     for _h in _vh_all if _h.get('value_gap', 0) >= VALUE_GAP_THRESHOLD]
+                     for _h in _vh_all if _h.get('is_value', False)]  # ⑤ EVベース
         _vg_map      = {_h.get('horse_num', _h.get('num')): _h.get('value_gap', 0) for _h in _vh_all}
         _odds_lookup = {_h.get('horse_num', _h.get('num')):
                         {'tansho_odds': _h.get('tansho_odds'), 'fukusho_odds': _h.get('fukusho_odds')}
                         for _h in _vh_all}
 
-        # chaos_score を c に入れて make_bets が再計算しないようにする
         c.setdefault('chaos_score', _chaos_score_val)
         bets = make_bets(c, _race_odds or None)
-        # ① 全レース必ず買い目を出す（空になることはないが念のため複勝フォールバック）
         if not bets:
             bets = [{'type': '複勝', 'nums': [top1['num']],
                      'horse_name': top1.get('name', ''),
                      'odds': top1.get('win_odds', 0) or 0,
                      'odds_est': 0, 'amount': 500, 'ev': 0.0, 'prob': 0.0,
                      'pattern': 'fallback', 'chaos_grade': _grade}]
+
+        # ④ フォーメーション生成（_build_horses_list が _pop をセット後に実行）
+        _horses_list = _build_horses_list(scored, top1, by_odds, _vg_map, _odds_lookup)
+        for _h in scored:
+            _h['popularity'] = _h.get('_pop', 99)
+        _formation = build_formation(scored, race)
+        if _formation and _formation.get('bets'):
+            bets = bets + _formation['bets']
+
         total_inv += sum(b['amount'] for b in bets)
 
         pop_rank = next((i + 1 for i, h in enumerate(by_odds)
                          if h['name'] == top1['name']), 99)
         conf = min(99, max(50, int(60 + (pop_rank - 2) * 4 + c['score_gap'] * 20)))
 
-        # ③ bet_reason は実際の bets から生成（"スキップ"廃止）
-        _types_str = '+'.join(dict.fromkeys(b['type'] for b in bets))
+        _types_str  = '+'.join(dict.fromkeys(b['type'] for b in bets))
         _bet_reason = f'★期待値あり: {_types_str}'
 
         _entry = {
@@ -238,19 +277,16 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
                 'score': top1['total'],
                 'style': top1.get('running_style', '差し'),
             },
-            'horses':      _build_horses_list(scored, top1, by_odds, _vg_map, _odds_lookup),
-            'bets':        _build_bet_list(bets),
-            'chaos_level': _grade,   # ④ 一本化
-            'chaos_grade': _grade,
-            'num_horses':  _num_horses,
+            'horses':       _horses_list,
+            'bets':         _build_bet_list(bets),
+            'formation':    _formation,
+            'chaos_level':  _grade,
+            'chaos_grade':  _grade,
+            'num_horses':   _num_horses,
             'value_horses': _vh_list,
-            'bet_reason':  _bet_reason,
+            'bet_reason':   _bet_reason,
             'cmt': auto_comment(c, bias_data),
         }
-        # _build_horses_list が scored に _pop をセットした後でフォーメーション生成
-        for _h in scored:
-            _h['popularity'] = _h.get('_pop', 99)
-        _entry['formation'] = build_formation(scored, race, chaos_grade=_grade)
         races_by_venue[rc].append(_entry)
 
     # ── 非厳選レース（rec=False・参考買い目つき）──────────────────
@@ -287,9 +323,9 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
         fuku_prob   = top1.get('top3_prob', min(0.80, win_prob * 3))
         ev_fuku     = calc_ev(fuku_prob, odds * 0.28)
         ev_tan      = calc_ev(win_prob, odds)
-        # ④ 波乱度分類器を一本化
+        # ③ 波乱度は pnベース
         _chaos_score2 = calc_chaos_score(race, scored)
-        _grade2   = classify_chaos_grade(scored, _chaos_score2)
+        _grade2   = classify_race_chaos(scored)
         maiden_note = '⚠ 新馬戦：データ不足のため参考値' if is_maiden_race(race) else ''
 
         _race_odds2 = market_odds_map.get(race['id'], {})
@@ -297,9 +333,10 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
         _vh_list2    = [{'horse_num': _h.get('horse_num', _h.get('num')),
                          'horse_name': _h.get('name', ''),
                          'value_gap':  round(_h.get('value_gap', 0), 4),
+                         'ev_direct':  round(_h.get('ev_direct', 0), 3),
                          'cal_prob':   round(_h.get('cal_prob', _h.get('pn', 0)), 4),
                          'market_prob': round(_h.get('market_prob', 0), 4)}
-                        for _h in _vh_all2 if _h.get('value_gap', 0) >= VALUE_GAP_THRESHOLD]
+                        for _h in _vh_all2 if _h.get('is_value', False)]  # ⑤ EVベース
         _odds_lookup2 = {_h.get('horse_num', _h.get('num')):
                          {'tansho_odds': _h.get('tansho_odds'), 'fukusho_odds': _h.get('fukusho_odds')}
                          for _h in _vh_all2}
@@ -318,7 +355,6 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
             'chaos_score':     _chaos_score2,
             'chaos_level':     _grade2,
         }
-        # ① 全レース bets を生成（参考）
         bets2 = make_bets(c_ref, _race_odds2 or None)
         if not bets2:
             bets2 = [{'type': '複勝', 'nums': [top1['num']],
@@ -327,8 +363,15 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
                       'odds_est': 0, 'amount': 500, 'ev': 0.0, 'prob': 0.0,
                       'pattern': 'fallback', 'chaos_grade': _grade2}]
 
-        # ③ bet_reason を実際の bets から生成
-        _types_str2 = '+'.join(dict.fromkeys(b['type'] for b in bets2))
+        # ④ フォーメーション生成（_build_horses_list が _pop をセット後）
+        _horses_list2 = _build_horses_list(scored, top1, by_odds, _vg_map2, _odds_lookup2)
+        for _h in scored:
+            _h['popularity'] = _h.get('_pop', 99)
+        _formation2 = build_formation(scored, race)
+        if _formation2 and _formation2.get('bets'):
+            bets2 = bets2 + _formation2['bets']
+
+        _types_str2  = '+'.join(dict.fromkeys(b['type'] for b in bets2))
         _bet_reason2 = f'参考: {_types_str2}'
 
         _entry2 = {
@@ -339,7 +382,7 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
             'dist':        f'{race["distance"]}m{race["surface"]}',
             'rec':         False,
             'conf':        conf,
-            'chaos_level': _grade2,   # ④ 一本化
+            'chaos_level': _grade2,
             'chaos_grade': _grade2,
             'num_horses':  _num_horses2,
             'value_horses': _vh_list2,
@@ -351,13 +394,11 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
                 'score': top1['total'],
                 'style': top1.get('running_style', '差し'),
             },
-            'horses': _build_horses_list(scored, top1, by_odds, _vg_map2, _odds_lookup2),
-            'bets':   _build_bet_list(bets2),
-            'cmt':    auto_comment(c_ref, bias_data) + ('\n' + maiden_note if maiden_note else ''),
+            'horses':    _horses_list2,
+            'bets':      _build_bet_list(bets2),
+            'formation': _formation2,
+            'cmt':       auto_comment(c_ref, bias_data) + ('\n' + maiden_note if maiden_note else ''),
         }
-        for _h in scored:
-            _h['popularity'] = _h.get('_pop', 99)
-        _entry2['formation'] = build_formation(scored, race, chaos_grade=_grade2)
         races_by_venue[rc].append(_entry2)
 
     bias_txt = '内外:フラット ペース:±0 時計:±0'

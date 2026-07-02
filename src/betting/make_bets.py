@@ -172,11 +172,14 @@ def _apply_ev_filter(bets, value_horses):
     if not has_odds:
         return bets
 
+    # estimate_payout は 100円あたり払戻（円）を返すため、EV閾値との比較は
+    # est >= EV_THRESHOLD × 100 が正しい（b['amount'] でスケールしない）
+    ev_floor = EV_THRESHOLD * 100
     filtered = []
     for b in bets:
         odds_list = [odds_by_num.get(n, {}) for n in b['nums'][:3]]
         est = estimate_payout(b['type'], odds_list)
-        if est is None or est >= b['amount'] * EV_THRESHOLD:
+        if est is None or est >= ev_floor:
             filtered.append(b)
     return filtered
 
@@ -189,7 +192,7 @@ def select_bet_type(horses, chaos_grade, value_horses, num_horses):
 
     【多頭数(>=14頭)】
         A/B: 馬連（rl_rank 1×2）+ ワイド（rl_rank 1×2）
-        C  : 馬連（rl_rank 1×2）+ 三連複（rl_rank 1〜3ボックス・少額）
+        C  : 馬連（rl_rank 1×2）　←三連複はフォーメーションで別途生成
 
     【少頭数(<=8頭)】
         → 馬連（rl_rank 1×2）のみ
@@ -199,7 +202,7 @@ def select_bet_type(horses, chaos_grade, value_horses, num_horses):
         B + バリュー馬あり: 複勝（バリュー馬）+ ワイド（バリュー馬×rl_rank1位）
         B + バリュー馬なし: 複勝（rl_rank 1位）
         C + バリュー馬あり: 複勝（バリュー馬）少額
-        C + バリュー馬なし: スキップ（空リスト）
+        C + バリュー馬なし: 複勝（rl_rank 1位・参考）
 
     市場オッズ取得済み（value_horses に fukusho_odds/tansho_odds がある）場合は、
     上記で生成した候補をさらに _apply_ev_filter() でフィルタする
@@ -208,16 +211,13 @@ def select_bet_type(horses, chaos_grade, value_horses, num_horses):
     Args:
         horses       : 全馬の予測結果（rl_rank 付きを前提）
         chaos_grade  : 'A'/'B'/'C'
-        value_horses : detect_value_horses() の戻り値（value_gap・fukusho_odds・
+        value_horses : detect_value_horses() の戻り値（is_value・fukusho_odds・
                        tansho_odds 付きの全馬リスト）
         num_horses   : 出走頭数
 
     Returns:
         買い目リスト。各要素: {type, nums, amount, reason}
-        スキップ時は空リスト []
     """
-    from src.betting.ev_filter import VALUE_GAP_THRESHOLD
-
     by_rl = sorted(horses, key=lambda h: h.get('rl_rank', 99))
     top1  = by_rl[0] if len(by_rl) > 0 else None
     top2  = by_rl[1] if len(by_rl) > 1 else None
@@ -231,12 +231,10 @@ def select_bet_type(horses, chaos_grade, value_horses, num_horses):
 
 
 def _select_bet_candidates(by_rl, top1, top2, top3, chaos_grade, value_horses, num_horses):
-    from src.betting.ev_filter import VALUE_GAP_THRESHOLD
-
     n1 = top1.get('horse_num', top1.get('num'))
     n2 = top2.get('horse_num', top2.get('num')) if top2 else None
     n3 = top3.get('horse_num', top3.get('num')) if top3 else None
-    vh = [h for h in value_horses if h.get('value_gap', 0) >= VALUE_GAP_THRESHOLD]
+    vh = [h for h in value_horses if h.get('is_value', False)]  # ⑤ EV一本化
 
     def ren(reason):
         return {'type': '馬連', 'nums': [n1, n2], 'amount': BET_AMOUNT_REN, 'reason': reason}
@@ -262,11 +260,8 @@ def _select_bet_candidates(by_rl, top1, top2, top3, chaos_grade, value_horses, n
         else:  # C
             if n2 is None:
                 return [fuku(n1, f'多頭数({num_horses}頭)+混戦・馬連候補不足→複勝')]
-            bets = [ren(f'多頭数({num_horses}頭)+混戦・馬連(RL1×2)')]
-            if n3 is not None:
-                bets.append(san([n1, n2, n3],
-                                f'多頭数({num_horses}頭)+混戦・三連複RL1〜3ボックス'))
-            return bets
+            return [ren(f'多頭数({num_horses}頭)+混戦・馬連(RL1×2)')]
+            # 三連複はフォーメーションで別途生成（build_formation → bets に合算）
 
     # ── 少頭数(<=8頭) ─────────────────────────────────────────────────────────
     if num_horses <= 8:
@@ -324,8 +319,7 @@ def make_bets(c, market_odds_map=None):
 
     # ── ルールベース（market_odds_map が渡された場合）──────────────────────────
     if market_odds_map is not None:
-        from src.betting.ev_filter import detect_value_horses
-        from src.features.engine import calc_chaos_score
+        from src.betting.ev_filter import detect_value_horses, classify_race_chaos
         for h in scored:
             if 'horse_num' not in h:
                 h['horse_num'] = h.get('num')
@@ -333,8 +327,7 @@ def make_bets(c, market_odds_map=None):
                 h['cal_prob'] = h.get('pn', 0)
             if 'popularity' not in h:
                 h['popularity'] = h.get('_pop', 99)
-        chaos_score_val = c.get('chaos_score', calc_chaos_score(race, scored))
-        grade     = classify_chaos_grade(scored, chaos_score_val)
+        grade     = classify_race_chaos(scored)  # ③ pnベース
         vh_all    = detect_value_horses(scored, market_odds_map)
         rule_bets = select_bet_type(scored, grade, vh_all, nh)
         if rule_bets:
@@ -515,7 +508,7 @@ def make_bets(c, market_odds_map=None):
 
 # ── 三連複フォーメーション設定 ────────────────────────────────────────────────
 FORMATION_UNIT       = 100
-FORMATION_MAX_POINTS = 15
+FORMATION_MAX_POINTS = 20
 FORMATION_AXIS_POP_LIMIT = 12
 FORMATION_SYN_TARGET = 3.5   # 合成オッズの目標値
 
@@ -642,141 +635,116 @@ def _select_best_candidate(candidates, chaos_grade, gap12, rl2_pop):
     return find('B_standard') or candidates[0]
 
 
-def build_formation(horses, race, chaos_grade='B'):
-    """三連複フォーメーションをパターン自動選択して生成する。
+def build_formation(horses, race, chaos_grade=None):
+    """三連複フォーメーションをAI自信度ベースで自動生成する（④）。
 
-    chaos_grade と AI自信度（RL1-2位のpn差）から最適パターンを選択。
+    選択ロジック（pn差による自信度判定）:
+        gap_12 >= 0.12  → 1頭軸流し  （軸: RL1位、相手: EV>=0.9 の馬 最大7頭）
+        gap_23 >= 0.08  → 2頭軸流し  （軸: RL1+RL2、相手: EV>=0.9 の馬）
+        それ以外         → ボックス   （RL上位5頭）
 
-    パターン一覧:
-      A_1ax4box  : 軸1頭×4頭BOX（6点）  ← chaos A + gap≥0.05
-      B_standard : 軸1頭×2列2頭×3列4頭（〜10点）← 標準
-      C_2ax5flow : 2頭軸×5頭流し（5点）  ← chaos A/B + RL2位も人気上位
-      D_4box     : 4頭BOX（4点）          ← chaos C + 混戦（軸不明）
-      E_1ax6box  : 軸1頭×6頭BOX（15点）  ← chaos C + 軸は1頭ある
+    4〜20点の範囲。4点未満になった場合は5頭ボックス（10点）に強制変更。
+    合成オッズ改善のため _trim_to_syn_target で低配当組み合わせを削る。
+
+    Args:
+        horses      : 全馬の予測結果（pn / win_odds / rl_rank を持つ）
+        race        : レース辞書（現在は未使用、シグネチャ互換のため残存）
+        chaos_grade : 廃止済み引数（後方互換のため残存、無視される）
     """
     if len(horses) < 4:
         return None
 
-    by_rl  = sorted(horses, key=lambda h: h.get('rl_rank', 99))
-    by_pop = sorted(horses, key=lambda h: _fpop(h))
-    num_horses = race.get('num_horses', len(horses))
+    by_rl = sorted(horses, key=lambda h: h.get('rl_rank', 99))
     h_map = {_fnum(h): h for h in horses}
 
     p1    = by_rl[0].get('pn', 0.05) if by_rl           else 0.05
     p2    = by_rl[1].get('pn', 0.03) if len(by_rl) > 1  else 0.03
-    gap12 = p1 - p2
+    p3    = by_rl[2].get('pn', 0.02) if len(by_rl) > 2  else 0.02
+    gap_12 = p1 - p2
+    gap_23 = p2 - p3
 
-    axis = select_axis(by_rl, by_pop)
-    if axis is None:
-        return None
-    ax1 = _fnum(axis)
+    ax1 = _fnum(by_rl[0])
+    ax2 = _fnum(by_rl[1]) if len(by_rl) > 1 else None
 
-    candidates = []
-
-    # ── パターンC: 2頭軸×5頭流し（5点）──────────────────────────────────────
-    rl2 = by_rl[1] if len(by_rl) > 1 else None
-    if rl2 and chaos_grade in ('A', 'B') and gap12 >= 0.03 and _fpop(rl2) <= 5:
-        ax2   = _fnum(rl2)
-        mates = _pick_n(by_rl[2:], by_pop, {ax1, ax2}, 5)
-        if len(mates) >= 2:
-            tickets = [[ax1, ax2, m] for m in mates]
-            candidates.append(_make_pattern('C_2ax5flow', tickets, [ax1, ax2], [], mates, h_map))
-
-    # ── パターンA: 軸1頭×4頭BOX（6点）────────────────────────────────────────
-    if chaos_grade == 'A' and gap12 >= 0.05 and num_horses <= 14:
-        mates = _pick_n(by_rl[1:], by_pop, {ax1}, 4)
-        if len(mates) >= 3:
-            tickets = [[ax1] + list(c) for c in combinations(mates, 2)]
-            candidates.append(_make_pattern('A_1ax4box', tickets, [ax1], mates[:2], mates[2:], h_map))
-
-    # ── パターンB: 軸1頭×2列2頭×3列4頭（〜10点）─────────────────────────────
-    if len(horses) >= 6:
-        second = []
-        for h in by_rl[1:6]:
-            if _fnum(h) != ax1 and _fpop(h) <= 6:
-                second.append(_fnum(h))
-            if len(second) >= 2:
+    # 相手候補: EV(pn×win_odds) >= 0.9、最大7頭
+    opp_pool = []
+    for h in by_rl[1:]:
+        ev_h = h.get('pn', 0) * (_fodds(h) or 10)
+        if ev_h >= 0.9:
+            opp_pool.append(_fnum(h))
+        if len(opp_pool) >= 7:
+            break
+    # 3頭未満ならRL順で補完
+    if len(opp_pool) < 3:
+        for h in by_rl[1:]:
+            n = _fnum(h)
+            if n not in opp_pool:
+                opp_pool.append(n)
+            if len(opp_pool) >= 5:
                 break
-        if len(second) < 2:
-            for h in by_pop[:4]:
-                if _fnum(h) != ax1 and _fnum(h) not in second:
-                    second.append(_fnum(h))
-                if len(second) >= 2:
-                    break
-        third = _pick_n(by_rl, by_pop, {ax1} | set(second), 4)
-        all_mates = second + third
-        if len(all_mates) >= 2:
-            tickets = [[ax1] + list(c) for c in combinations(all_mates, 2)]
-            candidates.append(_make_pattern('B_standard', tickets, [ax1], second, third, h_map))
 
-    # ── パターンD: 4頭BOX（4点）──────────────────────────────────────────────
-    if chaos_grade == 'C' and gap12 < 0.03 and len(horses) >= 4:
-        box4    = [_fnum(h) for h in by_rl[:4]]
-        tickets = [list(c) for c in combinations(box4, 3)]
-        candidates.append(_make_pattern('D_4box', tickets, [], [], box4, h_map))
+    tickets   = []
+    form_name = ''
+    axis_nums = []
 
-    # ── パターンE: 軸1頭×6頭BOX（15点）──────────────────────────────────────
-    if chaos_grade == 'C' and len(horses) >= 8:
-        mates6  = _pick_n(by_rl[1:], by_pop, {ax1}, 6)
-        if len(mates6) >= 4:
-            tickets = [[ax1] + list(c) for c in combinations(mates6, 2)][:FORMATION_MAX_POINTS]
-            candidates.append(_make_pattern('E_1ax6box', tickets, [ax1], mates6[:2], mates6[2:], h_map))
+    if gap_12 >= 0.12:
+        opp = [n for n in opp_pool if n != ax1]
+        tickets   = [sorted([ax1, a, b]) for a, b in combinations(opp, 2)]
+        form_name = '1頭軸流し'
+        axis_nums = [ax1]
+    elif gap_23 >= 0.08 and ax2 is not None:
+        opp = [n for n in opp_pool if n != ax1 and n != ax2]
+        tickets   = [sorted([ax1, ax2, o]) for o in opp]
+        form_name = '2頭軸流し'
+        axis_nums = [ax1, ax2]
+    else:
+        box = [ax1] + [n for n in opp_pool if n != ax1][:4]
+        tickets   = [sorted(list(c)) for c in combinations(box[:5], 3)]
+        form_name = 'ボックス'
+        axis_nums = []
 
-    if not candidates:
+    # 重複除去
+    seen, deduped = set(), []
+    for t in tickets:
+        key = tuple(t)
+        if key not in seen:
+            seen.add(key)
+            deduped.append(t)
+    tickets = deduped
+
+    # 低配当組み合わせを削って合成オッズ改善
+    tickets = _trim_to_syn_target(tickets, h_map, target_syn=2.5, min_tickets=4)
+
+    # 4点未満なら5頭ボックス強制
+    if len(tickets) < 4:
+        box5      = [_fnum(h) for h in by_rl[:5]]
+        tickets   = [sorted(list(c)) for c in combinations(box5, 3)]
+        form_name = '5頭ボックス'
+        axis_nums = []
+
+    # 上限20点
+    tickets = tickets[:FORMATION_MAX_POINTS]
+
+    if not tickets:
         return None
 
-    # ── ルールベースで最適パターンを選択 ─────────────────────────────────────
-    rl2_pop = _fpop(by_rl[1]) if len(by_rl) > 1 else 99
-    best = _select_best_candidate(candidates, chaos_grade, gap12, rl2_pop)
-
-    if len(best['tickets']) > FORMATION_MAX_POINTS:
-        best['tickets']  = best['tickets'][:FORMATION_MAX_POINTS]
-        best['syn_odds'] = round(_calc_syn_odds(best['tickets'], h_map), 2)
-
-    # 合成オッズが低すぎる場合は低払戻の組み合わせを除去して点数を絞る
-    if best['syn_odds'] < 1.5:
-        trimmed = _trim_to_syn_target(best['tickets'], h_map, target_syn=2.5, min_tickets=4)
-        if len(trimmed) != len(best['tickets']):
-            surviving = {n for t in trimmed for n in t}
-            best = {
-                'name':        best['name'],
-                'tickets':     trimmed,
-                'axis_nums':   best['axis_nums'],
-                'second_nums': [n for n in best['second_nums'] if n in surviving],
-                'third_nums':  [n for n in best['third_nums'] if n in surviving],
-                'syn_odds':    round(_calc_syn_odds(trimmed, h_map), 2),
-            }
-
-    payout_range = _tickets_payout_range(best['tickets'], h_map)
+    syn          = _calc_syn_odds(tickets, h_map)
+    payout_range = _tickets_payout_range(tickets, h_map)
 
     def _hinfo(n):
         h = h_map.get(n, {})
         return {'num': n, 'name': h.get('name', ''), 'pop': _fpop(h), 'odds': round(_fodds(h), 1)}
 
-    second_set = set(best['second_nums'])
-    axis_set   = set(best['axis_nums'])
-
-    def _tier(nums):
-        if len(best['axis_nums']) >= 2:
-            return '軸流し'
-        if not best['axis_nums']:
-            return 'BOX'
-        non_axis = [n for n in nums if n not in axis_set]
-        in_s = sum(1 for n in non_axis if n in second_set)
-        return '堅' if in_s == 2 else ('中穴' if in_s == 1 else '大穴')
-
     return {
-        'pattern':      best['name'],
-        'axis':         _hinfo(best['axis_nums'][0]) if best['axis_nums'] else None,
-        'axis2':        _hinfo(best['axis_nums'][1]) if len(best['axis_nums']) > 1 else None,
-        'second_row':   [_hinfo(n) for n in best['second_nums']],
-        'third_row':    [_hinfo(n) for n in best['third_nums']],
-        'bets':         [{'type': '三連複F', 'nums': t, 'amount': FORMATION_UNIT,
-                          'tier': _tier(t)} for t in best['tickets']],
-        'total_points': len(best['tickets']),
-        'total_amount': len(best['tickets']) * FORMATION_UNIT,
+        'pattern':      form_name,
+        'axis':         _hinfo(axis_nums[0]) if axis_nums else None,
+        'axis2':        _hinfo(axis_nums[1]) if len(axis_nums) > 1 else None,
+        'bets':         [{'type': '三連複F', 'nums': t, 'amount': FORMATION_UNIT}
+                         for t in tickets],
+        'total_points': len(tickets),
+        'total_amount': len(tickets) * FORMATION_UNIT,
         'payout_range': payout_range,
-        'syn_odds':     best['syn_odds'],
+        'syn_odds':     round(syn, 2),
     }
 
 
@@ -938,3 +906,89 @@ def log_bet_simulation(date_str, c, base_dir=None, db_path=None):
         )
     conn.commit()
     conn.close()
+
+
+def build_bets_from_simulation(horses, odds_map, n_sims=20000,
+                                min_ev=1.25, min_prob=0.01,
+                                max_trio=20, amount=100):
+    """
+    シミュレーション結果から、EV ベースで買い目を組む。
+
+    フォーメーション型に縛られず、確率×実オッズで期待値のある組み合わせを選ぶ。
+    horses の各要素は calc_all() の出力（'rating' キーを持つこと）。
+
+    Parameters
+    ----------
+    horses   : calc_all() の出力リスト（'horse_num' / 'rating' 必須）
+    odds_map : 実オッズ辞書 {'win':{馬番:o}, 'place':{}, 'quinella':{}, ...}
+    n_sims   : シミュレーション回数
+    min_ev   : EV下限
+    min_prob : 的中確率下限
+    max_trio : 三連複の最大点数
+    amount   : 1点あたり賭け金（円）
+
+    Returns
+    -------
+    bets        : [{'type','nums','prob','odds','ev','amount'}]
+    probs       : calc_ticket_probabilities の出力
+    ev_results  : calc_ev_all_tickets の出力
+    """
+    from src.betting.race_simulator import simulate_race, calc_ticket_probabilities
+    from src.betting.ev_calculator import calc_ev_all_tickets, select_value_bets
+
+    ratings   = [h.get('rating', 0.0) for h in horses]
+    horse_nums = [h.get('horse_num') or h.get('num') for h in horses]
+
+    orders = simulate_race(ratings, n_sims=n_sims)
+    probs  = calc_ticket_probabilities(orders, horse_nums)
+
+    ev_results  = calc_ev_all_tickets(probs, odds_map)
+    value_bets  = select_value_bets(ev_results, min_ev=min_ev, min_prob=min_prob)
+
+    bets = []
+
+    # 三連複: EV上位 max_trio 点
+    for e in value_bets.get('trio', [])[:max_trio]:
+        bets.append({
+            'type':   '三連複',
+            'nums':   list(e['key']),
+            'prob':   e['prob'],
+            'odds':   e['odds'],
+            'ev':     e['ev'],
+            'amount': amount,
+        })
+
+    # 馬連: EV上位 10 点
+    for e in value_bets.get('quinella', [])[:10]:
+        bets.append({
+            'type':   '馬連',
+            'nums':   list(e['key']),
+            'prob':   e['prob'],
+            'odds':   e['odds'],
+            'ev':     e['ev'],
+            'amount': amount,
+        })
+
+    # 単勝: EV上位 3 頭
+    for e in value_bets.get('win', [])[:3]:
+        bets.append({
+            'type':   '単勝',
+            'nums':   [e['key']],
+            'prob':   e['prob'],
+            'odds':   e['odds'],
+            'ev':     e['ev'],
+            'amount': amount,
+        })
+
+    # 複勝: EV上位 3 頭
+    for e in value_bets.get('place', [])[:3]:
+        bets.append({
+            'type':   '複勝',
+            'nums':   [e['key']],
+            'prob':   e['prob'],
+            'odds':   e['odds'],
+            'ev':     e['ev'],
+            'amount': amount,
+        })
+
+    return bets, probs, ev_results

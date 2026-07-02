@@ -760,15 +760,16 @@ def parse_result_soup(soup, racecourse, race_num, date, place_code):
             corner_all = '-'.join(pos_nums[:4]) if pos_nums else ''
             agari_m = re.search(r'(\d{2}\.\d)', texts[10]) if len(texts) > 10 else None
             agari = float(agari_m.group(1)) if agari_m else 0.0
-            pop_m = re.match(r'^(\d+)$', texts[13].strip()) if len(texts) > 13 else None
+            # 列順: ...上がり(10), 単勝(11), 人気(12), 馬体重(13), 調教師(14)
+            pop_m = re.match(r'^(\d+)$', texts[12].strip()) if len(texts) > 12 else None
             jockey = texts[6].strip() if len(texts) > 6 else ''
-            trainer = texts[12].strip() if len(texts) > 12 else ''
+            trainer = texts[14].strip() if len(texts) > 14 else ''
             margin_txt = texts[8].strip() if len(texts) > 8 else ''
             finish_time = _parse_finish_time(texts[7].strip() if len(texts) > 7 else '')
-            # 馬体重（texts[11]近辺、'516(+4)' 形式）
-            body_weight, body_weight_diff = _extract_body_weight(texts, start_idx=10)
-            # 単勝オッズ（row末尾付近の小数）
-            win_odds = _extract_win_odds(texts, start_idx=13)
+            # 馬体重（texts[13]、'516(+4)' 形式）
+            body_weight, body_weight_diff = _extract_body_weight(texts, start_idx=13)
+            # 単勝オッズ（texts[11]の小数）
+            win_odds = _extract_win_odds(texts, start_idx=11)
             finishers.append({
                 'place': place, 'num': num, 'name': name,
                 'running_style': style, 'post_position': num,
