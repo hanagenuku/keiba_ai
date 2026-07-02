@@ -83,39 +83,6 @@ def calc_kelly(win_prob, odds, bankroll=None, max_ratio=0.05):
     return max(0, amount)
 
 
-def classify_chaos_grade(horses, chaos_score):
-    """波乱度スコアとRL1位馬の人気から A/B/C を判定する（唯一の波乱度分類器）。
-
-    判定ルール（優先順）:
-        chaos_score < 0.30 かつ rl_rank=1 の人気 <= 2  → 'A'（堅い）
-        chaos_score > 0.55 または rl_rank=1 の人気 >= 6 → 'C'（大荒れ）
-        それ以外 → 'B'（中荒れ）
-
-    popularity が未設定の場合は win_odds 順位で代替する。
-
-    Args:
-        horses      : 全馬の予測結果。必須キー: rl_rank
-        chaos_score : engine.py の calc_chaos_score() の出力（0〜1）
-
-    Returns:
-        'A'（堅い）/ 'B'（中荒れ）/ 'C'（大荒れ）
-    """
-    top = next((h for h in horses if h.get('rl_rank') == 1), None)
-    if top is None:
-        return 'B'
-    top_pop = top.get('popularity') or top.get('_pop')
-    if not top_pop:
-        by_odds = sorted(horses, key=lambda h: h.get('win_odds') or 99)
-        top_num = top.get('horse_num', top.get('num'))
-        top_pop = next((i + 1 for i, h in enumerate(by_odds)
-                        if h.get('horse_num', h.get('num')) == top_num), 99)
-
-    if chaos_score < 0.30 and top_pop <= 2:
-        return 'A'
-    if chaos_score > 0.55 or top_pop >= 6:
-        return 'C'
-    return 'B'
-
 
 def estimate_payout(bet_type, horse_odds_list):
     """券種ごとの推定払戻（100円あたり）を計算する。

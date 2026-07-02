@@ -287,7 +287,7 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
         _num_horses  = race.get('num_horses', len(scored))
         by_odds = sorted(scored, key=lambda h: h.get('win_odds') or 99)
 
-        # popularity を win_odds 順位で補完（classify_chaos_grade に必要）
+        # popularity を win_odds 順位で補完
         for _rank, _h in enumerate(by_odds, 1):
             _h.setdefault('popularity', _rank)
             _h.setdefault('_pop', _rank)
