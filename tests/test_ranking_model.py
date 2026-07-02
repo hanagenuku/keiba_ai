@@ -151,15 +151,15 @@ def test_estimate_payouts_empty_input():
 # ── build_ranking_training_data の制約だけを numpy でチェック ───────────────
 
 def test_ranking_label_formula():
-    """正規化逆順位ラベルの計算式が正しい。"""
+    """逆順位ラベルの計算式が正しい（整数・ndcg評価指標の要件）。"""
     field_size = 10
     for place in range(1, field_size + 1):
-        score = (field_size - place + 1) / field_size
-        assert 0 < score <= 1.0
+        score = field_size - place + 1  # 整数ラベル
+        assert 1 <= score <= field_size
         if place == 1:
-            assert abs(score - 1.0) < 1e-9
+            assert score == field_size
         if place == field_size:
-            assert abs(score - 1 / field_size) < 1e-9
+            assert score == 1
 
 
 def test_groups_sum_invariant():

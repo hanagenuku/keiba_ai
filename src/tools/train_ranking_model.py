@@ -60,7 +60,7 @@ def build_ranking_training_data(df, feat_cols):
             continue
 
         field_size = n
-        scores = (field_size - valid['place'] + 1) / field_size
+        scores = (field_size - valid['place'] + 1)  # 整数ラベル [1, field_size]（ndcg評価指標の要件）
 
         X_list.append(valid[feat_cols].fillna(5.0).values)
         y_list.append(scores.values)
