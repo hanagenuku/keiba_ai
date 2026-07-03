@@ -201,7 +201,7 @@ def calibrate_all_models(base_dir,
         with open(model_path, 'rb') as f:
             model = pickle.load(f)
 
-        # 特徴量列を決定
+        # 特徴量列を決定（JSONはフォールバック。モデル自身の feature_names を優先）
         if cols_path and os.path.exists(cols_path):
             with open(cols_path) as f:
                 info = json.load(f)
@@ -210,6 +210,18 @@ def calibrate_all_models(base_dir,
             feat_cols = [c for c in df.columns
                          if c not in _EXCLUDE
                          and df[c].dtype in ('float64', 'int64', 'float32', 'int32')]
+
+        # モデルに記録された特徴量名で上書き（JSON と食い違っても必ず一致させる）
+        try:
+            import xgboost as xgb
+            booster = model.get_booster() if is_logistic else model
+            if booster.feature_names:
+                if list(booster.feature_names) != list(feat_cols):
+                    print(f'  ⚠ JSON({len(feat_cols)}) vs モデル({len(booster.feature_names)}) '
+                          f'特徴量数不一致 → モデル優先')
+                feat_cols = list(booster.feature_names)
+        except Exception:
+            pass  # feature_names が取れない場合は JSON のまま使う
 
         val_df_sorted = val_df.sort_values(['race_id', 'horse_num'])
 
