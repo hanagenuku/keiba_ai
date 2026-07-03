@@ -188,20 +188,13 @@ def _format_gumbel_bets(gb, scored):
         all_nums = sorted({n for b in trio for n in b['key']})
         from math import comb
         is_box = (comb(len(all_nums), 3) == pts)
+
         if is_box:
             structure = f'{len(all_nums)}頭BOX'
         else:
-            freq = {}
-            for b in trio:
-                for n in b['key']:
-                    freq[n] = freq.get(n, 0) + 1
-            max_freq = max(freq.values())
-            axis = sorted(n for n, c in freq.items() if c == max_freq)
-            himo = sorted(n for n in all_nums if n not in axis)
-            if axis and himo:
-                structure = f'軸{",".join(str(n) for n in axis)} → 相手{",".join(str(n) for n in himo)}'
-            else:
-                structure = f'{len(all_nums)}頭から{pts}点'
+            structure = f'{len(all_nums)}頭から{pts}点'
+
+        combos_short = ['-'.join(str(n) for n in b['key']) for b in trio]
 
         result.append({
             'tag':       'sanfuku',
@@ -209,6 +202,8 @@ def _format_gumbel_bets(gb, scored):
             'horse':     structure,
             'nums':      all_nums,
             'structure': structure,
+            'is_box':    is_box,
+            'combos':    combos_short,
             'est':       f'¥{pmin:,}〜¥{pmax:,}',
             'ev':        avg_ev,
             'syn_odds':  syn,
