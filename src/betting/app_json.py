@@ -160,13 +160,6 @@ def _detect_trio_structure(trio):
             'legs': [axes, axes, others],
         }
 
-    if len(axes) == 1:
-        return {
-            'type': 'formation',
-            'nums': all_nums,
-            'legs': [[axes[0]], others, others],
-        }
-
     return {'type': 'list', 'nums': all_nums}
 
 
