@@ -228,7 +228,9 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
 </div>
 <script>
 const DATA_URL  = 'https://hanagenuku.github.io/keiba_ai/data/latest.json';
+const DATA_URL_FALLBACK = 'https://raw.githubusercontent.com/hanagenuku/keiba_ai/main/data/latest.json';
 const STATS_URL = 'https://hanagenuku.github.io/keiba_ai/data/stats.json';
+const STATS_URL_FALLBACK = 'https://raw.githubusercontent.com/hanagenuku/keiba_ai/main/data/stats.json';
 const GAS_URL   = 'https://script.google.com/macros/s/AKfycbxcpXYNxHPS4wFmnX-EOyWaTU8AKt1ZQhJAL6dz5sTeEWoR319EfCqqDB0B1NHTHAYW/exec';
 const VALUE_GAP_THRESHOLD = 0.10;
 const BET_AMOUNT_REN  = 500;
@@ -246,7 +248,10 @@ async function loadData() {
   if (!DATA_URL) { document.getElementById('hdate').textContent='未設定'; return; }
   const bustUrl = DATA_URL + '?t=' + Date.now();
   try {
-    const res = await fetch(bustUrl, { cache: 'no-store' });
+    let res = await fetch(bustUrl, { cache: 'no-store' });
+    if (!res.ok) {
+      res = await fetch(DATA_URL_FALLBACK + '?t=' + Date.now(), { cache: 'no-store' });
+    }
     if (!res.ok) throw new Error('HTTP ' + res.status);
     D = await res.json();
     initApp();
@@ -314,10 +319,12 @@ let _pollingTimer = null;
 const _POLL_KEY = 'keiba_polling';
 
 const STATUS_URL = 'https://hanagenuku.github.io/keiba_ai/data/workflow_status.json';
+const STATUS_URL_FALLBACK = 'https://raw.githubusercontent.com/hanagenuku/keiba_ai/main/data/workflow_status.json';
 
 async function _getLatestTimestamp() {
   try {
-    const res = await fetch(DATA_URL + '?t=' + Date.now(), { cache: 'no-store' });
+    let res = await fetch(DATA_URL + '?t=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) res = await fetch(DATA_URL_FALLBACK + '?t=' + Date.now(), { cache: 'no-store' });
     if (!res.ok) return null;
     const j = await res.json();
     return j.generated_at || j.date || null;
@@ -326,7 +333,8 @@ async function _getLatestTimestamp() {
 
 async function _getWorkflowStatus(startTime) {
   try {
-    const res = await fetch(STATUS_URL + '?t=' + Date.now(), { cache: 'no-store' });
+    let res = await fetch(STATUS_URL + '?t=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) res = await fetch(STATUS_URL_FALLBACK + '?t=' + Date.now(), { cache: 'no-store' });
     if (!res.ok) return null;
     const j = await res.json();
     // 今回のトリガー後に書かれたステータスのみ有効
@@ -926,6 +934,7 @@ function render() {
 
 // ── 不利メモ入力（race_notes / スキーマ駆動） ─────────────────────────────
 const NOTE_SCHEMA_URL = 'https://hanagenuku.github.io/keiba_ai/data/note_schema.json';
+const NOTE_SCHEMA_URL_FALLBACK = 'https://raw.githubusercontent.com/hanagenuku/keiba_ai/main/data/note_schema.json';
 let _noteSchema = null;
 
 // race_id（20260622... 先頭YYYYMMDD）から YYYY-MM-DD を作る
@@ -936,7 +945,8 @@ function raceDateFromId(raceId) {
 
 async function fetchNoteSchema() {
   if (_noteSchema) return _noteSchema;
-  const res = await fetch(NOTE_SCHEMA_URL + '?t=' + Date.now(), {cache:'no-store'});
+  let res = await fetch(NOTE_SCHEMA_URL + '?t=' + Date.now(), {cache:'no-store'});
+  if (!res.ok) res = await fetch(NOTE_SCHEMA_URL_FALLBACK + '?t=' + Date.now(), {cache:'no-store'});
   if (!res.ok) throw new Error('note_schema.json が取得できません');
   _noteSchema = await res.json();
   return _noteSchema;
@@ -1092,7 +1102,8 @@ async function loadStats() {
   if (_statsCache) { renderStats(_statsCache); return; }
   el.innerHTML = '<div class="loading"><div class="loading-spin">📊</div><div>成績データ読み込み中...</div></div>';
   try {
-    const res = await fetch(STATS_URL + '?t=' + Date.now(), {cache:'no-store'});
+    let res = await fetch(STATS_URL + '?t=' + Date.now(), {cache:'no-store'});
+    if (!res.ok) res = await fetch(STATS_URL_FALLBACK + '?t=' + Date.now(), {cache:'no-store'});
     if (!res.ok) throw new Error('stats.json が見つかりません（まだ生成されていません）');
     _statsCache = await res.json();
     renderStats(_statsCache);
