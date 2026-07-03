@@ -224,15 +224,16 @@ def calibrate_all_models(base_dir,
             if winner_rows.empty:
                 continue
 
-            X = valid[[c for c in feat_cols if c in valid.columns]].fillna(5.0).values
             nums = valid['horse_num'].values
 
-            # 欠損特徴量は 5.0 で埋める（train_xgb と同じ）
-            _feat_cols_present = [c for c in feat_cols if c in valid.columns]
+            # CSVに無い特徴量は 5.0 で補完し、モデルの全特徴量リストを渡す（feature_names mismatch 防止）
+            valid_aligned = pd.DataFrame(index=valid.index)
+            for c in feat_cols:
+                valid_aligned[c] = valid[c] if c in valid.columns else 5.0
             ratings = _predict_ratings(
                 model, is_logistic,
-                valid[_feat_cols_present].fillna(5.0).values,
-                _feat_cols_present
+                valid_aligned.fillna(5.0).values,
+                list(feat_cols)
             )
 
             winner_num = int(winner_rows.iloc[0]['horse_num'])
