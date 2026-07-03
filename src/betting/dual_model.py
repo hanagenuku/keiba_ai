@@ -2,13 +2,10 @@
 デュアルモデル確率推定（券種別モデル使い分け）
 
 3モデル比較（653レース）に基づく暫定的な使い分け:
-  単勝         → B2_ndcg  (xgb_ranking_ndcg.pkl, T=0.7)  的中率 45.5% vs A 43.6%
-  複勝・馬連・三連複 → A_fukusho (T=0.7)  複勝 80.6%, 馬連 23.3%, 三連複 21.6%
-  B1_pairwise  → 不使用（T=5.0 で確率が均一すぎるため）
-
-⚠ 暫定。単勝の差 (45.5% vs 43.6%) は小さく誤差の可能性あり。
-  1,000 レース超のデータ蓄積後に再検証すること。
-  ROI は推定配当ベースの理論値であり実際の収益とは異なる。
+  単勝         → B2_ndcg  (xgb_ranking_ndcg.pkl)  的中率 47.6% vs A 43.0%
+  複勝・馬連・三連複 → A_fukusho  複勝 80.7%, 馬連 23.4%, 三連複 21.9%
+  B1_pairwise  → 不使用（全券種で最下位）
+  温度は rating_temperature.json から動的に読み込む（フォールバック: T=1.0）
 
 使い方（Colab / スクリプト）:
     from src.betting.dual_model import build_dual_probs
@@ -60,19 +57,39 @@ def load_dual_models(base_dir):
     result = {
         'model_A':  _load_model(os.path.join(data_dir, 'xgb_fukusho_model.pkl')),
         'feat_A':   _load_feat_cols(os.path.join(data_dir, 'xgb_feature_cols.json')),
-        'T_A':      float(temperatures.get('fukusho', {}).get('T', 0.7)),
+        'T_A':      float(temperatures.get('fukusho', {}).get('T', 1.0)),
         'model_B2': _load_model(os.path.join(data_dir, 'xgb_ranking_ndcg.pkl')),
         'feat_B2':  _load_feat_cols(os.path.join(data_dir, 'xgb_ranking_feature_cols.json')),
-        'T_B2':     float(temperatures.get('ranking_ndcg', {}).get('T', 0.7)),
+        'T_B2':     float(temperatures.get('ranking_ndcg', {}).get('T', 1.0)),
     }
     _CACHE[base_dir] = result
     return result
 
 
+def _resolve_feat_cols(model, feat_cols, is_logistic):
+    """モデル pkl の feature_names を優先し、JSON との不一致を吸収する。"""
+    try:
+        booster = model.get_booster() if is_logistic else model
+        if booster.feature_names:
+            return list(booster.feature_names)
+    except Exception:
+        pass
+    return feat_cols
+
+
+def _align_features(feat_cols, feat_df):
+    """feat_cols の全列を DataFrame に揃え、CSV にない列は 5.0 で補完する。"""
+    import pandas as pd
+    aligned = pd.DataFrame(index=feat_df.index)
+    for c in feat_cols:
+        aligned[c] = feat_df[c] if c in feat_df.columns else 5.0
+    return aligned.fillna(5.0)
+
+
 def _predict_a_ratings(model, feat_cols, feat_df, T):
     """A_fukusho (XGBClassifier): logit(複勝確率) / T を返す。"""
-    available = [c for c in feat_cols if c in feat_df.columns]
-    X = feat_df[available].fillna(5.0)
+    feat_cols = _resolve_feat_cols(model, feat_cols, is_logistic=True)
+    X = _align_features(feat_cols, feat_df)
     prob = model.predict_proba(X)[:, 1]
     prob = np.clip(prob, 1e-6, 1 - 1e-6)
     return np.log(prob / (1 - prob)) / T
@@ -81,9 +98,9 @@ def _predict_a_ratings(model, feat_cols, feat_df, T):
 def _predict_b2_ratings(model, feat_cols, feat_df, T):
     """B2_ndcg (xgb.Booster): predict() / T を返す。"""
     import xgboost as xgb
-    available = [c for c in feat_cols if c in feat_df.columns]
-    X = feat_df[available].fillna(5.0)
-    dmat = xgb.DMatrix(X.values, feature_names=available)
+    feat_cols = _resolve_feat_cols(model, feat_cols, is_logistic=False)
+    X = _align_features(feat_cols, feat_df)
+    dmat = xgb.DMatrix(X.values, feature_names=feat_cols)
     return model.predict(dmat) / T
 
 
