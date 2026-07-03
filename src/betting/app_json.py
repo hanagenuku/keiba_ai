@@ -184,16 +184,35 @@ def _format_gumbel_bets(gb, scored):
         pmax = s.get('payout_max', 0)
         syn  = s.get('syn_odds', 0)
         avg_ev = round(sum(b['ev'] for b in trio) / pts, 2)
-        combos = ['-'.join(str(n) for n in b['key']) for b in trio]
+
+        all_nums = sorted({n for b in trio for n in b['key']})
+        from math import comb
+        is_box = (comb(len(all_nums), 3) == pts)
+        if is_box:
+            structure = f'{len(all_nums)}頭BOX'
+        else:
+            freq = {}
+            for b in trio:
+                for n in b['key']:
+                    freq[n] = freq.get(n, 0) + 1
+            max_freq = max(freq.values())
+            axis = sorted(n for n, c in freq.items() if c == max_freq)
+            himo = sorted(n for n in all_nums if n not in axis)
+            if axis and himo:
+                structure = f'軸{",".join(str(n) for n in axis)} → 相手{",".join(str(n) for n in himo)}'
+            else:
+                structure = f'{len(all_nums)}頭から{pts}点'
+
         result.append({
-            'tag':      'sanfuku',
-            'label':    f'三連複({pts}点)',
-            'horse':    ', '.join(combos),
-            'combos':   combos,
-            'est':      f'¥{pmin:,}〜¥{pmax:,}',
-            'ev':       avg_ev,
-            'syn_odds': syn,
-            'amt':      f'¥{pts * 100}',
+            'tag':       'sanfuku',
+            'label':     f'三連複({pts}点)',
+            'horse':     structure,
+            'nums':      all_nums,
+            'structure': structure,
+            'est':       f'¥{pmin:,}〜¥{pmax:,}',
+            'ev':        avg_ev,
+            'syn_odds':  syn,
+            'amt':       f'¥{pts * 100}',
         })
 
     return result
