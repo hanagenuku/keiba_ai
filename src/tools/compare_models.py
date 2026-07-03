@@ -111,20 +111,32 @@ def _predict_ratings(model_info, feat_df, feat_cols):
     - xgb.Booster   (is_logistic=False): predict → 能力値
     """
     import xgboost as xgb
+    import pandas as pd
 
     model       = model_info['model']
     is_logistic = model_info['is_logistic']
     T           = model_info['T']
 
-    available = [c for c in feat_cols if c in feat_df.columns]
-    X = feat_df[available].fillna(5.0)
+    # モデルの feature_names を優先（JSON とモデル pkl の不一致を吸収）
+    try:
+        booster = model.get_booster() if is_logistic else model
+        if booster.feature_names:
+            feat_cols = list(booster.feature_names)
+    except Exception:
+        pass
+
+    # CSV にない特徴量は 5.0 で補完
+    aligned = pd.DataFrame(index=feat_df.index)
+    for c in feat_cols:
+        aligned[c] = feat_df[c] if c in feat_df.columns else 5.0
+    X = aligned.fillna(5.0)
 
     if is_logistic:
         prob = model.predict_proba(X)[:, 1]
         prob = np.clip(prob, 1e-6, 1 - 1e-6)
         ratings = np.log(prob / (1 - prob))
     else:
-        dmat = xgb.DMatrix(X.values, feature_names=available)
+        dmat = xgb.DMatrix(X.values, feature_names=feat_cols)
         ratings = model.predict(dmat)
 
     return ratings / T   # 温度補正済み能力値
@@ -280,7 +292,10 @@ def compare_all_models(base_dir, val_periods, n_sims=10000):
                 feat_cols = _feat_cols_cache[name]
                 try:
                     ratings = _predict_ratings(model_info, valid, feat_cols)
-                except Exception:
+                except Exception as e:
+                    if not getattr(_predict_ratings, f'_warned_{name}', False):
+                        print(f'  ⚠ {name}: predict失敗 → {type(e).__name__}: {e}')
+                        setattr(_predict_ratings, f'_warned_{name}', True)
                     continue
 
                 orders = simulate_race(ratings, n_sims=n_sims)
