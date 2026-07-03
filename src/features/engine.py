@@ -1380,6 +1380,134 @@ def calc_course_aptitude_features(horse_name, today_racecourse, today_surface,
     }
 
 
+# ── 脚質×コース×展開適性 ──────────────────────────────────────────────────
+
+# running_style の表記ゆれを正規化（DB=日本語、テスト=英語の両方を受け入れる）
+_STYLE_NORM = {
+    '逃げ': 'escape',  'escape': 'escape',
+    '先行': 'front',   'front':  'front',
+    '差し': 'stalk',   'stalk':  'stalk',
+    '追込': 'closer',  'closer': 'closer',
+}
+
+# ペース判定の展開別・脚質別適合度マトリクス
+_PACE_FIT_MATRIX = {
+    'high':   {'escape': 0.20, 'front': 0.35, 'stalk': 0.70, 'closer': 0.60},
+    'middle': {'escape': 0.50, 'front': 0.60, 'stalk': 0.45, 'closer': 0.35},
+    'slow':   {'escape': 0.75, 'front': 0.65, 'stalk': 0.30, 'closer': 0.20},
+}
+
+
+def estimate_horse_style(horse):
+    """過去走の running_style から馬の主な脚質を推定する（英語キーで返す）。
+
+    直近5走の最頻値を採用。running_style が無い場合は corner_3 で補完。
+    戻り値: 'escape' / 'front' / 'stalk' / 'closer' / None
+    """
+    from collections import Counter
+    styles = []
+    for rec in horse.get('history', [])[:5]:
+        rs = rec.get('running_style')
+        normalized = _STYLE_NORM.get(rs)
+        if normalized:
+            styles.append(normalized)
+        elif rec.get('corner_3') is not None:
+            try:
+                pos = float(rec['corner_3'])
+                if pos <= 2:
+                    styles.append('escape')
+                elif pos <= 5:
+                    styles.append('front')
+                elif pos <= 10:
+                    styles.append('stalk')
+                else:
+                    styles.append('closer')
+            except (TypeError, ValueError):
+                pass
+
+    if not styles:
+        return None
+    return Counter(styles).most_common(1)[0][0]
+
+
+def predict_race_pace(horses):
+    """出走馬の脚質構成からレースのペースを予測する。
+
+    逃げ馬が多い → ハイペース（差し有利）
+    逃げ馬が少ない → スローペース（先行有利）
+
+    Returns dict: pace / n_escape / n_front / n_stalk / n_closer /
+                  front_ratio / favored_style
+    """
+    n_escape = n_front = n_stalk = n_closer = 0
+    for h in horses:
+        style = estimate_horse_style(h)
+        if style == 'escape':
+            n_escape += 1
+        elif style == 'front':
+            n_front += 1
+        elif style == 'stalk':
+            n_stalk += 1
+        elif style == 'closer':
+            n_closer += 1
+
+    n_horses = len(horses) if horses else 1
+    front_ratio = (n_escape + n_front) / n_horses
+
+    if n_escape >= 3 or front_ratio >= 0.5:
+        pace = 'high'
+        favored = 'stalk'
+    elif n_escape <= 1 and front_ratio <= 0.3:
+        pace = 'slow'
+        favored = 'front'
+    else:
+        pace = 'middle'
+        favored = 'front'
+
+    return {
+        'pace':         pace,
+        'n_escape':     n_escape,
+        'n_front':      n_front,
+        'n_stalk':      n_stalk,
+        'n_closer':     n_closer,
+        'front_ratio':  round(front_ratio, 2),
+        'favored_style': favored,
+    }
+
+
+def calc_style_course_fit(horse, race, base_dir=None):
+    """馬の脚質がこのコースの有利脚質とどれだけ合うか（0〜1）。
+
+    course_profiles.json の style_advantage から取得。
+    コース未定義または脚質不明時は 0.25（4脚質均等）を返す。
+    """
+    profile = get_course_profile(
+        race.get('racecourse', ''), race.get('surface', '芝'), base_dir
+    )
+    if not profile or 'style_advantage' not in profile:
+        return 0.25
+
+    horse_style = estimate_horse_style(horse)
+    if horse_style is None:
+        return 0.25
+
+    return float(profile['style_advantage'].get(horse_style, 0.25))
+
+
+def calc_pace_fit(horse, pace_info):
+    """馬の脚質が予測されるペースに合うか（0〜1）。
+
+    pace_info は predict_race_pace() の戻り値。
+    脚質不明時は 0.5 を返す。
+    """
+    horse_style = estimate_horse_style(horse)
+    if horse_style is None:
+        return 0.5
+
+    pace = pace_info.get('pace', 'middle')
+    return float(_PACE_FIT_MATRIX.get(pace, _PACE_FIT_MATRIX['middle']).get(horse_style, 0.5))
+
+
 def calc_features_for_xgb(h, race):
     """XGBoost複勝予測モデルへの入力特徴量を生成"""
     import numpy as _np
@@ -1644,6 +1772,17 @@ def calc_features_for_xgb(h, race):
     )
     feats.update(course_feats)
 
+    # ── 脚質×コース・展開適性（3特徴量） ──────────────────────────────────
+    # pace_info はレース単位で1回だけ計算し race['_pace_info_cache'] に保存して使い回す。
+    if '_pace_info_cache' not in race:
+        race['_pace_info_cache'] = predict_race_pace(race.get('horses', []))
+    pace_info = race['_pace_info_cache']
+    feats['f_style_course_fit'] = calc_style_course_fit(h, race)
+    feats['f_pace_fit']         = calc_pace_fit(h, pace_info)
+    feats['f_style_total_fit']  = round(
+        (feats['f_style_course_fit'] + feats['f_pace_fit']) / 2, 3
+    )
+
     return feats
 
 
@@ -1708,6 +1847,10 @@ def add_relative_features(all_xfeats):
     # 予測乖離（正=AI過小評価、負=AI過大評価。乖離なし馬は 0）
     _assign('f_pred_gap_avg',   0.0, 'rl_f_pred_gap_avg',   reverse=False)
     _assign('f_pred_gap_worst', 0.0, 'rl_f_pred_gap_worst', reverse=False)
+    # 脚質×コース・展開適性（高いほど有利）
+    _assign('f_style_course_fit', 0.25, 'cl_f_style_course_fit')
+    _assign('f_pace_fit',         0.50, 'cl_f_pace_fit')
+    _assign('f_style_total_fit',  0.375,'cl_f_style_total_fit')
 
     # f_rl_rank / f_cl_rank: 複合スコアで順位付け
     for xf in all_xfeats:

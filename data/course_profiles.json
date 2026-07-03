@@ -1,5 +1,6 @@
 {
-  "version": 1,
+  "version": 2,
+  "_note": "style_advantage は history.db の実データから generate_style_advantage.py で生成する（デフォルト値は短直線=逃先有利、長直線=差追有利の傾向に基づく暫定値）",
   "courses": {
     "東京_芝": {
       "straight_length": 525,
@@ -7,7 +8,13 @@
       "turn": "left",
       "has_uphill": true,
       "uphill_severity": "medium",
-      "course_type": "spacious"
+      "course_type": "spacious",
+      "style_advantage": {
+        "escape": 0.20,
+        "front":  0.30,
+        "stalk":  0.35,
+        "closer": 0.15
+      }
     },
     "東京_ダート": {
       "straight_length": 501,
@@ -15,7 +22,13 @@
       "turn": "left",
       "has_uphill": true,
       "uphill_severity": "medium",
-      "course_type": "spacious"
+      "course_type": "spacious",
+      "style_advantage": {
+        "escape": 0.22,
+        "front":  0.35,
+        "stalk":  0.30,
+        "closer": 0.13
+      }
     },
     "中山_芝": {
       "straight_length": 310,
@@ -23,7 +36,13 @@
       "turn": "right",
       "has_uphill": true,
       "uphill_severity": "steep",
-      "course_type": "tight"
+      "course_type": "tight",
+      "style_advantage": {
+        "escape": 0.38,
+        "front":  0.42,
+        "stalk":  0.16,
+        "closer": 0.04
+      }
     },
     "中山_ダート": {
       "straight_length": 308,
@@ -31,7 +50,13 @@
       "turn": "right",
       "has_uphill": true,
       "uphill_severity": "steep",
-      "course_type": "tight"
+      "course_type": "tight",
+      "style_advantage": {
+        "escape": 0.40,
+        "front":  0.38,
+        "stalk":  0.18,
+        "closer": 0.04
+      }
     },
     "阪神_芝": {
       "straight_length": 474,
@@ -39,7 +64,13 @@
       "turn": "right",
       "has_uphill": true,
       "uphill_severity": "steep",
-      "course_type": "spacious"
+      "course_type": "spacious",
+      "style_advantage": {
+        "escape": 0.25,
+        "front":  0.35,
+        "stalk":  0.30,
+        "closer": 0.10
+      }
     },
     "阪神_ダート": {
       "straight_length": 353,
@@ -47,7 +78,13 @@
       "turn": "right",
       "has_uphill": false,
       "uphill_severity": "none",
-      "course_type": "standard"
+      "course_type": "standard",
+      "style_advantage": {
+        "escape": 0.32,
+        "front":  0.38,
+        "stalk":  0.24,
+        "closer": 0.06
+      }
     },
     "京都_芝": {
       "straight_length": 404,
@@ -55,7 +92,13 @@
       "turn": "right",
       "has_uphill": false,
       "uphill_severity": "none",
-      "course_type": "spacious"
+      "course_type": "spacious",
+      "style_advantage": {
+        "escape": 0.28,
+        "front":  0.35,
+        "stalk":  0.28,
+        "closer": 0.09
+      }
     },
     "京都_ダート": {
       "straight_length": 329,
@@ -63,7 +106,13 @@
       "turn": "right",
       "has_uphill": false,
       "uphill_severity": "none",
-      "course_type": "standard"
+      "course_type": "standard",
+      "style_advantage": {
+        "escape": 0.36,
+        "front":  0.38,
+        "stalk":  0.20,
+        "closer": 0.06
+      }
     },
     "新潟_芝": {
       "straight_length": 659,
@@ -71,7 +120,13 @@
       "turn": "left",
       "has_uphill": false,
       "uphill_severity": "none",
-      "course_type": "spacious"
+      "course_type": "spacious",
+      "style_advantage": {
+        "escape": 0.18,
+        "front":  0.27,
+        "stalk":  0.38,
+        "closer": 0.17
+      }
     },
     "新潟_ダート": {
       "straight_length": 354,
@@ -79,7 +134,13 @@
       "turn": "left",
       "has_uphill": false,
       "uphill_severity": "none",
-      "course_type": "standard"
+      "course_type": "standard",
+      "style_advantage": {
+        "escape": 0.28,
+        "front":  0.35,
+        "stalk":  0.27,
+        "closer": 0.10
+      }
     },
     "中京_芝": {
       "straight_length": 412,
@@ -87,7 +148,13 @@
       "turn": "left",
       "has_uphill": true,
       "uphill_severity": "steep",
-      "course_type": "standard"
+      "course_type": "standard",
+      "style_advantage": {
+        "escape": 0.28,
+        "front":  0.32,
+        "stalk":  0.30,
+        "closer": 0.10
+      }
     },
     "中京_ダート": {
       "straight_length": 410,
@@ -95,7 +162,13 @@
       "turn": "left",
       "has_uphill": true,
       "uphill_severity": "medium",
-      "course_type": "standard"
+      "course_type": "standard",
+      "style_advantage": {
+        "escape": 0.30,
+        "front":  0.35,
+        "stalk":  0.27,
+        "closer": 0.08
+      }
     },
     "札幌_芝": {
       "straight_length": 266,
@@ -103,7 +176,13 @@
       "turn": "right",
       "has_uphill": false,
       "uphill_severity": "none",
-      "course_type": "flat_tight"
+      "course_type": "flat_tight",
+      "style_advantage": {
+        "escape": 0.35,
+        "front":  0.42,
+        "stalk":  0.18,
+        "closer": 0.05
+      }
     },
     "札幌_ダート": {
       "straight_length": 264,
@@ -111,7 +190,13 @@
       "turn": "right",
       "has_uphill": false,
       "uphill_severity": "none",
-      "course_type": "flat_tight"
+      "course_type": "flat_tight",
+      "style_advantage": {
+        "escape": 0.38,
+        "front":  0.40,
+        "stalk":  0.17,
+        "closer": 0.05
+      }
     },
     "函館_芝": {
       "straight_length": 262,
@@ -119,7 +204,13 @@
       "turn": "right",
       "has_uphill": false,
       "uphill_severity": "none",
-      "course_type": "flat_tight"
+      "course_type": "flat_tight",
+      "style_advantage": {
+        "escape": 0.36,
+        "front":  0.47,
+        "stalk":  0.16,
+        "closer": 0.02
+      }
     },
     "函館_ダート": {
       "straight_length": 260,
@@ -127,7 +218,13 @@
       "turn": "right",
       "has_uphill": false,
       "uphill_severity": "none",
-      "course_type": "flat_tight"
+      "course_type": "flat_tight",
+      "style_advantage": {
+        "escape": 0.38,
+        "front":  0.44,
+        "stalk":  0.14,
+        "closer": 0.04
+      }
     },
     "福島_芝": {
       "straight_length": 292,
@@ -135,7 +232,13 @@
       "turn": "right",
       "has_uphill": false,
       "uphill_severity": "none",
-      "course_type": "tight"
+      "course_type": "tight",
+      "style_advantage": {
+        "escape": 0.38,
+        "front":  0.40,
+        "stalk":  0.18,
+        "closer": 0.04
+      }
     },
     "福島_ダート": {
       "straight_length": 295,
@@ -143,7 +246,13 @@
       "turn": "right",
       "has_uphill": false,
       "uphill_severity": "none",
-      "course_type": "tight"
+      "course_type": "tight",
+      "style_advantage": {
+        "escape": 0.46,
+        "front":  0.31,
+        "stalk":  0.20,
+        "closer": 0.05
+      }
     },
     "小倉_芝": {
       "straight_length": 293,
@@ -151,7 +260,13 @@
       "turn": "right",
       "has_uphill": false,
       "uphill_severity": "none",
-      "course_type": "flat_tight"
+      "course_type": "flat_tight",
+      "style_advantage": {
+        "escape": 0.38,
+        "front":  0.42,
+        "stalk":  0.16,
+        "closer": 0.04
+      }
     },
     "小倉_ダート": {
       "straight_length": 291,
@@ -159,7 +274,13 @@
       "turn": "right",
       "has_uphill": false,
       "uphill_severity": "none",
-      "course_type": "flat_tight"
+      "course_type": "flat_tight",
+      "style_advantage": {
+        "escape": 0.40,
+        "front":  0.40,
+        "stalk":  0.16,
+        "closer": 0.04
+      }
     }
   },
   "straight_class_values": {

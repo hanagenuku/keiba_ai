@@ -58,6 +58,7 @@ files = [
     'src/tools/calibrate.py', 'src/tools/analyze_divergence.py',
     'src/tools/rescrape_history.py', 'src/tools/build_training_data.py',
     'src/tools/train_xgb.py', 'src/tools/calibrate_xgb.py',
+    'src/tools/generate_style_advantage.py',
     'src/features/engine.py', 'src/features/speed_index.py',
     'src/utils/config.py', 'src/utils/db.py', 'src/utils/model_registry.py',
     'src/scraper/parser.py', 'src/scraper/jra_scraper.py',
