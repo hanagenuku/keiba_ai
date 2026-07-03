@@ -1,0 +1,64 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'data/*.json'
+      - 'data/note_schema.json'
+
+permissions:
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: false
+          sparse-checkout: |
+            index.html
+            data/latest.json
+            data/stats.json
+            data/workflow_status.json
+            data/note_schema.json
+            data/course_profiles.json
+            data/correction_table.json
+            data/track_bias_latest.json
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Build site directory
+        run: |
+          mkdir _site
+          cp index.html _site/
+          mkdir -p _site/data
+          cp data/*.json _site/data/ 2>/dev/null || true
+          touch _site/.nojekyll
+          echo "Site contents:"
+          find _site -type f | head -20
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
