@@ -2,15 +2,15 @@
   "calibration": {
     "fukusho": {
       "T": 0.7,
-      "ece": 0.0143
+      "ece": 0.0136
     },
     "ranking_pairwise": {
       "T": 5.0,
       "ece": 0.0053
     },
     "ranking_ndcg": {
-      "T": 1.0,
-      "ece": 0.0039
+      "T": 0.5,
+      "ece": 0.0094
     }
   },
   "val_period": {
