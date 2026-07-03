@@ -860,17 +860,32 @@ function render() {
         html += '<div class="sec" style="margin-top:10px;font-size:11px;color:#117a65">📊 EV買い目</div>';
         for (const b of race.gumbel_bets) {
           const tc = b.tag || 'fuku';
-          const synStr = b.syn_odds ? ' 合成'+b.syn_odds.toFixed(1)+'倍' : '';
           const evBadge = b.ev != null
             ? '<span style="font-size:10px;color:#117a65;font-weight:700;padding:1px 5px;background:rgba(17,122,101,0.12);border-radius:3px;flex-shrink:0">EV'+b.ev.toFixed(2)+'</span>'
             : '';
-          html += '<div class="bet">';
-          html += '<span class="btype '+tc+'">'+b.label+'</span>';
-          html += '<span class="bhorse">'+b.horse+'</span>';
-          html += '<span class="best">'+b.est+(tc==='sanfuku'?synStr:'')+'</span>';
-          html += evBadge;
-          html += '<span class="bamt">'+b.amt+'</span>';
-          html += '</div>';
+          if (tc === 'sanfuku' && b.combos && b.combos.length > 0) {
+            const synStr = b.syn_odds ? ' 合成'+b.syn_odds.toFixed(1)+'倍' : '';
+            html += '<div style="margin:6px 0;padding:8px 10px;background:rgba(17,122,101,0.06);border-radius:6px;font-size:12px">';
+            html += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">';
+            html += '<span class="btype sanfuku">'+b.label+'</span>';
+            html += evBadge;
+            html += '<span style="margin-left:auto;font-size:11px;color:#666">'+b.est+synStr+'</span>';
+            html += '<span class="bamt">'+b.amt+'</span>';
+            html += '</div>';
+            html += '<div style="display:flex;flex-wrap:wrap;gap:4px">';
+            for (const c of b.combos) {
+              html += '<span style="background:#fff;border:1px solid #ddd;border-radius:4px;padding:2px 6px;font-size:11px;font-weight:600;white-space:nowrap">'+c+'</span>';
+            }
+            html += '</div></div>';
+          } else {
+            html += '<div class="bet">';
+            html += '<span class="btype '+tc+'">'+b.label+'</span>';
+            html += '<span class="bhorse">'+b.horse+'</span>';
+            html += '<span class="best">'+b.est+'</span>';
+            html += evBadge;
+            html += '<span class="bamt">'+b.amt+'</span>';
+            html += '</div>';
+          }
         }
       }
       html += '</div>';

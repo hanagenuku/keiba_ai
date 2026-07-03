@@ -184,13 +184,12 @@ def _format_gumbel_bets(gb, scored):
         pmax = s.get('payout_max', 0)
         syn  = s.get('syn_odds', 0)
         avg_ev = round(sum(b['ev'] for b in trio) / pts, 2)
-        preview = ' / '.join('-'.join(f'#{n}' for n in b['key']) for b in trio[:2])
-        if pts > 2:
-            preview += f' 他{pts - 2}点'
+        combos = ['-'.join(str(n) for n in b['key']) for b in trio]
         result.append({
             'tag':      'sanfuku',
             'label':    f'三連複({pts}点)',
-            'horse':    preview,
+            'horse':    ', '.join(combos),
+            'combos':   combos,
             'est':      f'¥{pmin:,}〜¥{pmax:,}',
             'ev':       avg_ev,
             'syn_odds': syn,
