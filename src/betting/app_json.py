@@ -127,6 +127,49 @@ def _build_horses_list(scored, top1, by_odds, value_gap_map=None, odds_lookup=No
     return horses
 
 
+def _detect_trio_structure(trio):
+    """三連複の買い目パターンを判定し、BOX/フォーメーション/リストに分類する。"""
+    from math import comb
+
+    keys = [tuple(sorted(b['key'])) for b in trio]
+    pts = len(keys)
+    all_nums = sorted({n for k in keys for n in k})
+
+    if comb(len(all_nums), 3) == pts:
+        return {'type': 'box', 'nums': all_nums}
+
+    freq = {}
+    for k in keys:
+        for n in k:
+            freq[n] = freq.get(n, 0) + 1
+
+    axes = sorted(n for n, f in freq.items() if f == pts)
+    others = sorted(n for n in all_nums if n not in axes)
+
+    if len(axes) == 1 and comb(len(others), 2) == pts:
+        return {
+            'type': 'formation',
+            'nums': all_nums,
+            'legs': [[axes[0]], others, others],
+        }
+
+    if len(axes) == 2 and len(others) == pts:
+        return {
+            'type': 'formation',
+            'nums': all_nums,
+            'legs': [axes, axes, others],
+        }
+
+    if len(axes) == 1:
+        return {
+            'type': 'formation',
+            'nums': all_nums,
+            'legs': [[axes[0]], others, others],
+        }
+
+    return {'type': 'list', 'nums': all_nums}
+
+
 def _format_gumbel_bets(gb, scored):
     """build_optimal_bets の出力をアプリ表示リストに変換する。"""
     if not gb:
@@ -185,30 +228,16 @@ def _format_gumbel_bets(gb, scored):
         syn  = s.get('syn_odds', 0)
         avg_ev = round(sum(b['ev'] for b in trio) / pts, 2)
 
-        all_nums = sorted({n for b in trio for n in b['key']})
-        from math import comb
-        is_box = (comb(len(all_nums), 3) == pts)
-        if is_box:
-            structure = f'{len(all_nums)}頭BOX'
-        else:
-            freq = {}
-            for b in trio:
-                for n in b['key']:
-                    freq[n] = freq.get(n, 0) + 1
-            max_freq = max(freq.values())
-            axis = sorted(n for n, c in freq.items() if c == max_freq)
-            himo = sorted(n for n in all_nums if n not in axis)
-            if axis and himo:
-                structure = f'軸{",".join(str(n) for n in axis)} → 相手{",".join(str(n) for n in himo)}'
-            else:
-                structure = f'{len(all_nums)}頭から{pts}点'
+        structure = _detect_trio_structure(trio)
+        combos_short = ['-'.join(str(n) for n in b['key']) for b in trio]
 
         result.append({
             'tag':       'sanfuku',
             'label':     f'三連複({pts}点)',
-            'horse':     structure,
-            'nums':      all_nums,
-            'structure': structure,
+            'trio_type': structure['type'],
+            'legs':      structure.get('legs'),
+            'nums':      structure['nums'],
+            'combos':    combos_short,
             'est':       f'¥{pmin:,}〜¥{pmax:,}',
             'ev':        avg_ev,
             'syn_odds':  syn,
