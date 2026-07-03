@@ -863,33 +863,44 @@ function render() {
           const evBadge = b.ev != null
             ? '<span style="font-size:10px;color:#117a65;font-weight:700;padding:1px 5px;background:rgba(17,122,101,0.12);border-radius:3px;flex-shrink:0">EV'+b.ev.toFixed(2)+'</span>'
             : '';
-          if (tc === 'sanfuku' && (b.nums || b.combos)) {
+          if (tc === 'sanfuku' && b.nums) {
             const synStr = b.syn_odds ? ' 合成'+b.syn_odds.toFixed(1)+'倍' : '';
-            const nums = b.nums || [];
+            const ttype = b.trio_type || 'list';
+            const legs = b.legs || [];
             const combos = b.combos || [];
-            const isBox = b.is_box || false;
-            const struct = b.structure || b.horse || '';
-            const uid = 'trio-'+race.race_id+'-'+Math.random().toString(36).slice(2,6);
+            const chipStyle = 'display:inline-block;min-width:22px;text-align:center;background:#117a65;color:#fff;border-radius:50%;padding:2px 5px;font-size:11px;font-weight:700';
+            const legLabel = 'display:inline-block;width:32px;font-size:10px;color:#888;flex-shrink:0';
+
             html += '<div style="margin:6px 0;padding:8px 10px;background:rgba(17,122,101,0.06);border-radius:6px;font-size:12px">';
             html += '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">';
-            html += '<span class="btype sanfuku">'+(isBox ? struct : b.label)+'</span>';
-            for (const n of nums) {
-              html += '<span style="display:inline-block;min-width:22px;text-align:center;background:#117a65;color:#fff;border-radius:50%;padding:2px 5px;font-size:11px;font-weight:700">'+n+'</span>';
-            }
+            html += '<span class="btype sanfuku">'+b.label+'</span>';
             html += evBadge;
             html += '</div>';
+
+            if (ttype === 'box') {
+              html += '<div style="margin-top:5px;display:flex;align-items:center;gap:4px;flex-wrap:wrap">';
+              html += '<span style="font-size:11px;color:#555;font-weight:600">BOX</span>';
+              for (const n of b.nums) { html += '<span style="'+chipStyle+'">'+n+'</span>'; }
+              html += '</div>';
+            } else if (ttype === 'formation' && legs.length === 3) {
+              for (let i = 0; i < 3; i++) {
+                html += '<div style="margin-top:'+(i===0?'5':'2')+'px;display:flex;align-items:center;gap:4px;flex-wrap:wrap">';
+                html += '<span style="'+legLabel+'">'+(i+1)+'列目</span>';
+                for (const n of legs[i]) { html += '<span style="'+chipStyle+'">'+n+'</span>'; }
+                html += '</div>';
+              }
+            } else {
+              html += '<div style="margin-top:5px;display:flex;flex-wrap:wrap;gap:3px">';
+              for (const c of combos) {
+                html += '<span style="background:#fff;border:1px solid #ddd;border-radius:3px;padding:1px 5px;font-size:10px;font-weight:600;white-space:nowrap">'+c+'</span>';
+              }
+              html += '</div>';
+            }
+
             html += '<div style="margin-top:4px;display:flex;align-items:center;gap:8px;font-size:11px;color:#666">';
             html += '<span>'+b.est+synStr+'</span>';
             html += '<span class="bamt" style="margin-left:auto">'+b.amt+'</span>';
             html += '</div>';
-            if (!isBox && combos.length > 0) {
-              html += '<details style="margin-top:4px"><summary style="font-size:10px;color:#999;cursor:pointer">'+combos.length+'点の内訳を見る</summary>';
-              html += '<div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:3px">';
-              for (const c of combos) {
-                html += '<span style="background:#fff;border:1px solid #ddd;border-radius:3px;padding:1px 5px;font-size:10px;font-weight:600;white-space:nowrap">'+c+'</span>';
-              }
-              html += '</div></details>';
-            }
             html += '</div>';
           } else {
             html += '<div class="bet">';
