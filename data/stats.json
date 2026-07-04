@@ -94,26 +94,26 @@
     }
   ],
   "rl_accuracy": {
-    "total_races": 301,
-    "rl1_win_rate": 13.3,
-    "rl1_top3_rate": 24.6,
-    "rl2_top3_rate": 29.6,
-    "rl3_top3_rate": 19.3,
+    "total_races": 336,
+    "rl1_win_rate": 14.0,
+    "rl1_top3_rate": 25.9,
+    "rl2_top3_rate": 32.1,
+    "rl3_top3_rate": 20.5,
     "by_chaos": {
       "A": {
-        "total": 49,
-        "rl1_win_rate": 32.7,
-        "rl1_top3_rate": 40.8
+        "total": 53,
+        "rl1_win_rate": 35.8,
+        "rl1_top3_rate": 43.4
       },
       "B": {
-        "total": 180,
-        "rl1_win_rate": 4.4,
-        "rl1_top3_rate": 10.6
+        "total": 189,
+        "rl1_win_rate": 4.2,
+        "rl1_top3_rate": 10.1
       },
       "C": {
-        "total": 72,
-        "rl1_win_rate": 22.2,
-        "rl1_top3_rate": 48.6
+        "total": 94,
+        "rl1_win_rate": 21.3,
+        "rl1_top3_rate": 47.9
       }
     }
   },
@@ -1020,14 +1020,14 @@
     }
   ],
   "upset_patterns": {
-    "total_races": 204,
-    "overall_upset_rate": 95.6,
+    "total_races": 230,
+    "overall_upset_rate": 94.8,
     "by_chaos": [
       {
         "label": "A",
-        "total": 49,
-        "upset_rate": 95.9,
-        "full_miss_rate": 18.4,
+        "total": 53,
+        "upset_rate": 96.2,
+        "full_miss_rate": 17.0,
         "longshot_rate": 0.0
       },
       {
@@ -1039,76 +1039,76 @@
       },
       {
         "label": "C",
-        "total": 72,
-        "upset_rate": 91.7,
-        "full_miss_rate": 22.2,
+        "total": 94,
+        "upset_rate": 90.4,
+        "full_miss_rate": 20.2,
         "longshot_rate": 0.0
       }
     ],
     "by_heads": [
       {
         "label": "中頭数(9-13頭)",
-        "total": 94,
+        "total": 103,
         "upset_rate": 100.0,
-        "full_miss_rate": 13.8,
+        "full_miss_rate": 12.6,
         "longshot_rate": 0.0
       },
       {
         "label": "多頭数(14頭〜)",
-        "total": 86,
-        "upset_rate": 91.9,
-        "full_miss_rate": 39.5,
+        "total": 101,
+        "upset_rate": 90.1,
+        "full_miss_rate": 36.6,
         "longshot_rate": 0.0
       },
       {
         "label": "少頭数(〜8頭)",
-        "total": 24,
-        "upset_rate": 91.7,
-        "full_miss_rate": 20.8,
+        "total": 26,
+        "upset_rate": 92.3,
+        "full_miss_rate": 19.2,
         "longshot_rate": 0.0
       }
     ],
     "by_surface": [
       {
         "label": "ダート",
-        "total": 77,
-        "upset_rate": 97.4,
-        "full_miss_rate": 15.6,
+        "total": 86,
+        "upset_rate": 96.5,
+        "full_miss_rate": 14.0,
         "longshot_rate": 0.0
       },
       {
         "label": "芝",
-        "total": 127,
-        "upset_rate": 94.5,
-        "full_miss_rate": 31.5,
+        "total": 144,
+        "upset_rate": 93.8,
+        "full_miss_rate": 29.9,
         "longshot_rate": 0.0
       }
     ],
     "by_distance": [
       {
         "label": "マイル(1401-1800)",
-        "total": 71,
-        "upset_rate": 94.4,
-        "full_miss_rate": 12.7,
+        "total": 81,
+        "upset_rate": 92.6,
+        "full_miss_rate": 12.3,
         "longshot_rate": 0.0
       },
       {
         "label": "中距離(1801-2200)",
-        "total": 24,
+        "total": 26,
         "upset_rate": 100.0,
-        "full_miss_rate": 33.3,
+        "full_miss_rate": 30.8,
         "longshot_rate": 0.0
       },
       {
         "label": "短距離(〜1400)",
-        "total": 103,
-        "upset_rate": 95.1,
-        "full_miss_rate": 34.0,
+        "total": 115,
+        "upset_rate": 94.8,
+        "full_miss_rate": 32.2,
         "longshot_rate": 0.0
       },
       {
         "label": "長距離(2201〜)",
-        "total": 6,
+        "total": 8,
         "upset_rate": 100.0,
         "full_miss_rate": 0.0,
         "longshot_rate": 0.0
@@ -1117,32 +1117,32 @@
     "by_racecourse": [
       {
         "label": "函館",
-        "total": 83,
-        "upset_rate": 94.0,
-        "full_miss_rate": 22.9,
+        "total": 91,
+        "upset_rate": 92.3,
+        "full_miss_rate": 20.9,
         "longshot_rate": 0.0
       },
       {
         "label": "小倉",
-        "total": 68,
-        "upset_rate": 98.5,
-        "full_miss_rate": 23.5,
+        "total": 76,
+        "upset_rate": 98.7,
+        "full_miss_rate": 23.7,
         "longshot_rate": 0.0
       },
       {
         "label": "福島",
-        "total": 53,
-        "upset_rate": 94.3,
-        "full_miss_rate": 32.1,
+        "total": 63,
+        "upset_rate": 93.7,
+        "full_miss_rate": 28.6,
         "longshot_rate": 0.0
       }
     ],
     "by_class": [
       {
         "label": "1勝クラス",
-        "total": 41,
+        "total": 46,
         "upset_rate": 100.0,
-        "full_miss_rate": 7.3,
+        "full_miss_rate": 8.7,
         "longshot_rate": 0.0
       },
       {
@@ -1154,7 +1154,7 @@
       },
       {
         "label": "3勝クラス",
-        "total": 9,
+        "total": 11,
         "upset_rate": 100.0,
         "full_miss_rate": 0.0,
         "longshot_rate": 0.0
@@ -1168,88 +1168,88 @@
       },
       {
         "label": "新馬",
-        "total": 35,
-        "upset_rate": 97.1,
-        "full_miss_rate": 42.9,
+        "total": 39,
+        "upset_rate": 97.4,
+        "full_miss_rate": 38.5,
         "longshot_rate": 0.0
       },
       {
         "label": "未勝利",
-        "total": 96,
-        "upset_rate": 91.7,
-        "full_miss_rate": 29.2,
+        "total": 111,
+        "upset_rate": 90.1,
+        "full_miss_rate": 27.0,
         "longshot_rate": 0.0
       }
     ],
     "blind_spots": [
       {
         "label": "Cグレード・少頭数(〜8頭)",
-        "total": 5,
+        "total": 7,
         "upset_rate": 100.0,
         "full_miss_rate": 0.0,
         "longshot_rate": 0.0
       },
       {
         "label": "芝・長距離(2201〜)",
-        "total": 6,
+        "total": 8,
         "upset_rate": 100.0,
         "full_miss_rate": 0.0,
         "longshot_rate": 0.0
       },
       {
         "label": "Aグレード・多頭数(14頭〜)",
-        "total": 18,
+        "total": 20,
         "upset_rate": 100.0,
-        "full_miss_rate": 44.4,
+        "full_miss_rate": 40.0,
         "longshot_rate": 0.0
       },
       {
         "label": "芝・Aグレード・多頭数(14頭〜)",
-        "total": 14,
+        "total": 15,
         "upset_rate": 100.0,
-        "full_miss_rate": 50.0,
+        "full_miss_rate": 46.7,
+        "longshot_rate": 0.0
+      },
+      {
+        "label": "ダート・Aグレード・多頭数(14頭〜)",
+        "total": 5,
+        "upset_rate": 100.0,
+        "full_miss_rate": 20.0,
         "longshot_rate": 0.0
       },
       {
         "label": "芝・中距離(1801-2200)",
-        "total": 24,
+        "total": 26,
         "upset_rate": 100.0,
-        "full_miss_rate": 33.3,
+        "full_miss_rate": 30.8,
         "longshot_rate": 0.0
       },
       {
         "label": "Cグレード・中頭数(9-13頭)",
-        "total": 26,
+        "total": 33,
         "upset_rate": 100.0,
         "full_miss_rate": 0.0,
         "longshot_rate": 0.0
       },
       {
         "label": "芝・Cグレード・中頭数(9-13頭)",
-        "total": 18,
+        "total": 23,
         "upset_rate": 100.0,
         "full_miss_rate": 0.0,
         "longshot_rate": 0.0
       },
       {
         "label": "小倉・Cグレード",
-        "total": 33,
+        "total": 40,
         "upset_rate": 100.0,
-        "full_miss_rate": 27.3,
+        "full_miss_rate": 27.5,
         "longshot_rate": 0.0
       },
       {
         "label": "ダート・短距離(〜1400)",
-        "total": 31,
+        "total": 34,
         "upset_rate": 100.0,
-        "full_miss_rate": 38.7,
-        "longshot_rate": 0.0
-      },
-      {
-        "label": "Aグレード・中頭数(9-13頭)",
-        "total": 27,
-        "upset_rate": 100.0,
-        "full_miss_rate": 3.7,
+        "full_miss_rate": 35.3,
         "longshot_rate": 0.0
       }
     ]
@@ -1271,8 +1271,8 @@
         "races": 11
       }
     ],
-    "workflow_run_at": "2026-07-04T08:00:48Z",
+    "workflow_run_at": "2026-07-04T09:09:28Z",
     "workflow_result": "success"
   },
-  "generated_at": "2026-07-04 09:09"
+  "generated_at": "2026-07-04 12:40"
 }
