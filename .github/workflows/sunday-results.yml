@@ -7,12 +7,15 @@ concurrency:
   group: keiba-weekly
   cancel-in-progress: false
 
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
 jobs:
   results:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    permissions:
-      contents: write
 
     steps:
       - name: Checkout
@@ -71,3 +74,35 @@ jobs:
           git diff --cached --quiet || git commit -m "auto: workflow status $STATUS $TS"
           GIT_LFS_SKIP_SMUDGE=1 git pull --rebase --autostash origin main || true
           git push || true
+
+  deploy:
+    needs: results
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout (latest)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          lfs: false
+
+      - name: Prepare site
+        run: |
+          mkdir _site
+          cp index.html _site/
+          cp .nojekyll _site/
+          mkdir -p _site/data
+          for f in latest.json stats.json workflow_status.json note_schema.json course_profiles.json; do
+            [ -f "data/$f" ] && cp "data/$f" "_site/data/$f"
+          done
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
