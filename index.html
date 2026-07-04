@@ -348,7 +348,9 @@ function _stopPolling(btn, origText) {
   clearInterval(_pollingTimer);
   _pollingTimer = null;
   localStorage.removeItem(_POLL_KEY);
-  if (btn) { btn.textContent = origText; btn.disabled = false; }
+  if (btn) { btn.textContent = origText; }
+  document.querySelectorAll('.action-btn').forEach(b => b.disabled = false);
+  _triggerGuard = false;
 }
 
 function _startPolling(btn, origText, baselineTs, startTime = Date.now()) {
@@ -389,7 +391,7 @@ function _startPolling(btn, origText, baselineTs, startTime = Date.now()) {
 
     if (elapsed >= MAX_WAIT) {
       _stopPolling(btn, origText);
-      alert('⚠️ 15分経過しましたが完了を確認できませんでした。\nページを手動で更新してください。');
+      alert('⚠️ 35分経過しましたが完了を確認できませんでした。\nページを手動で更新してください。');
     }
   }, 1000);
 }
@@ -421,9 +423,14 @@ async function _restorePolling() {
   } catch(_) { localStorage.removeItem(_POLL_KEY); }
 }
 
+let _triggerGuard = false;
 async function triggerAction(workflow, mode) {
-  const btn = event.target;
+  if (_triggerGuard) return;
+  _triggerGuard = true;
+
+  const btn = event.currentTarget || event.target.closest('.action-btn') || event.target;
   btn.disabled = true;
+  document.querySelectorAll('.action-btn').forEach(b => b.disabled = true);
   const origText = btn.textContent;
   btn.textContent = '実行中... 0:00';
 
@@ -442,12 +449,14 @@ async function triggerAction(workflow, mode) {
     } else {
       alert('❌ エラー: ' + (data.message || JSON.stringify(data)));
       btn.textContent = origText;
-      btn.disabled = false;
+      document.querySelectorAll('.action-btn').forEach(b => b.disabled = false);
+      _triggerGuard = false;
     }
   } catch(err) {
     alert('❌ 通信エラー: ' + err.message);
     btn.textContent = origText;
-    btn.disabled = false;
+    document.querySelectorAll('.action-btn').forEach(b => b.disabled = false);
+    _triggerGuard = false;
   }
 }
 
