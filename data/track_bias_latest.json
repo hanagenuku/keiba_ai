@@ -1,22 +1,9 @@
 {
-  "inner_outer": 0.25,
-  "pace_bias": -0.15,
-  "track_speed": -1.12,
+  "inner_outer": 0.26,
+  "pace_bias": -0.12,
+  "track_speed": -1.15,
   "summary": "時計遅め",
   "by_course": {
-    "福島": {
-      "inner_outer": -0.08,
-      "pace_bias": 0.13,
-      "track_speed": -1.11,
-      "summary": "時計遅め",
-      "style_dist": {
-        "逃げ": 7,
-        "先行": 10,
-        "差し": 14,
-        "追込": 5
-      },
-      "race_count": 12
-    },
     "小倉": {
       "inner_outer": 0.59,
       "pace_bias": -0.7,
@@ -42,6 +29,19 @@
         "追込": 3
       },
       "race_count": 12
+    },
+    "福島": {
+      "inner_outer": -0.05,
+      "pace_bias": 0.21,
+      "track_speed": -1.19,
+      "summary": "時計遅め",
+      "style_dist": {
+        "逃げ": 6,
+        "先行": 10,
+        "差し": 12,
+        "追込": 5
+      },
+      "race_count": 11
     }
   },
   "date": "2026-07-04"
