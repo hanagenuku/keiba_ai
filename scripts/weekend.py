@@ -104,6 +104,10 @@ def predict_next_day(sess, hist_path, avg_bias, jst_now, force=False):
     races = fetch_races_on_date(sess, next_date, hist_path)
     print(f'📋 取得レース: {len(races)}R')
 
+    if not races:
+        print(f'⚠️ {next_date} のレースが0件のため予想生成をスキップ（latest.json は上書きしません）')
+        return
+
     surf_counts = {}
     for r in races:
         s = r.get('surface', '?')
