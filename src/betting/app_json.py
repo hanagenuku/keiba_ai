@@ -86,9 +86,9 @@ def _build_horses_list(scored, top1, by_odds, value_gap_map=None, odds_lookup=No
     """アプリ表示用の馬リストを生成する（馬番順）。
 
     本命はAI確率1位の馬。マークは _assign_marks で決定。
+    Val列はEV（pn × win_odds）を使用。オッズ欠損時はNone（"-"表示）。
     """
     marks = _assign_marks(scored, by_odds)
-    value_gap_map = value_gap_map or {}
     odds_lookup = odds_lookup or {}
 
     horses = []
@@ -96,6 +96,8 @@ def _build_horses_list(scored, top1, by_odds, value_gap_map=None, odds_lookup=No
         pop = h.get('_pop') or next((i + 1 for i, x in enumerate(by_odds) if x['name'] == h['name']), 99)
         pn  = h.get('pn', 0)
         wo  = h.get('win_odds', 0) or 0
+
+        ev_val = round(pn * wo, 3) if wo > 0 else None
 
         horse = {
             'n':        h['num'],
@@ -110,7 +112,7 @@ def _build_horses_list(scored, top1, by_odds, value_gap_map=None, odds_lookup=No
             'fuku_pct': round((h.get('top3_prob') or pn) * 100, 1),
             'rl_rank':  h.get('rl_rank', 99),
             'cl_rank':  h.get('cl_rank', 99),
-            'ev':       round(h.get('ev', 0.0), 3),
+            'ev':       ev_val,
             'prob_gap': round(h.get('prob_gap', 0.0), 4),
             'cal_prob': round(h.get('cal_prob', pn), 4),
             'mark':     marks[h['num']],
@@ -119,9 +121,6 @@ def _build_horses_list(scored, top1, by_odds, value_gap_map=None, odds_lookup=No
         if od:
             horse['tansho_odds']  = od.get('tansho_odds')
             horse['fukusho_odds'] = od.get('fukusho_odds')
-        vg = value_gap_map.get(h['num'])
-        if vg:
-            horse['value_gap'] = round(vg, 3)
         horses.append(horse)
     horses.sort(key=lambda x: x['n'])
     return horses
@@ -262,8 +261,8 @@ def _build_bet_list(bets):
             continue
         tag = ('fuku' if b['type'] == '複勝' else
                'tan'  if b['type'] == '単勝' else 'wide')
-        est = (f'推定{b["odds_est"]:.1f}倍' if b.get('odds_est')
-               else f'{b.get("odds", 0):.1f}倍')
+        odds_val = b.get('odds_est') or b.get('odds', 0) or 0
+        est = f'{odds_val:.1f}倍' if odds_val > 0 else '-'
         result.append({
             'tag':   tag,
             'label': b['type'],
@@ -339,12 +338,10 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
         _vh_all   = detect_value_horses(scored, _race_odds)
         _vh_list  = [{'horse_num': _h.get('horse_num', _h.get('num')),
                       'horse_name': _h.get('name', ''),
-                      'value_gap':  round(_h.get('value_gap', 0), 4),
                       'ev_direct':  round(_h.get('ev_direct', 0), 3),
                       'cal_prob':   round(_h.get('cal_prob', _h.get('pn', 0)), 4),
                       'market_prob': round(_h.get('market_prob', 0), 4)}
                      for _h in _vh_all if _h.get('is_value', False)]  # ⑤ EVベース
-        _vg_map      = {_h.get('horse_num', _h.get('num')): _h.get('value_gap', 0) for _h in _vh_all}
         _odds_lookup = {_h.get('horse_num', _h.get('num')):
                         {'tansho_odds': _h.get('tansho_odds'), 'fukusho_odds': _h.get('fukusho_odds')}
                         for _h in _vh_all}
@@ -359,7 +356,7 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
                      'pattern': 'fallback', 'chaos_grade': _grade}]
 
         # ④ フォーメーション生成（_build_horses_list が _pop をセット後に実行）
-        _horses_list = _build_horses_list(scored, top1, by_odds, _vg_map, _odds_lookup)
+        _horses_list = _build_horses_list(scored, top1, by_odds, odds_lookup=_odds_lookup)
         for _h in scored:
             _h['popularity'] = _h.get('_pop', 99)
         _formation = build_formation(scored, race)
@@ -454,7 +451,6 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
         _vh_all2     = detect_value_horses(scored, _race_odds2)
         _vh_list2    = [{'horse_num': _h.get('horse_num', _h.get('num')),
                          'horse_name': _h.get('name', ''),
-                         'value_gap':  round(_h.get('value_gap', 0), 4),
                          'ev_direct':  round(_h.get('ev_direct', 0), 3),
                          'cal_prob':   round(_h.get('cal_prob', _h.get('pn', 0)), 4),
                          'market_prob': round(_h.get('market_prob', 0), 4)}
@@ -462,7 +458,6 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
         _odds_lookup2 = {_h.get('horse_num', _h.get('num')):
                          {'tansho_odds': _h.get('tansho_odds'), 'fukusho_odds': _h.get('fukusho_odds')}
                          for _h in _vh_all2}
-        _vg_map2 = {_h.get('horse_num', _h.get('num')): _h.get('value_gap', 0) for _h in _vh_all2}
 
         c_ref = {
             'race':            race,
@@ -486,7 +481,7 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
                       'pattern': 'fallback', 'chaos_grade': _grade2}]
 
         # ④ フォーメーション生成（_build_horses_list が _pop をセット後）
-        _horses_list2 = _build_horses_list(scored, top1, by_odds, _vg_map2, _odds_lookup2)
+        _horses_list2 = _build_horses_list(scored, top1, by_odds, odds_lookup=_odds_lookup2)
         for _h in scored:
             _h['popularity'] = _h.get('_pop', 99)
         _formation2 = build_formation(scored, race)
