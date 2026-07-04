@@ -13,6 +13,15 @@
 function triggerWorkflow(e) {
   const workflow = (e.parameter.workflow || '').toString();
   const mode = (e.parameter.mode || 'saturday').toString();
+
+  // --- 二重発火防止（60秒以内の同一ワークフロー再トリガーを拒否）---
+  const cache = CacheService.getScriptCache();
+  const lockKey = 'trigger_lock_' + workflow;
+  if (cache.get(lockKey)) {
+    return jsonResponse({status: 'ok', message: workflow + ' は既にトリガー済み（重複スキップ）'});
+  }
+  cache.put(lockKey, '1', 60);
+
   const token = PropertiesService.getScriptProperties().getProperty('GITHUB_TOKEN');
 
   if (!token) {
@@ -54,6 +63,7 @@ function triggerWorkflow(e) {
   if (code === 204) {
     return jsonResponse({status: 'ok', message: workflow + ' をトリガーしました'});
   } else {
+    cache.remove(lockKey);
     return jsonResponse({status: 'error', code: code, body: res.getContentText()});
   }
 }
