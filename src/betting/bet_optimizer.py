@@ -77,6 +77,7 @@ def build_optimal_bets(probs, odds_map, horses, race):
                         odds_map.get('trio', {}),
                         ev_results.get('trio', []),
                         UNIT,
+                        probs=probs,
                     ),
     }
 
@@ -105,29 +106,53 @@ def _select_quinella(ev_list, unit):
     return [dict(e, amount=unit) for e in hits[:5]]
 
 
-def _build_trio(trio_probs, trio_odds, ev_list, unit):
+def _build_trio(trio_probs, trio_odds, ev_list, unit, probs=None):
     """
-    三連複を型に縛られず期待値ベースで組む。
+    三連複を軸構造ベースで組む。
 
-    ルール:
-      1. EV >= MIN_EV['trio'] かつ prob >= MIN_PROB['trio'] の組み合わせ
-      2. 4点未満なら EV>=1.0 の組み合わせで補充 → それでも足りなければ上位確率で補充
-      3. 点数を TRIO_MIN_POINTS 〜 TRIO_MAX_POINTS に収める
-      4. 合成オッズを計算して注記（切り捨てはしない）
-      「3頭1点」は絶対に出さない（TRIO_MIN_POINTS=4 が保証）
+    1. determine_axis_structure() で複勝確率から軸を判定
+    2. 軸を含む組み合わせに限定してEV最大化
+       - single_axis: 軸馬を含む組み合わせのみ → EV順
+       - double_axis: 2頭軸を含む組み合わせのみ → EV順
+       - box: 上位馬の全組み合わせ（EVフィルタなし）
+    3. 軸が不明確（拮抗）ならボックスにする
     """
-    # EV降順でソート済み ev_list を使う
-    value = [e for e in ev_list
-             if e['ev'] >= MIN_EV['trio'] and e['prob'] >= MIN_PROB['trio']]
+    # ── 軸構造の判定 ──
+    if probs and probs.get('place'):
+        structure, axis_nums = determine_axis_structure(probs, None)
+    else:
+        structure, axis_nums = 'list', []
 
-    if len(value) < TRIO_MIN_POINTS:
-        # 補充: EV>=1.0 は買う価値がある水準
-        fallback = [e for e in ev_list
-                    if e['ev'] >= 1.0 and e['prob'] >= MIN_PROB['trio']]
-        value = fallback[:max(TRIO_MIN_POINTS, len(value))]
+    # ── 軸に基づくフィルタリング ──
+    if structure == 'single_axis' and axis_nums:
+        axis = axis_nums[0]
+        candidates = [e for e in ev_list if axis in e['key']]
+    elif structure == 'double_axis' and len(axis_nums) >= 2:
+        candidates = [e for e in ev_list
+                      if all(a in e['key'] for a in axis_nums)]
+    elif structure == 'box' and axis_nums:
+        box_set = set(axis_nums)
+        candidates = [e for e in ev_list
+                      if set(e['key']).issubset(box_set)]
+    else:
+        candidates = ev_list
 
+    # ── 選択 ──
+    if structure == 'box' and candidates:
+        # BOX: 全組み合わせを採用（中途半端にEVで絞らない）
+        value = sorted(candidates, key=lambda x: x['ev'], reverse=True)
+    else:
+        # 軸ベース: 軸内でEV順に選択
+        value = [e for e in candidates
+                 if e['ev'] >= MIN_EV['trio'] and e['prob'] >= MIN_PROB['trio']]
+        if len(value) < TRIO_MIN_POINTS:
+            relaxed = [e for e in candidates
+                       if e['ev'] >= 1.0 and e['prob'] >= MIN_PROB['trio']]
+            if len(relaxed) >= len(value):
+                value = relaxed
+
+    # ── フォールバック（軸制約が厳しすぎる場合）──
     if len(value) < TRIO_MIN_POINTS:
-        # それでも足りなければ確率上位から
         value = sorted(
             [{'key': k, 'prob': p,
               'odds': trio_odds.get(k, 0),
@@ -140,10 +165,9 @@ def _build_trio(trio_probs, trio_odds, ev_list, unit):
 
     value = value[:TRIO_MAX_POINTS]
 
-    # 合成オッズ計算・注記付与
+    # ── 合成オッズ ──
     syn = _calc_synthetic_odds(value)
     syn_note = None
-    tmin, tmax = SYN_ODDS_TARGET
     if syn > 0:
         if syn < 1.5:
             syn_note = '低配当注意'

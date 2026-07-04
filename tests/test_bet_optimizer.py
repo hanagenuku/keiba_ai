@@ -213,3 +213,58 @@ def test_determine_axis_box():
     structure, axes = determine_axis_structure(probs, [])
     assert structure == 'box'
     assert len(axes) <= 5
+
+
+# ── 軸構造が三連複に反映されるか ──────────────────────────────────────────────
+
+def _make_single_axis_probs(n=10):
+    """1頭が突出する確率分布を作成。"""
+    from itertools import combinations
+    nums = list(range(1, n + 1))
+    # #1 が突出
+    place_p = {1: 0.85}
+    for i in range(2, n + 1):
+        place_p[i] = 0.30 + (n - i) * 0.02
+    win_p = {h: p / sum(place_p.values()) for h, p in place_p.items()}
+    trio_p = {}
+    for a, b, c in combinations(nums, 3):
+        trio_p[(a, b, c)] = win_p[a] * win_p[b] * win_p[c] * 50
+    trio_odds = {k: max(3.0, 0.775 / v) for k, v in trio_p.items()}
+    return {
+        'win': win_p,
+        'place': place_p,
+        'quinella': {},
+        'trio': trio_p,
+    }, {'trio': trio_odds}
+
+
+def test_single_axis_all_combos_contain_axis():
+    """single_axis のとき、全三連複が軸馬を含む。"""
+    probs, odds_map = _make_single_axis_probs(10)
+    bets = build_optimal_bets(probs, odds_map, [], {})
+    for b in bets['trio']:
+        assert 1 in b['key'], f"軸馬 #1 が {b['key']} に含まれていない"
+
+
+def test_box_all_combos_within_box_set():
+    """box のとき、全三連複がbox馬で構成される。"""
+    from itertools import combinations
+    nums = list(range(1, 9))
+    # 拮抗した確率
+    place_p = {h: 0.45 + (8 - h) * 0.01 for h in nums}
+    win_p = {h: p / sum(place_p.values()) for h, p in place_p.items()}
+    trio_p = {}
+    for a, b, c in combinations(nums, 3):
+        trio_p[(a, b, c)] = win_p[a] * win_p[b] * win_p[c] * 50
+    trio_odds = {k: max(3.0, 0.775 / v) for k, v in trio_p.items()}
+    probs = {'win': win_p, 'place': place_p, 'quinella': {}, 'trio': trio_p}
+    odds = {'trio': trio_odds}
+
+    structure, axis_nums = determine_axis_structure(probs, None)
+    assert structure == 'box'
+    box_set = set(axis_nums)
+
+    bets = build_optimal_bets(probs, odds, [], {})
+    for b in bets['trio']:
+        assert set(b['key']).issubset(box_set), \
+            f"combo {b['key']} が box {box_set} 外"
