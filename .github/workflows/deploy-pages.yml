@@ -1,0 +1,58 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'data/latest.json'
+      - 'data/stats.json'
+      - 'data/workflow_status.json'
+      - 'data/note_schema.json'
+      - '.github/workflows/deploy-pages.yml'
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: false
+
+      - name: Prepare site
+        run: |
+          mkdir _site
+          cp index.html _site/
+          cp .nojekyll _site/
+          mkdir -p _site/data
+          for f in latest.json stats.json workflow_status.json note_schema.json course_profiles.json; do
+            [ -f "data/$f" ] && cp "data/$f" "_site/data/$f"
+          done
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
