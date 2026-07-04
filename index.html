@@ -829,43 +829,47 @@ function render() {
         html += '<span class="odds-time" id="odds-time-'+k+'">'+(race._update_time ? ('更新: '+race._update_time) : '')+'</span>';
         html += '</div>';
       }
-      html += '<div class="bets"><div class="sec" style="margin-top:12px">買い目</div>';
-      if (race._morning_bets && race._morning_bets.length > 0) {
-        html += '<div style="padding:4px 0;font-size:10px;color:#999">📋 朝の推奨: '
-              + race._morning_bets.map(b=>(b.label||b.type)+' '+extractNums(b).map(n=>'#'+n).join('×')).join(' + ') + '</div>';
-      }
-      if (race._update_time) {
-        html += '<div style="padding:4px 0;font-size:11px">🔄 直前更新 '+race._update_time+' ';
-        switch (race._change_type) {
-          case 'no_change':
-            html += '<span style="color:#27ae60;font-weight:700">推奨変更なし</span>';
-            break;
-          case 'reduced':
-            html += '<span style="color:#c0392b;font-weight:700">⚠ 推奨変更: スキップ</span>';
-            html += buildValueChangeDetail(race);
-            break;
-          case 'expanded':
-            html += '<span style="color:#27ae60;font-weight:700">✅ 新規推奨: '
-                  + (race._new_bets_raw||[]).map(b=>b.type+' #'+b.nums.join('×#')).join(' + ') + '</span>';
-            html += buildValueChangeDetail(race);
-            break;
-          case 'swapped':
-            html += '<span style="color:#e67e22;font-weight:700">🔄 推奨変更: '
-                  + (race._new_bets_raw||[]).map(b=>b.type+' #'+b.nums.join('×#')).join(' + ') + '</span>';
-            html += buildValueChangeDetail(race);
-            break;
+      const hasGumbel = (race.gumbel_bets||[]).length > 0;
+      html += '<div class="bets">';
+      if (!hasGumbel) {
+        html += '<div class="sec" style="margin-top:12px">買い目</div>';
+        if (race._morning_bets && race._morning_bets.length > 0) {
+          html += '<div style="padding:4px 0;font-size:10px;color:#999">📋 朝の推奨: '
+                + race._morning_bets.map(b=>(b.label||b.type)+' '+extractNums(b).map(n=>'#'+n).join('×')).join(' + ') + '</div>';
         }
-        html += '</div>';
+        if (race._update_time) {
+          html += '<div style="padding:4px 0;font-size:11px">🔄 直前更新 '+race._update_time+' ';
+          switch (race._change_type) {
+            case 'no_change':
+              html += '<span style="color:#27ae60;font-weight:700">推奨変更なし</span>';
+              break;
+            case 'reduced':
+              html += '<span style="color:#c0392b;font-weight:700">⚠ 推奨変更: スキップ</span>';
+              html += buildValueChangeDetail(race);
+              break;
+            case 'expanded':
+              html += '<span style="color:#27ae60;font-weight:700">✅ 新規推奨: '
+                    + (race._new_bets_raw||[]).map(b=>b.type+' #'+b.nums.join('×#')).join(' + ') + '</span>';
+              html += buildValueChangeDetail(race);
+              break;
+            case 'swapped':
+              html += '<span style="color:#e67e22;font-weight:700">🔄 推奨変更: '
+                    + (race._new_bets_raw||[]).map(b=>b.type+' #'+b.nums.join('×#')).join(' + ') + '</span>';
+              html += buildValueChangeDetail(race);
+              break;
+          }
+          html += '</div>';
+        }
+        for (const b of (race.bets||[])) {
+          const tc = b.tag || TAG_MAP[b.label] || 'fuku';
+          html += '<div class="bet"><span class="btype '+tc+'">'+b.label+'</span><span class="bhorse">'+b.horse+'</span><span class="best">'+b.est+'</span><span class="bamt">'+b.amt+'</span></div>';
+        }
+        if ((race.bets||[]).length === 0 && race._update_time) {
+          html += '<div style="padding:6px 0;font-size:11px;color:#999">このレースは見送り</div>';
+        }
       }
-      for (const b of (race.bets||[])) {
-        const tc = b.tag || TAG_MAP[b.label] || 'fuku';
-        html += '<div class="bet"><span class="btype '+tc+'">'+b.label+'</span><span class="bhorse">'+b.horse+'</span><span class="best">'+b.est+'</span><span class="bamt">'+b.amt+'</span></div>';
-      }
-      if ((race.bets||[]).length === 0 && race._update_time) {
-        html += '<div style="padding:6px 0;font-size:11px;color:#999">このレースは見送り</div>';
-      }
-      if ((race.gumbel_bets||[]).length > 0) {
-        html += '<div class="sec" style="margin-top:10px;font-size:11px;color:#117a65">📊 EV買い目</div>';
+      if (hasGumbel) {
+        html += '<div class="sec" style="margin-top:12px;font-size:11px;color:#117a65">📊 EV買い目</div>';
         for (const b of race.gumbel_bets) {
           const tc = b.tag || 'fuku';
           const evBadge = b.ev != null
@@ -922,7 +926,7 @@ function render() {
         }
       }
       html += '</div>';
-      if (race.rec && race.formation) {
+      if (race.rec && race.formation && !hasGumbel) {
         html += formationHtml(race.formation);
       }
       html += '<div class="cmt">'+(race.cmt||'').replace(/</g,'&lt;')+'</div></div></div>';
