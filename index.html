@@ -673,6 +673,11 @@ function classifyChange(morningBets, newBets) {
 
 function betToDisplay(bet, horsesMap) {
   const tc = TAG_MAP[bet.type] || 'fuku';
+  if (bet.type === '三連複') {
+    const nums = bet.nums.slice().sort((a,b)=>a-b);
+    return {tag: 'sanfuku', label: '三連複(1点)', trio_type: 'list', nums: nums,
+            combos: [nums.join('-')], est: '1点', amt: '¥' + bet.amount};
+  }
   const names = bet.nums.map(n => {
     const h = horsesMap[n];
     return '#' + n + ' ' + (h ? h.name : '');
@@ -680,10 +685,10 @@ function betToDisplay(bet, horsesMap) {
   let est;
   if (bet.type === '複勝') {
     const h = horsesMap[bet.nums[0]];
-    est = (h && h.fukusho_odds) ? '推定' + h.fukusho_odds.toFixed(1) + '倍' : '推定-倍';
+    est = (h && h.fukusho_odds) ? h.fukusho_odds.toFixed(1) + '倍' : '-';
   } else {
     const pay = estimatePayout(bet, horsesMap);
-    est = pay ? (pay / 100).toFixed(1) + '倍' : '-倍';
+    est = pay ? (pay / 100).toFixed(1) + '倍' : '-';
   }
   return {tag: tc, label: bet.type, horse: names, est: est, amt: '¥' + bet.amount};
 }
@@ -811,7 +816,7 @@ function render() {
         const evVal = h.ev;
         let valCell = '-';
         let valClass = 'val-none';
-        if (evVal != null) {
+        if (evVal != null && evVal > 0) {
           valCell = evVal.toFixed(2);
           if (evVal >= 1.3) {
             valClass = 'val-buy';
@@ -865,7 +870,41 @@ function render() {
         }
         for (const b of (race.bets||[])) {
           const tc = b.tag || TAG_MAP[b.label] || 'fuku';
-          html += '<div class="bet"><span class="btype '+tc+'">'+b.label+'</span><span class="bhorse">'+b.horse+'</span><span class="best">'+b.est+'</span><span class="bamt">'+b.amt+'</span></div>';
+          if (tc === 'sanfuku' && b.nums) {
+            const chipStyle = 'display:inline-block;min-width:22px;text-align:center;background:#1a5c3a;color:#fff;border-radius:50%;padding:2px 5px;font-size:11px;font-weight:700';
+            const legLabel = 'display:inline-block;width:32px;font-size:10px;color:#888;flex-shrink:0';
+            const ttype = b.trio_type || 'list';
+            const legs = b.legs || [];
+            const combos = b.combos || [];
+            html += '<div style="margin:6px 0;padding:8px 10px;background:rgba(26,92,58,0.06);border-radius:6px;font-size:12px">';
+            html += '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">';
+            html += '<span class="btype sanfuku">'+b.label+'</span>';
+            html += '<span class="bamt" style="margin-left:auto">'+b.amt+'</span>';
+            html += '</div>';
+            if (ttype === 'box') {
+              html += '<div style="margin-top:5px;display:flex;align-items:center;gap:4px;flex-wrap:wrap">';
+              html += '<span style="font-size:11px;color:#555;font-weight:600">BOX</span>';
+              for (const n of b.nums) { html += '<span style="'+chipStyle+'">'+n+'</span>'; }
+              html += '</div>';
+            } else if (ttype === 'formation' && legs.length === 3) {
+              for (let i = 0; i < 3; i++) {
+                html += '<div style="margin-top:'+(i===0?'5':'2')+'px;display:flex;align-items:center;gap:4px;flex-wrap:wrap">';
+                html += '<span style="'+legLabel+'">'+(i===0?'軸':'相手')+'</span>';
+                for (const n of legs[i]) { html += '<span style="'+chipStyle+'">'+n+'</span>'; }
+                html += '</div>';
+              }
+            } else {
+              html += '<div style="margin-top:5px;display:flex;flex-wrap:wrap;gap:3px">';
+              for (const c of combos) {
+                html += '<span style="background:#fff;border:1px solid #ddd;border-radius:3px;padding:1px 5px;font-size:10px;font-weight:600;white-space:nowrap">'+c+'</span>';
+              }
+              html += '</div>';
+            }
+            html += '<div style="margin-top:4px;font-size:11px;color:#666">'+b.est+'</div>';
+            html += '</div>';
+          } else {
+            html += '<div class="bet"><span class="btype '+tc+'">'+b.label+'</span><span class="bhorse">'+b.horse+'</span><span class="best">'+b.est+'</span><span class="bamt">'+b.amt+'</span></div>';
+          }
         }
         if ((race.bets||[]).length === 0 && race._update_time) {
           html += '<div style="padding:6px 0;font-size:11px;color:#999">このレースは見送り</div>';

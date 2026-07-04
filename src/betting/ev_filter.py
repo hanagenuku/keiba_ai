@@ -179,7 +179,7 @@ def calc_value_score(ai_prob, market_prob, odds):
         dict(prob_gap, ev, is_value)
     """
     if not market_prob or not odds:
-        return {'prob_gap': 0.0, 'ev': 0.0, 'is_value': False}
+        return {'prob_gap': 0.0, 'ev': None, 'is_value': False}
     prob_gap = ai_prob - market_prob
     ev = ai_prob * odds
     return {
@@ -389,7 +389,7 @@ def select_quality_races(races, bias_data=None,
             h['prob_gap'] = vs['prob_gap']
             h['ev']       = vs['ev']
             h['is_value'] = vs['is_value']
-            if vs['ev'] > best_ev:
+            if (vs['ev'] or 0) > best_ev:
                 best_ev    = vs['ev']
                 best_horse = h
 
