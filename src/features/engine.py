@@ -2265,9 +2265,7 @@ def calc_all(race, bias_data=None):
         )
 
     all_totals = [h['total'] for h in out]
-    win_probs = softmax_probs(all_totals, temperature=2.0)
-    # 旧IsotonicCalibratorは同一確率フロアを生じさせるためスキップ
-    # （XGB raw_probを入力しているため再calibrationは不要）
+    win_probs = softmax_probs(all_totals, temperature=3.5)
     for h, p in zip(out, win_probs):
         h['win_prob'] = round(p, 6)
 
@@ -2277,6 +2275,11 @@ def calc_all(race, bias_data=None):
     for h, (t2, t3) in zip(out, harville):
         h['top2_prob'] = round(t2, 6)
         h['top3_prob'] = round(t3, 6)
+
+    # popularity を win_odds 順位から導出（低オッズ=1番人気）
+    odds_sorted = sorted(out, key=lambda x: x.get('win_odds') or 999)
+    for rank, h in enumerate(odds_sorted, 1):
+        h['popularity'] = rank
 
     for x in out:
         x['pn']      = x['win_prob']

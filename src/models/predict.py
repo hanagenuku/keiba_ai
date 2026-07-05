@@ -11,7 +11,7 @@ def softmax_probs(totals, temperature=2.0):
     Args:
         totals      : 各馬の合計スコアリスト
         temperature : 温度パラメータ。大きいほど確率が均等になる（標準: temperature で割る）
-                      2.0 で 16頭立て 1位:25-40%・最下位:1-3% の現実的分布
+                      3.5 でRL1が13-20%、実績と整合する分布
 
     Returns:
         確率リスト（float）

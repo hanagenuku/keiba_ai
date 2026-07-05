@@ -325,8 +325,8 @@ def ability_first_with_value(races, bias_data=None, top_n=6):
 
 def select_quality_races(races, bias_data=None,
                          min_ev=1.30,
-                         min_gap=0.06,
-                         min_win_prob=0.12,
+                         min_gap=0.03,
+                         min_win_prob=0.10,
                          odds_range=(1.5, 20.0),
                          max_races=6,
                          min_races=0):
@@ -339,8 +339,8 @@ def select_quality_races(races, bias_data=None,
     Parameters
     ----------
     min_ev       : フィールド最良馬のEV下限（デフォルト1.30）
-    min_gap      : RL1位〜2位の pn 差下限（デフォルト0.06）
-    min_win_prob : RL1位馬の AI勝率下限（デフォルト0.12）
+    min_gap      : RL1位〜2位の pn 差下限（デフォルト0.03）
+    min_win_prob : RL1位馬の AI勝率下限（デフォルト0.10）
     odds_range   : 本命オッズの許容範囲（デフォルト 1.5〜20.0）
     max_races    : 最大推奨レース数（デフォルト6）
     min_races    : 最小推奨レース数（デフォルト0 → 0件も許容）
