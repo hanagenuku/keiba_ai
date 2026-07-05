@@ -79,8 +79,8 @@ def test_trio_min_4_points():
     )
 
 
-def test_trio_max_20_points():
-    """三連複は最大 20 点。"""
+def test_trio_max_points():
+    """三連複は最大 TRIO_MAX_POINTS 点。"""
     probs, odds_map, horses = _make_probs_and_odds(16)
     bets = build_optimal_bets(probs, odds_map, horses, {})
     assert len(bets['trio']) <= TRIO_MAX_POINTS
