@@ -1,50 +1,64 @@
 {
   "rl_pop": {
     "RL上位_不人気": {
-      "factor": 0.7221,
-      "n": 167,
-      "actual_rate": 0.4072,
-      "predicted_rate": 0.5639,
-      "raw_factor": 0.7221
+      "factor": 0.7085,
+      "n": 364,
+      "actual_rate": 0.3956,
+      "predicted_rate": 0.5844,
+      "raw_factor": 0.6769
     },
     "RL中位_不人気": {
-      "factor": 0.9424,
-      "n": 168,
-      "actual_rate": 0.25,
-      "predicted_rate": 0.2653,
-      "raw_factor": 0.9424
+      "factor": 0.9883,
+      "n": 364,
+      "actual_rate": 0.2747,
+      "predicted_rate": 0.2508,
+      "raw_factor": 1.0953
     },
     "RL下位_不人気": {
-      "factor": 1.849,
-      "n": 395,
-      "actual_rate": 0.1392,
-      "predicted_rate": 0.0753,
-      "raw_factor": 1.849
+      "factor": 1.8756,
+      "n": 869,
+      "actual_rate": 0.1381,
+      "predicted_rate": 0.0713,
+      "raw_factor": 1.9376
+    },
+    "RL上位_人気": {
+      "factor": 0.8855,
+      "n": 10,
+      "actual_rate": 0.6,
+      "predicted_rate": 0.6776,
+      "raw_factor": 0.8855
     },
     "RL下位_人気": {
-      "factor": 1.9409,
-      "n": 10,
-      "actual_rate": 0.2,
-      "predicted_rate": 0.103,
-      "raw_factor": 1.9409
-    },
-    "RL下位_低人気": {
-      "factor": 3.2083,
+      "factor": 2.1411,
       "n": 11,
       "actual_rate": 0.2727,
-      "predicted_rate": 0.085,
-      "raw_factor": 3.2083
+      "predicted_rate": 0.1046,
+      "raw_factor": 2.6081
+    },
+    "RL下位_低人気": {
+      "factor": 3.1208,
+      "n": 12,
+      "actual_rate": 0.25,
+      "predicted_rate": 0.0857,
+      "raw_factor": 2.9166
+    },
+    "RL下位_中人気": {
+      "factor": 3.021,
+      "n": 10,
+      "actual_rate": 0.3,
+      "predicted_rate": 0.0993,
+      "raw_factor": 3.021
     },
     "RL上位_中人気": {
-      "factor": 0.1764,
-      "n": 10,
-      "actual_rate": 0.1,
-      "predicted_rate": 0.567,
-      "raw_factor": 0.1764
+      "factor": 0.1735,
+      "n": 11,
+      "actual_rate": 0.0909,
+      "predicted_rate": 0.5448,
+      "raw_factor": 0.1669
     }
   },
-  "updated_at": "2026-06-28 17:22",
-  "total_samples": 805,
+  "updated_at": "2026-07-05 16:51",
+  "total_samples": 1681,
   "weeks": 8,
   "ema_alpha": 0.3
 }
