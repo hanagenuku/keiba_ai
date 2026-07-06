@@ -1783,6 +1783,28 @@ def calc_features_for_xgb(h, race):
         (feats['f_style_course_fit'] + feats['f_pace_fit']) / 2, 3
     )
 
+    # ── 市場特徴量（人気ベース）─────────────────────────────────────────
+    # 市場（オッズ）はAUC 0.83の情報源だが従来モデルは一切使っていなかった。
+    # history.db の win_odds は0%欠損のため popularity（99.2%充足）を使う。
+    # 現走人気: 予測時は朝オッズ由来（calc_allが導出）、学習時は確定人気
+    # （final oddsの人気）。朝と確定で人気が多少ズレる点は既知の近似。
+    pop = h.get('popularity') or 0
+    feats['f_popularity'] = float(pop) if 0 < pop < 99 else float('nan')
+
+    # 過去走の人気推移と「市場を上回った率」（着順 < 人気 = 市場の見立てを超えた）
+    pops, beats = [], []
+    for r in hist[:5]:
+        p_pop   = r.get('popularity') or 0
+        p_place = r.get('place') or 0
+        if 0 < p_pop < 99:
+            pops.append(float(p_pop))
+            if 0 < p_place < 99:
+                beats.append(1.0 if p_place < p_pop else 0.0)
+    feats['f_pop_last']         = pops[0] if pops else float('nan')
+    feats['f_pop_avg']          = sum(pops) / len(pops) if pops else float('nan')
+    feats['f_beat_market_rate'] = (sum(beats) / len(beats)
+                                   if beats else float('nan'))
+
     return feats
 
 
@@ -2131,6 +2153,17 @@ def calc_all(race, bias_data=None):
     rc   = race.get('racecourse', '')
     surf = race.get('surface', '芝')
 
+    # popularity を win_odds 順位から導出（低オッズ=1番人気）。
+    # calc_features_for_xgb の市場特徴量（f_popularity）が Pass 1 で
+    # 参照するため、特徴量計算より先に設定する。
+    # 結果ページ由来の確定人気が既に入っている馬は上書きしない。
+    _horses_in = race.get('horses', [])
+    if _horses_in:
+        for _rank, _h in enumerate(
+                sorted(_horses_in, key=lambda x: x.get('win_odds') or 999), 1):
+            if not _h.get('popularity') or _h.get('popularity') == 99:
+                _h['popularity'] = _rank
+
     # ── Pass 1: 全馬の絶対特徴量を収集 ───────────────────────────────────
     horse_data = []  # (h, sc, career, xfeats)
     for h in race['horses']:
@@ -2275,11 +2308,6 @@ def calc_all(race, bias_data=None):
     for h, (t2, t3) in zip(out, harville):
         h['top2_prob'] = round(t2, 6)
         h['top3_prob'] = round(t3, 6)
-
-    # popularity を win_odds 順位から導出（低オッズ=1番人気）
-    odds_sorted = sorted(out, key=lambda x: x.get('win_odds') or 999)
-    for rank, h in enumerate(odds_sorted, 1):
-        h['popularity'] = rank
 
     for x in out:
         x['pn']      = x['win_prob']

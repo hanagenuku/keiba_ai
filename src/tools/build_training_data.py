@@ -44,6 +44,7 @@ def _get_history_before(conn, horse_name, before_date_str, limit=10):
                    h.racecourse, h.date, h.race_id, h.running_style,
                    h.agari_rank, h.field_size, h.margin,
                    h.finish_time, h.time_diff_sec,
+                   COALESCE(h.popularity, 0)                    AS popularity,
                    COALESCE(h.class_grade, r.race_class, '1勝') AS race_class,
                    COALESCE(r.track_condition, '良')             AS track_condition,
                    COALESCE(r.first_3f, 0.0)                    AS first_3f,
@@ -123,6 +124,8 @@ def _get_history_before(conn, horse_name, before_date_str, limit=10):
             "racecourse":       row['racecourse'] or '',
             "corner_3":         row['corner_3'],
             "margin":           float(row['margin'] or 0.0),
+            # 市場評価（f_pop_last / f_pop_avg / f_beat_market_rate 用）
+            "popularity":       int(row['popularity'] or 0),
             # メタ
             "date":             str(row['date'] or ''),
             "race_id":          row['race_id'],
@@ -253,6 +256,9 @@ def build_training_data(base_dir, output_csv='data/horse_features.csv',
                 'corner_3':     hdb['corner_3'],
                 'weight_load':  float(hdb['weight_load'] or 56.0),
                 'win_odds':     float(hdb['win_odds'] or 10.0),
+                # 現走人気（f_popularity 用）。学習時は確定人気、
+                # 予測時は calc_all が朝オッズから導出した人気が入る
+                'popularity':   int(hdb['popularity'] or 0),
                 'age':          int(hdb['age'] or 4),
                 'sex':          hdb['sex'] or '牡',
                 # init_engine 後の辞書から jockey_rate / trainer_rate を取得
