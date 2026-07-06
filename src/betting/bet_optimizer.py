@@ -38,6 +38,31 @@ TRIO_MAX_POINTS = 15
 
 SYN_ODDS_TARGET = (2.5, 6.0)  # 三連複合成オッズの目安
 
+# Gumbelシミュレーションに入れる rating の温度。
+# rating（XGBマージン）をそのまま使うと P(勝利)=softmax(rating, T=1) となり
+# 過信する（フォワード実測: RL1平均35% vs 実勝率16%）。
+# 2026-06-27〜07-04 の96レースで log-loss 最適だった T=2.5 をデフォルトとし、
+# rating_temperature.json の "gumbel_rating" キーがあればそちらを優先する。
+DEFAULT_GUMBEL_RATING_T = 2.5
+
+_GUMBEL_T_CACHE = {}
+
+
+def _load_gumbel_rating_temperature(base_dir):
+    """rating_temperature.json から Gumbel 用温度を読む（キャッシュ付き）。"""
+    if base_dir in _GUMBEL_T_CACHE:
+        return _GUMBEL_T_CACHE[base_dir]
+    T = DEFAULT_GUMBEL_RATING_T
+    try:
+        import os, json
+        path = os.path.join(base_dir, 'data', 'rating_temperature.json')
+        with open(path) as f:
+            T = float(json.load(f)['calibration']['gumbel_rating']['T'])
+    except Exception:
+        pass
+    _GUMBEL_T_CACHE[base_dir] = T
+    return T
+
 
 def build_optimal_bets(probs, odds_map, horses, race):
     """
@@ -325,10 +350,12 @@ def make_bets_v2(horses, race, base_dir, market_odds_map=None,
                      'T_A': dm_meta['T_A'],
                      'T_B2': dm_meta['T_B2']})
     else:
-        # horses['rating'] はルールベース総合スコア → 直接使用
-        ratings = [h.get('rating', 0.0) for h in horses]
+        # horses['rating'] = XGBマージン。T=1のままだと過信するため温度で割る
+        T = _load_gumbel_rating_temperature(base_dir)
+        ratings = [h.get('rating', 0.0) / T for h in horses]
         orders  = simulate_race(ratings, n_sims=n_sims)
         probs   = calc_ticket_probabilities(orders, horse_nums)
+        meta['T_gumbel'] = T
 
     # ── オッズ取得 ──────────────────────────────────────────────────────────
     race_id = race.get('id', '')
