@@ -34,9 +34,34 @@ MIN_PROB = {
 }
 
 TRIO_MIN_POINTS = 4
-TRIO_MAX_POINTS = 20
+TRIO_MAX_POINTS = 15
 
 SYN_ODDS_TARGET = (2.5, 6.0)  # 三連複合成オッズの目安
+
+# Gumbelシミュレーションに入れる rating の温度。
+# rating（XGBマージン）をそのまま使うと P(勝利)=softmax(rating, T=1) となり
+# 過信する（フォワード実測: RL1平均35% vs 実勝率16%）。
+# 2026-06-27〜07-04 の96レースで log-loss 最適だった T=2.5 をデフォルトとし、
+# rating_temperature.json の "gumbel_rating" キーがあればそちらを優先する。
+DEFAULT_GUMBEL_RATING_T = 2.5
+
+_GUMBEL_T_CACHE = {}
+
+
+def _load_gumbel_rating_temperature(base_dir):
+    """rating_temperature.json から Gumbel 用温度を読む（キャッシュ付き）。"""
+    if base_dir in _GUMBEL_T_CACHE:
+        return _GUMBEL_T_CACHE[base_dir]
+    T = DEFAULT_GUMBEL_RATING_T
+    try:
+        import os, json
+        path = os.path.join(base_dir, 'data', 'rating_temperature.json')
+        with open(path) as f:
+            T = float(json.load(f)['calibration']['gumbel_rating']['T'])
+    except Exception:
+        pass
+    _GUMBEL_T_CACHE[base_dir] = T
+    return T
 
 
 def build_optimal_bets(probs, odds_map, horses, race):
@@ -116,33 +141,53 @@ def _build_trio(trio_probs, trio_odds, ev_list, unit, probs=None):
        - double_axis: 2頭軸を含む組み合わせのみ → EV順
        - box: 上位馬の全組み合わせ（EVフィルタなし）
     3. 軸が不明確（拮抗）ならボックスにする
+    4. 相手は複勝確率8%以上の馬に限定（低確率の穴馬を除外）
     """
+    MIN_PARTNER_PLACE_PROB = 0.08
+
     # ── 軸構造の判定 ──
     if probs and probs.get('place'):
         structure, axis_nums = determine_axis_structure(probs, None)
     else:
         structure, axis_nums = 'list', []
 
+    # ── 相手候補の複勝確率フィルタ ──
+    place_probs = probs.get('place', {}) if probs else {}
+    qualified_partners = set()
+    if place_probs:
+        for num, pp in place_probs.items():
+            if pp >= MIN_PARTNER_PLACE_PROB:
+                qualified_partners.add(num)
+        for a in axis_nums:
+            qualified_partners.add(a)
+
+    def _combo_has_qualified_partners(e):
+        if not qualified_partners:
+            return True
+        return all(n in qualified_partners for n in e['key'])
+
     # ── 軸に基づくフィルタリング ──
     if structure == 'single_axis' and axis_nums:
         axis = axis_nums[0]
-        candidates = [e for e in ev_list if axis in e['key']]
+        candidates = [e for e in ev_list
+                      if axis in e['key'] and _combo_has_qualified_partners(e)]
     elif structure == 'double_axis' and len(axis_nums) >= 2:
         candidates = [e for e in ev_list
-                      if all(a in e['key'] for a in axis_nums)]
+                      if all(a in e['key'] for a in axis_nums)
+                      and _combo_has_qualified_partners(e)]
     elif structure == 'box' and axis_nums:
-        box_set = set(axis_nums)
+        box_set = set(axis_nums) & qualified_partners if qualified_partners else set(axis_nums)
+        if len(box_set) < 3:
+            box_set = set(axis_nums)
         candidates = [e for e in ev_list
                       if set(e['key']).issubset(box_set)]
     else:
-        candidates = ev_list
+        candidates = [e for e in ev_list if _combo_has_qualified_partners(e)]
 
     # ── 選択 ──
     if structure == 'box' and candidates:
-        # BOX: 全組み合わせを採用（中途半端にEVで絞らない）
         value = sorted(candidates, key=lambda x: x['ev'], reverse=True)
     else:
-        # 軸ベース: 軸内でEV順に選択
         value = [e for e in candidates
                  if e['ev'] >= MIN_EV['trio'] and e['prob'] >= MIN_PROB['trio']]
         if len(value) < TRIO_MIN_POINTS:
@@ -153,15 +198,24 @@ def _build_trio(trio_probs, trio_odds, ev_list, unit, probs=None):
 
     # ── フォールバック（軸制約が厳しすぎる場合）──
     if len(value) < TRIO_MIN_POINTS:
-        value = sorted(
-            [{'key': k, 'prob': p,
-              'odds': trio_odds.get(k, 0),
-              'ev':   p * trio_odds.get(k, 0)}
-             for k, p in trio_probs.items()
-             if trio_odds.get(k, 0) > 0],
-            key=lambda x: x['prob'],
-            reverse=True
-        )[:TRIO_MIN_POINTS]
+        fallback_pool = [
+            {'key': k, 'prob': p,
+             'odds': trio_odds.get(k, 0),
+             'ev':   p * trio_odds.get(k, 0)}
+            for k, p in trio_probs.items()
+            if trio_odds.get(k, 0) > 0 and _combo_has_qualified_partners(
+                {'key': k})
+        ]
+        if len(fallback_pool) < TRIO_MIN_POINTS:
+            fallback_pool = [
+                {'key': k, 'prob': p,
+                 'odds': trio_odds.get(k, 0),
+                 'ev':   p * trio_odds.get(k, 0)}
+                for k, p in trio_probs.items()
+                if trio_odds.get(k, 0) > 0
+            ]
+        value = sorted(fallback_pool, key=lambda x: x['prob'],
+                        reverse=True)[:TRIO_MIN_POINTS]
 
     value = value[:TRIO_MAX_POINTS]
 
@@ -296,10 +350,12 @@ def make_bets_v2(horses, race, base_dir, market_odds_map=None,
                      'T_A': dm_meta['T_A'],
                      'T_B2': dm_meta['T_B2']})
     else:
-        # horses['rating'] はルールベース総合スコア → 直接使用
-        ratings = [h.get('rating', 0.0) for h in horses]
+        # horses['rating'] = XGBマージン。T=1のままだと過信するため温度で割る
+        T = _load_gumbel_rating_temperature(base_dir)
+        ratings = [h.get('rating', 0.0) / T for h in horses]
         orders  = simulate_race(ratings, n_sims=n_sims)
         probs   = calc_ticket_probabilities(orders, horse_nums)
+        meta['T_gumbel'] = T
 
     # ── オッズ取得 ──────────────────────────────────────────────────────────
     race_id = race.get('id', '')

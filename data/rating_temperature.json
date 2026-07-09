@@ -11,6 +11,11 @@
     "ranking_ndcg": {
       "T": 0.5,
       "ece": 0.0095
+    },
+    "gumbel_rating": {
+      "T": 2.5,
+      "note": "make_bets_v2 rating-path用。2026-06-27〜07-04の96レースでlog-loss最適。RL1平均prob 17.7% vs 実勝率15.6%",
+      "fitted_on": "forward 2026-06-27..2026-07-04 (96 races)"
     }
   },
   "val_period": {

@@ -187,6 +187,36 @@ def init_db(base_dir=None, db_path=None):
         )
     except sqlite3.OperationalError:
         pass
+    # cal_prob > 1.0 の修正（旧market_correction残骸）
+    try:
+        conn.execute("UPDATE race_predictions SET cal_prob = 0.99 WHERE cal_prob > 1.0")
+    except sqlite3.OperationalError:
+        pass
+    # popularity=99 をオッズ順位で補填
+    try:
+        races_to_fix = conn.execute(
+            "SELECT DISTINCT race_id FROM race_predictions "
+            "WHERE (popularity = 99 OR popularity IS NULL) AND tansho_odds IS NOT NULL"
+        ).fetchall()
+        for (rid,) in races_to_fix:
+            horses = conn.execute(
+                "SELECT horse_num FROM race_predictions "
+                "WHERE race_id = ? ORDER BY COALESCE(tansho_odds, 9999)", (rid,)
+            ).fetchall()
+            for rank, (hnum,) in enumerate(horses, 1):
+                conn.execute(
+                    "UPDATE race_predictions SET popularity = ? "
+                    "WHERE race_id = ? AND horse_num = ? AND (popularity = 99 OR popularity IS NULL)",
+                    (rank, rid, hnum))
+    except sqlite3.OperationalError:
+        pass
+    # correction_enabled/factor の履歴をクリア（旧market_correction残骸）
+    try:
+        conn.execute(
+            "UPDATE race_predictions SET correction_enabled = NULL, correction_factor = NULL "
+            "WHERE correction_enabled IS NOT NULL")
+    except sqlite3.OperationalError:
+        pass
     conn.commit()
     conn.close()
 

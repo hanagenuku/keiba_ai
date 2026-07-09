@@ -179,7 +179,7 @@ def calc_value_score(ai_prob, market_prob, odds):
         dict(prob_gap, ev, is_value)
     """
     if not market_prob or not odds:
-        return {'prob_gap': 0.0, 'ev': 0.0, 'is_value': False}
+        return {'prob_gap': 0.0, 'ev': None, 'is_value': False}
     prob_gap = ai_prob - market_prob
     ev = ai_prob * odds
     return {
@@ -325,8 +325,8 @@ def ability_first_with_value(races, bias_data=None, top_n=6):
 
 def select_quality_races(races, bias_data=None,
                          min_ev=1.30,
-                         min_gap=0.06,
-                         min_win_prob=0.12,
+                         min_gap=0.03,
+                         min_win_prob=0.10,
                          odds_range=(1.5, 20.0),
                          max_races=6,
                          min_races=0):
@@ -339,8 +339,8 @@ def select_quality_races(races, bias_data=None,
     Parameters
     ----------
     min_ev       : フィールド最良馬のEV下限（デフォルト1.30）
-    min_gap      : RL1位〜2位の pn 差下限（デフォルト0.06）
-    min_win_prob : RL1位馬の AI勝率下限（デフォルト0.12）
+    min_gap      : RL1位〜2位の pn 差下限（デフォルト0.03）
+    min_win_prob : RL1位馬の AI勝率下限（デフォルト0.10）
     odds_range   : 本命オッズの許容範囲（デフォルト 1.5〜20.0）
     max_races    : 最大推奨レース数（デフォルト6）
     min_races    : 最小推奨レース数（デフォルト0 → 0件も許容）
@@ -389,7 +389,7 @@ def select_quality_races(races, bias_data=None,
             h['prob_gap'] = vs['prob_gap']
             h['ev']       = vs['ev']
             h['is_value'] = vs['is_value']
-            if vs['ev'] > best_ev:
+            if (vs['ev'] or 0) > best_ev:
                 best_ev    = vs['ev']
                 best_horse = h
 

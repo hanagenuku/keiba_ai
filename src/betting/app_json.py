@@ -55,16 +55,16 @@ def _assign_marks(scored, by_odds):
 
     # 高マーク: 3番人気以内 かつ AI上位3位 かつ EV>=1.0
     for h in scored:
-        if h['_pop'] <= 3 and h['ai_rank'] <= 3 and h.get('ev', 0) >= 1.0:
+        if h['_pop'] <= 3 and h['ai_rank'] <= 3 and (h.get('ev') or 0) >= 1.0:
             marks[h['num']] = '高'
 
     # 推マーク: AI順位が人気より3以上高い かつ AI上位8位 かつ EV>=1.2（最大2頭）
     osusume = [h for h in scored
                if h['ai_rank'] <= h['_pop'] - 3
                and h['ai_rank'] <= 8
-               and h.get('ev', 0) >= 1.2
+               and (h.get('ev') or 0) >= 1.2
                and marks[h['num']] == '']
-    osusume.sort(key=lambda h: h.get('ev', 0), reverse=True)
+    osusume.sort(key=lambda h: h.get('ev') or 0, reverse=True)
     for h in osusume[:2]:
         marks[h['num']] = '推'
 
@@ -72,11 +72,11 @@ def _assign_marks(scored, by_odds):
     ana_cands = [h for h in scored
                  if h['_pop'] >= 6
                  and h['ai_rank'] <= 5
-                 and h.get('ev', 0) >= 1.5
+                 and (h.get('ev') or 0) >= 1.5
                  and h.get('pn', 0) >= 0.15
                  and marks[h['num']] == '']
     if ana_cands:
-        ana = max(ana_cands, key=lambda h: h.get('ev', 0))
+        ana = max(ana_cands, key=lambda h: h.get('ev') or 0)
         marks[ana['num']] = '穴'
 
     return marks
@@ -248,21 +248,25 @@ def _build_bet_list(bets):
         if b['type'] == '三連複F':
             continue  # 後でまとめて追加
         if b['type'] == '三連複':
-            # 従来EV路（レガシー）からの三連複
             tickets = b.get('tickets', [b['nums']])
             pts = len(tickets)
+            structure = _detect_trio_structure([{'key': sorted(t)} for t in tickets])
+            combos = ['-'.join(str(n) for n in sorted(t)) for t in tickets]
             result.append({
-                'tag':   'san',
-                'label': f'三連複({pts}点)',
-                'horse': b.get('horse_name', '-'.join(f'#{n}' for n in b['nums'][:3])),
-                'est':   f'{pts}点',
-                'amt':   f'¥{b["amount"]}',
+                'tag':       'sanfuku',
+                'label':     f'三連複({pts}点)',
+                'trio_type': structure['type'],
+                'legs':      structure.get('legs'),
+                'nums':      structure['nums'],
+                'combos':    combos,
+                'est':       f'{pts}点',
+                'amt':       f'¥{b["amount"]}',
             })
             continue
         tag = ('fuku' if b['type'] == '複勝' else
                'tan'  if b['type'] == '単勝' else 'wide')
         odds_val = b.get('odds_est') or b.get('odds', 0) or 0
-        est = f'{odds_val:.1f}倍' if odds_val > 0 else '-'
+        est = f'{odds_val:.1f}倍' if odds_val >= 1.0 else '-'
         result.append({
             'tag':   tag,
             'label': b['type'],
@@ -274,15 +278,18 @@ def _build_bet_list(bets):
     if san_f:
         total_amt = sum(t['amount'] for t in san_f)
         pts = len(san_f)
-        preview = ' / '.join('-'.join(f'#{n}' for n in t['nums']) for t in san_f[:2])
-        if pts > 2:
-            preview += f' 他{pts - 2}点'
+        all_tickets = [t['nums'] for t in san_f]
+        structure = _detect_trio_structure([{'key': sorted(t)} for t in all_tickets])
+        combos = ['-'.join(str(n) for n in sorted(t)) for t in all_tickets]
         result.append({
-            'tag':   'san',
-            'label': f'三連複({pts}点)',
-            'horse': preview,
-            'est':   f'{pts}点',
-            'amt':   f'¥{total_amt}',
+            'tag':       'sanfuku',
+            'label':     f'三連複({pts}点)',
+            'trio_type': structure['type'],
+            'legs':      structure.get('legs'),
+            'nums':      structure['nums'],
+            'combos':    combos,
+            'est':       f'{pts}点',
+            'amt':       f'¥{total_amt}',
         })
 
     return result
@@ -349,10 +356,13 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
         c.setdefault('chaos_score', _chaos_score_val)
         bets = make_bets(c, _race_odds or None)
         if not bets:
+            _fb_odds = top1.get('win_odds', 0) or 0
             bets = [{'type': '複勝', 'nums': [top1['num']],
                      'horse_name': top1.get('name', ''),
-                     'odds': top1.get('win_odds', 0) or 0,
-                     'odds_est': 0, 'amount': 500, 'ev': 0.0, 'prob': 0.0,
+                     'odds': _fb_odds,
+                     'odds_est': 0, 'amount': 500,
+                     'ev': None if _fb_odds == 0 else 0.0,
+                     'prob': 0.0,
                      'pattern': 'fallback', 'chaos_grade': _grade}]
 
         # ④ フォーメーション生成（_build_horses_list が _pop をセット後に実行）
@@ -474,10 +484,13 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
         }
         bets2 = make_bets(c_ref, _race_odds2 or None)
         if not bets2:
+            _fb_odds2 = top1.get('win_odds', 0) or 0
             bets2 = [{'type': '複勝', 'nums': [top1['num']],
                       'horse_name': top1.get('name', ''),
-                      'odds': top1.get('win_odds', 0) or 0,
-                      'odds_est': 0, 'amount': 500, 'ev': 0.0, 'prob': 0.0,
+                      'odds': _fb_odds2,
+                      'odds_est': 0, 'amount': 500,
+                      'ev': None if _fb_odds2 == 0 else 0.0,
+                      'prob': 0.0,
                       'pattern': 'fallback', 'chaos_grade': _grade2}]
 
         # ④ フォーメーション生成（_build_horses_list が _pop をセット後）
