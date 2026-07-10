@@ -1,8 +1,17 @@
 """
-期待値ベースの買い目最適化
+RL上位ベースの買い目最適化
 
-Gumbelシミュレーションの確率と実オッズ（or推定オッズ）から、
-型に縛られず期待値最大の買い目を券種横断で生成する。
+AIのRL順位（win_prob順）を起点に、オッズ妙味のある馬を選ぶ。
+「AIが上位評価した馬の中から、オッズに旨味がある馬を買う」設計。
+
+旧設計（EV最大化）の問題:
+    Gumbel T=2.5 で確率がフラット化 → EV = prob × odds が
+    オッズに単調増加 → 常に最低人気を推す構造的欠陥。
+
+新設計:
+    1. RL上位馬（AIが強いと判断した馬）を候補とする
+    2. その中でオッズが本命すぎない馬（妙味あり）を選ぶ
+    3. EV は足切り（控除率超え）にのみ使う
 
 使い方（Colab / スクリプト）:
     from src.betting.bet_optimizer import build_optimal_bets
@@ -15,23 +24,28 @@ Gumbelシミュレーションの確率と実オッズ（or推定オッズ）か
 
 import numpy as np
 
-# 券種別の最低期待値（控除率を超える水準）
+# EV足切り（控除率を下回る買い目を除外するだけ）
 MIN_EV = {
-    'win':      1.15,   # 単勝（控除20%）
-    'place':    1.10,   # 複勝（控除20%、堅いので低め）
-    'quinella': 1.25,   # 馬連（控除22.5%）
-    'wide':     1.20,   # ワイド（未実装、将来用）
-    'trio':     1.30,   # 三連複（控除22.5%、荒れるので高め）
+    'win':      1.0,
+    'place':    1.0,
+    'quinella': 1.0,
+    'wide':     1.0,
+    'trio':     1.0,
 }
 
 # 券種別の最低的中確率（低すぎる買い目を除外）
 MIN_PROB = {
     'win':      0.05,
-    'place':    0.15,
+    'place':    0.10,
     'quinella': 0.02,
     'wide':     0.05,
     'trio':     0.005,
 }
+
+# 単勝: 本命すぎるオッズ（1.x倍）は妙味なし
+WIN_MIN_ODDS = 2.0
+# 単勝: オッズ上限（穴すぎる馬は避ける）
+WIN_MAX_ODDS = 30.0
 
 TRIO_MIN_POINTS = 4
 TRIO_MAX_POINTS = 15
@@ -66,7 +80,7 @@ def _load_gumbel_rating_temperature(base_dir):
 
 def build_optimal_bets(probs, odds_map, horses, race):
     """
-    期待値最大の買い目を券種横断で生成する。
+    RL上位馬を起点に、オッズ妙味のある買い目を生成する。
 
     Parameters
     ----------
@@ -74,7 +88,7 @@ def build_optimal_bets(probs, odds_map, horses, race):
                {bet_type: {key: float}}
     odds_map : 推定配当 or 実オッズ（estimate_payouts_from_win_odds と同じ構造）
                {bet_type: {key: float}}
-    horses   : calc_all() の出力リスト（horse_num / win_odds / name 等）
+    horses   : calc_all() の出力リスト（horse_num / win_odds / name / rl_rank 等）
     race     : レース辞書
 
     Returns
@@ -91,18 +105,21 @@ def build_optimal_bets(probs, odds_map, horses, race):
 
     ev_results = calc_ev_all_tickets(probs, odds_map)
 
+    rl_ranking = _build_rl_ranking(horses)
+
     UNIT = 100
 
     result = {
-        'win':      _select_win(ev_results.get('win', []), UNIT),
-        'place':    _select_place(ev_results.get('place', []), UNIT),
-        'quinella': _select_quinella(ev_results.get('quinella', []), UNIT),
+        'win':      _select_win(ev_results.get('win', []), UNIT, rl_ranking),
+        'place':    _select_place(ev_results.get('place', []), UNIT, rl_ranking),
+        'quinella': _select_quinella(ev_results.get('quinella', []), UNIT, rl_ranking),
         'trio':     _build_trio(
                         probs.get('trio', {}),
                         odds_map.get('trio', {}),
                         ev_results.get('trio', []),
                         UNIT,
                         probs=probs,
+                        rl_ranking=rl_ranking,
                     ),
     }
 
@@ -110,32 +127,95 @@ def build_optimal_bets(probs, odds_map, horses, race):
     return result
 
 
-def _select_win(ev_list, unit):
-    """単勝: 勝率上位3頭の中からEV最大の1点。"""
-    top3_keys = {e['key'] for e in sorted(ev_list, key=lambda x: x['prob'], reverse=True)[:3]}
-    hits = [e for e in ev_list
-            if e['key'] in top3_keys
-            and e['ev'] >= MIN_EV['win'] and e['prob'] >= MIN_PROB['win']]
-    return [dict(e, amount=unit) for e in hits[:1]]
+def _build_rl_ranking(horses):
+    """horses リストから {horse_num: rl_rank} マップを作る。"""
+    ranking = {}
+    for h in horses:
+        num = h.get('horse_num') or h.get('num')
+        rl = h.get('rl_rank')
+        if num is not None and rl is not None:
+            ranking[num] = rl
+    return ranking
 
 
-def _select_place(ev_list, unit):
-    """複勝: 複勝確率上位5頭の中からEV基準を満たす馬、最大2点。"""
-    top5_keys = {e['key'] for e in sorted(ev_list, key=lambda x: x['prob'], reverse=True)[:5]}
-    hits = [e for e in ev_list
-            if e['key'] in top5_keys
-            and e['ev'] >= MIN_EV['place'] and e['prob'] >= MIN_PROB['place']]
-    return [dict(e, amount=unit) for e in hits[:2]]
+def _select_win(ev_list, unit, rl_ranking):
+    """
+    単勝: RL上位3頭の中から、オッズに妙味がある馬を最大1点。
+
+    - RL1が本命すぎ(2倍未満)ならスキップ → RL2-3から選ぶ
+    - RL1-3のうちオッズ妙味がある馬(2〜30倍)をEV順で1点
+    - 全員本命すぎ or 全員穴すぎなら買わない
+    """
+    rl_top3 = {num for num, rank in rl_ranking.items() if rank <= 3}
+    if not rl_top3:
+        rl_top3 = {e['key'] for e in sorted(ev_list, key=lambda x: x['prob'], reverse=True)[:3]}
+
+    candidates = [e for e in ev_list
+                  if e['key'] in rl_top3
+                  and e['ev'] >= MIN_EV['win']
+                  and e['prob'] >= MIN_PROB['win']
+                  and WIN_MIN_ODDS <= e['odds'] <= WIN_MAX_ODDS]
+
+    candidates.sort(key=lambda x: x['ev'], reverse=True)
+    return [dict(e, amount=unit) for e in candidates[:1]]
 
 
-def _select_quinella(ev_list, unit):
-    """馬連: EV上位5点まで。"""
-    hits = [e for e in ev_list
-            if e['ev'] >= MIN_EV['quinella'] and e['prob'] >= MIN_PROB['quinella']]
-    return [dict(e, amount=unit) for e in hits[:5]]
+def _select_place(ev_list, unit, rl_ranking):
+    """
+    複勝: RL上位5頭からEV足切りを通る馬を最大2点。
+
+    RL順で優先し、EV >= 1.0 で足切り。
+    """
+    rl_top5 = {num for num, rank in rl_ranking.items() if rank <= 5}
+    if not rl_top5:
+        rl_top5 = {e['key'] for e in sorted(ev_list, key=lambda x: x['prob'], reverse=True)[:5]}
+
+    candidates = [e for e in ev_list
+                  if e['key'] in rl_top5
+                  and e['ev'] >= MIN_EV['place']
+                  and e['prob'] >= MIN_PROB['place']]
+
+    candidates.sort(key=lambda x: rl_ranking.get(x['key'], 99))
+    return [dict(e, amount=unit) for e in candidates[:2]]
 
 
-def _build_trio(trio_probs, trio_odds, ev_list, unit, probs=None):
+def _select_quinella(ev_list, unit, rl_ranking):
+    """
+    馬連: RL上位5頭の組み合わせから、EV足切りを通るもの最大5点。
+
+    少なくとも1頭がRL上位3頭に入る組み合わせを優先。
+    """
+    rl_top3 = {num for num, rank in rl_ranking.items() if rank <= 3}
+    rl_top5 = {num for num, rank in rl_ranking.items() if rank <= 5}
+
+    def _has_rl_horse(e):
+        if isinstance(e['key'], tuple):
+            return any(k in rl_top5 for k in e['key'])
+        return e['key'] in rl_top5
+
+    def _has_rl_top3(e):
+        if isinstance(e['key'], tuple):
+            return any(k in rl_top3 for k in e['key'])
+        return e['key'] in rl_top3
+
+    core = [e for e in ev_list
+            if _has_rl_horse(e) and _has_rl_top3(e)
+            and e['ev'] >= MIN_EV['quinella'] and e['prob'] >= MIN_PROB['quinella']]
+    core.sort(key=lambda x: x['ev'], reverse=True)
+
+    if len(core) < 3:
+        extra = [e for e in ev_list
+                 if _has_rl_horse(e)
+                 and e['ev'] >= MIN_EV['quinella'] and e['prob'] >= MIN_PROB['quinella']
+                 and e not in core]
+        extra.sort(key=lambda x: x['ev'], reverse=True)
+        core = core + extra
+
+    return [dict(e, amount=unit) for e in core[:5]]
+
+
+def _build_trio(trio_probs, trio_odds, ev_list, unit, probs=None,
+                 rl_ranking=None):
     """
     三連複を軸構造ベースで組む。
 
@@ -147,6 +227,8 @@ def _build_trio(trio_probs, trio_odds, ev_list, unit, probs=None):
     3. 軸が不明確（拮抗）ならボックスにする
     4. 相手は複勝確率8%以上の馬に限定（低確率の穴馬を除外）
     """
+    if rl_ranking is None:
+        rl_ranking = {}
     MIN_PARTNER_PLACE_PROB = 0.08
 
     # ── 軸構造の判定 ──

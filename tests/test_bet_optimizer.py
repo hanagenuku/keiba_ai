@@ -56,7 +56,14 @@ def _make_probs_and_odds(n=8):
         'trio':     {k: _to_odds(v, 0.225) for k, v in probs['trio'].items()},
     }
 
-    horses = [{'horse_num': h, 'win_odds': odds_map['win'][h], 'name': f'馬{h}'} for h in nums]
+    # RL順位 = win確率降順
+    ranked = sorted(range(n), key=lambda i: raw[i], reverse=True)
+    rl_ranks = {}
+    for rank, idx in enumerate(ranked, 1):
+        rl_ranks[nums[idx]] = rank
+
+    horses = [{'horse_num': h, 'win_odds': odds_map['win'][h], 'name': f'馬{h}',
+               'rl_rank': rl_ranks[h]} for h in nums]
     return probs, odds_map, horses
 
 
@@ -131,6 +138,83 @@ def test_each_bet_has_amount_100():
     for bt in ['win', 'place', 'quinella', 'trio']:
         for b in bets[bt]:
             assert b['amount'] == 100, f'{bt} の amount が 100 でない'
+
+
+# ── RL上位ベースの選択 ────────────────────────────────────────────────────────
+
+def test_win_rejects_low_rank_high_ev():
+    """RL8の馬はEVが高くても単勝に選ばれない（旧設計の構造的欠陥テスト）。"""
+    nums = list(range(1, 10))
+    probs = {
+        'win': {h: 0.12 - h * 0.005 for h in nums},
+        'place': {h: 0.5 - h * 0.03 for h in nums},
+        'quinella': {}, 'trio': {},
+    }
+    # RL8（馬番8）のオッズを極端に高く → EV最大だが、RL下位なので選ばれない
+    odds_map = {
+        'win': {h: 5.0 for h in nums},
+        'place': {}, 'quinella': {}, 'trio': {},
+    }
+    odds_map['win'][8] = 50.0  # EV最大だがRL8
+    odds_map['win'][1] = 3.0   # RL1だが本命すぎ
+
+    horses = [{'horse_num': h, 'rl_rank': h, 'name': f'馬{h}'} for h in nums]
+    bets = build_optimal_bets(probs, odds_map, horses, {})
+
+    if bets['win']:
+        selected = bets['win'][0]['key']
+        assert selected in {1, 2, 3}, f"RL下位の {selected} が選ばれた"
+
+
+def test_win_skips_favorite_picks_rl2():
+    """RL1がオッズ1.5倍（本命すぎ）→ RL2-3から選ぶ。"""
+    probs = {
+        'win': {1: 0.30, 2: 0.20, 3: 0.15, 4: 0.10, 5: 0.08},
+        'place': {}, 'quinella': {}, 'trio': {},
+    }
+    odds_map = {
+        'win': {1: 1.5, 2: 5.0, 3: 8.0, 4: 15.0, 5: 20.0},
+        'place': {}, 'quinella': {}, 'trio': {},
+    }
+    horses = [{'horse_num': h, 'rl_rank': h} for h in range(1, 6)]
+    bets = build_optimal_bets(probs, odds_map, horses, {})
+
+    if bets['win']:
+        selected = bets['win'][0]['key']
+        assert selected in {2, 3}, f"RL1(1.5倍)をスキップして{selected}を選ぶべき"
+
+
+def test_place_ordered_by_rl_rank():
+    """複勝はRL順位の高い方が先に選ばれる。"""
+    probs = {
+        'win': {}, 'quinella': {}, 'trio': {},
+        'place': {1: 0.5, 2: 0.4, 3: 0.3, 4: 0.2, 5: 0.15},
+    }
+    odds_map = {
+        'win': {}, 'quinella': {}, 'trio': {},
+        'place': {1: 2.0, 2: 3.0, 3: 4.0, 4: 5.0, 5: 7.0},
+    }
+    horses = [{'horse_num': h, 'rl_rank': h} for h in range(1, 6)]
+    bets = build_optimal_bets(probs, odds_map, horses, {})
+
+    if len(bets['place']) >= 2:
+        rl1 = bets['place'][0]['key']
+        rl2 = bets['place'][1]['key']
+        assert rl1 < rl2, f"RL{rl1}がRL{rl2}より先に来るべき"
+
+
+def test_quinella_includes_rl_top():
+    """馬連はRL上位3頭の少なくとも1頭を含む。"""
+    probs, odds_map, horses = _make_probs_and_odds(8)
+    bets = build_optimal_bets(probs, odds_map, horses, {})
+
+    rl_top3 = {h['horse_num'] for h in horses if h['rl_rank'] <= 3}
+    for b in bets['quinella']:
+        if isinstance(b['key'], tuple):
+            has_top = any(k in rl_top3 for k in b['key'])
+        else:
+            has_top = b['key'] in rl_top3
+        assert has_top, f"馬連 {b['key']} にRL上位3頭がいない"
 
 
 # ── 空入力・頭数不足 ───────────────────────────────────────────────────────────
