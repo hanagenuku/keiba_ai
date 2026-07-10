@@ -111,16 +111,20 @@ def build_optimal_bets(probs, odds_map, horses, race):
 
 
 def _select_win(ev_list, unit):
-    """単勝: EV最大の1点（基準を満たせば）。"""
+    """単勝: 勝率上位3頭の中からEV最大の1点。"""
+    top3_keys = {e['key'] for e in sorted(ev_list, key=lambda x: x['prob'], reverse=True)[:3]}
     hits = [e for e in ev_list
-            if e['ev'] >= MIN_EV['win'] and e['prob'] >= MIN_PROB['win']]
+            if e['key'] in top3_keys
+            and e['ev'] >= MIN_EV['win'] and e['prob'] >= MIN_PROB['win']]
     return [dict(e, amount=unit) for e in hits[:1]]
 
 
 def _select_place(ev_list, unit):
-    """複勝: EV基準を満たす馬、最大2点。"""
+    """複勝: 複勝確率上位5頭の中からEV基準を満たす馬、最大2点。"""
+    top5_keys = {e['key'] for e in sorted(ev_list, key=lambda x: x['prob'], reverse=True)[:5]}
     hits = [e for e in ev_list
-            if e['ev'] >= MIN_EV['place'] and e['prob'] >= MIN_PROB['place']]
+            if e['key'] in top5_keys
+            and e['ev'] >= MIN_EV['place'] and e['prob'] >= MIN_PROB['place']]
     return [dict(e, amount=unit) for e in hits[:2]]
 
 
