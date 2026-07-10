@@ -17,7 +17,9 @@ from src.betting.make_bets import init_betting, make_bets, log_bet_simulation
 from src.betting.ev_filter import select_quality_races, build_market_odds_from_races
 from src.betting.app_json import to_app_json
 from src.features.engine import calc_all
-from src.scraper.jra_scraper import fetch_races_on_date
+from src.scraper.jra_scraper import (
+    fetch_races_on_date, fetch_odds_map, apply_odds_to_races,
+)
 
 JST = timezone(timedelta(hours=9))
 
@@ -73,6 +75,14 @@ def main():
         checkpoint_db(hist_path)
         return
 
+    # 専用オッズページ(accessO.html)から単勝オッズを取得し各馬に反映する。
+    # 出馬表ページにはオッズが載らない（特に前日=金曜）ため、これを行わないと
+    # win_odds=0 のまま予想が走り、popularity 導出・バリュー表示・EV買い目が空になる。
+    print('💴 オッズ取得中（専用オッズページ）...')
+    market_odds_map = fetch_odds_map(sess, races)
+    n_odds = apply_odds_to_races(races, market_odds_map)
+    print(f'   オッズ反映: {n_odds}頭 / {len(races)}R')
+
     surf_counts = {}
     for r in races:
         s = r.get('surface', '?')
@@ -118,7 +128,11 @@ def main():
     print(f'💰 投資合計: ¥{total_inv:,}')
 
     jst_now = datetime.now(JST)
-    market_odds_map = build_market_odds_from_races(races)
+    # 専用オッズページで取れなかったレースは出馬表オッズ（win_odds）で補完する。
+    _fallback = build_market_odds_from_races(races)
+    for _rid, _om in _fallback.items():
+        if not market_odds_map.get(_rid):
+            market_odds_map[_rid] = _om
     app_data = to_app_json(selected, races, avg_bias, jst_now,
                            day_type='saturday', market_odds_map=market_odds_map)
     os.makedirs(os.path.dirname(APP_PATH), exist_ok=True)

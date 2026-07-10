@@ -228,6 +228,40 @@ def fetch_odds_map(sess, races):
     return market_odds_map
 
 
+def apply_odds_to_races(races, market_odds_map):
+    """market_odds_map の単勝オッズを各馬の win_odds に書き戻す。
+
+    出馬表ページ(_parse_shutuba)にはオッズが載らない（特に前日=金曜）ため、
+    専用オッズページ(fetch_odds_map)で取得した値を各馬に反映する。
+    これを呼ばないと win_odds=0.0 のまま予想が走り、popularity 導出・
+    バリュー表示・EV買い目がすべて空になる。
+
+    market_odds_map に無い / tansho が None・0 の馬は既存 win_odds を保持する。
+
+    Args:
+        races           : fetch_races_on_date が返すレースリスト
+        market_odds_map : {race_id: {horse_num: {'tansho', 'fukusho'}}}
+
+    Returns:
+        int: win_odds を更新した馬の数
+    """
+    updated = 0
+    for race in races:
+        om = market_odds_map.get(race.get('id')) or {}
+        if not om:
+            continue
+        for h in race.get('horses', []):
+            num = h.get('num') or h.get('horse_num')
+            if num is None:
+                continue
+            info = om.get(num) or om.get(int(num))
+            tansho = info.get('tansho') if isinstance(info, dict) else None
+            if tansho and tansho > 0:
+                h['win_odds'] = float(tansho)
+                updated += 1
+    return updated
+
+
 def fetch_races_on_date(sess, target_date, hist_db_path):
     """指定日の全レース出走表を取得"""
     print(f'📡 {target_date} 出走表取得中...')

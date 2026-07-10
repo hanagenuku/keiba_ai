@@ -8,7 +8,9 @@ from src.scraper.parser import parse_header, get_class_from_racename, parse_hist
 from src.scraper.calendar import get_base_from_calendar
 from src.utils.config import KAISAI_CALENDAR
 import src.scraper.jra_scraper as jra_scraper
-from src.scraper.jra_scraper import find_r01_shutuba, parse_result_soup
+from src.scraper.jra_scraper import (
+    find_r01_shutuba, parse_result_soup, apply_odds_to_races,
+)
 
 
 def test_parse_header_basic():
@@ -172,6 +174,44 @@ def test_find_r01_shutuba_returns_min_hit():
     # 0x10, 0x40, 0x80 がヒットするとき最小の 0x10 を返す（直列版と挙動一致）
     sess = _MultiHitSession([0x10, 0x40, 0x80])
     assert find_r01_shutuba('pw01dde010320260201', '20260627', sess) == 0x10
+
+
+# ── apply_odds_to_races（専用オッズページの単勝を win_odds に反映） ──────────
+
+def test_apply_odds_writes_tansho_to_win_odds():
+    """market_odds_map の tansho を各馬の win_odds に書き戻す。"""
+    races = [{'id': 'R1', 'horses': [
+        {'num': 1, 'win_odds': 0.0},
+        {'num': 2, 'win_odds': 0.0},
+    ]}]
+    mom = {'R1': {1: {'tansho': 2.4, 'fukusho': 1.3},
+                  2: {'tansho': 9.1, 'fukusho': 2.0}}}
+    n = apply_odds_to_races(races, mom)
+    assert n == 2
+    assert races[0]['horses'][0]['win_odds'] == 2.4
+    assert races[0]['horses'][1]['win_odds'] == 9.1
+
+
+def test_apply_odds_preserves_when_tansho_missing():
+    """tansho が None / 0 の馬は既存 win_odds を保持する。"""
+    races = [{'id': 'R1', 'horses': [
+        {'num': 1, 'win_odds': 5.5},   # 専用ページに tansho なし
+        {'num': 2, 'win_odds': 0.0},   # tansho=0
+    ]}]
+    mom = {'R1': {1: {'tansho': None, 'fukusho': 1.8},
+                  2: {'tansho': 0.0, 'fukusho': None}}}
+    n = apply_odds_to_races(races, mom)
+    assert n == 0
+    assert races[0]['horses'][0]['win_odds'] == 5.5
+    assert races[0]['horses'][1]['win_odds'] == 0.0
+
+
+def test_apply_odds_skips_race_without_map():
+    """market_odds_map に無いレースは既存 win_odds を保持する。"""
+    races = [{'id': 'R2', 'horses': [{'num': 1, 'win_odds': 3.3}]}]
+    n = apply_odds_to_races(races, {})
+    assert n == 0
+    assert races[0]['horses'][0]['win_odds'] == 3.3
 
 
 if __name__ == '__main__':
