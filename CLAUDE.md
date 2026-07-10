@@ -31,7 +31,7 @@ JRA競馬AI予想システム。Google Colab + Google Drive で運用。
 ## データ・モデル構造
 ```
 data/
-  history.db      # 学習データ（horse_history: 67,843件 / race_history: 4,893件）
+  history.db      # 学習データ（race_history: 11,153件以上 / horse_history: 対応する出走数）
   keiba.db        # 予想・ベット結果（bets, bet_simulation, results）
   optimal_weights.json  # チューニング済み重み（※Phase2-3後に再チューニング必要）
   calibrator.pkl
