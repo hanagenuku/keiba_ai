@@ -548,8 +548,8 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
         bias_tag = ('時計速め' if spd > 0.3 else '時計遅め' if spd < -0.3 else 'フラット')
 
     from datetime import timedelta
-    # sunday予想は翌日の日付を表示（土曜夜に実行するため）
-    display_dt = jst_now + timedelta(days=1) if day_type == 'sunday' else jst_now
+    # friday→saturday, sunday は翌日の日付を表示（前夜に実行するため）
+    display_dt = jst_now + timedelta(days=1) if day_type in ('saturday', 'sunday') else jst_now
     jday = ['月', '火', '水', '木', '金', '土', '日'][display_dt.weekday()]
     rec_count = len(selected)
     return {
