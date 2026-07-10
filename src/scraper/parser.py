@@ -70,18 +70,18 @@ def parse_header(text):
         if name in text:
             info['racecourse'] = name
             break
-    _shogai_kws = ['障害', '(J)', '（J）', 'J・G', 'J-G']
-    if any(kw in text for kw in _shogai_kws):
-        info['surface'] = '障害'
-        info['distance'] = 0
-        info['direction'] = ''
-        return info
     dm = re.search(r'([\d,]+)\s*メートル\s*[（(]\s*([芝ダ])[^）)]*([右左])', text)
     if dm:
         info['distance'] = int(dm.group(1).replace(',', ''))
         info['surface'] = '芝' if dm.group(2) == '芝' else 'ダート'
         info['direction'] = dm.group(3)
     else:
+        _shogai_kws = ['障害', '(J)', '（J）', 'J・G', 'J-G']
+        if any(kw in text for kw in _shogai_kws):
+            info['surface'] = '障害'
+            info['distance'] = 0
+            info['direction'] = ''
+            return info
         info['distance'] = 0
         info['surface'] = '不明'
         info['direction'] = ''
