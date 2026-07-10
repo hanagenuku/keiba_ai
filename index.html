@@ -49,6 +49,8 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
 .rc-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0}
 .conf{background:var(--gold);color:#fff;font-size:11px;font-weight:800;padding:3px 9px;border-radius:8px}
 .rec-lbl{font-size:10px;color:var(--gold);font-weight:700}
+.new-rec-alert{font-size:10px;color:#fff;font-weight:800;background:#e74c3c;padding:2px 8px;border-radius:4px;animation:rec-pulse 1.2s ease-in-out infinite;display:inline-block}
+@keyframes rec-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(1.08)}}
 .arr{font-size:11px;color:var(--sub);transition:transform .2s;display:inline-block}
 .arr.open{transform:rotate(180deg)}
 .hstrip{padding:0 14px 10px;display:flex;align-items:center;gap:8px;cursor:pointer}
@@ -1052,6 +1054,7 @@ function render() {
     const isRec = race.rec;
     // 推奨フラグ変更の表示
     let recLabel = '';
+    let nameAlert = '';
     if (isRec) {
       recLabel = '<span class="conf">AI '+race.conf+'%</span><span class="rec-lbl">★推奨</span>';
     }
@@ -1059,10 +1062,11 @@ function render() {
       if (!race.rec && race._morning_rec) {
         recLabel = '<span style="font-size:9px;color:#c0392b;font-weight:700;background:rgba(192,57,43,0.1);padding:1px 6px;border-radius:3px">推奨取消</span>';
       } else if (race.rec && !race._morning_rec) {
-        recLabel = '<span class="conf">AI '+race.conf+'%</span><span style="font-size:9px;color:#fff;font-weight:700;background:#27ae60;padding:1px 6px;border-radius:3px">NEW推奨</span>';
+        recLabel = '<span class="conf">AI '+race.conf+'%</span>';
+        nameAlert = ' <span class="new-rec-alert">NEW推奨</span>';
       }
     }
-    html += '<div class="rc'+(isRec?' rec':'')+'"><div class="rc-head" onclick="toggle(\''+k+'\')"><div class="rc-num">'+race.r+'</div><div class="rc-info"><div class="rc-name">'+race.name+'</div><div class="rc-meta">'+race.dist+'</div></div><div class="rc-right">'+recLabel+'<span class="arr'+(isOpen?' open':'')+'">▼</span></div></div>';
+    html += '<div class="rc'+(isRec?' rec':'')+'"><div class="rc-head" onclick="toggle(\''+k+'\')"><div class="rc-num">'+race.r+'</div><div class="rc-info"><div class="rc-name">'+race.name+nameAlert+'</div><div class="rc-meta">'+race.dist+'</div></div><div class="rc-right">'+recLabel+'<span class="arr'+(isOpen?' open':'')+'">▼</span></div></div>';
     if (race.honmei) {
       html += '<div class="hstrip" onclick="toggle(\''+k+'\')"><span class="hbadge">◎本命</span><span class="hname">#'+race.honmei.n+' '+race.honmei.name+'</span><span class="hodds">'+(race.honmei.odds||'-')+'倍 / '+(race.honmei.style||'-')+'</span></div>';
     }
