@@ -4,7 +4,6 @@
 3モデル比較（653レース）に基づく暫定的な使い分け:
   単勝         → B2_ndcg  (xgb_ranking_ndcg.pkl)  的中率 47.6% vs A 43.0%
   複勝・馬連・三連複 → A_fukusho  複勝 80.7%, 馬連 23.4%, 三連複 21.9%
-  B1_pairwise  → 不使用（全券種で最下位）
   温度は rating_temperature.json から動的に読み込む（フォールバック: T=1.0）
 
 使い方（Colab / スクリプト）:

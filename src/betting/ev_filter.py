@@ -13,7 +13,6 @@ ODDS_MAX          = 30.0
 WIN_PROB_MIN      = 0.06
 SKIP_CLASSES      = ('未勝利', '新馬')
 VALUE_EV_MIN      = 1.3   # バリュー判定の最低期待値（pn × win_odds）
-VALUE_GAP_THRESHOLD = 0.10  # 後方互換で残存（フィルタには使用しない）
 
 # ── 合成オッズ閾値 ────────────────────────────────────────────────────────
 SYNTHETIC_SAFE_MIN = 2.5    # 2.5倍未満: 低配当警戒域
@@ -99,33 +98,29 @@ def build_market_odds_from_races(races):
 def detect_value_horses(horses, market_odds_map):
     """バリュー馬を検出する。
 
-    EV（pn × win_odds）>= VALUE_EV_MIN をバリュー馬の基準とする（⑤）。
-    value_gap（AI複勝確率 - 市場複勝逆算確率）も計算して付与するが、
-    フィルタリングには使用しない（後方互換用）。
+    EV（pn × win_odds）>= VALUE_EV_MIN をバリュー馬の基準とする。
 
     Args:
         horses           : 各馬の予測結果。必須キー: horse_num, pn, win_odds
         market_odds_map  : {horse_num: fukusho_odds} または
                            {horse_num: {'tansho': float, 'fukusho': float}} の形式。
-                           空dictの場合は value_gap=0.0 を全馬に設定して続行。
 
     Returns:
-        is_value / value_gap / ev_direct を付与した馬リスト（EV降順ソート済み）。
+        is_value / ev_direct を付与した馬リスト（EV降順ソート済み）。
     """
     result = []
     for h in horses:
         hnum      = h.get('horse_num', h.get('num'))
-        fuku_prob = h.get('top3_prob') or h.get('pn', 0)
         wo        = h.get('win_odds', h.get('odds', 0)) or 0
         pn        = h.get('pn', 0) or 0
 
-        # ── 市場オッズから value_gap（後方互換） ──────────────────────────
         odds = market_odds_map.get(hnum) if market_odds_map else None
         tansho_odds = None
+        fuku_odds = None
         if isinstance(odds, dict):
             fuku_odds   = odds.get('fukusho')
             tansho_odds = odds.get('tansho')
-        else:
+        elif odds is not None:
             fuku_odds = odds
 
         if fuku_odds and fuku_odds >= 1.0:
@@ -133,14 +128,11 @@ def detect_value_horses(horses, market_odds_map):
         else:
             market_prob = 0.0
 
-        value_gap = round(fuku_prob - market_prob, 4) if market_odds_map else 0.0
-
-        # ── EV ベースのバリュー判定（⑤ 主判定） ─────────────────────────
         direct_ev = round(pn * wo, 3)
         is_value  = direct_ev >= VALUE_EV_MIN
 
         entry = dict(h)
-        entry['value_gap']    = value_gap
+        entry['value_gap']    = 0.0
         entry['market_prob']  = round(market_prob, 4)
         entry['fukusho_odds'] = fuku_odds
         entry['tansho_odds']  = tansho_odds

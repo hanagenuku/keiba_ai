@@ -134,7 +134,7 @@ def calibrate_all_models(base_dir,
                          T_candidates=None,
                          n_sims=5000):
     """
-    3モデル（fukusho / pairwise / ndcg）の温度を校正して
+    2モデル（fukusho / ndcg）の温度を校正して
     rating_temperature.json に保存する。
 
     Parameters
@@ -175,11 +175,6 @@ def calibrate_all_models(base_dir,
             os.path.join(data_dir, 'xgb_fukusho_model.pkl'),
             True,
             os.path.join(data_dir, 'xgb_feature_cols.json'),
-        ),
-        'ranking_pairwise': (
-            os.path.join(data_dir, 'xgb_ranking_pairwise.pkl'),
-            False,
-            os.path.join(data_dir, 'xgb_ranking_feature_cols.json'),
         ),
         'ranking_ndcg': (
             os.path.join(data_dir, 'xgb_ranking_ndcg.pkl'),

@@ -1,5 +1,5 @@
 """
-3モデル比較フレームワーク（複勝 vs pairwise vs ndcg）
+2モデル比較フレームワーク（複勝 vs ndcg）
 
 horse_features.csv を使って Val 期間の各レースを評価し、
 ROI・的中率・Calibration（ECE）を券種別に比較する。
@@ -69,12 +69,6 @@ def _load_models(base_dir):
             'is_logistic': True,
             'cols_path': os.path.join(data_dir, 'xgb_feature_cols.json'),
             'temp_key':  'fukusho',
-        },
-        'B1_pairwise': {
-            'path':      os.path.join(data_dir, 'xgb_ranking_pairwise.pkl'),
-            'is_logistic': False,
-            'cols_path': os.path.join(data_dir, 'xgb_ranking_feature_cols.json'),
-            'temp_key':  'ranking_pairwise',
         },
         'B2_ndcg': {
             'path':      os.path.join(data_dir, 'xgb_ranking_ndcg.pkl'),

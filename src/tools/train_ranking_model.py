@@ -1,13 +1,12 @@
 """
-ランキングモデル学習（rank:pairwise / rank:ndcg）
+ランキングモデル学習（rank:ndcg）
 
 horse_features.csv の同じ特徴量を使い、教師を着順(全体)に変更。
 複勝モデル(train_xgb.py)と比較するための対抗モデルを学習する。
 
 使い方（Colab）:
     from src.tools.train_ranking_model import train_ranking_model
-    train_ranking_model(BASE_DIR, objective='rank:pairwise', model_suffix='pairwise')
-    train_ranking_model(BASE_DIR, objective='rank:ndcg',    model_suffix='ndcg')
+    train_ranking_model(BASE_DIR, objective='rank:ndcg', model_suffix='ndcg')
 """
 
 import os
@@ -190,5 +189,4 @@ def train_ranking_model(base_dir,
 if __name__ == '__main__':
     import sys
     base = sys.argv[1] if len(sys.argv) > 1 else '/content/drive/MyDrive/keiba_ai'
-    train_ranking_model(base, objective='rank:pairwise', model_suffix='pairwise')
-    train_ranking_model(base, objective='rank:ndcg',    model_suffix='ndcg')
+    train_ranking_model(base, objective='rank:ndcg', model_suffix='ndcg')

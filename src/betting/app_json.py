@@ -82,7 +82,7 @@ def _assign_marks(scored, by_odds):
     return marks
 
 
-def _build_horses_list(scored, top1, by_odds, value_gap_map=None, odds_lookup=None):
+def _build_horses_list(scored, top1, by_odds, odds_lookup=None):
     """アプリ表示用の馬リストを生成する（馬番順）。
 
     本命はAI確率1位の馬。マークは _assign_marks で決定。
