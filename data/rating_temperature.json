@@ -4,10 +4,6 @@
       "T": 0.7,
       "ece": 0.0109
     },
-    "ranking_pairwise": {
-      "T": 5.0,
-      "ece": 0.002
-    },
     "ranking_ndcg": {
       "T": 0.5,
       "ece": 0.0115

@@ -70,7 +70,7 @@ def build_optimal_bets(probs, odds_map, horses, race):
 
     Parameters
     ----------
-    probs    : build_dual_probs の出力（win/place/quinella/trio の確率）
+    probs    : シミュレーション確率（win/place/quinella/trio の確率）
                {bet_type: {key: float}}
     odds_map : 推定配当 or 実オッズ（estimate_payouts_from_win_odds と同じ構造）
                {bet_type: {key: float}}
@@ -311,21 +311,16 @@ def determine_axis_structure(probs, horses):
 # ── タスク4: make_bets_v2（Gumbel確率ベース） ───────────────────────────────
 
 def make_bets_v2(horses, race, base_dir, market_odds_map=None,
-                 feat_df=None, n_sims=20000):
+                 n_sims=20000, **_kwargs):
     """
-    Gumbel確率ベースの新しい買い目生成。
-
-    既存の make_bets() とは独立したパス。段階移行用。
+    Gumbel確率ベースの買い目生成。
 
     Parameters
     ----------
     horses         : calc_all() の出力リスト（horse_num / rating / win_odds 必須）
     race           : レース辞書
-    base_dir       : プロジェクトルート（dual_model 用）
+    base_dir       : プロジェクトルート
     market_odds_map: {race_id: {horse_num: {'tansho', 'fukusho'}}} または None
-    feat_df        : XGB特徴量 DataFrame（horse_features.csv 行形式）
-                     渡すと dual_model（B2_ndcg で単勝）が有効になる
-                     None のとき horses['rating']（ルールベース）で単一シミュレーション
     n_sims         : Gumbelシミュレーション回数
 
     Returns
@@ -333,29 +328,20 @@ def make_bets_v2(horses, race, base_dir, market_odds_map=None,
     bets     : build_optimal_bets の出力
     probs    : シミュレーション確率 dict
     odds_map : 使用したオッズ dict
-    meta     : {'dual': bool, 'b2_available': bool, 'T_A', 'T_B2'}
+    meta     : dict
     """
     from src.betting.race_simulator import simulate_race, calc_ticket_probabilities
     from src.betting.payout_estimator import estimate_payouts_from_win_odds
 
     horse_nums = [h.get('horse_num') or h.get('num') for h in horses]
-    meta = {'dual': False, 'b2_available': False, 'T_A': None, 'T_B2': None}
+    meta = {}
 
     # ── シミュレーション ──────────────────────────────────────────────────────
-    if feat_df is not None:
-        from src.betting.dual_model import build_dual_probs
-        probs, dm_meta = build_dual_probs(feat_df, horse_nums, base_dir, n_sims)
-        meta.update({'dual': True,
-                     'b2_available': dm_meta['b2_available'],
-                     'T_A': dm_meta['T_A'],
-                     'T_B2': dm_meta['T_B2']})
-    else:
-        # horses['rating'] = XGBマージン。T=1のままだと過信するため温度で割る
-        T = _load_gumbel_rating_temperature(base_dir)
-        ratings = [h.get('rating', 0.0) / T for h in horses]
-        orders  = simulate_race(ratings, n_sims=n_sims)
-        probs   = calc_ticket_probabilities(orders, horse_nums)
-        meta['T_gumbel'] = T
+    T = _load_gumbel_rating_temperature(base_dir)
+    ratings = [h.get('rating', 0.0) / T for h in horses]
+    orders  = simulate_race(ratings, n_sims=n_sims)
+    probs   = calc_ticket_probabilities(orders, horse_nums)
+    meta['T_gumbel'] = T
 
     # ── オッズ取得 ──────────────────────────────────────────────────────────
     race_id = race.get('id', '')
