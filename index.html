@@ -243,14 +243,16 @@ let D = null;
 let venue = null;
 const opened = {};
 const oddsCooldown = {};
-async function loadData() {
+async function loadData(preferRaw) {
   document.getElementById('race-list').innerHTML = '<div class="loading"><div class="loading-spin">🏇</div><div>予想データを読み込み中...</div></div>';
   if (!DATA_URL) { document.getElementById('hdate').textContent='未設定'; return; }
-  const bustUrl = DATA_URL + '?t=' + Date.now();
+  const primary   = preferRaw ? DATA_URL_FALLBACK : DATA_URL;
+  const secondary = preferRaw ? DATA_URL : DATA_URL_FALLBACK;
+  const bustUrl = primary + '?t=' + Date.now();
   try {
     let res = await fetch(bustUrl, { cache: 'no-store' });
     if (!res.ok) {
-      res = await fetch(DATA_URL_FALLBACK + '?t=' + Date.now(), { cache: 'no-store' });
+      res = await fetch(secondary + '?t=' + Date.now(), { cache: 'no-store' });
     }
     if (!res.ok) throw new Error('HTTP ' + res.status);
     D = await res.json();
@@ -323,8 +325,9 @@ const STATUS_URL_FALLBACK = 'https://raw.githubusercontent.com/hanagenuku/keiba_
 
 async function _getLatestTimestamp() {
   try {
-    let res = await fetch(DATA_URL + '?t=' + Date.now(), { cache: 'no-store' });
-    if (!res.ok) res = await fetch(DATA_URL_FALLBACK + '?t=' + Date.now(), { cache: 'no-store' });
+    // raw.githubusercontent.com はCDNキャッシュが短いのでポーリング時はこちらを優先
+    let res = await fetch(DATA_URL_FALLBACK + '?t=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) res = await fetch(DATA_URL + '?t=' + Date.now(), { cache: 'no-store' });
     if (!res.ok) return null;
     const j = await res.json();
     return j.generated_at || j.date || null;
@@ -333,8 +336,9 @@ async function _getLatestTimestamp() {
 
 async function _getWorkflowStatus(startTime) {
   try {
-    let res = await fetch(STATUS_URL + '?t=' + Date.now(), { cache: 'no-store' });
-    if (!res.ok) res = await fetch(STATUS_URL_FALLBACK + '?t=' + Date.now(), { cache: 'no-store' });
+    // raw.githubusercontent.com はCDNキャッシュが短いのでポーリング時はこちらを優先
+    let res = await fetch(STATUS_URL_FALLBACK + '?t=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) res = await fetch(STATUS_URL + '?t=' + Date.now(), { cache: 'no-store' });
     if (!res.ok) return null;
     const j = await res.json();
     // 今回のトリガー後に書かれたステータスのみ有効
@@ -384,7 +388,7 @@ function _startPolling(btn, origText, baselineTs, startTime = Date.now()) {
 
       if (wfStatus === 'success' || (ts && ts !== baselineTs)) {
         _stopPolling(btn, origText);
-        await loadData();
+        await loadData(true);
         return;
       }
     }
