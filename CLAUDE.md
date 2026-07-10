@@ -90,7 +90,53 @@ print('done')
 | `src/tools/tune_weights.py` | 重みチューニング。Phase 2-3 の新キー(rl/maturity/rotation)対応済み |
 | `src/utils/db.py` | save_history_db。Phase 1 スキーマ拡張済み |
 
+## 市場ベースラインKPI（2026-07-10 導入）
+
+### 概要
+AIモデルと市場（オッズ）の予測精度を log-loss で比較する唯一のKPI。
+`generate_stats.py` が毎週のワークフロー実行時に自動算出し、stats.json に出力。
+
+### 計算方法
+- AI確率: `win_prob`（softmax出力、レース内合計1）
+- 市場確率: `1/tansho_odds` をレース内で正規化（合計1）
+- 正解: `actual_place == 1`
+- log-loss: `-mean( y*log(p) + (1-y)*log(1-p) )`
+- **delta = AI log-loss - 市場 log-loss**（負ならAI優位）
+
+### 出力先
+- `stats.json` の `model_kpi` セクション（全体 + 日別ブレークダウン）
+- `data/kpi_weekly.json`（累積週次トレンド）
+
+### 判定基準
+| delta | verdict | 意味 |
+|-------|---------|------|
+| < -0.001 | AI優位 | AIの予測が市場より正確 |
+| > 0.001 | 市場優位 | 市場の予測がAIより正確 |
+| それ以外 | 同等 | 差なし |
+
+### 目標
+delta を負にする（AI < 市場）ことが全ての改善の指標。
+delta が正の間は、AIが市場に劣っている＝馬券で長期プラスにならない。
+
+---
+
 ## セッション履歴
+
+### 2026-07-10：大掃除完了 + 市場ベースラインKPI導入
+
+#### Phase A: 大掃除（PR #46 マージ済み）
+- pairwise モデル完全削除（rating_calibration/train_ranking_model/compare_models/.gitattributes）
+- value_gap 計算ロジック撤去（ev_filter.py、常時0.0を返す後方互換）
+- dual_model 凍結（bet_optimizer.py の feat_df パスを削除、dual_model.py は Colab 用に残存）
+
+#### Phase B: 市場ベースラインKPI（本PR）
+- `scripts/generate_stats.py` に `calc_model_kpi()` 追加
+  - race_predictions の win_prob（AI）と tansho_odds（市場）から log-loss を算出
+  - stats.json に `model_kpi` セクションを出力
+- `_save_kpi_weekly()` で `data/kpi_weekly.json` に累積追記
+- `tests/test_model_kpi.py` 新規10テスト
+
+---
 
 ### 2026-05-25：DESIGN.md 全Phase実装（Phase 0〜3 完了）
 

@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """keiba.db / history.db から stats.json を生成してアプリ向けに公開する"""
 import json
+import math
 import os
 import sqlite3
 import sys
+from collections import defaultdict
 from datetime import datetime
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -128,6 +130,136 @@ def _calc_upset_patterns(shadows):
         'by_class':     dim_list('class'),
         'blind_spots':  blind_spots,
     }
+
+
+def calc_model_kpi(conn):
+    """AI vs 市場の log-loss を race_predictions から算出する。
+
+    レースごとに:
+      - AI確率 = win_prob（softmax出力、合計1）
+      - 市場確率 = (1/tansho_odds) を同一レース内で正規化（合計1）
+      - 正解 = actual_place == 1
+    log-loss = -mean( y*log(p) + (1-y)*log(1-p) )
+
+    Returns dict with overall + weekly breakdown, or None if data insufficient.
+    """
+    EPS = 1e-7
+
+    rows = conn.execute('''
+        SELECT date, race_id, horse_num, win_prob, tansho_odds, actual_place
+        FROM race_predictions
+        WHERE actual_place IS NOT NULL
+          AND win_prob IS NOT NULL AND win_prob > 0
+          AND tansho_odds IS NOT NULL AND tansho_odds > 0
+    ''').fetchall()
+
+    if not rows:
+        return None
+
+    races = defaultdict(list)
+    for r in rows:
+        races[r['race_id']].append(r)
+
+    # 不完全なレース（馬が1頭しかない等）を除外
+    races = {k: v for k, v in races.items() if len(v) >= 2}
+    if not races:
+        return None
+
+    ai_losses = []
+    mkt_losses = []
+    weekly_data = defaultdict(lambda: {'ai_sum': 0.0, 'mkt_sum': 0.0, 'n': 0,
+                                       'date': None, 'races': 0})
+
+    for race_id, horses in races.items():
+        raw_mkt = [1.0 / h['tansho_odds'] for h in horses]
+        mkt_total = sum(raw_mkt)
+        if mkt_total <= 0:
+            continue
+
+        mkt_probs = [p / mkt_total for p in raw_mkt]
+        date = horses[0]['date']
+        week = date[:10] if date else 'unknown'
+
+        for i, h in enumerate(horses):
+            y = 1.0 if h['actual_place'] == 1 else 0.0
+            ai_p = max(min(h['win_prob'], 1.0 - EPS), EPS)
+            mkt_p = max(min(mkt_probs[i], 1.0 - EPS), EPS)
+
+            ai_ll = -(y * math.log(ai_p) + (1 - y) * math.log(1 - ai_p))
+            mkt_ll = -(y * math.log(mkt_p) + (1 - y) * math.log(1 - mkt_p))
+
+            ai_losses.append(ai_ll)
+            mkt_losses.append(mkt_ll)
+
+            wd = weekly_data[week]
+            wd['ai_sum'] += ai_ll
+            wd['mkt_sum'] += mkt_ll
+            wd['n'] += 1
+            wd['date'] = date
+
+        weekly_data[week]['races'] += 1
+
+    n_total = len(ai_losses)
+    if n_total == 0:
+        return None
+
+    ai_avg = sum(ai_losses) / n_total
+    mkt_avg = sum(mkt_losses) / n_total
+    delta = ai_avg - mkt_avg
+
+    weekly_list = []
+    for week in sorted(weekly_data.keys()):
+        wd = weekly_data[week]
+        if wd['n'] == 0:
+            continue
+        w_ai = wd['ai_sum'] / wd['n']
+        w_mkt = wd['mkt_sum'] / wd['n']
+        weekly_list.append({
+            'date': week,
+            'races': wd['races'],
+            'horses': wd['n'],
+            'ai_logloss': round(w_ai, 4),
+            'mkt_logloss': round(w_mkt, 4),
+            'delta': round(w_ai - w_mkt, 4),
+        })
+
+    return {
+        'total_races': len(races),
+        'total_horses': n_total,
+        'ai_logloss': round(ai_avg, 4),
+        'mkt_logloss': round(mkt_avg, 4),
+        'delta': round(delta, 4),
+        'verdict': 'AI優位' if delta < -0.001 else ('市場優位' if delta > 0.001 else '同等'),
+        'weekly': weekly_list,
+    }
+
+
+def _save_kpi_weekly(kpi, base_dir):
+    """kpi_weekly.json に累積追記する（週ごとの最新値を上書き）。"""
+    path = os.path.join(base_dir, 'data', 'kpi_weekly.json')
+    existing = []
+    if os.path.exists(path):
+        try:
+            with open(path, encoding='utf-8') as f:
+                existing = json.load(f)
+        except Exception:
+            existing = []
+
+    existing_dates = {e['date'] for e in existing}
+    for w in kpi.get('weekly', []):
+        if w['date'] not in existing_dates:
+            existing.append(w)
+            existing_dates.add(w['date'])
+        else:
+            for i, e in enumerate(existing):
+                if e['date'] == w['date']:
+                    existing[i] = w
+                    break
+
+    existing.sort(key=lambda x: x['date'])
+
+    with open(path, 'w', encoding='utf-8') as f:
+        json.dump(existing, f, ensure_ascii=False, indent=2)
 
 
 def generate_stats(base_dir=None):
@@ -304,6 +436,12 @@ def generate_stats(base_dir=None):
         except Exception:
             pass
     stats['results_status'] = rs
+
+    # ── モデルKPI: AI vs 市場 log-loss ────────────────────────────────────
+    kpi = calc_model_kpi(conn)
+    if kpi:
+        stats['model_kpi'] = kpi
+        _save_kpi_weekly(kpi, base_dir)
 
     stats['generated_at'] = datetime.now().strftime('%Y-%m-%d %H:%M')
     conn.close()
