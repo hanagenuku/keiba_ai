@@ -129,7 +129,7 @@ delta が正の間は、AIが市場に劣っている＝馬券で長期プラス
 - value_gap 計算ロジック撤去（ev_filter.py、常時0.0を返す後方互換）
 - dual_model 凍結（bet_optimizer.py の feat_df パスを削除、dual_model.py は Colab 用に残存）
 
-#### Phase B: 市場ベースラインKPI（本PR）
+#### Phase B: 市場ベースラインKPI（PR #47 マージ済み）
 - `scripts/generate_stats.py` に `calc_model_kpi()` 追加
   - race_predictions の win_prob（AI）と tansho_odds（市場）から log-loss を算出
   - stats.json に `model_kpi` セクションを出力
