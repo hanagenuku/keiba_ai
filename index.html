@@ -492,6 +492,7 @@ async function fetchFreshOdds(raceKey, btn) {
     if (!race._morning_bets) {
       race._morning_bets = JSON.parse(JSON.stringify(race.bets || []));
       race._morning_ev = {};
+      race._morning_rec = race.rec;
       for (const h of (race.horses || [])) {
         race._morning_ev[h.n] = h.ev;
         h._morning_odds = h.odds || null;
@@ -506,6 +507,7 @@ async function fetchFreshOdds(raceKey, btn) {
     }
 
     updateOddsAndEV(race, data.odds || {});
+    updateRecFlag(race);
     const rawBets = recalcBets(race);
     race._change_type = classifyChange(race._morning_bets, rawBets);
 
@@ -544,10 +546,58 @@ function updateOddsAndEV(race, freshOdds) {
     h.ev = (h.odds && h.odds > 0 && h.tan_pct != null)
          ? Math.round((h.tan_pct / 100) * h.odds * 1000) / 1000
          : null;
+    // 人気急上昇検出: 朝オッズ→直前オッズの下落率
+    h._odds_surge = null;
+    if (h._morning_odds && h._morning_odds > 0 && h.odds && h.odds > 0) {
+      const dropRate = (h._morning_odds - h.odds) / h._morning_odds;
+      // 30%以上下落 かつ 3倍以上変動（1.0→0.9程度の微変動は除外）
+      if (dropRate >= 0.30 && (h._morning_odds - h.odds) >= 3.0) {
+        h._odds_surge = 'hot';
+      } else if (dropRate >= 0.20 && (h._morning_odds - h.odds) >= 2.0) {
+        h._odds_surge = 'warm';
+      }
+    }
   }
   const ranked = (race.horses || []).filter(h => h.odds != null && h.odds > 0);
   ranked.sort((a, b) => a.odds - b.odds);
   ranked.forEach((h, i) => { h.pop = i + 1; });
+}
+
+function updateRecFlag(race) {
+  // RL1のEVが直前オッズで大きく変動した場合に推奨フラグを更新
+  const horses = (race.horses || []).slice()
+    .filter(h => h.odds > 0)
+    .sort((a, b) => (a.rl_rank || 99) - (b.rl_rank || 99));
+  if (horses.length === 0) return;
+  const rl1 = horses[0];
+  const rl1Ev = rl1.ev || 0;
+  const rl1Odds = rl1.tansho_odds || rl1.odds || 0;
+  const wasRec = race._morning_rec != null ? race._morning_rec : race.rec;
+
+  // 推奨外し: RL1のオッズが1.5倍未満（ガチガチ本命＝妙味なし）
+  // または RL上位3頭全員のEVが0.8未満（買い目が全滅）
+  const rl3Evs = horses.slice(0, 3).map(h => h.ev || 0);
+  const allLowEv = rl3Evs.every(ev => ev < 0.8);
+  if (wasRec && (rl1Odds < 1.5 || allLowEv)) {
+    race.rec = false;
+    race._rec_reason = rl1Odds < 1.5
+      ? 'RL1が' + rl1Odds.toFixed(1) + '倍（妙味なし）'
+      : 'RL上位のEVが低下';
+    return;
+  }
+
+  // 推奨追加: 元々非推奨だが直前でRL1-3に妙味が出た
+  if (!wasRec) {
+    const hasValue = horses.slice(0, 3).some(h => {
+      const o = h.tansho_odds || h.odds || 0;
+      return (h.ev || 0) >= 1.2 && o >= 2.0 && o <= 30.0;
+    });
+    if (hasValue) {
+      race.rec = true;
+      race._rec_reason = '直前オッズでRL上位に妙味発生';
+      return;
+    }
+  }
 }
 
 function _synthKey(b) {
@@ -569,6 +619,8 @@ function recalcGumbelBets(race) {
   const hasOdds = horses.some(h => h.odds > 0 && h.tansho_odds > 0);
   if (!hasOdds) return null;
 
+  const WIN_MIN_ODDS = 2.0, WIN_MAX_ODDS = 30.0;
+
   const sorted = horses.slice()
     .filter(h => h.odds > 0)
     .sort((a, b) => (a.rl_rank || 99) - (b.rl_rank || 99));
@@ -576,30 +628,39 @@ function recalcGumbelBets(race) {
 
   const result = [];
 
-  // 単勝: RL1位, EV = cal_prob × tansho_odds
-  const top = sorted[0];
-  if (top.tansho_odds > 0) {
-    const prob = (top.cal_prob || top.tan_pct / 100);
-    const ev = Math.round(prob * top.tansho_odds * 100) / 100;
-    if (ev >= 0.8) {
-      result.push({
-        tag: 'tan', label: '単勝',
-        horse: '#' + top.n + ' ' + top.name,
-        est: top.tansho_odds.toFixed(1) + '倍',
-        ev: ev, prob: Math.round(prob * 1000) / 1000,
-        amt: '¥500', _key: 'tan_' + top.n
-      });
-    }
+  // 単勝: RL上位3頭からオッズ妙味(2〜30倍)のある馬を1点
+  const rlTop3 = sorted.slice(0, 3);
+  const winCands = rlTop3.filter(h => {
+    const o = h.tansho_odds || h.odds;
+    return o >= WIN_MIN_ODDS && o <= WIN_MAX_ODDS;
+  }).map(h => {
+    const prob = (h.cal_prob || h.tan_pct / 100);
+    const o = h.tansho_odds || h.odds;
+    return { h, prob, odds: o, ev: Math.round(prob * o * 100) / 100 };
+  }).filter(c => c.ev >= 1.0);
+  winCands.sort((a, b) => b.ev - a.ev);
+  if (winCands.length > 0) {
+    const c = winCands[0];
+    result.push({
+      tag: 'tan', label: '単勝',
+      horse: '#' + c.h.n + ' ' + c.h.name,
+      est: c.odds.toFixed(1) + '倍',
+      ev: c.ev, prob: Math.round(c.prob * 1000) / 1000,
+      amt: '¥500', _key: 'tan_' + c.h.n
+    });
   }
 
-  // 複勝: RL上位で EV >= 0.8
-  for (const h of sorted.slice(0, 3)) {
+  // 複勝: RL上位5頭からRL順で最大2点
+  const rlTop5 = sorted.slice(0, 5);
+  let placeCount = 0;
+  for (const h of rlTop5) {
+    if (placeCount >= 2) break;
     const fo = h.fukusho_odds || (h.tansho_odds ? Math.round(h.tansho_odds * 0.344 * 10) / 10 : 0);
     if (fo <= 0) continue;
     const prob = (h.fuku_pct || 0) / 100;
     if (prob <= 0) continue;
     const ev = Math.round(prob * fo * 100) / 100;
-    if (ev >= 0.8) {
+    if (ev >= 1.0) {
       result.push({
         tag: 'fuku', label: '複勝',
         horse: '#' + h.n + ' ' + h.name,
@@ -607,28 +668,43 @@ function recalcGumbelBets(race) {
         ev: ev, prob: Math.round(prob * 1000) / 1000,
         amt: '¥500', _key: 'fuku_' + h.n
       });
+      placeCount++;
     }
   }
 
-  // 馬連: RL1×2, EV = prob × estimated_odds
+  // 馬連: RL上位5頭の組み合わせからRL3位含むもの優先で最大5点
   if (sorted.length >= 2) {
-    const h1 = sorted[0], h2 = sorted[1];
-    const o1 = h1.tansho_odds || h1.odds, o2 = h2.tansho_odds || h2.odds;
-    if (o1 > 0 && o2 > 0) {
-      const qOdds = Math.round(Math.max(2.0, Math.pow(o1 * o2, 0.5) * 0.75) * 10) / 10;
-      const p1 = (h1.cal_prob || h1.tan_pct / 100);
-      const p2 = (h2.cal_prob || h2.tan_pct / 100);
-      const qProb = Math.round(p1 * p2 / Math.max(1e-9, 1 - p1) * 2 * 1000) / 1000;
-      const ev = Math.round(qProb * qOdds * 100) / 100;
-      if (ev >= 0.8) {
-        result.push({
-          tag: 'umaren', label: '馬連',
-          horse: '#' + Math.min(h1.n, h2.n) + '-#' + Math.max(h1.n, h2.n),
-          est: qOdds.toFixed(1) + '倍',
-          ev: ev, prob: qProb,
-          amt: '¥500', _key: 'umaren_' + [h1.n, h2.n].sort((a, b) => a - b).join('_')
-        });
+    const rlTop5Q = sorted.slice(0, Math.min(5, sorted.length));
+    const rl3Set = new Set(sorted.slice(0, 3).map(h => h.n));
+    const qCands = [];
+    for (let i = 0; i < rlTop5Q.length - 1; i++) {
+      for (let j = i + 1; j < rlTop5Q.length; j++) {
+        const h1 = rlTop5Q[i], h2 = rlTop5Q[j];
+        if (!rl3Set.has(h1.n) && !rl3Set.has(h2.n)) continue;
+        const o1 = h1.tansho_odds || h1.odds, o2 = h2.tansho_odds || h2.odds;
+        if (o1 <= 0 || o2 <= 0) continue;
+        const qOdds = Math.round(Math.max(2.0, Math.pow(o1 * o2, 0.5) * 0.75) * 10) / 10;
+        const p1 = (h1.cal_prob || h1.tan_pct / 100);
+        const p2 = (h2.cal_prob || h2.tan_pct / 100);
+        const qProb = Math.round(p1 * p2 / Math.max(1e-9, 1 - p1) * 2 * 1000) / 1000;
+        const ev = Math.round(qProb * qOdds * 100) / 100;
+        if (ev >= 1.0) {
+          qCands.push({
+            h1, h2, odds: qOdds, prob: qProb, ev,
+            rlSum: (h1.rl_rank || 99) + (h2.rl_rank || 99)
+          });
+        }
       }
+    }
+    qCands.sort((a, b) => a.rlSum - b.rlSum || b.ev - a.ev);
+    for (const c of qCands.slice(0, 5)) {
+      result.push({
+        tag: 'umaren', label: '馬連',
+        horse: '#' + Math.min(c.h1.n, c.h2.n) + '-#' + Math.max(c.h1.n, c.h2.n),
+        est: c.odds.toFixed(1) + '倍',
+        ev: c.ev, prob: c.prob,
+        amt: '¥500', _key: 'umaren_' + [c.h1.n, c.h2.n].sort((a, b) => a - b).join('_')
+      });
     }
   }
 
@@ -637,14 +713,12 @@ function recalcGumbelBets(race) {
     const MIN_FUKU_PCT = 8.0;
     const TRIO_MAX_PTS = 15;
 
-    // 複勝確率順でソート → 軸は複勝確率最上位
     const byFuku = horses.slice()
       .filter(h => h.odds > 0 && (h.fuku_pct || 0) > 0)
       .sort((a, b) => (b.fuku_pct || 0) - (a.fuku_pct || 0));
     if (byFuku.length < 3) { /* skip */ } else {
     const axis = byFuku[0];
 
-    // 相手候補: 複勝確率 >= 8% かつ EV基準（tansho_odds * cal_prob >= 0.5）
     const partners = byFuku.slice(1).filter(h => {
       if ((h.fuku_pct || 0) < MIN_FUKU_PCT) return false;
       const prob = (h.cal_prob || (h.tan_pct || 0) / 100);
@@ -682,7 +756,6 @@ function recalcGumbelBets(race) {
         const synOdds = Math.round(pts * 100 / selected.reduce((s, c) => s + 100 / (c.odds || 1), 0) * 10) / 10;
         const comboStrs = selected.map(c => c.nums.join('-'));
 
-        // 軸1頭流しなので formation
         const others = allNums.filter(n => n !== axis.n);
         result.push({
           tag: 'sanfuku', label: '三連複(' + pts + '点)',
@@ -977,7 +1050,19 @@ function render() {
     const k = venue+race.r;
     const isOpen = opened[k];
     const isRec = race.rec;
-    html += '<div class="rc'+(isRec?' rec':'')+'"><div class="rc-head" onclick="toggle(\''+k+'\')"><div class="rc-num">'+race.r+'</div><div class="rc-info"><div class="rc-name">'+race.name+'</div><div class="rc-meta">'+race.dist+'</div></div><div class="rc-right">'+(isRec?'<span class="conf">AI '+race.conf+'%</span><span class="rec-lbl">★推奨</span>':'')+'<span class="arr'+(isOpen?' open':'')+'">▼</span></div></div>';
+    // 推奨フラグ変更の表示
+    let recLabel = '';
+    if (isRec) {
+      recLabel = '<span class="conf">AI '+race.conf+'%</span><span class="rec-lbl">★推奨</span>';
+    }
+    if (race._morning_rec != null && race._morning_rec !== race.rec) {
+      if (!race.rec && race._morning_rec) {
+        recLabel = '<span style="font-size:9px;color:#c0392b;font-weight:700;background:rgba(192,57,43,0.1);padding:1px 6px;border-radius:3px">推奨取消</span>';
+      } else if (race.rec && !race._morning_rec) {
+        recLabel = '<span class="conf">AI '+race.conf+'%</span><span style="font-size:9px;color:#fff;font-weight:700;background:#27ae60;padding:1px 6px;border-radius:3px">NEW推奨</span>';
+      }
+    }
+    html += '<div class="rc'+(isRec?' rec':'')+'"><div class="rc-head" onclick="toggle(\''+k+'\')"><div class="rc-num">'+race.r+'</div><div class="rc-info"><div class="rc-name">'+race.name+'</div><div class="rc-meta">'+race.dist+'</div></div><div class="rc-right">'+recLabel+'<span class="arr'+(isOpen?' open':'')+'">▼</span></div></div>';
     if (race.honmei) {
       html += '<div class="hstrip" onclick="toggle(\''+k+'\')"><span class="hbadge">◎本命</span><span class="hname">#'+race.honmei.n+' '+race.honmei.name+'</span><span class="hodds">'+(race.honmei.odds||'-')+'倍 / '+(race.honmei.style||'-')+'</span></div>';
     }
@@ -992,6 +1077,29 @@ function render() {
           html += '<span style="font-size:11px;color:#666">'+race.bet_reason+'</span>';
         }
         html += '</div>';
+      }
+      // 直前オッズ変動サマリー（推奨変更・人気急上昇馬）
+      if (race._update_time) {
+        const surgeHorses = (race.horses || []).filter(h => h._odds_surge === 'hot');
+        const warmHorses = (race.horses || []).filter(h => h._odds_surge === 'warm');
+        if (surgeHorses.length > 0 || (race._morning_rec != null && race._morning_rec !== race.rec)) {
+          html += '<div style="padding:4px 0 8px;font-size:11px;border-left:3px solid #e74c3c;padding-left:8px;margin-bottom:4px">';
+          if (race._rec_reason) {
+            const rcColor = race.rec ? '#27ae60' : '#c0392b';
+            html += '<div style="color:'+rcColor+';font-weight:700">' + (race.rec ? '+ ' : '- ') + race._rec_reason + '</div>';
+          }
+          if (surgeHorses.length > 0) {
+            html += '<div style="color:#e74c3c;font-weight:600">人気急上昇: '
+              + surgeHorses.map(h => '#' + h.n + ' ' + h.name + '(' + (h._morning_odds||0).toFixed(1) + '→' + h.odds.toFixed(1) + ')').join(', ')
+              + '</div>';
+          }
+          if (warmHorses.length > 0) {
+            html += '<div style="color:#e67e22">上昇傾向: '
+              + warmHorses.map(h => '#' + h.n + '(' + (h._morning_odds||0).toFixed(1) + '→' + h.odds.toFixed(1) + ')').join(', ')
+              + '</div>';
+          }
+          html += '</div>';
+        }
       }
       html += '<table class="htbl"><tr><th style="width:20px">番</th><th class="col-name">馬名</th><th class="col-pop" style="width:22px">人</th><th class="col-odds" style="width:34px">ｵｯｽﾞ</th><th class="col-mk">特記</th><th class="col-rl" style="width:24px">RL</th><th style="width:32px">勝率</th><th style="width:32px">複勝</th><th class="col-val" style="width:32px">EV</th></tr>';
       for (const h of (race.horses||[])) {
@@ -1031,7 +1139,15 @@ function render() {
           }
         }
 
-        html += '<tr'+(isH?' class="hl"':'')+'><td>'+(isH?'◎':'')+h.n+'</td><td class="col-name">'+h.name+'</td><td class="col-pop">'+pop+'</td><td class="col-odds">'+odds+'</td><td>'+mkBadge(h.mark)+'</td><td class="col-rl">'+rl+'</td><td>'+tan+'</td><td class="'+(hi?'phi':'plo')+'">'+fuku+'</td><td class="'+valClass+'">'+valCell+'</td></tr>';
+        // 人気急上昇マーク
+        let surgeBadge = '';
+        if (h._odds_surge === 'hot') {
+          surgeBadge = '<span style="color:#e74c3c;font-size:8px;font-weight:800;background:rgba(231,76,60,0.12);border-radius:3px;padding:0 3px;margin-left:2px" title="朝→直前でオッズ大幅下落">急騰</span>';
+        } else if (h._odds_surge === 'warm') {
+          surgeBadge = '<span style="color:#e67e22;font-size:8px;font-weight:700;margin-left:2px" title="朝→直前でオッズ下落傾向">上昇</span>';
+        }
+
+        html += '<tr'+(isH?' class="hl"':'')+'><td>'+(isH?'◎':'')+h.n+'</td><td class="col-name">'+h.name+surgeBadge+'</td><td class="col-pop">'+pop+'</td><td class="col-odds">'+odds+'</td><td>'+mkBadge(h.mark)+'</td><td class="col-rl">'+rl+'</td><td>'+tan+'</td><td class="'+(hi?'phi':'plo')+'">'+fuku+'</td><td class="'+valClass+'">'+valCell+'</td></tr>';
       }
       html += '</table>';
       if (race.race_id) {
