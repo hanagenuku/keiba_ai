@@ -1,0 +1,42 @@
+[
+  {
+    "date": "2026-06-27",
+    "races": 32,
+    "horses": 388,
+    "ai_logloss": 0.2571,
+    "mkt_logloss": 0.1908,
+    "delta": 0.0663
+  },
+  {
+    "date": "2026-06-28",
+    "races": 32,
+    "horses": 380,
+    "ai_logloss": 0.3235,
+    "mkt_logloss": 0.2344,
+    "delta": 0.0891
+  },
+  {
+    "date": "2026-07-04",
+    "races": 34,
+    "horses": 417,
+    "ai_logloss": 0.28,
+    "mkt_logloss": 0.2424,
+    "delta": 0.0376
+  },
+  {
+    "date": "2026-07-05",
+    "races": 27,
+    "horses": 231,
+    "ai_logloss": 0.2788,
+    "mkt_logloss": 0.3305,
+    "delta": -0.0517
+  },
+  {
+    "date": "2026-07-11",
+    "races": 31,
+    "horses": 402,
+    "ai_logloss": 0.2296,
+    "mkt_logloss": 0.2277,
+    "delta": 0.0019
+  }
+]
