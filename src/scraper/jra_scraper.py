@@ -331,28 +331,6 @@ def fetch_races_on_date(sess, target_date, hist_db_path):
                 if found_delta is not None:
                     print(f'  R{r:02d}: suffix補正 {found_delta:+d} → {sx}')
 
-            # 近傍スキャンで見つからない場合は0x00〜0xFF全探索
-            if soup is None:
-                tried = set()
-                tried.add(int(sx, 16))
-                base_s = int(sx, 16)
-                for d in range(1, 31):
-                    tried.add((base_s + d) % 256)
-                    tried.add((base_s - d) % 256)
-                print(f'  R{r:02d}: 近傍スキャン失敗 → 全探索中...', end='', flush=True)
-                for s in range(256):
-                    if s in tried:
-                        continue
-                    sx_c = f'{s:02X}'
-                    _, soup_c = _try_fetch_shutuba(sess, base, r, date_str, sx_c)
-                    if soup_c is not None:
-                        soup = soup_c
-                        sx = sx_c
-                        print(f' 発見 suffix={sx}')
-                        break
-                else:
-                    print(' 未発見')
-
             if soup is None:
                 print(f'  R{r:02d}: suffix={sx} → パラメータエラー/ページなし')
                 continue
