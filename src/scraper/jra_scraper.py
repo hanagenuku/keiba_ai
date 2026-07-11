@@ -312,11 +312,11 @@ def fetch_races_on_date(sess, target_date, hist_db_path):
                         soup = soup2
                         sx = sx_simple
 
-            # 全レース共通：計算式が外れた場合に近傍±30をスキャン
+            # 全レース共通：計算式が外れた場合に近傍±60をスキャン
             if soup is None:
                 base_s = int(sx, 16)
                 found_delta = None
-                for delta in range(1, 31):
+                for delta in range(1, 61):
                     for sign, cand in [(+delta, (base_s + delta) % 256),
                                        (-delta, (base_s - delta) % 256)]:
                         sx_c = f'{cand:02X}'
@@ -330,28 +330,6 @@ def fetch_races_on_date(sess, target_date, hist_db_path):
                         break
                 if found_delta is not None:
                     print(f'  R{r:02d}: suffix補正 {found_delta:+d} → {sx}')
-
-            # 近傍スキャンで見つからない場合は0x00〜0xFF全探索
-            if soup is None:
-                tried = set()
-                tried.add(int(sx, 16))
-                base_s = int(sx, 16)
-                for d in range(1, 31):
-                    tried.add((base_s + d) % 256)
-                    tried.add((base_s - d) % 256)
-                print(f'  R{r:02d}: 近傍スキャン失敗 → 全探索中...', end='', flush=True)
-                for s in range(256):
-                    if s in tried:
-                        continue
-                    sx_c = f'{s:02X}'
-                    _, soup_c = _try_fetch_shutuba(sess, base, r, date_str, sx_c)
-                    if soup_c is not None:
-                        soup = soup_c
-                        sx = sx_c
-                        print(f' 発見 suffix={sx}')
-                        break
-                else:
-                    print(' 未発見')
 
             if soup is None:
                 print(f'  R{r:02d}: suffix={sx} → パラメータエラー/ページなし')
@@ -966,7 +944,8 @@ def fetch_results(sess, target_date, calendar=None):
 
             if soup is None:
                 base_s = int(sx, 16)
-                for delta in range(1, 31):
+                found_delta = None
+                for delta in range(1, 61):
                     for _sign, cand in [(+delta, (base_s + delta) % 256),
                                         (-delta, (base_s - delta) % 256)]:
                         sx_c = f'{cand:02X}'
@@ -974,31 +953,12 @@ def fetch_results(sess, target_date, calendar=None):
                         if soup_c is not None:
                             soup = soup_c
                             sx = sx_c
-                            print(f'  R{r:02d}: 結果suffix補正 → {sx}')
+                            found_delta = _sign
                             break
                     if soup is not None:
                         break
-
-            if soup is None:
-                tried = set()
-                tried.add(int(sx, 16))
-                base_s = int(sx, 16)
-                for d in range(1, 31):
-                    tried.add((base_s + d) % 256)
-                    tried.add((base_s - d) % 256)
-                print(f'  R{r:02d}: 結果suffix近傍失敗 → 全探索中...', end='', flush=True)
-                for s in range(256):
-                    if s in tried:
-                        continue
-                    sx_c = f'{s:02X}'
-                    soup_c = _try_fetch_result(sess, base_result, r, target_date, sx_c)
-                    if soup_c is not None:
-                        soup = soup_c
-                        sx = sx_c
-                        print(f' 発見 suffix={sx}')
-                        break
-                else:
-                    print(' 未発見')
+                if found_delta is not None:
+                    print(f'  R{r:02d}: 結果suffix補正 {found_delta:+d} → {sx}')
 
             if soup is None:
                 continue
