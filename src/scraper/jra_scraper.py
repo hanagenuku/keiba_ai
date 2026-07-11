@@ -102,6 +102,24 @@ def _try_fetch_shutuba(sess, base, r, date_str, sx):
     return resp, soup
 
 
+def _try_fetch_result(sess, base, r, date_str, sx):
+    """指定suffixで結果ページを取得。soup を返す。失敗時はNone。"""
+    cn = f'{base}{r:02d}{date_str}/{sx}'
+    try:
+        resp = sess.post(f'{JRA_BASE}/JRADB/accessD.html',
+                         data={'cname': cn, 'CNAME': cn},
+                         headers=HEADERS, timeout=15)
+        resp.encoding = 'shift_jis'
+    except Exception:
+        return None
+    if 'パラメータエラー' in resp.text:
+        return None
+    soup = BeautifulSoup(resp.text, 'lxml')
+    if not soup.find_all('table'):
+        return None
+    return soup
+
+
 # 単勝・複勝オッズページ(accessO.html)のCNAME prefix。
 # 出馬表は 'pw01dde01' だが、オッズページは 'pw151ouS3' を使用する（実機検証済み）。
 ODDS_PREFIX = 'pw151ouS3'
@@ -294,11 +312,11 @@ def fetch_races_on_date(sess, target_date, hist_db_path):
                         soup = soup2
                         sx = sx_simple
 
-            # 全レース共通：計算式が外れた場合に近傍±10をスキャン
+            # 全レース共通：計算式が外れた場合に近傍±60をスキャン
             if soup is None:
                 base_s = int(sx, 16)
                 found_delta = None
-                for delta in range(1, 11):
+                for delta in range(1, 61):
                     for sign, cand in [(+delta, (base_s + delta) % 256),
                                        (-delta, (base_s - delta) % 256)]:
                         sx_c = f'{cand:02X}'
@@ -914,14 +932,35 @@ def fetch_results(sess, target_date, calendar=None):
         print(f'✅ {r01:02X}')
         for r in range(1, 13):
             sx = calc_suffix(r01, r)
-            cn = f'{base_result}{r:02d}{target_date}/{sx}'
-            resp = sess.post(f'{JRA_BASE}/JRADB/accessD.html',
-                             data={'cname': cn, 'CNAME': cn}, timeout=15)
-            resp.encoding = 'shift_jis'
-            if 'パラメータエラー' in resp.text:
-                continue
-            soup = BeautifulSoup(resp.text, 'lxml')
-            if not soup.find_all('table'):
+            soup = _try_fetch_result(sess, base_result, r, target_date, sx)
+
+            if soup is None and r >= 10:
+                sx_simple = f'{(r01 + (r - 1) * 181) % 256:02X}'
+                if sx_simple != sx:
+                    soup2 = _try_fetch_result(sess, base_result, r, target_date, sx_simple)
+                    if soup2 is not None:
+                        soup = soup2
+                        sx = sx_simple
+
+            if soup is None:
+                base_s = int(sx, 16)
+                found_delta = None
+                for delta in range(1, 61):
+                    for _sign, cand in [(+delta, (base_s + delta) % 256),
+                                        (-delta, (base_s - delta) % 256)]:
+                        sx_c = f'{cand:02X}'
+                        soup_c = _try_fetch_result(sess, base_result, r, target_date, sx_c)
+                        if soup_c is not None:
+                            soup = soup_c
+                            sx = sx_c
+                            found_delta = _sign
+                            break
+                    if soup is not None:
+                        break
+                if found_delta is not None:
+                    print(f'  R{r:02d}: 結果suffix補正 {found_delta:+d} → {sx}')
+
+            if soup is None:
                 continue
             result = parse_result_soup(soup, rc, r, target_date, pc)
             if not result:
