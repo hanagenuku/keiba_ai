@@ -13,9 +13,11 @@ from src.models.calibration_xgb import load_xgb_calibrator
 # ── グローバルコンテキスト（init_engine()で設定） ─────────────────
 _XGB_FUKUSHO_MODEL  = None
 _XGB_FEATURE_COLS   = None
+_XGB_RESIDUAL       = False   # True なら残差学習モデル（base_margin を渡す）
 _CALIBRATOR         = None
 _XGB_CALIBRATOR     = None
 _PACE_MODEL         = None
+_JOCKEY_PACE_STATS  = {}    # jockey_name → {median_first3f_norm, escape_rate}
 _SPEED_INDEX_CALC   = None  # SpeedIndexCalculator
 _MEMBER_LEVEL_CACHE = {}    # race_id → float (前走メンバーレベルキャッシュ)
 _KEIBA_DB_PATH      = None  # race_predictions 参照用
@@ -49,7 +51,8 @@ def init_engine(base_dir,
                 horse_dist_dict=None, horse_course_dict=None,
                 horse_venue_dist_dict=None):
     """エンジンのグローバル変数を設定する。ノートブックのセル4で呼ぶ"""
-    global _XGB_FUKUSHO_MODEL, _XGB_FEATURE_COLS, _CALIBRATOR, _XGB_CALIBRATOR, _PACE_MODEL
+    global _XGB_FUKUSHO_MODEL, _XGB_FEATURE_COLS, _XGB_RESIDUAL, _CALIBRATOR, _XGB_CALIBRATOR, _PACE_MODEL
+    global _JOCKEY_PACE_STATS
     global _W, _horse_dist_dict, _horse_course_dict, _horse_venue_dist_dict, _post_zone_bias
     global _jockey_dict, _trainer_dict, _hist_db_path, _SPEED_INDEX_CALC, _MEMBER_LEVEL_CACHE
     global _KEIBA_DB_PATH, _BASE_DIR
@@ -79,12 +82,7 @@ def init_engine(base_dir,
         _MEMBER_LEVEL_CACHE = {}
         print(f'  ⚠ メンバーレベルキャッシュ失敗: {_e}')
 
-    if xgb_model is not None:
-        _XGB_FUKUSHO_MODEL = xgb_model
-    elif os.path.exists(f'{base_dir}/data/xgb_fukusho_model.pkl'):
-        with open(f'{base_dir}/data/xgb_fukusho_model.pkl', 'rb') as f:
-            _XGB_FUKUSHO_MODEL = pickle.load(f)
-
+    # feature_cols.json を先に読んで residual フラグを判定
     if xgb_feature_cols is not None:
         _XGB_FEATURE_COLS = xgb_feature_cols
     elif os.path.exists(f'{base_dir}/data/xgb_feature_cols.json'):
@@ -92,6 +90,20 @@ def init_engine(base_dir,
         with open(f'{base_dir}/data/xgb_feature_cols.json', encoding='utf-8') as f:
             info = json.load(f)
             _XGB_FEATURE_COLS = info['feature_cols']
+            _XGB_RESIDUAL = info.get('residual', False)
+            if _XGB_RESIDUAL:
+                print('  残差学習モデル検出: base_margin を推論時に適用します')
+
+    if xgb_model is not None:
+        _XGB_FUKUSHO_MODEL = xgb_model
+    elif os.path.exists(f'{base_dir}/data/xgb_fukusho_model.pkl'):
+        if _XGB_RESIDUAL:
+            import xgboost as _xgb_load
+            _XGB_FUKUSHO_MODEL = _xgb_load.Booster()
+            _XGB_FUKUSHO_MODEL.load_model(f'{base_dir}/data/xgb_fukusho_model.pkl')
+        else:
+            with open(f'{base_dir}/data/xgb_fukusho_model.pkl', 'rb') as f:
+                _XGB_FUKUSHO_MODEL = pickle.load(f)
 
     if calibrator is not None:
         _CALIBRATOR = calibrator
@@ -107,6 +119,12 @@ def init_engine(base_dir,
     elif os.path.exists(f'{base_dir}/data/pace_model.pkl'):
         with open(f'{base_dir}/data/pace_model.pkl', 'rb') as f:
             _PACE_MODEL = pickle.load(f)
+
+    jps_path = os.path.join(base_dir, 'data', 'jockey_pace_stats.json')
+    if os.path.exists(jps_path):
+        import json as _json_jps
+        with open(jps_path, encoding='utf-8') as f:
+            _JOCKEY_PACE_STATS = _json_jps.load(f)
 
     if weights is not None:
         _W = weights
@@ -889,29 +907,123 @@ VENUE_PACE_TENDENCY = {
 }
 
 
+def _build_pace_features_for_inference(race):
+    """推論時に19特徴量のペースモデル入力を構築する。"""
+    horses = race.get('horses', [])
+    n = max(len(horses), 1)
+    esc = race.get('escape_count', 0)
+    front = race.get('front_count', 0)
+    distance = int(race.get('distance', 1600))
+    surface = race.get('surface', '芝')
+    surface_num = 1 if surface == '芝' else 0
+    racecourse = race.get('racecourse', '')
+    condition = race.get('track_condition', '良')
+
+    agari_vals = [h.get('agari3f') for h in horses if h.get('agari3f')]
+    avg_agari = sum(agari_vals) / len(agari_vals) if agari_vals else 36.0
+    std_agari = (sum((x - avg_agari) ** 2 for x in agari_vals) / len(agari_vals)) ** 0.5 if len(agari_vals) > 1 else 1.5
+    front_density = (esc + front) / n
+
+    escape_positions = []
+    escape_pop = []
+    for h in horses:
+        rs = h.get('running_style', '')
+        if rs in ('逃げ', 'escape'):
+            pos = int(h.get('horse_num') or h.get('post_position') or 8)
+            escape_positions.append(pos)
+            pop = h.get('popularity') or 0
+            if 0 < pop < 99:
+                escape_pop.append(pop)
+
+    escape_avg_pos = sum(escape_positions) / len(escape_positions) if escape_positions else n / 2
+    escape_outer_ratio = sum(1 for p in escape_positions if p > n * 0.6) / len(escape_positions) if escape_positions else 0.0
+    escape_avg_pop = sum(escape_pop) / len(escape_pop) if escape_pop else 8.0
+
+    course_key = f'{racecourse}_{surface}'
+    profile = {}
+    cp = _COURSE_PROFILES or load_course_profiles()
+    if cp:
+        courses = cp.get('courses', cp) if isinstance(cp, dict) else {}
+        profile = courses.get(course_key, {})
+    straight_length = profile.get('straight_length', 350)
+    has_uphill = 1 if profile.get('has_uphill', False) else 0
+    straight_class = {'very_long': 4, 'long': 3, 'medium': 2, 'short': 1}.get(
+        profile.get('straight_class', 'medium'), 2)
+    if distance <= 1400:
+        n_corners = 2 if straight_length < 500 else 1
+    elif distance <= 2000:
+        n_corners = 3 if straight_length < 400 else 2
+    else:
+        n_corners = 4
+
+    jockey_pace_vals = []
+    jockey_escape_pct_sum = 0.0
+    for h in horses:
+        jn = (h.get('jockey', '') or '').replace(' ', '').replace('　', '')
+        js = _JOCKEY_PACE_STATS.get(jn, {})
+        jockey_escape_pct_sum += js.get('escape_rate', 0.05)
+        rs = h.get('running_style', '')
+        if rs in ('逃げ', 'escape') and 'median_first3f_norm' in js:
+            jockey_pace_vals.append(js['median_first3f_norm'])
+    jockey_pace_median = sum(jockey_pace_vals) / len(jockey_pace_vals) if jockey_pace_vals else 35.5
+    jockey_escape_pct = jockey_escape_pct_sum / max(n, 1)
+
+    condition_num = {'良': 0, '稍重': 1, '重': 2, '不良': 3}.get(condition, 0)
+
+    return {
+        'escape_count': esc,
+        'front_count': front,
+        'front_density': round(front_density, 3),
+        'avg_agari3f': round(avg_agari, 2),
+        'std_agari3f': round(std_agari, 2),
+        'runner_count': n,
+        'distance': distance,
+        'surface_num': surface_num,
+        'escape_avg_pos': round(escape_avg_pos, 2),
+        'escape_outer_ratio': round(escape_outer_ratio, 3),
+        'escape_avg_pop': round(escape_avg_pop, 2),
+        'straight_length': straight_length,
+        'straight_class': straight_class,
+        'has_uphill': has_uphill,
+        'n_corners': n_corners,
+        'jockey_pace_median': round(jockey_pace_median, 2),
+        'jockey_escape_pct': round(jockey_escape_pct, 4),
+        'condition_num': condition_num,
+    }
+
+
 def calc_pace_distribution(race):
     horses = race.get('horses', [])
     n = max(len(horses), 1)
     esc   = race.get('escape_count', 0)
     front = race.get('front_count', 0)
     if _PACE_MODEL is not None:
-        front_density = (esc + front) / n
-        agari_vals = [h.get('agari3f') for h in horses if h.get('agari3f')]
-        avg_agari = sum(agari_vals) / len(agari_vals) if agari_vals else 36.0
-        std_agari = (sum((x - avg_agari) ** 2 for x in agari_vals) / len(agari_vals)) ** 0.5 if len(agari_vals) > 1 else 1.5
-        surface_num = 1 if race.get('surface') == '芝' else 0
-        distance = int(race.get('distance', 1600))
+        feat_cols = getattr(_PACE_MODEL, '_pace_feature_cols', None)
+        if feat_cols and len(feat_cols) > 8:
+            feats = _build_pace_features_for_inference(race)
+        else:
+            front_density = (esc + front) / n
+            agari_vals = [h.get('agari3f') for h in horses if h.get('agari3f')]
+            avg_agari = sum(agari_vals) / len(agari_vals) if agari_vals else 36.0
+            std_agari = (sum((x - avg_agari) ** 2 for x in agari_vals) / len(agari_vals)) ** 0.5 if len(agari_vals) > 1 else 1.5
+            feat_cols = ['escape_count', 'front_count', 'front_density',
+                         'avg_agari3f', 'std_agari3f', 'runner_count',
+                         'distance', 'surface_num']
+            feats = {
+                'escape_count': esc, 'front_count': front,
+                'front_density': front_density,
+                'avg_agari3f': avg_agari, 'std_agari3f': std_agari,
+                'runner_count': n,
+                'distance': int(race.get('distance', 1600)),
+                'surface_num': 1 if race.get('surface') == '芝' else 0,
+            }
         import pandas as _pd
-        X_df = _pd.DataFrame([[
-            esc, front, front_density,
-            avg_agari, std_agari, n,
-            distance, surface_num,
-        ]], columns=[
-            'front_count', 'senkou_count', 'front_density',
-            'avg_agari3f', 'std_agari3f', 'runner_count',
-            'distance', 'surface_num',
-        ])
+        X_df = _pd.DataFrame([{c: feats.get(c, 0) for c in feat_cols}])[feat_cols]
         proba = _PACE_MODEL.predict_proba(X_df)[0]
+        le = getattr(_PACE_MODEL, '_pace_label_encoder', None)
+        if le is not None:
+            classes = list(le.classes_)
+            return {cls: round(float(proba[i]), 3) for i, cls in enumerate(classes)}
         return {
             'slow': round(float(proba[0]), 3),
             'mid':  round(float(proba[1]), 3),
@@ -2137,6 +2249,8 @@ def get_xgb_rating(xfeats_list, model=None, feature_cols=None):
     rows = [{c: xf.get(c, 5.0) for c in fc} for xf in xfeats_list]
     X    = _pd.DataFrame(rows)[fc].fillna(5.0)
     dmat = _xgb.DMatrix(X, feature_names=list(fc))
+    if _XGB_RESIDUAL:
+        return [float(v) for v in m.predict(dmat)]
     return [float(v) for v in m.get_booster().predict(dmat, output_margin=True)]
 
 
@@ -2207,11 +2321,27 @@ def calc_all(race, bias_data=None):
                 import xgboost as _xgb_lib
                 xrow   = {c: xfeats.get(c, 5.0) for c in _XGB_FEATURE_COLS}
                 X_pred = _pd_xgb.DataFrame([xrow])[_XGB_FEATURE_COLS].fillna(5.0)
-                prob   = float(_XGB_FUKUSHO_MODEL.predict_proba(X_pred)[0][1])
-                raw_prob = prob
-                # 能力値（Phase1）: XGB生マージン（sigmoid前のlog-odds）
-                _dmat  = _xgb_lib.DMatrix(X_pred, feature_names=list(_XGB_FEATURE_COLS))
-                rating = float(_XGB_FUKUSHO_MODEL.get_booster().predict(_dmat, output_margin=True)[0])
+
+                if _XGB_RESIDUAL:
+                    # 残差学習: base_margin を設定してから予測
+                    _dmat  = _xgb_lib.DMatrix(X_pred, feature_names=list(_XGB_FEATURE_COLS))
+                    _pop   = h.get('popularity') or len(race.get('horses', [])) // 2
+                    _n_h   = max(len(race.get('horses', [])), 2)
+                    _harm  = math.log(_n_h) + 0.5772
+                    _p_mkt = max(min((1.0 / max(_pop, 1)) / _harm, 0.999), 0.001)
+                    _bm    = math.log(_p_mkt / (1 - _p_mkt))
+                    import numpy as _np_bm
+                    _dmat.set_base_margin(_np_bm.array([_bm]))
+                    raw_margin = float(_XGB_FUKUSHO_MODEL.predict(_dmat)[0])
+                    prob   = 1 / (1 + math.exp(-raw_margin))
+                    raw_prob = prob
+                    rating = raw_margin
+                else:
+                    prob   = float(_XGB_FUKUSHO_MODEL.predict_proba(X_pred)[0][1])
+                    raw_prob = prob
+                    # 能力値（Phase1）: XGB生マージン（sigmoid前のlog-odds）
+                    _dmat  = _xgb_lib.DMatrix(X_pred, feature_names=list(_XGB_FEATURE_COLS))
+                    rating = float(_XGB_FUKUSHO_MODEL.get_booster().predict(_dmat, output_margin=True)[0])
                 # XGB専用キャリブレーターを適用（複勝確率表示用）
                 if _XGB_CALIBRATOR is not None:
                     import numpy as _np_cal
