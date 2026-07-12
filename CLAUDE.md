@@ -59,6 +59,7 @@ files = [
     'src/tools/rescrape_history.py', 'src/tools/build_training_data.py',
     'src/tools/train_xgb.py', 'src/tools/calibrate_xgb.py',
     'src/tools/generate_style_advantage.py',
+    'src/tools/train_pace_model.py',
     'src/features/engine.py', 'src/features/speed_index.py',
     'src/utils/config.py', 'src/utils/db.py', 'src/utils/model_registry.py',
     'src/scraper/parser.py', 'src/scraper/jra_scraper.py',
@@ -121,6 +122,54 @@ delta が正の間は、AIが市場に劣っている＝馬券で長期プラス
 ---
 
 ## セッション履歴
+
+### 2026-07-12：展開予測モデル強化（19特徴量化）
+
+#### 概要
+従来の8特徴量ペース分類器を19特徴量に拡張。レース展開予想の精度向上を目指す。
+
+#### 新特徴量（11個追加）
+| カテゴリ | 特徴量 | 意味 |
+|----------|--------|------|
+| 枠順×脚質 | escape_avg_pos | 逃げ馬の平均馬番（内枠→ハナ取りやすい） |
+| 枠順×脚質 | escape_outer_ratio | 逃げ馬のうち外枠(>60%)にいる割合 |
+| ペース耐性 | escape_avg_pop | 逃げ馬の平均人気（人気=実力→ペース耐性高） |
+| コース特性 | straight_length | 直線長（course_profiles.json） |
+| コース特性 | straight_class | 直線分類(1-4) |
+| コース特性 | has_uphill | 坂の有無 |
+| コース特性 | n_corners | コーナー数（距離から推定） |
+| 騎手傾向 | jockey_pace_median | 逃げ騎手の正規化前半3F中央値 |
+| 騎手傾向 | jockey_escape_pct | 全騎手の平均逃げ率 |
+| 馬場 | condition_num | 馬場状態(良0/稍重1/重2/不良3) |
+
+#### 実装内容
+- `src/tools/train_pace_model.py` 新規作成
+  - `_classify_pace()`: first_3f→ペース3分類（距離正規化・表面別閾値）
+  - `_build_jockey_pace_stats()`: 騎手ごとの逃げ時ペースメイク統計
+  - `_build_features()`: 19特徴量構築
+  - `train_pace_model()`: XGBClassifier学習パイプライン
+  - 保存: `pace_model.pkl`（LabelEncoder添付）、`jockey_pace_stats.json`
+- `src/features/engine.py` 更新
+  - `_JOCKEY_PACE_STATS` グローバル追加、`init_engine()` で自動ロード
+  - `_build_pace_features_for_inference()` 新関数: 推論時に19特徴量を構築
+  - `calc_pace_distribution()`: 新モデル（`_pace_feature_cols`属性あり）なら19特徴量、旧モデルなら8特徴量で後方互換
+  - `_pace_label_encoder` からクラス順序を取得（ハードコード排除）
+- `tests/test_pace_model.py` 新規18テスト
+
+#### Colabでの再学習手順
+```python
+from src.tools.train_pace_model import train_pace_model
+result = train_pace_model(BASE_DIR)
+# → data/pace_model.pkl + data/jockey_pace_stats.json が生成
+# → 次回 init_engine() で自動ロード
+```
+
+#### 安全性
+- 旧モデル（8特徴量）は自動退避（pace_model_old.pkl）
+- 旧モデルフォーマットでも `calc_pace_distribution()` が後方互換で動作
+- `jockey_pace_stats.json` 未生成でもデフォルト値で推論可能
+
+---
 
 ### 2026-07-10：大掃除完了 + 市場ベースラインKPI導入
 
