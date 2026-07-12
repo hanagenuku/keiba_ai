@@ -13,6 +13,7 @@ from src.models.calibration_xgb import load_xgb_calibrator
 # ── グローバルコンテキスト（init_engine()で設定） ─────────────────
 _XGB_FUKUSHO_MODEL  = None
 _XGB_FEATURE_COLS   = None
+_XGB_RESIDUAL       = False   # True なら残差学習モデル（base_margin を渡す）
 _CALIBRATOR         = None
 _XGB_CALIBRATOR     = None
 _PACE_MODEL         = None
@@ -49,7 +50,7 @@ def init_engine(base_dir,
                 horse_dist_dict=None, horse_course_dict=None,
                 horse_venue_dist_dict=None):
     """エンジンのグローバル変数を設定する。ノートブックのセル4で呼ぶ"""
-    global _XGB_FUKUSHO_MODEL, _XGB_FEATURE_COLS, _CALIBRATOR, _XGB_CALIBRATOR, _PACE_MODEL
+    global _XGB_FUKUSHO_MODEL, _XGB_FEATURE_COLS, _XGB_RESIDUAL, _CALIBRATOR, _XGB_CALIBRATOR, _PACE_MODEL
     global _W, _horse_dist_dict, _horse_course_dict, _horse_venue_dist_dict, _post_zone_bias
     global _jockey_dict, _trainer_dict, _hist_db_path, _SPEED_INDEX_CALC, _MEMBER_LEVEL_CACHE
     global _KEIBA_DB_PATH, _BASE_DIR
@@ -79,12 +80,7 @@ def init_engine(base_dir,
         _MEMBER_LEVEL_CACHE = {}
         print(f'  ⚠ メンバーレベルキャッシュ失敗: {_e}')
 
-    if xgb_model is not None:
-        _XGB_FUKUSHO_MODEL = xgb_model
-    elif os.path.exists(f'{base_dir}/data/xgb_fukusho_model.pkl'):
-        with open(f'{base_dir}/data/xgb_fukusho_model.pkl', 'rb') as f:
-            _XGB_FUKUSHO_MODEL = pickle.load(f)
-
+    # feature_cols.json を先に読んで residual フラグを判定
     if xgb_feature_cols is not None:
         _XGB_FEATURE_COLS = xgb_feature_cols
     elif os.path.exists(f'{base_dir}/data/xgb_feature_cols.json'):
@@ -92,6 +88,20 @@ def init_engine(base_dir,
         with open(f'{base_dir}/data/xgb_feature_cols.json', encoding='utf-8') as f:
             info = json.load(f)
             _XGB_FEATURE_COLS = info['feature_cols']
+            _XGB_RESIDUAL = info.get('residual', False)
+            if _XGB_RESIDUAL:
+                print('  残差学習モデル検出: base_margin を推論時に適用します')
+
+    if xgb_model is not None:
+        _XGB_FUKUSHO_MODEL = xgb_model
+    elif os.path.exists(f'{base_dir}/data/xgb_fukusho_model.pkl'):
+        if _XGB_RESIDUAL:
+            import xgboost as _xgb_load
+            _XGB_FUKUSHO_MODEL = _xgb_load.Booster()
+            _XGB_FUKUSHO_MODEL.load_model(f'{base_dir}/data/xgb_fukusho_model.pkl')
+        else:
+            with open(f'{base_dir}/data/xgb_fukusho_model.pkl', 'rb') as f:
+                _XGB_FUKUSHO_MODEL = pickle.load(f)
 
     if calibrator is not None:
         _CALIBRATOR = calibrator
@@ -2137,6 +2147,8 @@ def get_xgb_rating(xfeats_list, model=None, feature_cols=None):
     rows = [{c: xf.get(c, 5.0) for c in fc} for xf in xfeats_list]
     X    = _pd.DataFrame(rows)[fc].fillna(5.0)
     dmat = _xgb.DMatrix(X, feature_names=list(fc))
+    if _XGB_RESIDUAL:
+        return [float(v) for v in m.predict(dmat)]
     return [float(v) for v in m.get_booster().predict(dmat, output_margin=True)]
 
 
@@ -2207,11 +2219,27 @@ def calc_all(race, bias_data=None):
                 import xgboost as _xgb_lib
                 xrow   = {c: xfeats.get(c, 5.0) for c in _XGB_FEATURE_COLS}
                 X_pred = _pd_xgb.DataFrame([xrow])[_XGB_FEATURE_COLS].fillna(5.0)
-                prob   = float(_XGB_FUKUSHO_MODEL.predict_proba(X_pred)[0][1])
-                raw_prob = prob
-                # 能力値（Phase1）: XGB生マージン（sigmoid前のlog-odds）
-                _dmat  = _xgb_lib.DMatrix(X_pred, feature_names=list(_XGB_FEATURE_COLS))
-                rating = float(_XGB_FUKUSHO_MODEL.get_booster().predict(_dmat, output_margin=True)[0])
+
+                if _XGB_RESIDUAL:
+                    # 残差学習: base_margin を設定してから予測
+                    _dmat  = _xgb_lib.DMatrix(X_pred, feature_names=list(_XGB_FEATURE_COLS))
+                    _pop   = h.get('popularity') or len(race.get('horses', [])) // 2
+                    _n_h   = max(len(race.get('horses', [])), 2)
+                    _harm  = math.log(_n_h) + 0.5772
+                    _p_mkt = max(min((1.0 / max(_pop, 1)) / _harm, 0.999), 0.001)
+                    _bm    = math.log(_p_mkt / (1 - _p_mkt))
+                    import numpy as _np_bm
+                    _dmat.set_base_margin(_np_bm.array([_bm]))
+                    raw_margin = float(_XGB_FUKUSHO_MODEL.predict(_dmat)[0])
+                    prob   = 1 / (1 + math.exp(-raw_margin))
+                    raw_prob = prob
+                    rating = raw_margin
+                else:
+                    prob   = float(_XGB_FUKUSHO_MODEL.predict_proba(X_pred)[0][1])
+                    raw_prob = prob
+                    # 能力値（Phase1）: XGB生マージン（sigmoid前のlog-odds）
+                    _dmat  = _xgb_lib.DMatrix(X_pred, feature_names=list(_XGB_FEATURE_COLS))
+                    rating = float(_XGB_FUKUSHO_MODEL.get_booster().predict(_dmat, output_margin=True)[0])
                 # XGB専用キャリブレーターを適用（複勝確率表示用）
                 if _XGB_CALIBRATOR is not None:
                     import numpy as _np_cal
