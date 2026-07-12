@@ -76,6 +76,10 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
 /* 人気列 */
 .htbl th.col-pop{background:#34495e;width:22px}
 .htbl td.col-pop{font-weight:700;color:#555;font-size:10px}
+/* 乖離バッジ */
+.gap-up{color:#fff;background:#27ae60;font-size:8px;font-weight:800;border-radius:3px;padding:0 3px;margin-left:1px;display:inline-block}
+.gap-down{color:#999;font-size:8px;font-weight:600;margin-left:1px;display:inline-block}
+.gap-converge{color:#e67e22;font-size:7px;font-weight:600;margin-left:1px;display:inline-block}
 /* オッズ列 */
 .htbl th.col-odds{background:#2c3e50}
 .htbl td.col-odds{font-size:10px;color:#666}
@@ -498,6 +502,7 @@ async function fetchFreshOdds(raceKey, btn) {
       for (const h of (race.horses || [])) {
         race._morning_ev[h.n] = h.ev;
         h._morning_odds = h.odds || null;
+        h._morning_pop = h.pop != null ? h.pop : null;
       }
     }
     if (!race._morning_gumbel) {
@@ -710,65 +715,111 @@ function recalcGumbelBets(race) {
     }
   }
 
-  // 三連複: 軸1頭（複勝確率最上位）＋相手5〜6頭（複勝率+EVで絞る）
+  // 三連複: RL上位からの軸構造判定（自信度ベース）
   if (sorted.length >= 3) {
-    const MIN_FUKU_PCT = 8.0;
-    const TRIO_MAX_PTS = 15;
+    const TRIO_MAX_PTS = 20;
+    const byRL = horses.slice()
+      .filter(h => h.odds > 0 && (h.rl_rank || 99) < 99)
+      .sort((a, b) => (a.rl_rank || 99) - (b.rl_rank || 99));
+    if (byRL.length >= 3) {
+    const p1 = (byRL[0].tan_pct || 0) / 100;
+    const p2 = (byRL[1].tan_pct || 0) / 100;
+    const p3 = (byRL[2].tan_pct || 0) / 100;
+    const gap12 = p1 - p2;
+    const gap23 = p2 - p3;
 
-    const byFuku = horses.slice()
-      .filter(h => h.odds > 0 && (h.fuku_pct || 0) > 0)
-      .sort((a, b) => (b.fuku_pct || 0) - (a.fuku_pct || 0));
-    if (byFuku.length < 3) { /* skip */ } else {
-    const axis = byFuku[0];
+    let structure, axisNums, oppPool;
+    if (gap12 >= 0.08) {
+      structure = '1頭軸';
+      axisNums = [byRL[0]];
+    } else if (gap23 >= 0.05) {
+      structure = '2頭軸';
+      axisNums = [byRL[0], byRL[1]];
+    } else {
+      structure = 'ボックス';
+      axisNums = [];
+    }
 
-    const partners = byFuku.slice(1).filter(h => {
-      if ((h.fuku_pct || 0) < MIN_FUKU_PCT) return false;
-      const prob = (h.cal_prob || (h.tan_pct || 0) / 100);
-      const odds = h.tansho_odds || h.odds || 0;
-      return prob * odds >= 0.5;
-    }).slice(0, 6);
+    // 相手候補: 複勝率12%以上 or RL5位以内、かつEV>=0.7
+    const axisSet = new Set(axisNums.map(h => h.n));
+    oppPool = byRL.filter(h => !axisSet.has(h.n)).filter(h => {
+      const fp = h.fuku_pct || 0;
+      const ev = (h.tan_pct || 0) / 100 * (h.tansho_odds || h.odds || 0);
+      return (fp >= 12 || (h.rl_rank || 99) <= 5) && ev >= 0.7;
+    });
+    // 最低3頭はRL順で確保
+    if (oppPool.length < 3) {
+      for (const h of byRL) {
+        if (!axisSet.has(h.n) && !oppPool.find(o => o.n === h.n)) oppPool.push(h);
+        if (oppPool.length >= 3) break;
+      }
+    }
 
-    if (partners.length >= 2) {
-      const combos = [];
-      for (let i = 0; i < partners.length - 1; i++) {
-        for (let j = i + 1; j < partners.length; j++) {
-          const a = axis, b = partners[i], c = partners[j];
-          const oa = a.tansho_odds || a.odds, ob = b.tansho_odds || b.odds, oc = c.tansho_odds || c.odds;
-          if (oa <= 0 || ob <= 0 || oc <= 0) continue;
-          const tOdds = Math.round(Math.max(3.0, Math.pow(oa * ob * oc, 0.33) * 0.80) * 10) / 10;
-          const pa = (a.cal_prob || a.tan_pct / 100);
-          const pb = (b.cal_prob || b.tan_pct / 100);
-          const pc = (c.cal_prob || c.tan_pct / 100);
-          const tProb = Math.round(pa * pb * pc * 6 / Math.pow(Math.max(1e-9, (1 - pa) * (1 - pb)), 1) * 10000) / 10000;
-          const ev = Math.round(tProb * tOdds * 100) / 100;
-          combos.push({
-            nums: [a.n, b.n, c.n].sort((x, y) => x - y),
-            odds: tOdds, prob: tProb, ev: ev
-          });
+    let tickets = [];
+    let formLabel = '';
+    if (structure === '1頭軸' && oppPool.length >= 2) {
+      const ax = axisNums[0];
+      for (let i = 0; i < oppPool.length - 1; i++) {
+        for (let j = i + 1; j < oppPool.length; j++) {
+          tickets.push([ax, oppPool[i], oppPool[j]]);
         }
       }
-      combos.sort((a, b) => b.ev - a.ev);
-      const selected = combos.filter(c => c.ev >= 0.3).slice(0, TRIO_MAX_PTS);
-      if (selected.length >= 1) {
-        const allNums = [...new Set(selected.flatMap(c => c.nums))].sort((a, b) => a - b);
-        const pts = selected.length;
-        const avgEv = Math.round(selected.reduce((s, c) => s + c.ev, 0) / pts * 100) / 100;
-        const minPay = Math.min(...selected.map(c => c.odds)) * 100;
-        const maxPay = Math.max(...selected.map(c => c.odds)) * 100;
-        const synOdds = Math.round(pts * 100 / selected.reduce((s, c) => s + 100 / (c.odds || 1), 0) * 10) / 10;
-        const comboStrs = selected.map(c => c.nums.join('-'));
-
-        const others = allNums.filter(n => n !== axis.n);
-        result.push({
-          tag: 'sanfuku', label: '三連複(' + pts + '点)',
-          trio_type: 'formation', legs: [[axis.n], others, others],
-          nums: allNums, combos: comboStrs,
-          est: '¥' + Math.round(minPay).toLocaleString() + '〜¥' + Math.round(maxPay).toLocaleString(),
-          ev: avgEv, syn_odds: synOdds,
-          amt: '¥' + (pts * 100),
-          _key: 'sanfuku'
-        });
+      formLabel = '1頭軸流し';
+    } else if (structure === '2頭軸' && oppPool.length >= 1) {
+      for (const o of oppPool) {
+        tickets.push([axisNums[0], axisNums[1], o]);
       }
+      formLabel = '2頭軸流し';
+    } else {
+      const boxH = byRL.slice(0, Math.min(5, byRL.length));
+      for (let i = 0; i < boxH.length - 2; i++) {
+        for (let j = i + 1; j < boxH.length - 1; j++) {
+          for (let k = j + 1; k < boxH.length; k++) {
+            tickets.push([boxH[i], boxH[j], boxH[k]]);
+          }
+        }
+      }
+      formLabel = 'ボックス';
+    }
+
+    // EV計算して選別
+    const combos = tickets.map(t => {
+      const [a, b, c] = t;
+      const oa = a.tansho_odds || a.odds, ob = b.tansho_odds || b.odds, oc = c.tansho_odds || c.odds;
+      if (oa <= 0 || ob <= 0 || oc <= 0) return null;
+      const tOdds = Math.round(Math.max(3.0, Math.pow(oa * ob * oc, 0.33) * 0.80) * 10) / 10;
+      const pa = (a.cal_prob || (a.tan_pct || 0) / 100);
+      const pb = (b.cal_prob || (b.tan_pct || 0) / 100);
+      const pc = (c.cal_prob || (c.tan_pct || 0) / 100);
+      const tProb = Math.round(pa * pb * pc * 6 / Math.max(1e-9, (1 - pa) * (1 - pb)) * 10000) / 10000;
+      const ev = Math.round(tProb * tOdds * 100) / 100;
+      return { nums: [a.n, b.n, c.n].sort((x, y) => x - y), odds: tOdds, prob: tProb, ev: ev };
+    }).filter(c => c != null);
+    combos.sort((a, b) => b.ev - a.ev);
+    const selected = combos.filter(c => c.ev >= 0.3).slice(0, TRIO_MAX_PTS);
+    if (selected.length >= 1) {
+      const allNums = [...new Set(selected.flatMap(c => c.nums))].sort((a, b) => a - b);
+      const pts = selected.length;
+      const avgEv = Math.round(selected.reduce((s, c) => s + c.ev, 0) / pts * 100) / 100;
+      const minPay = Math.min(...selected.map(c => c.odds)) * 100;
+      const maxPay = Math.max(...selected.map(c => c.odds)) * 100;
+      const synOdds = Math.round(pts * 100 / selected.reduce((s, c) => s + 100 / (c.odds || 1), 0) * 10) / 10;
+      const comboStrs = selected.map(c => c.nums.join('-'));
+
+      const axN = axisNums.map(h => h.n);
+      const others = allNums.filter(n => !axN.includes(n));
+      const legs = axN.length === 1 ? [[axN[0]], others, others]
+                 : axN.length === 2 ? [[axN[0], axN[1]], others, []] : [allNums, allNums, allNums];
+      result.push({
+        tag: 'sanfuku', label: '三連複' + formLabel + '(' + pts + '点)',
+        trio_type: axN.length > 0 ? 'formation' : 'box',
+        legs: legs, axis: axN.length > 0 ? {num: axN[0]} : null,
+        nums: allNums, combos: comboStrs,
+        est: '¥' + Math.round(minPay).toLocaleString() + '〜¥' + Math.round(maxPay).toLocaleString(),
+        ev: avgEv, syn_odds: synOdds,
+        amt: '¥' + (pts * 100),
+        _key: 'sanfuku'
+      });
     }
     }
   }
@@ -1151,7 +1202,27 @@ function render() {
           surgeBadge = '<span style="color:#e67e22;font-size:8px;font-weight:700;margin-left:2px" title="朝→直前でオッズ下落傾向">上昇</span>';
         }
 
-        html += '<tr'+(isH?' class="hl"':'')+'><td>'+(isH?'◎':'')+h.n+'</td><td class="col-name">'+h.name+surgeBadge+'</td><td class="col-pop">'+pop+'</td><td class="col-odds">'+odds+'</td><td>'+mkBadge(h.mark)+'</td><td class="col-rl">'+rl+'</td><td>'+tan+'</td><td class="'+(hi?'phi':'plo')+'">'+fuku+'</td><td class="'+valClass+'">'+valCell+'</td></tr>';
+        // 乖離バッジ: RL順位 vs 人気順位
+        let gapBadge = '';
+        const rlNum = (h.rl_rank && h.rl_rank < 99) ? h.rl_rank : null;
+        const popNum = h.pop != null ? h.pop : null;
+        if (rlNum != null && popNum != null) {
+          const gap = popNum - rlNum;
+          const mPop = h._morning_pop;
+          if (gap >= 2) {
+            let title = 'AI' + rlNum + '位 vs 人気' + popNum + '位';
+            let extra = '';
+            if (mPop != null && mPop !== popNum) {
+              const mGap = mPop - rlNum;
+              if (mGap > gap) extra = '<span class="gap-converge" title="市場がAIに接近">←' + mGap + '</span>';
+            }
+            gapBadge = '<span class="gap-up" title="' + title + '">↑' + gap + '</span>' + extra;
+          } else if (gap <= -2) {
+            gapBadge = '<span class="gap-down" title="AI' + rlNum + '位 vs 人気' + popNum + '位">↓' + Math.abs(gap) + '</span>';
+          }
+        }
+
+        html += '<tr'+(isH?' class="hl"':'')+'><td>'+(isH?'◎':'')+h.n+'</td><td class="col-name">'+h.name+surgeBadge+'</td><td class="col-pop">'+pop+'</td><td class="col-odds">'+odds+'</td><td>'+mkBadge(h.mark)+'</td><td class="col-rl">'+rl+gapBadge+'</td><td>'+tan+'</td><td class="'+(hi?'phi':'plo')+'">'+fuku+'</td><td class="'+valClass+'">'+valCell+'</td></tr>';
       }
       html += '</table>';
       if (race.race_id) {
