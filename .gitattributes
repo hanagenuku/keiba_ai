@@ -7,4 +7,5 @@ data/xgb_calibrator.pkl -filter -diff -merge
 data/xgb_ranking_ndcg.pkl -filter -diff -merge
 data/pace_model.pkl -filter -diff -merge
 data/speed_index_cache.pkl -filter -diff -merge
+data/xgb_fukusho_model_residual.pkl -filter -diff -merge
 data/horse_features.csv -filter -diff -merge
