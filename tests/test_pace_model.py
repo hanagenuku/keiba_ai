@@ -7,27 +7,43 @@ import pytest
 class TestClassifyPace:
     """_classify_pace の分類ロジック検証"""
 
-    def test_high_pace_turf(self):
+    def _set_cache(self):
+        """テスト用にパーセンタイルキャッシュを設定"""
+        import src.tools.train_pace_model as pm
+        pm._PACE_PERCENTILE_CACHE = {
+            ('芝', 'sprint'): (34.0, 35.5),
+            ('芝', 'mile'): (35.0, 36.5),
+            ('芝', 'mid'): (35.5, 37.0),
+            ('芝', 'long'): (36.0, 37.5),
+            ('ダート', 'sprint'): (35.5, 37.0),
+            ('ダート', 'mile'): (36.0, 37.5),
+        }
+
+    def test_high_pace(self):
+        self._set_cache()
         from src.tools.train_pace_model import _classify_pace
-        # 1200m芝, first_3f=33.5s → 正規化 33.5 < 34.5 → high
         assert _classify_pace(33.5, 1200, '芝') == 'high'
 
-    def test_slow_pace_turf(self):
+    def test_slow_pace(self):
+        self._set_cache()
         from src.tools.train_pace_model import _classify_pace
-        # 1200m芝, first_3f=37.0s → 正規化 37.0 > 36.0 → slow
-        assert _classify_pace(37.0, 1200, '芝') == 'slow'
+        assert _classify_pace(36.0, 1200, '芝') == 'slow'
 
-    def test_mid_pace_turf(self):
+    def test_mid_pace(self):
+        self._set_cache()
         from src.tools.train_pace_model import _classify_pace
-        # 1200m芝, first_3f=35.0s → 34.5 < 35.0 < 36.0 → mid
-        assert _classify_pace(35.0, 1200, '芝') == 'mid'
+        assert _classify_pace(34.5, 1200, '芝') == 'mid'
 
-    def test_distance_normalization(self):
+    def test_longer_distance_independent(self):
+        self._set_cache()
         from src.tools.train_pace_model import _classify_pace
-        # 2400m芝, first_3f=35.0s → normalized = 35.0 * (1200/2400) = 17.5 → high
-        assert _classify_pace(35.0, 2400, '芝') == 'high'
+        # 2400m芝: 閾値は (36.0, 37.5) なので 36.5 は mid
+        assert _classify_pace(36.5, 2400, '芝') == 'mid'
+        # 35.5 は high
+        assert _classify_pace(35.5, 2400, '芝') == 'high'
 
     def test_label_override(self):
+        self._set_cache()
         from src.tools.train_pace_model import _classify_pace
         assert _classify_pace(33.0, 1200, '芝', 'slow') == 'slow'
         assert _classify_pace(33.0, 1200, '芝', 'S') == 'slow'
@@ -40,12 +56,10 @@ class TestClassifyPace:
         assert _classify_pace(35.0, 0, '芝') is None
         assert _classify_pace(None, 1200, '芝') is None
 
-    def test_dirt_thresholds(self):
-        from src.tools.train_pace_model import _classify_pace
-        # ダートは閾値が高い (high: 36.0, slow: 37.5)
-        assert _classify_pace(35.5, 1200, 'ダート') == 'high'
-        assert _classify_pace(38.0, 1200, 'ダート') == 'slow'
-        assert _classify_pace(37.0, 1200, 'ダート') == 'mid'
+    def test_no_cache_returns_mid(self):
+        import src.tools.train_pace_model as pm
+        pm._PACE_PERCENTILE_CACHE = {}
+        assert pm._classify_pace(35.0, 1200, '芝') == 'mid'
 
 
 class TestBuildPaceFeaturesForInference:
@@ -203,9 +217,6 @@ class TestTrainPaceModelModule:
         from src.tools.train_pace_model import train_pace_model
         assert callable(train_pace_model)
 
-    def test_pace_thresholds_defined(self):
-        from src.tools.train_pace_model import _PACE_THRESHOLDS
-        assert '芝' in _PACE_THRESHOLDS
-        assert 'ダート' in _PACE_THRESHOLDS
-        assert 'high' in _PACE_THRESHOLDS['芝']
-        assert 'slow' in _PACE_THRESHOLDS['芝']
+    def test_percentile_cache_defined(self):
+        from src.tools.train_pace_model import _PACE_PERCENTILE_CACHE
+        assert isinstance(_PACE_PERCENTILE_CACHE, dict)
