@@ -1421,6 +1421,11 @@ def _default_course_features():
         'f_uphill_match':     0.0,
         'f_agari_at_similar': 99.0,
         'f_course_coverage':  0,
+        'f_course_type_rate':       0.0,
+        'f_tight_vs_spacious':      0.0,
+        'f_uphill_severity_rate':   0.0,
+        'f_corner_position_change': 0.0,
+        'f_agari_rank_at_type':     0.5,
     }
 
 
@@ -1449,6 +1454,16 @@ def calc_course_aptitude_features(horse_name, today_racecourse, today_surface,
     uphill_match   = []  # 坂の有無が同じ
     agari_list     = []  # 直線長が近いコースでの上がり
 
+    same_type      = []  # 同じ course_type
+    tight_results  = []  # tight/flat_tight での成績
+    spacious_results = []  # spacious での成績
+    same_severity  = []  # 同じ uphill_severity での成績
+    corner_changes = []  # 小回りコースでの3→4角位置変動
+    agari_ranks_at_type = []  # 同タイプコースでの上がり相対順位
+
+    today_type     = today.get('course_type', '')
+    today_severity = today.get('uphill_severity', 'none')
+
     for hrec in history:
         rc    = hrec.get('racecourse', '')
         sf    = hrec.get('surface', '')
@@ -1463,6 +1478,8 @@ def calc_course_aptitude_features(horse_name, today_racecourse, today_surface,
             continue
 
         is_top3 = 1 if place <= 3 else 0
+        past_type     = prof.get('course_type', '')
+        past_severity = prof.get('uphill_severity', 'none')
 
         if rc == today_racecourse and sf == today_surface:
             same_course.append(is_top3)
@@ -1479,8 +1496,51 @@ def calc_course_aptitude_features(horse_name, today_racecourse, today_surface,
         if prof.get('has_uphill') == today.get('has_uphill'):
             uphill_match.append(is_top3)
 
+        # -- 新特徴量用の集計 --
+        if past_type == today_type:
+            same_type.append(is_top3)
+        if past_type in ('tight', 'flat_tight'):
+            tight_results.append(is_top3)
+        if past_type == 'spacious':
+            spacious_results.append(is_top3)
+        if past_severity == today_severity:
+            same_severity.append(is_top3)
+
+        # 小回りコースでの3→4角の位置変動（器用さ指標）
+        if past_type in ('tight', 'flat_tight'):
+            corner_all = hrec.get('corner_all', '')
+            if corner_all:
+                positions = corner_all.split('-')
+                if len(positions) >= 4:
+                    try:
+                        c3 = float(positions[2])
+                        c4 = float(positions[3])
+                        corner_changes.append(c3 - c4)
+                    except (ValueError, IndexError):
+                        pass
+
+        # 同タイプコースでの上がり相対順位
+        if past_type == today_type:
+            ar = hrec.get('agari_rank')
+            nf = hrec.get('num_finishers') or hrec.get('finishers')
+            if ar is not None and nf is not None:
+                try:
+                    ar_f, nf_f = float(ar), float(nf)
+                    if nf_f > 0:
+                        agari_ranks_at_type.append(ar_f / nf_f)
+                except (ValueError, TypeError):
+                    pass
+
     def _rate(lst):
         return round(sum(lst) / len(lst), 3) if lst else 0.0
+
+    # 小回り vs 大箱の成績差（正=小回りが得意）
+    tight_rate   = _rate(tight_results) if tight_results else None
+    spacious_rate = _rate(spacious_results) if spacious_results else None
+    if tight_rate is not None and spacious_rate is not None:
+        tight_vs_spacious = round(tight_rate - spacious_rate, 3)
+    else:
+        tight_vs_spacious = 0.0
 
     return {
         'f_same_course_rate': _rate(same_course),
@@ -1489,6 +1549,13 @@ def calc_course_aptitude_features(horse_name, today_racecourse, today_surface,
         'f_uphill_match':     _rate(uphill_match),
         'f_agari_at_similar': round(min(agari_list), 1) if agari_list else 99.0,
         'f_course_coverage':  len(same_course),
+        'f_course_type_rate':       _rate(same_type),
+        'f_tight_vs_spacious':      tight_vs_spacious,
+        'f_uphill_severity_rate':   _rate(same_severity),
+        'f_corner_position_change': (round(sum(corner_changes) / len(corner_changes), 2)
+                                     if corner_changes else 0.0),
+        'f_agari_rank_at_type':     (round(sum(agari_ranks_at_type) / len(agari_ranks_at_type), 3)
+                                     if agari_ranks_at_type else 0.5),
     }
 
 
