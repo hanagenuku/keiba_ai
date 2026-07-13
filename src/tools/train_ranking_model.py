@@ -58,11 +58,12 @@ def build_ranking_training_data(df, feat_cols):
         if n < 5:
             continue
 
-        field_size = n
-        scores = (field_size - valid['place'].astype(int) + 1).astype(int)  # 非負整数 [1, field_size]
+        # 着順で並べ替えて1〜nの連番スコアを振る（DNF除外で着順にギャップがあっても安全）
+        valid = valid.sort_values('place')
+        scores = np.arange(n, 0, -1)  # [n, n-1, ..., 2, 1] 1着=n（最高）
 
         X_list.append(valid[feat_cols].fillna(5.0).values)
-        y_list.append(scores.values)
+        y_list.append(scores)
         groups.append(n)
 
     if not X_list:
