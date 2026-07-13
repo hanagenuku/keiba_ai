@@ -322,6 +322,164 @@ def train_xgb(base_dir,
     }
 
 
+def train_ensemble(base_dir,
+                   train_end='2026-03-31',
+                   val_start='2026-04-01',
+                   val_end='2026-05-31',
+                   n_estimators=500,
+                   early_stopping_rounds=50):
+    """XGBoost + LightGBM のアンサンブルモデルを学習する。
+
+    両モデルの predict_proba を平均し、単体より +0.01〜0.02 の AUC 向上を狙う。
+    保存: xgb_ensemble_model.pkl (dict: xgb, lgbm, feat_cols, weights)
+    """
+    import pandas as pd
+    import numpy as np
+    from xgboost import XGBClassifier
+    from sklearn.metrics import roc_auc_score, brier_score_loss, log_loss
+
+    try:
+        from lightgbm import LGBMClassifier
+    except ImportError:
+        print('❌ lightgbm が未インストール。pip install lightgbm を実行してください。')
+        return None
+
+    csv_path = os.path.join(base_dir, 'data', 'horse_features.csv')
+    if not os.path.exists(csv_path):
+        raise FileNotFoundError(f'horse_features.csv が見つかりません: {csv_path}')
+
+    df = pd.read_csv(csv_path)
+    df['date_obj'] = pd.to_datetime(
+        df['date'].astype(str).str.replace('-', '', regex=False).str[:8],
+        format='%Y%m%d', errors='coerce'
+    )
+    df = df.dropna(subset=['date_obj'])
+
+    train_df = df[df['date_obj'] <= pd.Timestamp(train_end)].copy()
+    val_df = df[(df['date_obj'] >= pd.Timestamp(val_start)) &
+                (df['date_obj'] <= pd.Timestamp(val_end))].copy()
+
+    print(f'Train: {len(train_df)} 行, Val: {len(val_df)} 行')
+    if len(val_df) == 0:
+        raise ValueError('検証データが空です。')
+
+    exclude = _EXCLUDE_COLS | {'date_obj'}
+    feat_cols = [c for c in df.columns
+                 if c not in exclude
+                 and df[c].dtype in ('float64', 'int64', 'float32', 'int32')]
+    print(f'特徴量数: {len(feat_cols)}')
+
+    X_train = train_df[feat_cols].fillna(5.0)
+    y_train = train_df['is_fukusho']
+    X_val = val_df[feat_cols].fillna(5.0)
+    y_val = val_df['is_fukusho']
+
+    pos_rate = y_train.mean()
+    spw = round((1 - pos_rate) / max(pos_rate, 0.01), 2)
+
+    # ── XGBoost ──
+    print('\n━━ XGBoost 学習 ━━')
+    xgb_model = XGBClassifier(
+        n_estimators=n_estimators, max_depth=6, learning_rate=0.05,
+        subsample=0.8, colsample_bytree=0.8, min_child_weight=10,
+        reg_alpha=0.1, reg_lambda=1.0, scale_pos_weight=spw,
+        eval_metric='logloss', early_stopping_rounds=early_stopping_rounds,
+        use_label_encoder=False, random_state=42, n_jobs=-1,
+    )
+    xgb_model.fit(X_train, y_train, eval_set=[(X_val, y_val)], verbose=50)
+    xgb_prob = xgb_model.predict_proba(X_val)[:, 1]
+    xgb_auc = roc_auc_score(y_val, xgb_prob)
+    print(f'  XGB AUC: {xgb_auc:.4f}')
+
+    # ── LightGBM ──
+    print('\n━━ LightGBM 学習 ━━')
+    lgbm_model = LGBMClassifier(
+        n_estimators=n_estimators, max_depth=6, learning_rate=0.05,
+        subsample=0.8, colsample_bytree=0.8, min_child_weight=10,
+        reg_alpha=0.1, reg_lambda=1.0, scale_pos_weight=spw,
+        random_state=42, n_jobs=-1, verbose=-1,
+    )
+    lgbm_model.fit(
+        X_train, y_train,
+        eval_set=[(X_val, y_val)],
+        callbacks=[
+            __import__('lightgbm').early_stopping(early_stopping_rounds),
+            __import__('lightgbm').log_evaluation(50),
+        ],
+    )
+    lgbm_prob = lgbm_model.predict_proba(X_val)[:, 1]
+    lgbm_auc = roc_auc_score(y_val, lgbm_prob)
+    print(f'  LGBM AUC: {lgbm_auc:.4f}')
+
+    # ── アンサンブル（重み最適化）──
+    print('\n━━ アンサンブル ━━')
+    best_w, best_auc = 0.5, 0.0
+    for w in np.arange(0.3, 0.75, 0.05):
+        ens_prob = w * xgb_prob + (1 - w) * lgbm_prob
+        ens_auc = roc_auc_score(y_val, ens_prob)
+        if ens_auc > best_auc:
+            best_w, best_auc = w, ens_auc
+    ens_prob = best_w * xgb_prob + (1 - best_w) * lgbm_prob
+    ens_brier = brier_score_loss(y_val, ens_prob)
+    ens_ll = log_loss(y_val, ens_prob)
+
+    print(f'  最適重み: XGB={best_w:.2f}, LGBM={1-best_w:.2f}')
+    print(f'  Ensemble AUC  : {best_auc:.4f}')
+    print(f'  Ensemble Brier: {ens_brier:.4f}')
+    print(f'  Ensemble LL   : {ens_ll:.4f}')
+    print(f'  XGB単体との差 : {best_auc - xgb_auc:+.4f}')
+
+    # ── 保存 ──
+    model_path = os.path.join(base_dir, 'data', 'xgb_ensemble_model.pkl')
+    cols_path = os.path.join(base_dir, 'data', 'xgb_ensemble_cols.json')
+
+    ensemble = {
+        'xgb': xgb_model,
+        'lgbm': lgbm_model,
+        'xgb_weight': best_w,
+        'feat_cols': feat_cols,
+    }
+    with open(model_path, 'wb') as f:
+        pickle.dump(ensemble, f)
+
+    cols_meta = {
+        'feature_cols': feat_cols,
+        'trained_at': str(pd.Timestamp.now()),
+        'val_auc_xgb': round(xgb_auc, 4),
+        'val_auc_lgbm': round(lgbm_auc, 4),
+        'val_auc_ensemble': round(best_auc, 4),
+        'xgb_weight': round(best_w, 2),
+        'n_train': len(train_df),
+        'n_val': len(val_df),
+    }
+    with open(cols_path, 'w', encoding='utf-8') as f:
+        json.dump(cols_meta, f, ensure_ascii=False, indent=2)
+
+    print(f'\n✅ アンサンブルモデル保存: {model_path}')
+
+    # ── 特徴量重要度 Top 20（XGB + LGBM 平均）──
+    xgb_imp = dict(zip(feat_cols, xgb_model.feature_importances_))
+    lgbm_imp = dict(zip(feat_cols, lgbm_model.feature_importances_))
+    total_lgbm = sum(lgbm_imp.values()) or 1.0
+    merged = {}
+    for c in feat_cols:
+        merged[c] = (xgb_imp.get(c, 0) + lgbm_imp.get(c, 0) / total_lgbm) / 2
+    top20 = sorted(merged.items(), key=lambda x: x[1], reverse=True)[:20]
+    print('\n── 特徴量重要度 Top 20（平均）──')
+    for name, imp in top20:
+        print(f'  {name:<35} {imp*100:.2f}%')
+
+    return {
+        'auc_xgb': round(xgb_auc, 4),
+        'auc_lgbm': round(lgbm_auc, 4),
+        'auc_ensemble': round(best_auc, 4),
+        'xgb_weight': round(best_w, 2),
+        'brier': round(ens_brier, 4),
+        'logloss': round(ens_ll, 4),
+        'n_features': len(feat_cols),
+    }
+
+
 if __name__ == '__main__':
     import sys
     base = sys.argv[1] if len(sys.argv) > 1 else '/content/drive/MyDrive/keiba_ai'

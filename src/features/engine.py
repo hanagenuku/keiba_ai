@@ -42,6 +42,7 @@ _trainer_dict          = {}  # 調教師名 → 勝率
 _hist_db_path          = None  # Phase 3: DBパス（calc_prev_member_levelで使用）
 _BASE_DIR              = None  # init_engine で設定。course_profiles等の遅延ロードに使用
 _COURSE_PROFILES       = None  # data/course_profiles.json の内容（コース適性特徴量で使用）
+_ENSEMBLE_MODEL        = None  # XGB+LightGBM ensemble dict (train_ensemble() が生成)
 
 
 def init_engine(base_dir,
@@ -94,16 +95,31 @@ def init_engine(base_dir,
             if _XGB_RESIDUAL:
                 print('  残差学習モデル検出: base_margin を推論時に適用します')
 
-    if xgb_model is not None:
-        _XGB_FUKUSHO_MODEL = xgb_model
-    elif os.path.exists(f'{base_dir}/data/xgb_fukusho_model.pkl'):
-        if _XGB_RESIDUAL:
-            import xgboost as _xgb_load
-            _XGB_FUKUSHO_MODEL = _xgb_load.Booster()
-            _XGB_FUKUSHO_MODEL.load_model(f'{base_dir}/data/xgb_fukusho_model.pkl')
-        else:
-            with open(f'{base_dir}/data/xgb_fukusho_model.pkl', 'rb') as f:
-                _XGB_FUKUSHO_MODEL = pickle.load(f)
+    # アンサンブルモデル（XGB+LightGBM）を優先ロード
+    global _ENSEMBLE_MODEL
+    ens_path = f'{base_dir}/data/xgb_ensemble_model.pkl'
+    if os.path.exists(ens_path):
+        try:
+            with open(ens_path, 'rb') as f:
+                _ENSEMBLE_MODEL = pickle.load(f)
+            _XGB_FUKUSHO_MODEL = _ENSEMBLE_MODEL['xgb']
+            _XGB_FEATURE_COLS = _ENSEMBLE_MODEL['feat_cols']
+            print(f'  🎯 アンサンブルモデル読込 (XGB weight={_ENSEMBLE_MODEL["xgb_weight"]:.2f})')
+        except Exception as _e:
+            _ENSEMBLE_MODEL = None
+            print(f'  ⚠ アンサンブルモデル読込失敗: {_e}')
+
+    if _ENSEMBLE_MODEL is None:
+        if xgb_model is not None:
+            _XGB_FUKUSHO_MODEL = xgb_model
+        elif os.path.exists(f'{base_dir}/data/xgb_fukusho_model.pkl'):
+            if _XGB_RESIDUAL:
+                import xgboost as _xgb_load
+                _XGB_FUKUSHO_MODEL = _xgb_load.Booster()
+                _XGB_FUKUSHO_MODEL.load_model(f'{base_dir}/data/xgb_fukusho_model.pkl')
+            else:
+                with open(f'{base_dir}/data/xgb_fukusho_model.pkl', 'rb') as f:
+                    _XGB_FUKUSHO_MODEL = pickle.load(f)
 
     if calibrator is not None:
         _CALIBRATOR = calibrator
@@ -1687,6 +1703,22 @@ def calc_pace_fit(horse, pace_info):
     return float(_PACE_FIT_MATRIX.get(pace, _PACE_FIT_MATRIX['middle']).get(horse_style, 0.5))
 
 
+def _ensure_escape_front_count(race):
+    """race に escape_count / front_count が未設定なら horses から算出して設定する。"""
+    if 'escape_count' in race and race['escape_count'] > 0:
+        return
+    horses = race.get('horses', [])
+    esc = front_ = 0
+    for h_ in horses:
+        rs = h_.get('running_style', '')
+        if rs in ('逃げ', 'escape'):
+            esc += 1
+        elif rs in ('先行', 'front'):
+            front_ += 1
+    race['escape_count'] = esc
+    race['front_count'] = front_
+
+
 def calc_features_for_xgb(h, race):
     """XGBoost複勝予測モデルへの入力特徴量を生成"""
     import numpy as _np
@@ -1961,6 +1993,23 @@ def calc_features_for_xgb(h, race):
     feats['f_style_total_fit']  = round(
         (feats['f_style_course_fit'] + feats['f_pace_fit']) / 2, 3
     )
+
+    # ── ペースシナリオ特徴量（展開予測モデル出力 × 脚質）──────────────────
+    if '_pace_dist_cache' not in race:
+        _ensure_escape_front_count(race)
+        race['_pace_dist_cache'] = calc_pace_distribution(race)
+    pace_dist = race['_pace_dist_cache']
+    p_fast = pace_dist.get('high', pace_dist.get('fast', 0.33))
+    p_slow = pace_dist.get('slow', 0.33)
+    feats['f_pace_prob_fast'] = float(p_fast)
+    feats['f_pace_prob_slow'] = float(p_slow)
+    horse_style = estimate_horse_style(h)
+    if horse_style in ('escape', 'front'):
+        feats['f_pace_x_style'] = float(p_slow - p_fast)
+    elif horse_style in ('stalk', 'closer'):
+        feats['f_pace_x_style'] = float(p_fast - p_slow)
+    else:
+        feats['f_pace_x_style'] = 0.0
 
     # ── 市場特徴量（人気ベース）─────────────────────────────────────────
     # 市場（オッズ）はAUC 0.83の情報源だが従来モデルは一切使っていなかった。
@@ -2403,10 +2452,17 @@ def calc_all(race, bias_data=None):
                     prob   = 1 / (1 + math.exp(-raw_margin))
                     raw_prob = prob
                     rating = raw_margin
+                elif _ENSEMBLE_MODEL is not None:
+                    xgb_prob = float(_XGB_FUKUSHO_MODEL.predict_proba(X_pred)[0][1])
+                    lgbm_prob = float(_ENSEMBLE_MODEL['lgbm'].predict_proba(X_pred)[0][1])
+                    w = _ENSEMBLE_MODEL.get('xgb_weight', 0.5)
+                    prob = w * xgb_prob + (1 - w) * lgbm_prob
+                    raw_prob = prob
+                    _dmat  = _xgb_lib.DMatrix(X_pred, feature_names=list(_XGB_FEATURE_COLS))
+                    rating = float(_XGB_FUKUSHO_MODEL.get_booster().predict(_dmat, output_margin=True)[0])
                 else:
                     prob   = float(_XGB_FUKUSHO_MODEL.predict_proba(X_pred)[0][1])
                     raw_prob = prob
-                    # 能力値（Phase1）: XGB生マージン（sigmoid前のlog-odds）
                     _dmat  = _xgb_lib.DMatrix(X_pred, feature_names=list(_XGB_FEATURE_COLS))
                     rating = float(_XGB_FUKUSHO_MODEL.get_booster().predict(_dmat, output_margin=True)[0])
                 # XGB専用キャリブレーターを適用（複勝確率表示用）

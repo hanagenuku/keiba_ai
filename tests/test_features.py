@@ -7,6 +7,7 @@ from src.features.engine import (
     calc_performance_index, f_recent, calc_chaos_score,
     auto_comment, dist_zone_label, dz,
     calc_course_aptitude_features, load_course_profiles, get_course_profile,
+    calc_features_for_xgb, _ensure_escape_front_count,
 )
 
 ROOT = os.path.join(os.path.dirname(__file__), '..')
@@ -204,6 +205,80 @@ def test_tight_vs_spacious_no_data():
     feats = calc_course_aptitude_features('テスト馬', '中山', '芝', history, ROOT)
     # spaciousのデータなし → tight_vs_spacious = 0.0
     assert feats['f_tight_vs_spacious'] == 0.0
+
+
+# ── ペースシナリオ特徴量 ──────────────────────────────────────────────
+def test_ensure_escape_front_count():
+    """horses の running_style から escape/front count を自動算出"""
+    race = {
+        'horses': [
+            {'running_style': '逃げ'},
+            {'running_style': '先行'},
+            {'running_style': '先行'},
+            {'running_style': '差し'},
+            {'running_style': '追込'},
+        ],
+    }
+    _ensure_escape_front_count(race)
+    assert race['escape_count'] == 1
+    assert race['front_count'] == 2
+
+
+def test_ensure_escape_front_count_already_set():
+    """既に設定済みなら上書きしない"""
+    race = {'escape_count': 3, 'front_count': 5, 'horses': []}
+    _ensure_escape_front_count(race)
+    assert race['escape_count'] == 3
+    assert race['front_count'] == 5
+
+
+def test_pace_scenario_features_sashi():
+    """差し馬はハイペース期待時に f_pace_x_style > 0"""
+    horses = [
+        {'name': 'A', 'horse_num': 1, 'running_style': '逃げ',
+         'history': [{'running_style': '逃げ', 'corner_3': 1}]},
+        {'name': 'B', 'horse_num': 2, 'running_style': '逃げ',
+         'history': [{'running_style': '逃げ', 'corner_3': 1}]},
+        {'name': 'C', 'horse_num': 3, 'running_style': '逃げ',
+         'history': [{'running_style': '逃げ', 'corner_3': 2}]},
+        {'name': 'D', 'horse_num': 4, 'running_style': '差し',
+         'history': [{'running_style': '差し', 'corner_3': 8}]},
+        {'name': 'E', 'horse_num': 5, 'running_style': '追込',
+         'history': [{'running_style': '追込', 'corner_3': 12}]},
+    ]
+    race = {
+        'racecourse': '東京', 'surface': '芝', 'distance': 1600,
+        'track_condition': '良', 'race_class': '1勝', 'first_3f': 35.0,
+        'horses': horses, 'date': '2026-01-01',
+    }
+    feats = calc_features_for_xgb(horses[3], race)  # 差し馬
+    assert 'f_pace_prob_fast' in feats
+    assert 'f_pace_prob_slow' in feats
+    assert 'f_pace_x_style' in feats
+    assert feats['f_pace_x_style'] > 0  # 逃げ3頭→ハイペース→差し有利
+
+
+def test_pace_scenario_features_nige():
+    """逃げ馬はハイペース予想時に f_pace_x_style < 0（不利）"""
+    horses = [
+        {'name': 'A', 'horse_num': 1, 'running_style': '逃げ',
+         'history': [{'running_style': '逃げ', 'corner_3': 1}]},
+        {'name': 'B', 'horse_num': 2, 'running_style': '逃げ',
+         'history': [{'running_style': '逃げ', 'corner_3': 2}]},
+        {'name': 'C', 'horse_num': 3, 'running_style': '逃げ',
+         'history': [{'running_style': '逃げ', 'corner_3': 1}]},
+        {'name': 'D', 'horse_num': 4, 'running_style': '差し',
+         'history': [{'running_style': '差し', 'corner_3': 8}]},
+        {'name': 'E', 'horse_num': 5, 'running_style': '追込',
+         'history': [{'running_style': '追込', 'corner_3': 13}]},
+    ]
+    race = {
+        'racecourse': '東京', 'surface': '芝', 'distance': 1600,
+        'track_condition': '良', 'race_class': '1勝', 'first_3f': 35.0,
+        'horses': horses, 'date': '2026-01-01',
+    }
+    feats = calc_features_for_xgb(horses[0], race)  # 逃げ馬
+    assert feats['f_pace_x_style'] < 0  # 逃げ3頭→ハイペース→逃げ不利
 
 
 if __name__ == '__main__':
