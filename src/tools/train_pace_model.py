@@ -19,17 +19,50 @@ import math
 import pickle
 import sqlite3
 
-# ペースラベル: first_3f を距離で正規化し分類
-# first_3f / (distance/1000) で 1000m あたりの前半3Fペースを算出
-# 閾値は JRA の平均的なペース分布に基づく
-_PACE_THRESHOLDS = {
-    '芝':   {'high': 34.5, 'slow': 36.0},
-    'ダート': {'high': 36.0, 'slow': 37.5},
-}
+_PACE_PERCENTILE_CACHE = {}  # (surface, dist_zone) → (p33, p67)
+
+
+def _dist_zone(distance):
+    if distance <= 1400:
+        return 'sprint'
+    elif distance <= 1800:
+        return 'mile'
+    elif distance <= 2200:
+        return 'mid'
+    return 'long'
+
+
+def _build_pace_percentiles(conn):
+    """距離帯×表面ごとの first_3f パーセンタイル(33%, 67%)を算出する。"""
+    global _PACE_PERCENTILE_CACHE
+    import numpy as np
+    rows = conn.execute("""
+        SELECT distance, surface, first_3f
+        FROM race_history
+        WHERE first_3f > 0 AND distance > 0
+          AND surface IN ('芝', 'ダート')
+    """).fetchall()
+
+    from collections import defaultdict
+    buckets = defaultdict(list)
+    for r in rows:
+        key = (r['surface'], _dist_zone(int(r['distance'])))
+        buckets[key].append(float(r['first_3f']))
+
+    for key, vals in buckets.items():
+        arr = np.array(vals)
+        _PACE_PERCENTILE_CACHE[key] = (
+            float(np.percentile(arr, 33)),
+            float(np.percentile(arr, 67)),
+        )
 
 
 def _classify_pace(first_3f, distance, surface, pace_label=None):
-    """前半3Fからペースを3分類する。pace_label が明示されていればそれを優先。"""
+    """前半3Fからペースを3分類する。pace_label が明示されていればそれを優先。
+
+    パーセンタイルベース: 距離帯×表面ごとに first_3f の分布から
+    下位33% = high（速い）, 上位33% = slow（遅い）, 中間 = mid。
+    """
     if pace_label and pace_label in ('slow', 'mid', 'high'):
         return pace_label
     if pace_label in ('S', 'スロー'):
@@ -41,13 +74,15 @@ def _classify_pace(first_3f, distance, surface, pace_label=None):
 
     if not first_3f or first_3f <= 0 or not distance or distance <= 0:
         return None
-    # 距離で正規化（1200m基準）
-    ratio = 1200.0 / max(distance, 800)
-    normalized = first_3f * ratio
-    th = _PACE_THRESHOLDS.get(surface, _PACE_THRESHOLDS['芝'])
-    if normalized <= th['high']:
+
+    key = (surface or '芝', _dist_zone(distance))
+    thresholds = _PACE_PERCENTILE_CACHE.get(key)
+    if not thresholds:
+        return 'mid'
+    p33, p67 = thresholds
+    if first_3f <= p33:
         return 'high'
-    elif normalized >= th['slow']:
+    elif first_3f >= p67:
         return 'slow'
     return 'mid'
 
@@ -293,6 +328,13 @@ def train_pace_model(base_dir,
 
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
+
+    # ペース分類用パーセンタイル構築
+    print('ペース分類パーセンタイルを構築中...')
+    _build_pace_percentiles(conn)
+    print(f'  距離帯×表面: {len(_PACE_PERCENTILE_CACHE)} グループ')
+    for k, (p33, p67) in sorted(_PACE_PERCENTILE_CACHE.items()):
+        print(f'    {k[0]}_{k[1]}: high<={p33:.1f}s, slow>={p67:.1f}s')
 
     # 騎手ペースメイク統計を構築
     print('騎手ペースメイク統計を構築中...')
