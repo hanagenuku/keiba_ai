@@ -123,6 +123,31 @@ delta が正の間は、AIが市場に劣っている＝馬券で長期プラス
 
 ## セッション履歴
 
+### 2026-07-13：乖離分析蓄積システム + オッズ変動×結果分析
+
+#### 概要
+AI予測と市場オッズの乖離を定量化し、結果との相関を週次蓄積する仕組みを追加。
+直前オッズ変動（急騰・急落）と結果の因果関係分析も統合。
+
+#### 実装内容
+- `scripts/generate_stats.py`:
+  - `calc_divergence_analysis()`: AI確率/市場確率の比率を6バケットに分類し、勝率・3着内率を集計
+    - 本命一致/不一致時の成績比較、過大/過小評価馬ランキング
+  - `calc_odds_movement_analysis()`: 朝→直前オッズ変動を5段階に分類（急騰/上昇/横ばい/下降/急落）
+    - AI評価との一致/不一致別の成績、大変動馬リスト
+  - `_save_divergence_weekly()`: `data/divergence_weekly.json`に週次蓄積（同日上書き）
+  - `generate_stats()`に統合: stats.jsonに`divergence_analysis`・`odds_movement`セクション追加
+- `tests/test_divergence_analysis.py`: 9テスト新規
+
+#### 出力先
+- `stats.json` の `divergence_analysis` / `odds_movement` セクション
+- `data/divergence_weekly.json`（累積週次トレンド）
+
+#### 日曜ワークフローでの自動蓄積
+`generate_stats()`は既にsunday-results.ymlから呼ばれるため、追加設定不要で自動蓄積開始。
+
+---
+
 ### 2026-07-12：展開予測モデル強化（19特徴量化）
 
 #### 概要
