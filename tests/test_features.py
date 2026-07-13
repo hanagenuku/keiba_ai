@@ -132,7 +132,78 @@ def test_course_aptitude_unknown_course():
         'f_same_course_rate': 0.0, 'f_same_turn_rate': 0.0,
         'f_straight_match': 0.0, 'f_uphill_match': 0.0,
         'f_agari_at_similar': 99.0, 'f_course_coverage': 0,
+        'f_course_type_rate': 0.0, 'f_tight_vs_spacious': 0.0,
+        'f_uphill_severity_rate': 0.0, 'f_corner_position_change': 0.0,
+        'f_agari_rank_at_type': 0.5,
     }
+
+
+def test_course_type_rate_tight_specialist():
+    """小回りコース(tight/flat_tight)で好走、大箱(spacious)で凡走する馬"""
+    history = [
+        {'racecourse': '中山', 'surface': '芝', 'place': 1, 'corner_all': '3-3-2-1'},
+        {'racecourse': '福島', 'surface': '芝', 'place': 2, 'corner_all': '5-4-3-2'},
+        {'racecourse': '函館', 'surface': '芝', 'place': 1, 'corner_all': '4-3-2-1'},
+        {'racecourse': '東京', 'surface': '芝', 'place': 10},
+        {'racecourse': '新潟', 'surface': '芝', 'place': 12},
+    ]
+    # 今日が中山(tight) → tight系3戦3好走
+    feats = calc_course_aptitude_features('テスト馬', '中山', '芝', history, ROOT)
+    assert feats['f_course_type_rate'] == 1.0  # tight同士: 中山+福島=2好走/2走 → 1.0
+    assert feats['f_tight_vs_spacious'] > 0    # tight(1.0) > spacious(0.0) → 正
+    assert feats['f_corner_position_change'] > 0  # 3角→4角で前に出ている
+
+    # 今日が東京(spacious)
+    feats2 = calc_course_aptitude_features('テスト馬', '東京', '芝', history, ROOT)
+    assert feats2['f_course_type_rate'] == 0.0  # spacious: 東京0+新潟0 / 2走
+
+
+def test_uphill_severity_rate():
+    """急坂コース(steep)で好走する馬"""
+    history = [
+        {'racecourse': '中山', 'surface': '芝', 'place': 1},  # steep
+        {'racecourse': '阪神', 'surface': '芝', 'place': 2},  # steep
+        {'racecourse': '京都', 'surface': '芝', 'place': 8},  # none
+        {'racecourse': '新潟', 'surface': '芝', 'place': 10}, # none
+    ]
+    # 今日が中京(steep)
+    feats = calc_course_aptitude_features('テスト馬', '中京', '芝', history, ROOT)
+    assert feats['f_uphill_severity_rate'] == 1.0  # steep: 2好走/2走
+
+
+def test_corner_position_change():
+    """小回りコースでの3→4角の位置変動"""
+    history = [
+        # 3角5位→4角2位 = +3（前に出る = 器用）
+        {'racecourse': '中山', 'surface': '芝', 'place': 2, 'corner_all': '6-5-5-2'},
+        # 3角3位→4角1位 = +2
+        {'racecourse': '福島', 'surface': '芝', 'place': 1, 'corner_all': '4-3-3-1'},
+    ]
+    feats = calc_course_aptitude_features('テスト馬', '中山', '芝', history, ROOT)
+    assert feats['f_corner_position_change'] == 2.5  # (3+2)/2
+
+
+def test_agari_rank_at_type():
+    """同タイプコースでの上がり相対順位"""
+    history = [
+        {'racecourse': '東京', 'surface': '芝', 'place': 2,
+         'agari_rank': 1, 'num_finishers': 16},  # spacious, 上がり1位/16頭
+        {'racecourse': '新潟', 'surface': '芝', 'place': 3,
+         'agari_rank': 2, 'num_finishers': 18},  # spacious, 上がり2位/18頭
+    ]
+    feats = calc_course_aptitude_features('テスト馬', '東京', '芝', history, ROOT)
+    # (1/16 + 2/18) / 2 ≈ 0.087
+    assert 0.08 < feats['f_agari_rank_at_type'] < 0.09
+
+
+def test_tight_vs_spacious_no_data():
+    """片方のコースタイプしかデータがない場合は0.0"""
+    history = [
+        {'racecourse': '中山', 'surface': '芝', 'place': 1},
+    ]
+    feats = calc_course_aptitude_features('テスト馬', '中山', '芝', history, ROOT)
+    # spaciousのデータなし → tight_vs_spacious = 0.0
+    assert feats['f_tight_vs_spacious'] == 0.0
 
 
 if __name__ == '__main__':
