@@ -2011,6 +2011,16 @@ def calc_features_for_xgb(h, race):
     else:
         feats['f_pace_x_style'] = 0.0
 
+    # ── 距離適性特徴量（馬の能力タイプ Phase 1）──────────────────────────
+    # データリーク対策: 対象レース日より前の過去走のみを使用
+    from src.features.horse_type import calc_distance_features as _calc_dist_feats
+    _hist_for_type = [
+        r_ for r_ in hist
+        if r_.get('date') and str(r_['date']) < str(race.get('date', '9999-99-99'))
+    ]
+    dist_type_feats = _calc_dist_feats(h, race, _hist_for_type)
+    feats.update(dist_type_feats)
+
     # ── 市場特徴量（人気ベース）─────────────────────────────────────────
     # 市場（オッズ）はAUC 0.83の情報源だが従来モデルは一切使っていなかった。
     # history.db の win_odds は0%欠損のため popularity（99.2%充足）を使う。
