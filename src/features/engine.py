@@ -2560,6 +2560,23 @@ def calc_all(race, bias_data=None):
             h['total'] * (1 - RELATIVE_WEIGHT) + rel * RELATIVE_WEIGHT + pace_bonus, 2
         )
 
+    # ── エラータグ補正（蓄積データに基づく条件別スコア調整） ──
+    if _BASE_DIR:
+        try:
+            from src.features.error_tags import get_correction_factor
+            for h in out:
+                et_factor = get_correction_factor(
+                    _BASE_DIR, rc, surf,
+                    race.get('distance', 0),
+                    race.get('track_condition', ''),
+                    horse=h,
+                )
+                if et_factor != 1.0:
+                    h['total'] = round(h['total'] * et_factor, 2)
+                    h['et_correction'] = et_factor
+        except Exception:
+            pass
+
     all_totals = [h['total'] for h in out]
     win_probs = softmax_probs(all_totals, temperature=3.5)
     for h, p in zip(out, win_probs):

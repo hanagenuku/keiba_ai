@@ -13,6 +13,7 @@ from scripts.weekend import fetch_and_save_results
 from src.betting.shadow import record_all_shadow_bets
 from src.features.correction import update_correction_table
 from src.features.engine import init_engine
+from src.features.error_tags import process_weekly_error_tags
 from src.tools.shap_diagnosis import generate_shap_report
 from src.utils.db import (init_db, get_db_path, get_history_db_path,
                            backup_db, checkpoint_db)
@@ -74,6 +75,12 @@ def main():
     # ③ SHAP診断レポート生成
     jst_date = jst_now.strftime('%Y-%m-%d')
     generate_shap_report(ROOT, db_path, target_date=jst_date)
+
+    # ④ エラータグ分類・蓄積（翌週予想の補正係数を自動更新）
+    try:
+        process_weekly_error_tags(ROOT, db_path, target_date=jst_date)
+    except Exception as e:
+        print(f'⚠ エラータグ処理失敗（予想には影響なし）: {e}')
 
     since_date = (jst_now - timedelta(days=7)).strftime('%Y-%m-%d')
     print_roi_breakdown(db_path, since_date)
