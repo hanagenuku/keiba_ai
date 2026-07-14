@@ -136,11 +136,11 @@
     "f_rl_rank",
     "f_cl_rank"
   ],
-  "trained_at": "2026-07-14 02:25:07.471062",
-  "val_auc": 0.809,
-  "val_brier": 0.3018,
-  "val_logloss": 0.799,
-  "n_train": 152255,
-  "n_val": 1472,
+  "trained_at": "2026-07-14 13:35:35.959840",
+  "val_auc": 0.7974,
+  "val_brier": 0.3026,
+  "val_logloss": 0.8005,
+  "n_train": 150739,
+  "n_val": 2988,
   "residual": true
 }
