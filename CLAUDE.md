@@ -60,7 +60,7 @@ files = [
     'src/tools/train_xgb.py', 'src/tools/calibrate_xgb.py',
     'src/tools/generate_style_advantage.py',
     'src/tools/train_pace_model.py',
-    'src/features/engine.py', 'src/features/speed_index.py',
+    'src/features/engine.py', 'src/features/speed_index.py', 'src/features/horse_type.py',
     'src/utils/config.py', 'src/utils/db.py', 'src/utils/model_registry.py',
     'src/scraper/parser.py', 'src/scraper/jra_scraper.py',
     'src/models/__init__.py', 'src/models/calibration.py', 'src/models/predict.py',
