@@ -163,3 +163,33 @@ def test_empty_results_noop(tmp_base):
     """空リストでもクラッシュしない。"""
     record_all_shadow_bets([], tmp_base)
     assert _fetch_shadow_rows(tmp_base) == []
+
+
+def test_rerun_does_not_duplicate_row(tmp_base):
+    """同一レースを2回記録しても shadow_bets には1行しか残らない（idx_shadow_bets_uniq）。
+
+    workflow_dispatch の再実行や --force 再生成で record_all_shadow_bets が
+    同じレースに対して2回呼ばれても、rl_accuracy 等の集計が二重カウントされないことを保証する。
+    """
+    horses = [
+        {'horse_num': 5, 'name': '朝の本命', 'rl_rank': 1,
+         'win_prob': 0.30, 'cal_prob': 0.45, 'win_odds': 4.0},
+        {'horse_num': 2, 'name': '朝の対抗', 'rl_rank': 2,
+         'win_prob': 0.20, 'cal_prob': 0.35, 'win_odds': 6.0},
+        {'horse_num': 8, 'name': '朝の三番手', 'rl_rank': 3,
+         'win_prob': 0.15, 'cal_prob': 0.30, 'win_odds': 8.0},
+    ]
+    _save_morning(tmp_base, 'R_RERUN', '2026-07-06', horses)
+
+    finishers = [
+        {'num': 2, 'name': '朝の対抗', 'place': 1, 'win_odds': 5.5},
+        {'num': 5, 'name': '朝の本命', 'place': 2, 'win_odds': 3.8},
+        {'num': 8, 'name': '朝の三番手', 'place': 3, 'win_odds': 9.0},
+    ]
+    result = _make_result('R_RERUN', '2026-07-06', finishers)
+
+    record_all_shadow_bets([result], tmp_base)
+    record_all_shadow_bets([result], tmp_base)  # ワークフロー再実行を模擬
+
+    rows = _fetch_shadow_rows(tmp_base)
+    assert len(rows) == 1

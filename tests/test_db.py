@@ -201,6 +201,56 @@ def test_save_bets_db_no_duplicate():
         assert len(rows) == 1  # 重複しない
 
 
+def test_shadow_bets_uniq_index_dedupes_on_migration():
+    """init_db は shadow_bets の重複行(race_id)を削除し UNIQUE INDEX を張る。
+
+    一意制約が無いと record_all_shadow_bets の INSERT OR IGNORE が効かず、
+    ワークフロー再実行のたびに同じレースが二重に記録されてしまう。
+    ここでは一意制約導入前の旧DB（テーブルはあるが重複行が既に入っている状態）を
+    模した上で init_db を実行し、マイグレーションが正しく機能することを検証する。
+    """
+    with tempfile.TemporaryDirectory() as tmp:
+        os.makedirs(os.path.join(tmp, 'data'))
+        # 旧バージョンの init_db 相当：一意制約なしで shadow_bets を作り重複行を投入
+        conn = sqlite3.connect(get_db_path(tmp))
+        conn.execute("""
+            CREATE TABLE shadow_bets (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                date TEXT, race_id TEXT, racecourse TEXT
+            )
+        """)
+        conn.execute(
+            "INSERT INTO shadow_bets (date, race_id, racecourse) VALUES (?, ?, ?)",
+            ('2026-07-19', 'R_DUP', '東京'))
+        conn.execute(
+            "INSERT INTO shadow_bets (date, race_id, racecourse) VALUES (?, ?, ?)",
+            ('2026-07-19', 'R_DUP', '東京'))
+        conn.commit()
+        rows = conn.execute('SELECT * FROM shadow_bets WHERE race_id=?', ('R_DUP',)).fetchall()
+        assert len(rows) == 2  # マイグレーション前は重複が入りうる
+        conn.close()
+
+        # init_db を実行するとマイグレーションで重複が排除され一意インデックスが張られる
+        init_db(base_dir=tmp)
+        conn = sqlite3.connect(get_db_path(tmp))
+        rows = conn.execute('SELECT * FROM shadow_bets WHERE race_id=?', ('R_DUP',)).fetchall()
+        assert len(rows) == 1
+
+        indexes = {r[0] for r in conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='shadow_bets'"
+        ).fetchall()}
+        assert 'idx_shadow_bets_uniq' in indexes
+
+        # 以後、同じ race_id の INSERT OR IGNORE は無視される
+        conn.execute(
+            "INSERT OR IGNORE INTO shadow_bets (date, race_id, racecourse) VALUES (?, ?, ?)",
+            ('2026-07-19', 'R_DUP', '東京'))
+        conn.commit()
+        rows = conn.execute('SELECT * FROM shadow_bets WHERE race_id=?', ('R_DUP',)).fetchall()
+        conn.close()
+        assert len(rows) == 1
+
+
 if __name__ == '__main__':
     test_init_db_creates_tables()
     print('✅ test_init_db_creates_tables passed')

@@ -187,6 +187,23 @@ def init_db(base_dir=None, db_path=None):
         )
     except sqlite3.OperationalError:
         pass
+    # shadow_bets の重複行を排除し race_id に一意制約を張る。
+    # 一意制約が無いと record_all_shadow_bets の INSERT OR IGNORE が実質ただの
+    # INSERT になり、ワークフローの再実行（--force やリトライ）でレースが
+    # 二重に記録され、rl_accuracy / 盲点パターン集計が二重カウントされる。
+    try:
+        conn.execute("""
+            DELETE FROM shadow_bets
+            WHERE id NOT IN (
+                SELECT MAX(id) FROM shadow_bets GROUP BY race_id
+            )
+        """)
+        conn.execute(
+            "CREATE UNIQUE INDEX IF NOT EXISTS idx_shadow_bets_uniq "
+            "ON shadow_bets(race_id)"
+        )
+    except sqlite3.OperationalError:
+        pass
     # cal_prob > 1.0 の修正（旧market_correction残骸）
     try:
         conn.execute("UPDATE race_predictions SET cal_prob = 0.99 WHERE cal_prob > 1.0")

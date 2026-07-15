@@ -21,10 +21,12 @@ from src.betting.ev_filter import select_quality_races, build_market_odds_from_r
 from src.features.engine import calc_all
 from src.betting.app_json import to_app_json
 from src.betting.shadow import record_all_shadow_bets
+from src.features.error_tags import process_weekly_error_tags
 from src.scraper.jra_scraper import (
     fetch_races_on_date, fetch_results, fetch_odds_map, apply_odds_to_races,
 )
 from src.tools.bias import analyze_bias, build_avg_bias
+from src.tools.shap_diagnosis import generate_shap_report
 
 JST = timezone(timedelta(hours=9))
 
@@ -232,6 +234,17 @@ def main():
             record_all_shadow_bets(all_results, ROOT,
                                    bias_data=avg_bias,
                                    recommended_race_ids=_rec_ids)
+
+        # 土曜分のエラータグ分類・蓄積（sunday_results.py は日曜分しか処理しないため、
+        # ここで呼ばないと土曜レースが週次補正学習から永久に漏れる）
+        jst_date = jst_now.strftime('%Y-%m-%d')
+        try:
+            process_weekly_error_tags(ROOT, db_path, target_date=jst_date)
+        except Exception as e:
+            print(f'⚠ エラータグ処理失敗（予想には影響なし）: {e}')
+
+        # 土曜分のSHAP診断レポート生成
+        generate_shap_report(ROOT, db_path, target_date=jst_date)
 
         # 翌日（日曜）予想
         predict_next_day(sess, hist_path, avg_bias, jst_now, force=args.force)
