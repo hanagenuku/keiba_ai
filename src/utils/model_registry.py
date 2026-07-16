@@ -27,8 +27,6 @@ MODEL_FILES = [
     'optimal_weights.json',
     'xgb_fukusho_model.pkl',
     'xgb_feature_cols.json',
-    'bet_selector_model.pkl',
-    'bet_selector_le.pkl',
     'pace_model.pkl',
 ]
 

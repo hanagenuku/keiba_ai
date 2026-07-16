@@ -2,8 +2,6 @@
 EV計算・Kelly基準ベット額・券種選択・シミュレーション記録。
 ノートブックのセル内関数を分離。
 """
-import os
-import pickle
 import sqlite3
 from itertools import combinations
 
@@ -28,10 +26,6 @@ BET_AMOUNT_SAN  = 200   # 三連複の基本金額（円）※少額固定
 # ── EVフィルタ（市場オッズ取得時のみ適用）────────────────────────────────────
 EV_THRESHOLD = 1.5  # 推定払戻 >= 投資額 × EV_THRESHOLD で買い
 
-# ── 券種選択モデル（後方互換のため残存。ルールベースでは使用しない）──────────
-_BET_SELECTOR    = None
-_BET_SELECTOR_LE = None
-
 
 def init_betting(base_dir,
                  bankroll=None, fuku_amt=None, tan_amt=None,
@@ -44,7 +38,6 @@ def init_betting(base_dir,
         *_amt     : 各券種のデフォルト賭け金（省略時はモジュール定数を維持）
     """
     global BANKROLL, FUKU_AMT, TAN_AMT, WIDE_AMT, REN_AMT, TAN2_AMT, SAN_AMT
-    global _BET_SELECTOR, _BET_SELECTOR_LE
 
     if bankroll  is not None: BANKROLL = bankroll
     if fuku_amt  is not None: FUKU_AMT = fuku_amt
@@ -53,15 +46,6 @@ def init_betting(base_dir,
     if ren_amt   is not None: REN_AMT  = ren_amt
     if tan2_amt  is not None: TAN2_AMT = tan2_amt
     if san_amt   is not None: SAN_AMT  = san_amt
-
-    bs_path = os.path.join(base_dir, 'data', 'bet_selector_model.pkl')
-    le_path = os.path.join(base_dir, 'data', 'bet_selector_le.pkl')
-    if os.path.exists(bs_path) and os.path.exists(le_path):
-        with open(bs_path, 'rb') as f: _BET_SELECTOR    = pickle.load(f)
-        with open(le_path, 'rb') as f: _BET_SELECTOR_LE = pickle.load(f)
-        print('✅ 券種選択モデル読み込み完了（ルールベースのため予測には使用しない）')
-    else:
-        print('⚠ 券種選択モデルなし → ルールベースで動作')
 
 
 def calc_ev(win_prob, odds):

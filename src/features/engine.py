@@ -96,9 +96,15 @@ def init_engine(base_dir,
                 print('  残差学習モデル検出: base_margin を推論時に適用します')
 
     # アンサンブルモデル（XGB+LightGBM）を優先ロード
+    # ⚠ 残差学習モデル（_XGB_RESIDUAL）とは推論経路が非互換（DMatrix+base_marginを
+    # 使う残差推論パスに、sklearn API の XGBClassifier を渡すと型エラーになり、
+    # calc_all側のtry/exceptでルールベースへサイレントにフォールバックしてしまう）。
+    # 残差学習モデルが検出されている場合はアンサンブルより優先する。
     global _ENSEMBLE_MODEL
     ens_path = f'{base_dir}/data/xgb_ensemble_model.pkl'
-    if os.path.exists(ens_path):
+    if _XGB_RESIDUAL:
+        _ENSEMBLE_MODEL = None
+    elif os.path.exists(ens_path):
         try:
             with open(ens_path, 'rb') as f:
                 _ENSEMBLE_MODEL = pickle.load(f)
