@@ -82,49 +82,6 @@ def classify_pop(popularity):
         return '不人気'
 
 
-def classify_distance(distance):
-    """距離を帯に分類"""
-    if distance <= 1400:
-        return '短距離'
-    elif distance <= 1800:
-        return 'マイル'
-    elif distance <= 2200:
-        return '中距離'
-    else:
-        return '長距離'
-
-
-def apply_correction(horse, correction_table):
-    """
-    1頭の予測に補正を適用する。
-
-    Parameters
-    ----------
-    horse : dict
-        必須キー: cal_prob, rl_rank, popularity
-    correction_table : dict
-        load_correction_table() で読み込んだテーブル
-
-    Returns
-    -------
-    float: 補正済み cal_prob
-    """
-    if not correction_table.get('rl_pop'):
-        return horse.get('cal_prob', 0.0)
-
-    rl_group  = classify_rl(horse.get('rl_rank', 99))
-    pop_group = classify_pop(horse.get('popularity', 99))
-    key = f'{rl_group}_{pop_group}'
-
-    entry = correction_table['rl_pop'].get(key)
-    if not entry or entry.get('n', 0) < MIN_SAMPLES:
-        return horse.get('cal_prob', 0.0)
-
-    factor = max(FACTOR_MIN, min(FACTOR_MAX, entry.get('factor', DEFAULT_FACTOR)))
-    corrected = horse['cal_prob'] * factor
-    return max(0.001, min(0.999, corrected))
-
-
 def update_correction_table(base_dir, db_path, weeks=8):
     """
     race_predictions の直近N週間のデータから補正テーブルを更新する。

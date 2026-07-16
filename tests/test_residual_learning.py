@@ -1,6 +1,8 @@
 """残差学習（base_margin）の単体テスト"""
 
+import json
 import math
+import pickle
 import pytest
 import numpy as np
 import pandas as pd
@@ -94,3 +96,78 @@ class TestEngineResidualInference:
         logit_val = math.log(p_orig / (1 - p_orig))
         p_back = 1 / (1 + math.exp(-logit_val))
         assert abs(p_orig - p_back) < 1e-10
+
+
+class TestEnsembleResidualConflict:
+    """init_engine: 残差学習モデルとアンサンブルモデルの併存を防ぐガードの検証。
+
+    2026-07 に発生した実障害の再現テスト:
+    data/xgb_ensemble_model.pkl（sklearn API の XGBClassifier を含む古い実験の
+    残骸）が残っていると、残差学習フラグ(_XGB_RESIDUAL=True)が立っていても
+    アンサンブルモデルが _XGB_FUKUSHO_MODEL を上書きしてしまい、推論時に
+    「DMatrix + base_margin」パスへ sklearn API モデルを渡す型エラーが発生、
+    calc_all の try/except でルールベースへサイレントフォールバックしていた。
+    """
+
+    def _make_residual_booster(self, tmp_path, feature_cols):
+        import numpy as np
+        import xgboost as xgb
+
+        rng = np.random.RandomState(0)
+        X = rng.rand(20, len(feature_cols))
+        y = rng.randint(0, 2, size=20)
+        dtrain = xgb.DMatrix(X, label=y, feature_names=feature_cols)
+        booster = xgb.train({'objective': 'binary:logistic', 'max_depth': 2}, dtrain, num_boost_round=3)
+        model_path = tmp_path / 'data' / 'xgb_fukusho_model.pkl'
+        booster.save_model(str(model_path))
+
+        cols_path = tmp_path / 'data' / 'xgb_feature_cols.json'
+        cols_path.write_text(json.dumps({'feature_cols': feature_cols, 'residual': True}))
+
+    def _make_stray_ensemble(self, tmp_path, feature_cols):
+        import numpy as np
+        from xgboost import XGBClassifier
+        from lightgbm import LGBMClassifier
+
+        rng = np.random.RandomState(0)
+        X = rng.rand(20, len(feature_cols))
+        y = rng.randint(0, 2, size=20)
+        xgb_clf = XGBClassifier(n_estimators=3, max_depth=2)
+        xgb_clf.fit(X, y)
+        lgbm_clf = LGBMClassifier(n_estimators=3, max_depth=2, verbosity=-1)
+        lgbm_clf.fit(X, y)
+
+        ensemble = {'xgb': xgb_clf, 'lgbm': lgbm_clf, 'xgb_weight': 0.7, 'feat_cols': feature_cols}
+        with open(tmp_path / 'data' / 'xgb_ensemble_model.pkl', 'wb') as f:
+            pickle.dump(ensemble, f)
+
+    def _make_min_engine_files(self, tmp_path):
+        """init_engine を空 data/ ディレクトリで完走させるための最小pklを用意する。
+
+        （_horse_dist_dict 等は data/ に対応する pkl が無いと構築処理が
+        history.db 依存になり、DB が無い環境ではモジュール未初期化の
+        グローバル変数参照で NameError になるため、空 dict を明示的に置く）
+        """
+        for name in ['horse_dist_dict.pkl', 'horse_course_dict.pkl',
+                     'horse_venue_dist_dict.pkl', 'post_zone_bias.pkl']:
+            with open(tmp_path / 'data' / name, 'wb') as f:
+                pickle.dump({}, f)
+
+    def test_residual_model_not_overridden_by_stray_ensemble(self, tmp_path):
+        (tmp_path / 'data').mkdir()
+        feature_cols = [f'f{i}' for i in range(5)]
+        self._make_min_engine_files(tmp_path)
+        self._make_residual_booster(tmp_path, feature_cols)
+        self._make_stray_ensemble(tmp_path, feature_cols)
+
+        from src.features import engine
+        engine.init_engine(str(tmp_path))
+
+        assert engine._XGB_RESIDUAL is True
+        assert engine._ENSEMBLE_MODEL is None, (
+            "残差学習モデル検出時はアンサンブルモデルを無視すべき"
+        )
+        import xgboost as xgb
+        assert isinstance(engine._XGB_FUKUSHO_MODEL, xgb.Booster), (
+            "残差推論パスは Booster を期待するため sklearn API に上書きされてはいけない"
+        )
