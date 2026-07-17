@@ -102,6 +102,80 @@ def _try_fetch_shutuba(sess, base, r, date_str, sx):
     return resp, soup
 
 
+def fetch_horse_pedigree(sess, cname):
+    """血統情報ページ(accessU.html)から父・母の父を取得する。
+
+    出馬表の馬名リンクに埋め込まれた CNAME（例: 'pw01dud002024103763/CB'）を使う。
+    ページは <dt>父</dt><dd>馬名</dd> のような定義リスト構造。
+    母・母の母は "○○ 産駒" という表記（繁殖牝馬自体のページではないため）になるが、
+    父・母の父はそのまま種牡馬名が入る。
+
+    Returns
+    -------
+    dict: {'sire': str, 'dam_sire': str}（取得できなかった項目は含まない）
+    """
+    resp = sess.post(f'{JRA_BASE}/JRADB/accessU.html',
+                     data={'cname': cname, 'CNAME': cname},
+                     headers=HEADERS, timeout=15)
+    resp.encoding = 'shift_jis'
+    soup = BeautifulSoup(resp.text, 'lxml')
+
+    result = {}
+    label_to_key = {'父': 'sire', '母の父': 'dam_sire'}
+    for dt in soup.find_all('dt'):
+        label = dt.get_text(strip=True)
+        key = label_to_key.get(label)
+        if not key:
+            continue
+        dd = dt.find_next_sibling('dd')
+        if not dd:
+            continue
+        value = re.sub(r'\s*産駒\s*$', '', dd.get_text(' ', strip=True))
+        if value:
+            result[key] = value
+    return result
+
+
+def _fill_pedigree(sess, horses, hist_db_path):
+    """出走馬の血統(父・母の父)を補完する。
+
+    history.db に既に記録済みの馬（過去に一度でも取得済み）は再取得しない
+    （血統は不変データのためキャッシュとして扱える）。未記録の新規馬のみ
+    accessU.html へ追加リクエストする。1頭の失敗が他馬・レース全体を
+    止めないよう、例外は個別に握りつぶす。
+    """
+    conn = sqlite3.connect(hist_db_path)
+    try:
+        for h in horses:
+            cname = h.get('pedigree_cname')
+            row = None
+            try:
+                row = conn.execute(
+                    "SELECT sire, dam_sire FROM horse_history "
+                    "WHERE horse_name=? AND sire IS NOT NULL AND sire != '' "
+                    "ORDER BY date DESC LIMIT 1", (h.get('name', ''),)
+                ).fetchone()
+            except sqlite3.OperationalError:
+                pass  # 未マイグレーションの旧DB（sire列なし）
+            if row and row[0]:
+                h['sire'] = row[0]
+                h['dam_sire'] = row[1] or ''
+                continue
+            if not cname:
+                continue
+            try:
+                ped = fetch_horse_pedigree(sess, cname)
+                if ped.get('sire'):
+                    h['sire'] = ped['sire']
+                if ped.get('dam_sire'):
+                    h['dam_sire'] = ped['dam_sire']
+            except Exception as e:
+                print(f'  ⚠ 血統取得失敗 ({h.get("name", "?")}): {e}')
+            time.sleep(0.3)
+    finally:
+        conn.close()
+
+
 def _try_fetch_result(sess, base, r, date_str, sx):
     """指定suffixで結果ページを取得。soup を返す。失敗時はNone。"""
     cn = f'{base}{r:02d}{date_str}/{sx}'
@@ -358,6 +432,9 @@ def fetch_races_on_date(sess, target_date, hist_db_path):
                     print(f'  R{r:02d}: ログ取得中に例外 suffix={sx}')
                 time.sleep(0.3)
                 continue
+
+            # 血統(父・母の父)を補完する。history.dbに未記録の新規馬のみ追加リクエストする。
+            _fill_pedigree(sess, race['horses'], hist_db_path)
 
             # オッズ取得用のCNAME情報を保持（fetch_odds_for_race で使用）
             race['_odds_cn'] = {'base': base, 'date_str': date_str, 'sx': sx, 'race_num': r, 'odds_r01': odds_r01}
@@ -798,6 +875,14 @@ def parse_result_soup(soup, racecourse, race_num, date, place_code):
                 texts[3].strip(),
             )
             name = name_m.group(1).strip() if name_m else texts[3].strip()[:10]
+            # 馬名リンクは血統情報ページ(accessU.html?CNAME=...)への直リンクになっている
+            pedigree_cname = None
+            if len(cells) > 3:
+                name_a = cells[3].find('a')
+                if name_a:
+                    cn_m = re.search(r'CNAME=([^&]+)', name_a.get('href', ''))
+                    if cn_m:
+                        pedigree_cname = cn_m.group(1)
             # 性齢（texts[4]近辺）
             sex, age = _extract_sex_age(texts, start_idx=4, end_idx=6)
             # 斤量（texts[5]近辺）
@@ -843,6 +928,7 @@ def parse_result_soup(soup, racecourse, race_num, date, place_code):
                 'body_weight_diff': body_weight_diff,
                 'corner_all': corner_all,
                 'win_odds': win_odds,
+                'pedigree_cname': pedigree_cname,
             })
         divs = parse_dividends(soup)
         if not finishers:
@@ -878,8 +964,13 @@ def parse_result_soup(soup, racecourse, race_num, date, place_code):
 
 
 
-def fetch_results(sess, target_date, calendar=None):
-    """指定日の全レース結果を取得"""
+def fetch_results(sess, target_date, calendar=None, hist_db_path=None):
+    """指定日の全レース結果を取得。
+
+    hist_db_path を渡すと、確定した出走馬の血統(父・母の父)を補完して
+    history.db に永続化できる状態にする（history.dbに未記録の新規馬のみ
+    追加リクエストする）。省略時は血統補完をスキップする（後方互換）。
+    """
     from src.scraper.calendar import get_kaisai_on_date
     print(f'📡 {target_date} 結果取得中...')
     all_results = []
@@ -965,6 +1056,8 @@ def fetch_results(sess, target_date, calendar=None):
             result = parse_result_soup(soup, rc, r, target_date, pc)
             if not result:
                 continue
+            if hist_db_path:
+                _fill_pedigree(sess, result['finishers'], hist_db_path)
             all_results.append(result)
             top3 = result['finishers'][:3]
             t3 = ' '.join(

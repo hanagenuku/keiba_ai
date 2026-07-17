@@ -46,7 +46,7 @@ APP_PATH = os.path.join(ROOT, 'data', 'latest.json')
 def fetch_and_save_results(sess, hist_path, target_date):
     print(f'📅 本日結果取得: {target_date}')
 
-    all_results = fetch_results(sess, target_date)
+    all_results = fetch_results(sess, target_date, hist_db_path=hist_path)
     print(f'📋 取得完了: {len(all_results)}レース')
 
     if all_results:

@@ -4,7 +4,7 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from bs4 import BeautifulSoup
-from src.scraper.parser import parse_header, get_class_from_racename, parse_hist
+from src.scraper.parser import parse_header, get_class_from_racename, parse_hist, parse_horse
 from src.scraper.calendar import get_base_from_calendar
 from src.utils.config import KAISAI_CALENDAR
 import src.scraper.jra_scraper as jra_scraper
@@ -212,6 +212,133 @@ def test_apply_odds_skips_race_without_map():
     n = apply_odds_to_races(races, {})
     assert n == 0
     assert races[0]['horses'][0]['win_odds'] == 3.3
+
+
+# ── 血統(父・母の父)スクレイピング（2026-07-17〜） ─────────────────────────
+
+def test_parse_horse_extracts_pedigree_cname():
+    """馬名リンクのhrefからCNAME(血統ページへの直リンク)を抽出できる。"""
+    html = '''
+    <tr>
+      <td>1</td>
+      <td><a href="/JRADB/accessU.html?CNAME=pw01dud002024103763/CB">テストウマ</a></td>
+      <td>牡3</td>
+      <td>57.0</td>
+      <td><a href="#">調教師名</a></td>
+      <td><a href="#">騎手名</a></td>
+      <td>3.5</td>
+    </tr>
+    '''
+    cells = BeautifulSoup(html, 'lxml').find('tr').find_all('td')
+    h = parse_horse(cells, '東京', '芝')
+    assert h is not None
+    assert h['name'] == 'テストウマ'
+    assert h['pedigree_cname'] == 'pw01dud002024103763/CB'
+
+
+def test_parse_horse_pedigree_cname_none_without_href():
+    """href が無い（通常のテキスト馬名など）場合は None のまま。"""
+    html = '''
+    <tr>
+      <td>1</td>
+      <td>テストウマ二</td>
+      <td>牡3</td>
+      <td>57.0</td>
+    </tr>
+    '''
+    cells = BeautifulSoup(html, 'lxml').find('tr').find_all('td')
+    h = parse_horse(cells, '東京', '芝')
+    assert h is not None
+    assert h.get('pedigree_cname') is None
+
+
+_PEDIGREE_HTML = '''
+<html><body>
+<li class="data_col1">
+<dl>
+<dt>父</dt><dd>ステルヴィオ</dd>
+<dt>母</dt><dd>オーミバンビーナ 産駒</dd>
+<dt>母の父</dt><dd>ブラックタイド</dd>
+<dt>母の母</dt><dd>ポットアカデミー 産駒</dd>
+</dl>
+</li>
+</body></html>
+'''
+
+
+class _FakePedigreeSession:
+    """accessU.htmlへのPOSTに対し、事前登録した cname → HTML を返す擬似JRADB。"""
+    def __init__(self, html_by_cname):
+        self.html_by_cname = html_by_cname
+        self.calls = []
+
+    def post(self, url, data=None, headers=None, timeout=None):
+        cn = (data or {}).get('cname') or (data or {}).get('CNAME') or ''
+        self.calls.append(cn)
+        html = self.html_by_cname.get(cn, '<html><body></body></html>')
+        return _FakeResp(html)
+
+
+def test_fetch_horse_pedigree_parses_sire_and_dam_sire():
+    """<dt>/<dd>構造から父・母の父を取得し、母の"産駒"サフィックスは対象外にする。"""
+    sess = _FakePedigreeSession({'pw01dud002024103763/CB': _PEDIGREE_HTML})
+    result = jra_scraper.fetch_horse_pedigree(sess, 'pw01dud002024103763/CB')
+    assert result == {'sire': 'ステルヴィオ', 'dam_sire': 'ブラックタイド'}
+
+
+def test_fetch_horse_pedigree_missing_page_returns_empty():
+    sess = _FakePedigreeSession({})
+    result = jra_scraper.fetch_horse_pedigree(sess, 'pw01dud000000000000/00')
+    assert result == {}
+
+
+def test_fill_pedigree_skips_cached_horse(tmp_path):
+    """history.dbに既に血統が記録済みの馬は再取得しない（ネットワークリクエストなし）。"""
+    from src.utils.db import save_history_db
+    hist_path = tmp_path / 'history.db'
+    save_history_db([{
+        'race_id': '20260101_01_01', 'racecourse': '東京', 'distance': 1600, 'surface': '芝',
+        'finishers': [{'num': 1, 'name': 'キャッシュ済み馬', 'place': 3,
+                       'sire': '既知の父', 'dam_sire': '既知の母父'}],
+    }], db_path=str(hist_path))
+
+    sess = _FakePedigreeSession({})  # 呼ばれたら空HTMLしか返せない＝取得ミスに気づける
+    horses = [{'name': 'キャッシュ済み馬', 'pedigree_cname': 'pw01dud000000000000/00'}]
+    jra_scraper._fill_pedigree(sess, horses, str(hist_path))
+
+    assert horses[0]['sire'] == '既知の父'
+    assert horses[0]['dam_sire'] == '既知の母父'
+    assert sess.calls == []
+
+
+def test_fill_pedigree_fetches_new_horse(tmp_path, monkeypatch):
+    """history.dbに記録の無い新規馬は accessU.html から取得する。"""
+    monkeypatch.setattr(jra_scraper.time, 'sleep', lambda *_: None)
+    from src.utils.db import save_history_db
+    hist_path = tmp_path / 'history.db'
+    save_history_db([], db_path=str(hist_path))  # スキーマ作成のみ
+
+    sess = _FakePedigreeSession({'pw01dud002024103763/CB': _PEDIGREE_HTML})
+    horses = [{'name': '新規馬', 'pedigree_cname': 'pw01dud002024103763/CB'}]
+    jra_scraper._fill_pedigree(sess, horses, str(hist_path))
+
+    assert horses[0]['sire'] == 'ステルヴィオ'
+    assert horses[0]['dam_sire'] == 'ブラックタイド'
+    assert sess.calls == ['pw01dud002024103763/CB']
+
+
+def test_fill_pedigree_no_cname_skips_silently(tmp_path):
+    """pedigree_cnameが取れなかった馬（href欠損等）はエラーにせずスキップする。"""
+    from src.utils.db import save_history_db
+    hist_path = tmp_path / 'history.db'
+    save_history_db([], db_path=str(hist_path))
+
+    sess = _FakePedigreeSession({})
+    horses = [{'name': 'CNAME無し馬', 'pedigree_cname': None}]
+    jra_scraper._fill_pedigree(sess, horses, str(hist_path))
+
+    assert 'sire' not in horses[0]
+    assert sess.calls == []
 
 
 if __name__ == '__main__':
