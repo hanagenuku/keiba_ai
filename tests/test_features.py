@@ -7,7 +7,7 @@ from src.features.engine import (
     calc_performance_index, f_recent, calc_chaos_score,
     auto_comment, dist_zone_label, dz,
     calc_course_aptitude_features, load_course_profiles, get_course_profile,
-    calc_features_for_xgb, _ensure_escape_front_count,
+    calc_features_for_xgb, _ensure_escape_front_count, f_blood,
 )
 
 ROOT = os.path.join(os.path.dirname(__file__), '..')
@@ -279,6 +279,39 @@ def test_pace_scenario_features_nige():
     }
     feats = calc_features_for_xgb(horses[0], race)  # 逃げ馬
     assert feats['f_pace_x_style'] < 0  # 逃げ3頭→ハイペース→逃げ不利
+
+
+class TestFBlood:
+    """f_blood: 母父(dam_sire)は現状スクレイピング未対応で常に空文字になる。
+    空の場合に DEF_SIRE(汎用値) とブレンドして父側の実データを希釈しないことを確認する。
+    """
+
+    def test_no_dam_sire_avoids_dilution(self):
+        # ロードカナロア: 短距離特化(sp:1.0)・長距離は苦手(lo:0.3)。
+        # 母父が空のときは父の実データがそのまま反映され、DEF_SIRE(lo:0.8=平均的)と
+        # ブレンドするより長距離適性は低く評価されるはず。
+        race = {'surface': '芝', 'distance': 3000}  # 'lo'ゾーン
+        h_no_dam = {'sire': 'ロードカナロア', 'dam_sire': '', 'age': 2.5}
+        h_unknown_dam = {'sire': 'ロードカナロア', 'dam_sire': '存在しない架空馬名', 'age': 2.5}
+
+        score_no_dam = f_blood(h_no_dam, race)
+        score_diluted = f_blood(h_unknown_dam, race)
+
+        assert score_no_dam < score_diluted, (
+            "母父が空(未取得)の場合は父の実データをそのまま使うべきで、"
+            "DEF_SIREとブレンドした場合より苦手条件の評価が下がる（＝薄まらない）はず"
+        )
+
+    def test_dam_sire_present_still_blends(self):
+        """母父が実際に取得できているケース（将来のスクレイピング対応後）は
+        従来通り父70%・母父30%でブレンドする（後方互換の確認）。
+        """
+        race = {'surface': '芝', 'distance': 3000}
+        h_same = {'sire': 'ロードカナロア', 'dam_sire': 'ロードカナロア', 'age': 2.5}
+        h_no_dam = {'sire': 'ロードカナロア', 'dam_sire': '', 'age': 2.5}
+
+        # 母父も父と同一プロファイルなら、ブレンドしても無ブレンドと同じ値になる
+        assert abs(f_blood(h_same, race) - f_blood(h_no_dam, race)) < 1e-9
 
 
 if __name__ == '__main__':

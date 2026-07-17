@@ -1165,13 +1165,21 @@ def f_dist_v2(h, race):
 
 
 def f_blood(h, race):
-    sd   = SIRE_DB.get(h.get('sire', ''), DEF_SIRE)
-    dd   = SIRE_DB.get(h.get('dam_sire', ''), DEF_SIRE)
+    sd     = SIRE_DB.get(h.get('sire', ''), DEF_SIRE)
+    dam_si = h.get('dam_sire', '')
     age  = h.get('age', 4)
     surf = race.get('surface', '芝')
     z    = dz(race.get('distance', 2000))
-    ds   = sd['dist'].get(z, .7) * .7 + dd['dist'].get(z, .7) * .3
-    ss   = sd['surf'].get(surf, .7) * .7 + dd['surf'].get(surf, .7) * .3
+    if dam_si:
+        dd = SIRE_DB.get(dam_si, DEF_SIRE)
+        ds = sd['dist'].get(z, .7) * .7 + dd['dist'].get(z, .7) * .3
+        ss = sd['surf'].get(surf, .7) * .7 + dd['surf'].get(surf, .7) * .3
+    else:
+        # 母父は現状スクレイピング未対応で常に空文字。DEF_SIRE(汎用値)で
+        # 30%ブレンドすると父側の実データが薄まるだけなので、
+        # 母父が取れている場合のみブレンドし、無ければ父のみで評価する。
+        ds = sd['dist'].get(z, .7)
+        ss = sd['surf'].get(surf, .7)
     peak = sd['peak']
     gt   = sd['type']
     diff = age - peak
