@@ -165,6 +165,7 @@ def parse_horse(cells, rc, surf):
             return None
         name = None
         name_col = 1
+        pedigree_cname = None
         for col_idx in range(1, min(5, len(cells))):
             links = cells[col_idx].find_all('a')
             for a in links:
@@ -172,6 +173,11 @@ def parse_horse(cells, rc, surf):
                 if txt and re.search(r'[゠-ヿ一-鿿]', txt) and len(txt) >= 2:
                     name = txt
                     name_col = col_idx
+                    # 馬名リンクは血統情報ページ(accessU.html?CNAME=...)への直リンクになっている
+                    href = a.get('href', '')
+                    m = re.search(r'CNAME=([^&]+)', href)
+                    if m:
+                        pedigree_cname = m.group(1)
                     break
             if name:
                 break
@@ -245,6 +251,7 @@ def parse_horse(cells, rc, surf):
             'jockey': jockey,
             'trainer': trainer,
             'sire': sire,
+            'pedigree_cname': pedigree_cname,
             'racecourse': rc,
             'surface': surf,
             'post_position': umaban,
