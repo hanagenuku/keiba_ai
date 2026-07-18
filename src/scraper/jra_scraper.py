@@ -136,13 +136,29 @@ def fetch_horse_pedigree(sess, cname):
     return result
 
 
-def _fill_pedigree(sess, horses, hist_db_path):
+# 1回のワークフロー実行（出馬表取得 or 結果取得の全レース分）あたりの
+# 血統新規取得の上限。導入直後は history.db に sire が一切無いため全馬が
+# "新規"扱いになり、無制限だと数百件の追加リクエストでCIの30分タイムアウトに
+# 達してしまう（2026-07-18 に実際に発生・全データ喪失）。上限に達した馬は
+# 静かにスキップし、次回の実行で改めて拾われる（数週間かけて段階的に埋まる）。
+PEDIGREE_FETCH_BUDGET_DEFAULT = 60
+
+
+def _fill_pedigree(sess, horses, hist_db_path, budget=None):
     """出走馬の血統(父・母の父)を補完する。
 
     history.db に既に記録済みの馬（過去に一度でも取得済み）は再取得しない
     （血統は不変データのためキャッシュとして扱える）。未記録の新規馬のみ
     accessU.html へ追加リクエストする。1頭の失敗が他馬・レース全体を
     止めないよう、例外は個別に握りつぶす。
+
+    Parameters
+    ----------
+    budget : dict または None
+        {'remaining': int} 形式の共有カウンタ。呼び出し元が複数レース分を
+        ループしながら同じ dict を使い回すことで、実行全体での新規取得数に
+        上限を設ける。上限到達後は残りの馬を静かにスキップする（次回の
+        実行で改めて拾われる）。None なら無制限（テスト・単発呼び出し用）。
     """
     conn = sqlite3.connect(hist_db_path)
     try:
@@ -163,6 +179,10 @@ def _fill_pedigree(sess, horses, hist_db_path):
                 continue
             if not cname:
                 continue
+            if budget is not None:
+                if budget.get('remaining', 0) <= 0:
+                    continue  # 今回の実行では上限到達。次回の実行で拾う
+                budget['remaining'] -= 1
             try:
                 ped = fetch_horse_pedigree(sess, cname)
                 if ped.get('sire'):
@@ -358,6 +378,7 @@ def fetch_races_on_date(sess, target_date, hist_db_path):
     """指定日の全レース出走表を取得"""
     print(f'📡 {target_date} 出走表取得中...')
     all_races = []
+    pedigree_budget = {'remaining': PEDIGREE_FETCH_BUDGET_DEFAULT}
     links = get_kaisai_on_date(target_date, sess)
     for base, date_str in links.items():
         pc = re.search(r'pw01dde01(\d{2})', base)
@@ -433,8 +454,9 @@ def fetch_races_on_date(sess, target_date, hist_db_path):
                 time.sleep(0.3)
                 continue
 
-            # 血統(父・母の父)を補完する。history.dbに未記録の新規馬のみ追加リクエストする。
-            _fill_pedigree(sess, race['horses'], hist_db_path)
+            # 血統(父・母の父)を補完する。history.dbに未記録の新規馬のみ追加リクエストする
+            # （実行全体でPEDIGREE_FETCH_BUDGET_DEFAULT件までに制限。超過分は次回に持ち越し）。
+            _fill_pedigree(sess, race['horses'], hist_db_path, budget=pedigree_budget)
 
             # オッズ取得用のCNAME情報を保持（fetch_odds_for_race で使用）
             race['_odds_cn'] = {'base': base, 'date_str': date_str, 'sx': sx, 'race_num': r, 'odds_r01': odds_r01}
@@ -974,6 +996,7 @@ def fetch_results(sess, target_date, calendar=None, hist_db_path=None):
     from src.scraper.calendar import get_kaisai_on_date
     print(f'📡 {target_date} 結果取得中...')
     all_results = []
+    pedigree_budget = {'remaining': PEDIGREE_FETCH_BUDGET_DEFAULT}
 
     # Step1: 結果一覧(pw01sli00/AF)から sde_base を取得
     bases = {}
@@ -1057,7 +1080,7 @@ def fetch_results(sess, target_date, calendar=None, hist_db_path=None):
             if not result:
                 continue
             if hist_db_path:
-                _fill_pedigree(sess, result['finishers'], hist_db_path)
+                _fill_pedigree(sess, result['finishers'], hist_db_path, budget=pedigree_budget)
             all_results.append(result)
             top3 = result['finishers'][:3]
             t3 = ' '.join(

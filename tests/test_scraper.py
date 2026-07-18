@@ -341,6 +341,61 @@ def test_fill_pedigree_no_cname_skips_silently(tmp_path):
     assert sess.calls == []
 
 
+def test_fill_pedigree_respects_budget(tmp_path, monkeypatch):
+    """budgetの残数が尽きたら、それ以降の新規馬はリクエストせずスキップする。
+
+    2026-07-18にworkflowが30分タイムアウトでキャンセルされ、その回の
+    土曜結果・日曜予想が丸ごと保存されずに失われた事故の再発防止テスト
+    （導入直後は全馬が"新規"扱いになり無制限だと数百リクエスト発生する）。
+    """
+    monkeypatch.setattr(jra_scraper.time, 'sleep', lambda *_: None)
+    from src.utils.db import save_history_db
+    hist_path = tmp_path / 'history.db'
+    save_history_db([], db_path=str(hist_path))
+
+    sess = _FakePedigreeSession({
+        'pw01dud0001/AA': _PEDIGREE_HTML,
+        'pw01dud0002/BB': _PEDIGREE_HTML,
+        'pw01dud0003/CC': _PEDIGREE_HTML,
+    })
+    horses = [
+        {'name': '馬1', 'pedigree_cname': 'pw01dud0001/AA'},
+        {'name': '馬2', 'pedigree_cname': 'pw01dud0002/BB'},
+        {'name': '馬3', 'pedigree_cname': 'pw01dud0003/CC'},
+    ]
+    budget = {'remaining': 2}
+    jra_scraper._fill_pedigree(sess, horses, str(hist_path), budget=budget)
+
+    assert horses[0]['sire'] == 'ステルヴィオ'
+    assert horses[1]['sire'] == 'ステルヴィオ'
+    assert 'sire' not in horses[2]  # 上限到達でスキップ
+    assert sess.calls == ['pw01dud0001/AA', 'pw01dud0002/BB']
+    assert budget['remaining'] == 0
+
+
+def test_fill_pedigree_budget_shared_across_calls(tmp_path, monkeypatch):
+    """budgetは複数レース（複数回の_fill_pedigree呼び出し）にまたがって共有される。"""
+    monkeypatch.setattr(jra_scraper.time, 'sleep', lambda *_: None)
+    from src.utils.db import save_history_db
+    hist_path = tmp_path / 'history.db'
+    save_history_db([], db_path=str(hist_path))
+
+    sess = _FakePedigreeSession({
+        'pw01dud0001/AA': _PEDIGREE_HTML,
+        'pw01dud0002/BB': _PEDIGREE_HTML,
+    })
+    budget = {'remaining': 1}
+    race1_horses = [{'name': 'レース1の馬', 'pedigree_cname': 'pw01dud0001/AA'}]
+    race2_horses = [{'name': 'レース2の馬', 'pedigree_cname': 'pw01dud0002/BB'}]
+
+    jra_scraper._fill_pedigree(sess, race1_horses, str(hist_path), budget=budget)
+    jra_scraper._fill_pedigree(sess, race2_horses, str(hist_path), budget=budget)
+
+    assert race1_horses[0]['sire'] == 'ステルヴィオ'
+    assert 'sire' not in race2_horses[0]  # 前のレースで予算を使い切っている
+    assert sess.calls == ['pw01dud0001/AA']
+
+
 if __name__ == '__main__':
     test_parse_header_basic()
     print('✅ test_parse_header_basic passed')
