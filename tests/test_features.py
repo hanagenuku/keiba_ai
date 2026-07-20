@@ -7,7 +7,7 @@ from src.features.engine import (
     calc_performance_index, f_recent, calc_chaos_score,
     auto_comment, dist_zone_label, dz,
     calc_course_aptitude_features, load_course_profiles, get_course_profile,
-    calc_features_for_xgb, _ensure_escape_front_count, f_blood,
+    calc_features_for_xgb, _ensure_escape_front_count, f_blood, _bayes_rate,
 )
 
 ROOT = os.path.join(os.path.dirname(__file__), '..')
@@ -95,13 +95,13 @@ def test_course_aptitude_tokyo_specialist():
         {'racecourse': '中山', 'surface': '芝', 'place': 12, 'agari3f': 36.8},
         {'racecourse': '中山', 'surface': '芝', 'place': 10, 'agari3f': 37.1},
     ]
-    # 今日が東京芝 → 東京で2戦2好走
+    # 今日が東京芝 → 東京で2戦2好走（ベイズ縮小により1.0ではなく中立値寄りの0.598）
     feats = calc_course_aptitude_features('テスト馬', '東京', '芝', history, ROOT)
-    assert feats['f_same_course_rate'] == 1.0
+    assert feats['f_same_course_rate'] == _bayes_rate([1, 1])
     assert feats['f_course_coverage'] == 2
-    # 今日が中山芝 → 中山で2戦2凡走
+    # 今日が中山芝 → 中山で2戦2凡走（同様に0.0ではなく0.198）
     feats = calc_course_aptitude_features('テスト馬', '中山', '芝', history, ROOT)
-    assert feats['f_same_course_rate'] == 0.0
+    assert feats['f_same_course_rate'] == _bayes_rate([0, 0])
     assert feats['f_course_coverage'] == 2
 
 
@@ -113,15 +113,17 @@ def test_course_aptitude_straight_match():
         {'racecourse': '函館', 'surface': '芝', 'place': 8, 'agari3f': 35.0},
     ]
     feats = calc_course_aptitude_features('テスト馬', '東京', '芝', history, ROOT)
-    # straight_class=long の過去走は東京の1走（好走）のみ → 1.0
-    assert feats['f_straight_match'] == 1.0
+    # straight_class=long の過去走は東京の1走（好走）のみ
+    # → ベイズ縮小で1.0ではなく中立値寄りの0.497（n=1は信頼度が低いため）
+    assert feats['f_straight_match'] == _bayes_rate([1])
     # long コースの最速上がりは 33.2
     assert feats['f_agari_at_similar'] == 33.2
 
 
 def test_course_aptitude_no_history():
     feats = calc_course_aptitude_features('新馬', '東京', '芝', [], ROOT)
-    assert feats['f_same_course_rate'] == 0.0
+    # 未経験(n=0)はベイズ縮小のprior(0.33)。0.0（=確実に凡走）と区別する
+    assert feats['f_same_course_rate'] == _bayes_rate([])
     assert feats['f_course_coverage'] == 0
     assert feats['f_agari_at_similar'] == 99.0
 
@@ -148,15 +150,15 @@ def test_course_type_rate_tight_specialist():
         {'racecourse': '東京', 'surface': '芝', 'place': 10},
         {'racecourse': '新潟', 'surface': '芝', 'place': 12},
     ]
-    # 今日が中山(tight) → tight系3戦3好走
+    # 今日が中山(tight) → tight系3戦3好走（ベイズ縮小で1.0ではなく0.598）
     feats = calc_course_aptitude_features('テスト馬', '中山', '芝', history, ROOT)
-    assert feats['f_course_type_rate'] == 1.0  # tight同士: 中山+福島=2好走/2走 → 1.0
-    assert feats['f_tight_vs_spacious'] > 0    # tight(1.0) > spacious(0.0) → 正
+    assert feats['f_course_type_rate'] == _bayes_rate([1, 1])  # 中山+福島=2好走/2走
+    assert feats['f_tight_vs_spacious'] > 0    # tight側 > spacious側 → 正（縮小後も方向は不変）
     assert feats['f_corner_position_change'] > 0  # 3角→4角で前に出ている
 
     # 今日が東京(spacious)
     feats2 = calc_course_aptitude_features('テスト馬', '東京', '芝', history, ROOT)
-    assert feats2['f_course_type_rate'] == 0.0  # spacious: 東京0+新潟0 / 2走
+    assert feats2['f_course_type_rate'] == _bayes_rate([0, 0])  # spacious: 東京0+新潟0 / 2走
 
 
 def test_uphill_severity_rate():
@@ -169,7 +171,7 @@ def test_uphill_severity_rate():
     ]
     # 今日が中京(steep)
     feats = calc_course_aptitude_features('テスト馬', '中京', '芝', history, ROOT)
-    assert feats['f_uphill_severity_rate'] == 1.0  # steep: 2好走/2走
+    assert feats['f_uphill_severity_rate'] == _bayes_rate([1, 1])  # steep: 2好走/2走
 
 
 def test_corner_position_change():
@@ -205,6 +207,58 @@ def test_tight_vs_spacious_no_data():
     feats = calc_course_aptitude_features('テスト馬', '中山', '芝', history, ROOT)
     # spaciousのデータなし → tight_vs_spacious = 0.0
     assert feats['f_tight_vs_spacious'] == 0.0
+
+
+# ── ベイズ縮小レート（少走数での極端値対策） ──────────────────────────
+def test_bayes_rate_no_data_returns_prior():
+    """未経験(n=0)はpriorをそのまま返す（0.0固定にしない）"""
+    assert _bayes_rate([]) == 0.33
+    assert _bayes_rate([], prior=0.3) == 0.3
+
+
+def test_bayes_rate_small_sample_shrinks_toward_prior():
+    """1走2走の全勝/全敗は1.0/0.0まで振れず、priorへ引き寄せられる"""
+    assert 0.33 < _bayes_rate([1]) < 1.0
+    assert 0.0 < _bayes_rate([0]) < 0.33
+    # サンプルが増えるほど実測値（1.0）に近づく（縮小幅が小さくなる）
+    assert _bayes_rate([1]) < _bayes_rate([1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
+
+
+def test_bayes_rate_large_sample_converges_to_observed():
+    """十分な走数があれば実測レートにほぼ収束する"""
+    hits = [1] * 47 + [0] * 3  # 50走47勝
+    assert abs(_bayes_rate(hits) - 0.94) < 0.04
+
+
+def test_course_aptitude_single_race_less_extreme_than_two():
+    """同じ全勝でも経験走数が少ないほどベイズ縮小の影響が大きい"""
+    history_1race = [{'racecourse': '東京', 'surface': '芝', 'place': 1}]
+    history_2race = [
+        {'racecourse': '東京', 'surface': '芝', 'place': 1},
+        {'racecourse': '東京', 'surface': '芝', 'place': 1},
+    ]
+    feats_1 = calc_course_aptitude_features('テスト馬', '東京', '芝', history_1race, ROOT)
+    feats_2 = calc_course_aptitude_features('テスト馬', '東京', '芝', history_2race, ROOT)
+    assert feats_1['f_same_course_rate'] < feats_2['f_same_course_rate'] < 1.0
+
+
+def test_fukusho_rate_features_shrink_for_thin_history():
+    """f_dist_fukusho / f_course_fukusho / f_recent_fukusho も1走のみでは1.0にならない"""
+    horse = {
+        'name': 'テスト馬', 'horse_num': 1, 'running_style': '差し',
+        'history': [
+            {'racecourse': '東京', 'surface': '芝', 'distance': 1600, 'place': 1, 'corner_3': 3},
+        ],
+    }
+    race = {
+        'racecourse': '東京', 'surface': '芝', 'distance': 1600,
+        'track_condition': '良', 'race_class': '1勝', 'first_3f': 35.0,
+        'horses': [horse], 'date': '2026-01-01',
+    }
+    feats = calc_features_for_xgb(horse, race)
+    assert 0.33 < feats['f_dist_fukusho'] < 1.0
+    assert 0.33 < feats['f_course_fukusho'] < 1.0
+    assert 0.33 < feats['f_recent_fukusho'] < 1.0
 
 
 # ── ペースシナリオ特徴量 ──────────────────────────────────────────────
