@@ -101,6 +101,47 @@ def test_find_r01_shutuba_returns_none_when_absent(monkeypatch):
     assert find_r01_shutuba('pw01dde010320260201', '20260627', sess) is None
 
 
+# ── _jradb_post 共通ラッパー（2026-07-20〜、重複コード削減のためのリファクタ） ──
+
+def test_jradb_post_returns_response_on_success():
+    sess = _FakeSession(target_suffix=0x50)
+    resp = jra_scraper._jradb_post(sess, 'accessD.html', 'pw01dde010320260201015010326260627/50')
+    assert resp is not None
+    assert '<table>' in resp.text
+
+
+def test_jradb_post_returns_none_on_parameter_error():
+    sess = _FakeSession(target_suffix=0x50)
+    resp = jra_scraper._jradb_post(sess, 'accessD.html', 'pw01dde01032026020101/FF')
+    assert resp is None
+
+
+def test_try_fetch_shutuba_success_and_parameter_error():
+    """_jradb_post統一後も (resp, soup) / (None, None) の挙動が変わらないことを確認。"""
+    sess = _FakeSession(target_suffix=0x50)
+    resp, soup = jra_scraper._try_fetch_shutuba(
+        sess, 'pw01dde010320260201', 1, '20260627', '50')
+    assert resp is not None
+    assert soup is not None
+    assert soup.find_all('table')
+
+    resp_none, soup_none = jra_scraper._try_fetch_shutuba(
+        sess, 'pw01dde010320260201', 1, '20260627', 'FF')
+    assert resp_none is None
+    assert soup_none is None
+
+
+def test_try_fetch_result_success_and_parameter_error():
+    """_jradb_post統一後も soup / None の挙動が変わらないことを確認。"""
+    sess = _FakeSession(target_suffix=0x50)
+    soup = jra_scraper._try_fetch_result(sess, 'pw01dde010320260201', 1, '20260627', '50')
+    assert soup is not None
+    assert soup.find_all('table')
+
+    soup_none = jra_scraper._try_fetch_result(sess, 'pw01dde010320260201', 1, '20260627', 'FF')
+    assert soup_none is None
+
+
 # JRA result table: 着順,枠番,馬番,馬名,性齢,斤量,騎手,タイム,着差,通過順,上がり,単勝,人気,馬体重,調教師
 _RESULT_HTML = """
 <html><body>

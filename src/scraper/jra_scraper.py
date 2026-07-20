@@ -23,6 +23,27 @@ def calc_suffix(r01, r):
         return f'{(r01 + 8 * 181 + 245 + (r - 10) * 181) % 256:02X}'
 
 
+def _jradb_post(sess, page, cname, timeout=15):
+    """JRADB(accessX.html)への共通POSTラッパー。
+
+    出馬表・結果・血統ページで共通の「cname/CNAME 両キー送信 → shift_jis →
+    パラメータエラー判定」パターンを一箇所にまとめる。通信エラー等の例外は
+    そのまま呼び出し元に伝播させる（呼び出し元ごとに再試行方針が異なるため、
+    ここで握りつぶさない）。
+
+    Returns
+    -------
+    requests.Response または None（'パラメータエラー'応答の場合）
+    """
+    resp = sess.post(f'{JRA_BASE}/JRADB/{page}',
+                      data={'cname': cname, 'CNAME': cname},
+                      headers=HEADERS, timeout=timeout)
+    resp.encoding = 'shift_jis'
+    if 'パラメータエラー' in resp.text:
+        return None
+    return resp
+
+
 def find_r01_shutuba(base, date, sess):
     """R01出走表のsuffixを探索する（0x00〜0xFF を順次スキャン）。
 
@@ -35,15 +56,13 @@ def find_r01_shutuba(base, date, sess):
     for s in range(256):
         cn = f'{base}01{date}/{s:02X}'
         try:
-            r = sess.post(f'{JRA_BASE}/JRADB/accessD.html',
-                          data={'cname': cn, 'CNAME': cn}, headers=HEADERS, timeout=10)
-            r.encoding = 'shift_jis'
+            r = _jradb_post(sess, 'accessD.html', cn, timeout=10)
         except Exception:
             time.sleep(0.02)
             continue
+        if r is None:
+            continue  # パラメータエラー：sleepなしで高速スキップ
         text = r.text
-        if 'パラメータエラー' in text:
-            continue  # sleepなしで高速スキップ
         soup = BeautifulSoup(text, 'lxml')
         if not soup.find_all('table'):
             time.sleep(0.02)
@@ -90,11 +109,8 @@ def find_r01_result(base, date, sess):
 def _try_fetch_shutuba(sess, base, r, date_str, sx):
     """指定suffixで出走表ページを取得。(resp, soup) を返す。パラメータエラーの場合はNone, None。"""
     cn = f'{base}{r:02d}{date_str}/{sx}'
-    resp = sess.post(f'{JRA_BASE}/JRADB/accessD.html',
-                     data={'cname': cn, 'CNAME': cn},
-                     headers=HEADERS, timeout=15)
-    resp.encoding = 'shift_jis'
-    if 'パラメータエラー' in resp.text:
+    resp = _jradb_post(sess, 'accessD.html', cn, timeout=15)
+    if resp is None:
         return None, None
     soup = BeautifulSoup(resp.text, 'lxml')
     if not soup.find_all('table'):
@@ -114,10 +130,9 @@ def fetch_horse_pedigree(sess, cname):
     -------
     dict: {'sire': str, 'dam_sire': str}（取得できなかった項目は含まない）
     """
-    resp = sess.post(f'{JRA_BASE}/JRADB/accessU.html',
-                     data={'cname': cname, 'CNAME': cname},
-                     headers=HEADERS, timeout=15)
-    resp.encoding = 'shift_jis'
+    resp = _jradb_post(sess, 'accessU.html', cname, timeout=15)
+    if resp is None:
+        return {}
     soup = BeautifulSoup(resp.text, 'lxml')
 
     result = {}
@@ -200,13 +215,10 @@ def _try_fetch_result(sess, base, r, date_str, sx):
     """指定suffixで結果ページを取得。soup を返す。失敗時はNone。"""
     cn = f'{base}{r:02d}{date_str}/{sx}'
     try:
-        resp = sess.post(f'{JRA_BASE}/JRADB/accessD.html',
-                         data={'cname': cn, 'CNAME': cn},
-                         headers=HEADERS, timeout=15)
-        resp.encoding = 'shift_jis'
+        resp = _jradb_post(sess, 'accessD.html', cn, timeout=15)
     except Exception:
         return None
-    if 'パラメータエラー' in resp.text:
+    if resp is None:
         return None
     soup = BeautifulSoup(resp.text, 'lxml')
     if not soup.find_all('table'):
