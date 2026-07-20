@@ -1442,6 +1442,19 @@ def get_course_profile(racecourse, surface, base_dir=None):
     return profiles.get('courses', {}).get(key)
 
 
+def _bayes_rate(hits_list, prior=0.33, k=3):
+    """少走数の成績率をベイズ縮小して返す（0/1に極端に振れるのを防ぐ）。
+
+    hits_list: 各走を1(該当)/0(非該当)で表したリスト。空でも prior を返す
+    （「未経験」と「経験済みで0%」を同じ0.0で表すと、木モデルが両者を
+    区別できず"確実に悪い"と誤読しかねないため、中立値prior に統一する）。
+    k は事前分布の重みを何走ぶんとみなすか。件数がk程度になるまではprior寄り、
+    増えるほど実測値に収束する（Beta-Binomialの事後平均と同形）。
+    """
+    n = len(hits_list)
+    return round((sum(hits_list) + prior * k) / (n + k), 3)
+
+
 def _default_course_features():
     """データなし・コース未定義時のデフォルト特徴量。"""
     return {
@@ -1562,7 +1575,7 @@ def calc_course_aptitude_features(horse_name, today_racecourse, today_surface,
                     pass
 
     def _rate(lst):
-        return round(sum(lst) / len(lst), 3) if lst else 0.0
+        return _bayes_rate(lst, prior=0.33, k=3)
 
     # 小回り vs 大箱の成績差（正=小回りが得意）
     tight_rate   = _rate(tight_results) if tight_results else None
@@ -1788,7 +1801,7 @@ def calc_features_for_xgb(h, race):
         tw_ = sum(ws_)
         ps_ = [max(0, 10 - (p - 1) * 10 / 15) for p in places]
         feats['f_recent']         = float(sum(s * w for s, w in zip(ps_, ws_)) / tw_) if tw_ > 0 else 5.0
-        feats['f_recent_fukusho'] = float(sum(1 for p in places if p <= 3) / len(places))
+        feats['f_recent_fukusho'] = _bayes_rate([1 if p <= 3 else 0 for p in places], prior=0.33, k=3)
         feats['f_career_runs']    = min(20, len(hist))
         feats['f_last1_rank']     = float(places[-1]) if len(places) >= 1 else 8.0
         feats['f_last2_rank']     = float(places[-2]) if len(places) >= 2 else 8.0
@@ -1806,23 +1819,23 @@ def calc_features_for_xgb(h, race):
         return 'lo'
 
     dz_ = _dz(dist)
-    if hist:
-        same_zone   = [r for r in hist if _dz(int(r.get('distance', 1600) or 1600)) == dz_]
-        same_course = [r for r in hist if r.get('racecourse', '') == rc and r.get('surface', '') == surf]
-        feats['f_dist_fukusho']   = float(sum(1 for r in same_zone if r.get('place', 10) <= 3) / len(same_zone)) if same_zone else 0.33
-        feats['f_course_fukusho'] = float(sum(1 for r in same_course if r.get('place', 10) <= 3) / len(same_course)) if same_course else 0.33
-    else:
-        feats['f_dist_fukusho']   = 0.33
-        feats['f_course_fukusho'] = 0.33
+    same_zone   = [r for r in hist if _dz(int(r.get('distance', 1600) or 1600)) == dz_] if hist else []
+    same_course = ([r for r in hist if r.get('racecourse', '') == rc and r.get('surface', '') == surf]
+                    if hist else [])
+    feats['f_dist_fukusho']   = _bayes_rate(
+        [1 if r.get('place', 10) <= 3 else 0 for r in same_zone], prior=0.33, k=3)
+    feats['f_course_fukusho'] = _bayes_rate(
+        [1 if r.get('place', 10) <= 3 else 0 for r in same_course], prior=0.33, k=3)
 
     if c3_arr and len(c3_arr) >= 2:
         high_front = [r for r, c in zip(hist[-len(c3_arr):], c3_arr) if c <= 4]
         slow_back  = [r for r, c in zip(hist[-len(c3_arr):], c3_arr) if c >= 8]
-        feats['f_perf_highpace'] = float(sum(1 for r in high_front if r.get('place', 10) <= 3) / len(high_front)) if high_front else 0.3
-        feats['f_perf_slowpace'] = float(sum(1 for r in slow_back if r.get('place', 10) <= 3) / len(slow_back)) if slow_back else 0.3
     else:
-        feats['f_perf_highpace'] = 0.3
-        feats['f_perf_slowpace'] = 0.3
+        high_front, slow_back = [], []
+    feats['f_perf_highpace'] = _bayes_rate(
+        [1 if r.get('place', 10) <= 3 else 0 for r in high_front], prior=0.3, k=3)
+    feats['f_perf_slowpace'] = _bayes_rate(
+        [1 if r.get('place', 10) <= 3 else 0 for r in slow_back], prior=0.3, k=3)
 
     feats['f_jockey']      = min(10, max(0, h.get('jockey_rate', 0.15) / 0.30 * 10))
     feats['f_jockey_rate'] = float(h.get('jockey_rate', 0.15))
