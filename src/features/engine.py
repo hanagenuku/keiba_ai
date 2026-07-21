@@ -20,6 +20,24 @@ _PACE_MODEL         = None
 _JOCKEY_PACE_STATS  = {}    # jockey_name → {median_first3f_norm, escape_rate}
 _SPEED_INDEX_CALC   = None  # SpeedIndexCalculator
 _MEMBER_LEVEL_CACHE = {}    # race_id → float (前走メンバーレベルキャッシュ)
+_XGB_MISSING_FEATS_WARNED = set()  # 一度警告した欠落列の組み合わせは再度出さない
+
+
+def _check_xgb_feature_coverage(xfeats, feature_cols):
+    """xfeats に feature_cols の列が全て揃っているか確認し、欠落があれば警告する。
+
+    欠落列は従来どおり呼び出し側で5.0穴埋めされ推論は止めないが、これは
+    「学習時と違う特徴量分布が推論に静かに混入する」既知の危険パターン
+    （2026-07-16のxgb_ensemble_model.pkl事故と同種）のため、検知だけは必ず行う。
+    同じ欠落列の組み合わせを毎レース・毎頭ごとに再警告しないよう1回だけログする。
+    """
+    missing = tuple(sorted(c for c in feature_cols if c not in xfeats))
+    if missing and missing not in _XGB_MISSING_FEATS_WARNED:
+        _XGB_MISSING_FEATS_WARNED.add(missing)
+        shown = missing[:10]
+        suffix = f'...(他{len(missing) - 10}列)' if len(missing) > 10 else ''
+        print(f'⚠ [XGB特徴量] {len(missing)}列が計算結果に存在せず5.0で穴埋め: '
+              f'{shown}{suffix}')
 _KEIBA_DB_PATH      = None  # race_predictions 参照用
 _W                 = {
     'rl':       0.35,   # Phase 2: スピード指数ベースRLスコア
@@ -56,8 +74,9 @@ def init_engine(base_dir,
     global _JOCKEY_PACE_STATS
     global _W, _horse_dist_dict, _horse_course_dict, _horse_venue_dist_dict, _post_zone_bias
     global _jockey_dict, _trainer_dict, _hist_db_path, _SPEED_INDEX_CALC, _MEMBER_LEVEL_CACHE
-    global _KEIBA_DB_PATH, _BASE_DIR
+    global _KEIBA_DB_PATH, _BASE_DIR, _XGB_MISSING_FEATS_WARNED
     _BASE_DIR      = base_dir
+    _XGB_MISSING_FEATS_WARNED = set()  # モデル/特徴量再ロード時に警告抑制状態をリセット
     _hist_db_path  = os.path.join(base_dir, 'data', 'history.db')
     _KEIBA_DB_PATH = os.path.join(base_dir, 'data', 'keiba.db')
 
@@ -2399,6 +2418,8 @@ def get_xgb_rating(xfeats_list, model=None, feature_cols=None):
     fc = feature_cols or _XGB_FEATURE_COLS
     if m is None or not fc:
         return [0.0] * len(xfeats_list)
+    for xf in xfeats_list:
+        _check_xgb_feature_coverage(xf, fc)
     rows = [{c: xf.get(c, 5.0) for c in fc} for xf in xfeats_list]
     X    = _pd.DataFrame(rows)[fc].fillna(5.0)
     dmat = _xgb.DMatrix(X, feature_names=list(fc))
@@ -2472,6 +2493,7 @@ def calc_all(race, bias_data=None):
             try:
                 import pandas as _pd_xgb
                 import xgboost as _xgb_lib
+                _check_xgb_feature_coverage(xfeats, _XGB_FEATURE_COLS)
                 xrow   = {c: xfeats.get(c, 5.0) for c in _XGB_FEATURE_COLS}
                 X_pred = _pd_xgb.DataFrame([xrow])[_XGB_FEATURE_COLS].fillna(5.0)
 
