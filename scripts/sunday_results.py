@@ -11,7 +11,6 @@ sys.path.insert(0, ROOT)
 from scripts._session import create_session
 from scripts.weekend import fetch_and_save_results
 from src.betting.shadow import record_all_shadow_bets
-from src.features.correction import update_correction_table
 from src.features.engine import init_engine
 from src.features.error_tags import process_weekly_error_tags
 from src.tools.shap_diagnosis import generate_shap_report
@@ -67,16 +66,20 @@ def main():
     all_results = fetch_and_save_results(sess, hist_path, target_date)
 
     if all_results:
-        record_all_shadow_bets(all_results, ROOT)
+        # 実際に推奨・購入したレースを was_recommended=1 として記録する
+        # （weekend.py の土曜側と同じロジック。従来はここが抜けており、
+        # 日曜分のshadow_betsは推奨レースでも常に was_recommended=0 になっていた）
+        _conn = sqlite3.connect(db_path)
+        _rec_ids = {r[0] for r in _conn.execute(
+            'SELECT DISTINCT race_id FROM bets WHERE date=?', (target_date,)).fetchall()}
+        _conn.close()
+        record_all_shadow_bets(all_results, ROOT, recommended_race_ids=_rec_ids)
 
-    # ② 補正テーブルを EMA で更新（race_predictions に4週分以上蓄積されてから有効）
-    update_correction_table(ROOT, db_path, weeks=8)
-
-    # ③ SHAP診断レポート生成
+    # ② SHAP診断レポート生成
     jst_date = jst_now.strftime('%Y-%m-%d')
     generate_shap_report(ROOT, db_path, target_date=jst_date)
 
-    # ④ エラータグ分類・蓄積（翌週予想の補正係数を自動更新）
+    # ③ エラータグ分類・蓄積（翌週予想の補正係数を自動更新）
     try:
         process_weekly_error_tags(ROOT, db_path, target_date=jst_date)
     except Exception as e:
