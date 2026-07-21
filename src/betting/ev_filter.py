@@ -132,7 +132,6 @@ def detect_value_horses(horses, market_odds_map):
         is_value  = direct_ev >= VALUE_EV_MIN
 
         entry = dict(h)
-        entry['value_gap']    = 0.0
         entry['market_prob']  = round(market_prob, 4)
         entry['fukusho_odds'] = fuku_odds
         entry['tansho_odds']  = tansho_odds

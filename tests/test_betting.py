@@ -51,20 +51,6 @@ def test_select_bet_no_skip_a_5heads():
     assert any(b['type'] == '馬連' for b in bets)
 
 
-# ── ⑤ detect_value_horses: value_gap は廃止（常に0.0） ──────────────────────
-
-def test_detect_value_horses_value_gap_always_zero():
-    """value_gap は廃止済み。常に0.0を返す。"""
-    horses = [
-        {'num': 1, 'horse_num': 1, 'top3_prob': 0.60, 'cal_prob': 0.30, 'pn': 0.25},
-        {'num': 2, 'horse_num': 2, 'top3_prob': 0.40, 'cal_prob': 0.25, 'pn': 0.20},
-    ]
-    market = {1: {'tansho': 4.0, 'fukusho': 1.8}, 2: {'tansho': 6.0, 'fukusho': 2.5}}
-    result = detect_value_horses(horses, market)
-    for h in result:
-        assert h['value_gap'] == 0.0
-
-
 def test_detect_value_horses_ev_direct():
     """ev_direct = pn × win_odds が正しく計算される"""
     horses = [{'num': 1, 'horse_num': 1, 'pn': 0.30, 'win_odds': 5.0}]
@@ -90,8 +76,6 @@ if __name__ == '__main__':
     print('✅ test_select_bet_no_skip_c_no_value_13heads passed')
     test_select_bet_no_skip_a_5heads()
     print('✅ test_select_bet_no_skip_a_5heads passed')
-    test_detect_value_horses_value_gap_always_zero()
-    print('✅ test_detect_value_horses_value_gap_always_zero passed')
     test_detect_value_horses_ev_direct()
     print('✅ test_detect_value_horses_ev_direct passed')
     test_select_bet_type_returns_bets_all_chaos_grades()
