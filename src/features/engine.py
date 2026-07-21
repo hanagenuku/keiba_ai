@@ -38,6 +38,28 @@ def _check_xgb_feature_coverage(xfeats, feature_cols):
         suffix = f'...(他{len(missing) - 10}列)' if len(missing) > 10 else ''
         print(f'⚠ [XGB特徴量] {len(missing)}列が計算結果に存在せず5.0で穴埋め: '
               f'{shown}{suffix}')
+
+
+_XGB_INFERENCE_ERRORS_WARNED = set()  # 一度警告した例外の組み合わせは再度出さない
+
+
+def _warn_xgb_inference_fallback(horse_name, err):
+    """XGB推論が例外で失敗しルールベースへフォールバックしたことを警告する。
+
+    calc_all() の except Exception: は元々無警告だった。2026-07-16の
+    xgb_ensemble_model.pkl事故（TypeErrorが握りつぶされ、XGB予測を一切使わず
+    ルールベーススコアのみで予想が生成されていたことに気づけなかった件）と
+    全く同じ構造の危険箇所のため、原因を問わず例外発生時は必ず可視化する。
+    挙動（ルールベースへのフォールバック自体）は変更しない。
+    同じ例外種別+メッセージの組み合わせは1回だけログする。
+    """
+    err_key = f'{type(err).__name__}: {err}'
+    if err_key not in _XGB_INFERENCE_ERRORS_WARNED:
+        _XGB_INFERENCE_ERRORS_WARNED.add(err_key)
+        print(f'⚠ [XGB推論失敗] {horse_name} でXGB予測が例外により失敗、'
+              f'ルールベーススコアへフォールバック: {err_key}')
+
+
 _KEIBA_DB_PATH      = None  # race_predictions 参照用
 _W                 = {
     'rl':       0.35,   # Phase 2: スピード指数ベースRLスコア
@@ -74,9 +96,10 @@ def init_engine(base_dir,
     global _JOCKEY_PACE_STATS
     global _W, _horse_dist_dict, _horse_course_dict, _horse_venue_dist_dict, _post_zone_bias
     global _jockey_dict, _trainer_dict, _hist_db_path, _SPEED_INDEX_CALC, _MEMBER_LEVEL_CACHE
-    global _KEIBA_DB_PATH, _BASE_DIR, _XGB_MISSING_FEATS_WARNED
+    global _KEIBA_DB_PATH, _BASE_DIR, _XGB_MISSING_FEATS_WARNED, _XGB_INFERENCE_ERRORS_WARNED
     _BASE_DIR      = base_dir
-    _XGB_MISSING_FEATS_WARNED = set()  # モデル/特徴量再ロード時に警告抑制状態をリセット
+    _XGB_MISSING_FEATS_WARNED    = set()  # モデル/特徴量再ロード時に警告抑制状態をリセット
+    _XGB_INFERENCE_ERRORS_WARNED = set()
     _hist_db_path  = os.path.join(base_dir, 'data', 'history.db')
     _KEIBA_DB_PATH = os.path.join(base_dir, 'data', 'keiba.db')
 
@@ -2534,7 +2557,8 @@ def calc_all(race, bias_data=None):
                 # round()は精度損失で同一確率が発生するため使わない
                 total  = raw_prob * 10
                 prob   = cal_prob  # 表示用複勝確率はcal_probを保持
-            except Exception:
+            except Exception as _xgb_err:
+                _warn_xgb_inference_fallback(h.get('name', '?'), _xgb_err)
                 total = sum(sc.get(k, 5.0) * _W.get(k, 0) for k in _W if _W.get(k, 0) > 0)
                 total = apply_career_flags(total, career)
                 prob  = 1 / (1 + math.exp(-(total - 5.5) * .8))
