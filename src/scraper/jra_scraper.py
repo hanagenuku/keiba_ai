@@ -672,23 +672,47 @@ def parse_dividends(soup):
         fm = re.findall(r'(\d+)\s+([\d,]+)\s*円', text[idx:idx + 200])
         if fm:
             divs['fukusho'] = [{'num': int(f[0]), 'payout': int(f[1].replace(',', ''))} for f in fm[:3]]
+    idx = text.find('枠連')
+    if idx >= 0:
+        km = re.findall(r'(\d+)-(\d+)\s+([\d,]+)\s*円', text[idx:idx + 200])
+        if km:
+            divs['wakuren'] = {'nums': [int(km[0][0]), int(km[0][1])],
+                               'payout': int(km[0][2].replace(',', ''))}
     idx = text.find('馬連')
     if idx >= 0:
         um = re.findall(r'(\d+)-(\d+)\s+([\d,]+)\s*円', text[idx:idx + 200])
         if um:
             divs['umaren'] = {'nums': [int(um[0][0]), int(um[0][1])],
                               'payout': int(um[0][2].replace(',', ''))}
+    # 馬単は着順ありの組（1着→2着）。db.py の bet_type='馬単' 決済がこのキーを参照する
+    idx = text.find('馬単')
+    if idx >= 0:
+        utm = re.findall(r'(\d+)-(\d+)\s+([\d,]+)\s*円', text[idx:idx + 200])
+        if utm:
+            divs['umatan'] = {'nums': [int(utm[0][0]), int(utm[0][1])],
+                              'payout': int(utm[0][2].replace(',', ''))}
     idx = text.find('ワイド')
     if idx >= 0:
         wm = re.findall(r'(\d+)-(\d+)\s+([\d,]+)\s*円', text[idx:idx + 300])
         if wm:
             divs['wide'] = [{'nums': [int(w[0]), int(w[1])], 'payout': int(w[2].replace(',', ''))} for w in wm[:3]]
+    # 「三連複」(旧表記)と「3連複」(現行ページの数字表記)の両方に対応
     idx = text.find('三連複')
+    if idx < 0:
+        idx = text.find('3連複')
     if idx >= 0:
         sm = re.findall(r'(\d+)-(\d+)-(\d+)\s+([\d,]+)\s*円', text[idx:idx + 200])
         if sm:
             divs['sanrenpuku'] = {'nums': [int(sm[0][0]), int(sm[0][1]), int(sm[0][2])],
                                   'payout': int(sm[0][3].replace(',', ''))}
+    idx = text.find('三連単')
+    if idx < 0:
+        idx = text.find('3連単')
+    if idx >= 0:
+        stm = re.findall(r'(\d+)-(\d+)-(\d+)\s+([\d,]+)\s*円', text[idx:idx + 200])
+        if stm:
+            divs['sanrentan'] = {'nums': [int(stm[0][0]), int(stm[0][1]), int(stm[0][2])],
+                                 'payout': int(stm[0][3].replace(',', ''))}
     return divs
 
 
@@ -818,8 +842,11 @@ def _extract_weather_pace(header_text):
 def _extract_lap_times(soup):
     """結果ページからラップタイム（ハロンごとの区間タイム）を抽出する。
 
-    JRA結果ページは「ラップタイム」見出しに続けて
-    "12.5 - 10.9 - 11.4 - 11.8 - ..." の形式で各200m区間タイムを掲載する。
+    JRA結果ページ（sp.jra.jp実機で確認済み）は「タイム」欄の中に「ハロンタイム」
+    見出しで各区間タイムを、「上り」見出しで4F/3F上りタイムを掲載する
+    （例: "9.5 - 11.1 - 11.6 - 12.2 - 12.4 - 12.8" / "4F 49.0 - 3F 37.4"）。
+    旧実装は「ラップタイム」表記のみを探しており、この見出し違いにより
+    first_3f/last_3fが長期間未取得（0%）だった可能性が高いため、両表記に対応する。
 
     Returns:
         (lap_times: list[float], first_3f: float|None, last_3f: float|None)
@@ -828,12 +855,16 @@ def _extract_lap_times(soup):
     text = unicodedata.normalize('NFKC', soup.get_text(' ', strip=True))
     idx = text.find('ラップタイム')
     if idx < 0:
+        idx = text.find('ハロンタイム')
+    if idx < 0:
         return [], None, None
-    # 見出し以降・「ペース」または200文字までを対象に区間タイムを収集
+    # 見出し以降・次見出し（ペース/コーナー通過順位/払戻金）または300文字までを対象に区間タイムを収集
     segment = text[idx:idx + 300]
-    end = segment.find('ペース')
-    if end > 0:
-        segment = segment[:end]
+    end_candidates = [e for e in (segment.find('ペース'),
+                                   segment.find('コーナー通過順位'),
+                                   segment.find('払戻金')) if e > 0]
+    if end_candidates:
+        segment = segment[:min(end_candidates)]
     laps = [float(m) for m in re.findall(r'(\d{1,2}\.\d)', segment)]
     # ラップは概ね 9.0〜15.0 秒/200m の範囲。範囲外（誤検出）は除外
     laps = [v for v in laps if 8.0 <= v <= 16.0]
