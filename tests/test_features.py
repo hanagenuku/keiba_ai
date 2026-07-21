@@ -8,7 +8,9 @@ from src.features.engine import (
     auto_comment, dist_zone_label, dz,
     calc_course_aptitude_features, load_course_profiles, get_course_profile,
     calc_features_for_xgb, _ensure_escape_front_count, f_blood, _bayes_rate,
+    _check_xgb_feature_coverage,
 )
+import src.features.engine as engine
 
 ROOT = os.path.join(os.path.dirname(__file__), '..')
 
@@ -259,6 +261,32 @@ def test_fukusho_rate_features_shrink_for_thin_history():
     assert 0.33 < feats['f_dist_fukusho'] < 1.0
     assert 0.33 < feats['f_course_fukusho'] < 1.0
     assert 0.33 < feats['f_recent_fukusho'] < 1.0
+
+
+# ── XGB特徴量カバレッジ検証（学習時と違う特徴量の静かな混入を検知） ──────
+def test_check_xgb_feature_coverage_warns_on_missing_column(capsys):
+    """feature_colsにあってxfeatsに無い列があれば警告を1回出す"""
+    engine._XGB_MISSING_FEATS_WARNED = set()
+    _check_xgb_feature_coverage({'f_a': 1.0}, ['f_a', 'f_b'])
+    out = capsys.readouterr().out
+    assert 'f_b' in out
+    assert 'XGB特徴量' in out
+
+
+def test_check_xgb_feature_coverage_silent_when_complete(capsys):
+    """全列が揃っていれば何も出力しない"""
+    engine._XGB_MISSING_FEATS_WARNED = set()
+    _check_xgb_feature_coverage({'f_a': 1.0, 'f_b': 2.0}, ['f_a', 'f_b'])
+    assert capsys.readouterr().out == ''
+
+
+def test_check_xgb_feature_coverage_warns_only_once(capsys):
+    """同じ欠落列の組み合わせは2回目以降は警告しない（毎頭ごとのログ洪水防止）"""
+    engine._XGB_MISSING_FEATS_WARNED = set()
+    _check_xgb_feature_coverage({'f_a': 1.0}, ['f_a', 'f_b'])
+    _check_xgb_feature_coverage({'f_a': 1.0}, ['f_a', 'f_b'])
+    out = capsys.readouterr().out
+    assert out.count('XGB特徴量') == 1
 
 
 # ── ペースシナリオ特徴量 ──────────────────────────────────────────────
