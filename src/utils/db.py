@@ -395,6 +395,8 @@ def save_history_db(all_results, base_dir=None, db_path=None):
         # 血統（父・母の父）。2026-07-17〜、accessU.htmlから取得
         "ALTER TABLE horse_history ADD COLUMN sire TEXT",
         "ALTER TABLE horse_history ADD COLUMN dam_sire TEXT",
+        # 調教師所属（栗東/美浦）。2026-07-21〜、結果ページの調教師欄「名前(栗東)」表記から取得
+        "ALTER TABLE horse_history ADD COLUMN trainer_affiliation TEXT",
     ]
     for sql in migrations:
         try:
@@ -453,8 +455,8 @@ def save_history_db(all_results, base_dir=None, db_path=None):
                 " popularity,tansho_payout,fukusho_payout,margin,agari_rank,"
                 " class_grade,finish_time,time_diff_sec,chakusa_text,"
                 " weight_load,sex,age,body_weight,body_weight_diff,"
-                " bracket,corner_all,win_odds,sire,dam_sire) "
-                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                " bracket,corner_all,win_odds,sire,dam_sire,trainer_affiliation) "
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (race_id, date_str, r.get('racecourse', ''),
                  h.get('name', ''), h.get('num', 0), h.get('place', 99),
                  h.get('running_style', ''), h.get('agari3f', 0.0),
@@ -473,7 +475,8 @@ def save_history_db(all_results, base_dir=None, db_path=None):
                  h.get('sex', ''), h.get('age'),
                  h.get('body_weight'), h.get('body_weight_diff'),
                  h.get('bracket'), h.get('corner_all', ''),
-                 h.get('win_odds'), h.get('sire', ''), h.get('dam_sire', '')),
+                 h.get('win_odds'), h.get('sire', ''), h.get('dam_sire', ''),
+                 h.get('trainer_affiliation')),
             )
             new_horses += cur2.rowcount
             # Stage 3 rescrape 用：既存行の新フィールドを UPDATE で充填
@@ -495,7 +498,8 @@ def save_history_db(all_results, base_dir=None, db_path=None):
                 "  win_odds         = COALESCE(?, win_odds), "
                 "  surface          = COALESCE(NULLIF(?, ''), surface), "
                 "  sire             = COALESCE(NULLIF(?, ''), sire), "
-                "  dam_sire         = COALESCE(NULLIF(?, ''), dam_sire) "
+                "  dam_sire         = COALESCE(NULLIF(?, ''), dam_sire), "
+                "  trainer_affiliation = COALESCE(?, trainer_affiliation) "
                 "WHERE race_id = ? AND horse_num = ?",
                 (h.get('finish_time'), h.get('time_diff_sec'),
                  h.get('chakusa_text', ''), h.get('margin'),
@@ -506,6 +510,7 @@ def save_history_db(all_results, base_dir=None, db_path=None):
                  h.get('win_odds'),
                  h.get('surface', r.get('surface', '')),
                  h.get('sire', ''), h.get('dam_sire', ''),
+                 h.get('trainer_affiliation'),
                  race_id, h.get('num', 0)),
             )
 

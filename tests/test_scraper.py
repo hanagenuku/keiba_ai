@@ -333,6 +333,29 @@ def test_fetch_horse_pedigree_missing_page_returns_empty():
     assert result == {}
 
 
+def test_save_history_db_stores_trainer_affiliation(tmp_path):
+    """horse_history.trainer_affiliation に「栗東」/「美浦」が保存・取得できる。"""
+    import sqlite3
+    from src.utils.db import save_history_db
+    hist_path = tmp_path / 'history.db'
+    save_history_db([{
+        'race_id': '20260101_01_01', 'racecourse': '東京', 'distance': 1600, 'surface': '芝',
+        'finishers': [
+            {'num': 1, 'name': '栗東の馬', 'place': 1, 'trainer': '西村真幸',
+             'trainer_affiliation': '栗東'},
+            {'num': 2, 'name': '美浦の馬', 'place': 2, 'trainer': '秋本大介',
+             'trainer_affiliation': '美浦'},
+        ],
+    }], db_path=str(hist_path))
+
+    conn = sqlite3.connect(str(hist_path))
+    rows = conn.execute(
+        'SELECT horse_name, trainer_affiliation FROM horse_history ORDER BY horse_num'
+    ).fetchall()
+    conn.close()
+    assert rows == [('栗東の馬', '栗東'), ('美浦の馬', '美浦')]
+
+
 def test_fill_pedigree_skips_cached_horse(tmp_path):
     """history.dbに既に血統が記録済みの馬は再取得しない（ネットワークリクエストなし）。"""
     from src.utils.db import save_history_db
@@ -435,6 +458,40 @@ def test_fill_pedigree_budget_shared_across_calls(tmp_path, monkeypatch):
     assert race1_horses[0]['sire'] == 'ステルヴィオ'
     assert 'sire' not in race2_horses[0]  # 前のレースで予算を使い切っている
     assert sess.calls == ['pw01dud0001/AA']
+
+
+# ── 調教師所属（栗東/美浦）抽出（sp.jra.jp実機で確認した表記に基づく） ──────
+def test_split_trainer_affiliation_ritto():
+    name, affil = jra_scraper._split_trainer_affiliation('西村真幸(栗東)')
+    assert name == '西村真幸'
+    assert affil == '栗東'
+
+
+def test_split_trainer_affiliation_miho():
+    name, affil = jra_scraper._split_trainer_affiliation('秋本大介(美浦)')
+    assert name == '秋本大介'
+    assert affil == '美浦'
+
+
+def test_split_trainer_affiliation_no_suffix_returns_none():
+    """所属表記が無い場合は名前をそのまま返しaffiliationはNone（後方互換）"""
+    name, affil = jra_scraper._split_trainer_affiliation('テスト調教師')
+    assert name == 'テスト調教師'
+    assert affil is None
+
+
+def test_parse_result_soup_extracts_trainer_affiliation():
+    """調教師欄「名前(栗東/美浦)」形式から所属を分離してtrainer_affiliationに格納する。
+    trainerフィールド自体は名前のみになり既存の挙動を壊さない（後方互換）。"""
+    html = _RESULT_HTML.replace('テスト調教師', '西村真幸(栗東)').replace(
+        'サブ調教師', '秋本大介(美浦)')
+    soup = BeautifulSoup(html, 'lxml')
+    result = parse_result_soup(soup, '中山', 1, '20230107', '06')
+    horses = result['finishers']
+    assert horses[0]['trainer'] == '西村真幸'
+    assert horses[0]['trainer_affiliation'] == '栗東'
+    assert horses[1]['trainer'] == '秋本大介'
+    assert horses[1]['trainer_affiliation'] == '美浦'
 
 
 # ── ラップタイム見出し・払戻金の券種網羅（sp.jra.jp実機で確認したページ内容に基づく） ──
