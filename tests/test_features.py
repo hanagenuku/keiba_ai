@@ -1,4 +1,5 @@
 import os
+import sqlite3
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
@@ -8,7 +9,7 @@ from src.features.engine import (
     auto_comment, dist_zone_label, dz,
     calc_course_aptitude_features, load_course_profiles, get_course_profile,
     calc_features_for_xgb, _ensure_escape_front_count, f_blood, _bayes_rate,
-    _check_xgb_feature_coverage, _warn_xgb_inference_fallback,
+    _bayes_shrink, _check_xgb_feature_coverage, _warn_xgb_inference_fallback,
 )
 import src.features.engine as engine
 
@@ -226,6 +227,12 @@ def test_bayes_rate_small_sample_shrinks_toward_prior():
     assert _bayes_rate([1]) < _bayes_rate([1, 1, 1, 1, 1, 1, 1, 1, 1, 1])
 
 
+def test_bayes_shrink_counts_matches_bayes_rate():
+    """(的中数, 試行数) 版と list 版は同じ値を返す（_bayes_rateの内部実装）"""
+    assert _bayes_shrink(2, 5, prior=0.2, k=4) == _bayes_rate([1, 1, 0, 0, 0], prior=0.2, k=4)
+    assert _bayes_shrink(0, 0, prior=0.15, k=10) == 0.15
+
+
 def test_bayes_rate_large_sample_converges_to_observed():
     """十分な走数があれば実測レートにほぼ収束する"""
     hits = [1] * 47 + [0] * 3  # 50走47勝
@@ -261,6 +268,65 @@ def test_fukusho_rate_features_shrink_for_thin_history():
     assert 0.33 < feats['f_dist_fukusho'] < 1.0
     assert 0.33 < feats['f_course_fukusho'] < 1.0
     assert 0.33 < feats['f_recent_fukusho'] < 1.0
+
+
+# ── 騎手・調教師勝率のベイズ縮小（_build_horse_dicts） ────────────────
+def _make_history_db(base_dir, rows):
+    """テスト用の最小history.db（horse_history）を作成する。"""
+    data_dir = os.path.join(base_dir, 'data')
+    os.makedirs(data_dir, exist_ok=True)
+    db_path = os.path.join(data_dir, 'history.db')
+    conn = sqlite3.connect(db_path)
+    conn.execute("""
+        CREATE TABLE horse_history (
+            race_id TEXT, horse_name TEXT, distance INTEGER, surface TEXT,
+            racecourse TEXT, place INTEGER, horse_num INTEGER,
+            jockey TEXT, trainer TEXT
+        )
+    """)
+    for r in rows:
+        conn.execute(
+            "INSERT INTO horse_history (race_id, horse_name, distance, surface, "
+            "racecourse, place, horse_num, jockey, trainer) VALUES (?,?,?,?,?,?,?,?,?)",
+            (r['race_id'], r.get('horse_name', 'テスト馬'), r.get('distance', 1600),
+             r.get('surface', '芝'), r.get('racecourse', '東京'), r['place'],
+             r.get('horse_num', 1), r.get('jockey', ''), r.get('trainer', '')),
+        )
+    conn.commit()
+    conn.close()
+    return str(base_dir)
+
+
+def test_build_horse_dicts_jockey_low_sample_shrinks_toward_prior(tmp_path):
+    """runs<10の騎手も除外されず、prior(0.15)と実測値の間の値が入る
+    （旧実装はrunsな>=10のハードカットオフで丸ごと除外し、lookup側の
+    デフォルト0.15に一律フォールバックしていた）"""
+    rows = [{'race_id': f'R{i}', 'place': 1, 'jockey': '若手騎手'} for i in range(2)]
+    base_dir = _make_history_db(tmp_path, rows)
+    engine._jockey_dict = {}
+    engine._trainer_dict = {}
+    engine._build_horse_dicts(base_dir)
+    key = ('若手騎手', '東京', '芝')
+    assert key in engine._jockey_dict
+    assert 0.15 < engine._jockey_dict[key] < 1.0
+
+
+def test_build_horse_dicts_jockey_high_sample_close_to_observed(tmp_path):
+    """十分な走数があれば実測勝率に近づく"""
+    rows = ([{'race_id': f'W{i}', 'place': 1, 'jockey': 'ベテラン騎手'} for i in range(30)]
+            + [{'race_id': f'L{i}', 'place': 5, 'jockey': 'ベテラン騎手'} for i in range(20)])
+    base_dir = _make_history_db(tmp_path, rows)
+    engine._jockey_dict = {}
+    engine._trainer_dict = {}
+    engine._build_horse_dicts(base_dir)
+    val = engine._jockey_dict[('ベテラン騎手', '東京', '芝')]
+    assert abs(val - 0.6) < 0.1  # 30勝/50走=0.6に近い
+
+
+def test_build_horse_dicts_trainer_low_sample_shrinks_toward_prior():
+    """調教師も同様にruns<10で除外されず、prior(0.12)寄りの値になる"""
+    assert _bayes_shrink(1, 1, prior=0.12, k=10) > 0.12
+    assert _bayes_shrink(1, 1, prior=0.12, k=10) < 1.0
 
 
 # ── XGB特徴量カバレッジ検証（学習時と違う特徴量の静かな混入を検知） ──────

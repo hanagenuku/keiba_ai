@@ -424,10 +424,16 @@ def _build_horse_dicts(base_dir):
                 }
         return out
 
-    new_jockey_dict  = {k: round(v['wins'] / v['runs'], 4)
-                        for k, v in jockey_stat.items() if v['runs'] >= 10}
-    new_trainer_dict = {k: round(v['wins'] / v['runs'], 4)
-                        for k, v in trainer_stat.items() if v['runs'] >= 10}
+    # 少走数（runs<10）の騎手・調教師も、生の勝率を使わずベイズ縮小した値を採用する。
+    # 従来は runs>=10 のハードカットオフで9走以下を丸ごと除外し、lookup側の
+    # デフォルト値（jockey:0.15 / trainer:0.12）に一律フォールバックしていたが、
+    # これだと1走1着の若手騎手も0走の未知の騎手も同じ扱いになってしまう。
+    # prior はそのlookup側デフォルトと揃え、k=10 は旧カットオフに相当する
+    # 「10走ぶんの事前分布」として、連続的に実測値へ収束させる。
+    new_jockey_dict  = {k: _bayes_shrink(v['wins'], v['runs'], prior=0.15, k=10)
+                        for k, v in jockey_stat.items() if v['runs'] > 0}
+    new_trainer_dict = {k: _bayes_shrink(v['wins'], v['runs'], prior=0.12, k=10)
+                        for k, v in trainer_stat.items() if v['runs'] > 0}
 
     new_dist   = _make_dict(dist_stat)
     new_course = _make_dict(course_stat)
@@ -1484,17 +1490,24 @@ def get_course_profile(racecourse, surface, base_dir=None):
     return profiles.get('courses', {}).get(key)
 
 
+def _bayes_shrink(hits, n, prior=0.33, k=3):
+    """(的中数, 試行数) からベイズ縮小レートを計算する共通ロジック。
+
+    n=0 の場合は prior をそのまま返す。k は事前分布の重みを何試行ぶんと
+    みなすか。試行数がk程度になるまではprior寄り、増えるほど実測値に収束する
+    （Beta-Binomialの事後平均と同形）。
+    """
+    return round((hits + prior * k) / (n + k), 3)
+
+
 def _bayes_rate(hits_list, prior=0.33, k=3):
     """少走数の成績率をベイズ縮小して返す（0/1に極端に振れるのを防ぐ）。
 
     hits_list: 各走を1(該当)/0(非該当)で表したリスト。空でも prior を返す
     （「未経験」と「経験済みで0%」を同じ0.0で表すと、木モデルが両者を
     区別できず"確実に悪い"と誤読しかねないため、中立値prior に統一する）。
-    k は事前分布の重みを何走ぶんとみなすか。件数がk程度になるまではprior寄り、
-    増えるほど実測値に収束する（Beta-Binomialの事後平均と同形）。
     """
-    n = len(hits_list)
-    return round((sum(hits_list) + prior * k) / (n + k), 3)
+    return _bayes_shrink(sum(hits_list), len(hits_list), prior, k)
 
 
 def _default_course_features():
