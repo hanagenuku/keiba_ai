@@ -820,6 +820,26 @@ def _extract_win_odds(texts, start_idx=10):
     return None
 
 
+_TRAINER_AFFIL_RE = re.compile(r'^(.+?)[\(（](栗東|美浦)[\)）]$')
+
+
+def _split_trainer_affiliation(trainer_text):
+    """調教師欄の「西村真幸(栗東)」/「秋本大介(美浦)」形式から所属を分離する。
+
+    実機（sp.jra.jp）の結果ページで確認済みの表記。所属表記が無い場合
+    （通期表示ではなく名前のみ等）は affiliation=None を返す後方互換設計。
+    列位置の想定がズレて trainer_text 自体が空/別データの場合も、
+    パターン不一致でNoneを返すだけで例外は出さない。
+
+    Returns:
+        (trainer_name: str, affiliation: '栗東'|'美浦'|None)
+    """
+    m = _TRAINER_AFFIL_RE.match(trainer_text.strip())
+    if m:
+        return m.group(1).strip(), m.group(2)
+    return trainer_text.strip(), None
+
+
 def _extract_weather_pace(header_text):
     """ヘッダから天候とペース判定を抽出。"""
     t = unicodedata.normalize('NFKC', header_text or '')
@@ -968,7 +988,8 @@ def parse_result_soup(soup, racecourse, race_num, date, place_code):
             # 列順: ...上がり(10), 単勝(11), 人気(12), 馬体重(13), 調教師(14)
             pop_m = re.match(r'^(\d+)$', texts[12].strip()) if len(texts) > 12 else None
             jockey = texts[6].strip() if len(texts) > 6 else ''
-            trainer = texts[14].strip() if len(texts) > 14 else ''
+            trainer_raw = texts[14].strip() if len(texts) > 14 else ''
+            trainer, trainer_affiliation = _split_trainer_affiliation(trainer_raw)
             margin_txt = texts[8].strip() if len(texts) > 8 else ''
             finish_time = _parse_finish_time(texts[7].strip() if len(texts) > 7 else '')
             # 馬体重（texts[13]、'516(+4)' 形式）
@@ -994,6 +1015,7 @@ def parse_result_soup(soup, racecourse, race_num, date, place_code):
                 'corner_all': corner_all,
                 'win_odds': win_odds,
                 'pedigree_cname': pedigree_cname,
+                'trainer_affiliation': trainer_affiliation,
             })
         divs = parse_dividends(soup)
         if not finishers:
