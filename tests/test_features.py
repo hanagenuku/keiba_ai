@@ -8,7 +8,7 @@ from src.features.engine import (
     auto_comment, dist_zone_label, dz,
     calc_course_aptitude_features, load_course_profiles, get_course_profile,
     calc_features_for_xgb, _ensure_escape_front_count, f_blood, _bayes_rate,
-    _check_xgb_feature_coverage,
+    _check_xgb_feature_coverage, _warn_xgb_inference_fallback,
 )
 import src.features.engine as engine
 
@@ -287,6 +287,35 @@ def test_check_xgb_feature_coverage_warns_only_once(capsys):
     _check_xgb_feature_coverage({'f_a': 1.0}, ['f_a', 'f_b'])
     out = capsys.readouterr().out
     assert out.count('XGB特徴量') == 1
+
+
+# ── XGB推論の例外フォールバック検知（無警告フォールバック事故の再発防止） ──
+def test_warn_xgb_inference_fallback_warns_once(capsys):
+    """XGB推論が例外で失敗しルールベースへフォールバックしたら警告を出す"""
+    engine._XGB_INFERENCE_ERRORS_WARNED = set()
+    _warn_xgb_inference_fallback('テスト馬', TypeError('boom'))
+    out = capsys.readouterr().out
+    assert 'テスト馬' in out
+    assert 'XGB推論失敗' in out
+    assert 'TypeError' in out
+
+
+def test_warn_xgb_inference_fallback_dedupes_same_error(capsys):
+    """同じ例外種別+メッセージは2回目以降は警告しない（毎頭ごとのログ洪水防止）"""
+    engine._XGB_INFERENCE_ERRORS_WARNED = set()
+    _warn_xgb_inference_fallback('馬A', TypeError('boom'))
+    _warn_xgb_inference_fallback('馬B', TypeError('boom'))
+    out = capsys.readouterr().out
+    assert out.count('XGB推論失敗') == 1
+
+
+def test_warn_xgb_inference_fallback_warns_again_for_different_error(capsys):
+    """例外の種類が異なれば別途警告する"""
+    engine._XGB_INFERENCE_ERRORS_WARNED = set()
+    _warn_xgb_inference_fallback('馬A', TypeError('boom'))
+    _warn_xgb_inference_fallback('馬B', ValueError('other'))
+    out = capsys.readouterr().out
+    assert out.count('XGB推論失敗') == 2
 
 
 # ── ペースシナリオ特徴量 ──────────────────────────────────────────────
