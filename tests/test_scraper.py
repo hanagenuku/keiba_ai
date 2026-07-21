@@ -437,6 +437,74 @@ def test_fill_pedigree_budget_shared_across_calls(tmp_path, monkeypatch):
     assert sess.calls == ['pw01dud0001/AA']
 
 
+# ── ラップタイム見出し・払戻金の券種網羅（sp.jra.jp実機で確認したページ内容に基づく） ──
+def _make_soup(text):
+    return BeautifulSoup(f'<html><body><div>{text}</div></body></html>', 'lxml')
+
+
+def test_extract_lap_times_matches_haron_time_heading():
+    """実機(sp.jra.jp)で確認した「ハロンタイム」見出し表記に対応する。
+    旧実装は「ラップタイム」表記のみ探索しており、この見出し違いにより
+    first_3f/last_3fが長期未取得（docs/history_db_schema.md記載の0%）だった可能性が高い。"""
+    soup = _make_soup(
+        'タイム ハロンタイム 9.5 - 11.1 - 11.6 - 12.2 - 12.4 - 12.8 '
+        '上り 4F 49.0 - 3F 37.4 '
+        'コーナー通過順位 3コーナー (1,*5)6,10(2,9)-(3,4)8=7'
+    )
+    laps, first_3f, last_3f = jra_scraper._extract_lap_times(soup)
+    assert laps == [9.5, 11.1, 11.6, 12.2, 12.4, 12.8]
+    assert first_3f == round(9.5 + 11.1 + 11.6, 1)
+    assert last_3f == round(12.2 + 12.4 + 12.8, 1)
+
+
+def test_extract_lap_times_still_matches_old_heading():
+    """旧「ラップタイム」表記でも従来どおり動作する（後方互換）"""
+    soup = _make_soup('ラップタイム 12.5 - 10.9 - 11.4 - 11.8 - 12.0 - 12.3 ペース: M')
+    laps, first_3f, last_3f = jra_scraper._extract_lap_times(soup)
+    assert len(laps) == 6
+    assert first_3f is not None and last_3f is not None
+
+
+def test_extract_lap_times_no_heading_returns_empty():
+    soup = _make_soup('見出しの無い本文のみ')
+    laps, first_3f, last_3f = jra_scraper._extract_lap_times(soup)
+    assert laps == [] and first_3f is None and last_3f is None
+
+
+def test_parse_dividends_captures_all_ticket_types():
+    """実機(sp.jra.jp)で確認した払戻金表を券種網羅で解析できる。
+    db.pyのbet_type='馬単'決済は divs['umatan'] を参照するが、旧実装は
+    umatan/wakuren/sanrentanを一切解析しておらず、馬単の的中払戻が常に0円に
+    なる潜在バグがあった。"""
+    soup = _make_soup(
+        '単勝 1 110円 1番人気 '
+        '複勝 1 110円 1番人気 6 180円 5番人気 10 110円 2番人気 '
+        '枠連 1-6 880円 4番人気 '
+        '馬連 1-6 920円 4番人気 '
+        '馬単 1-6 960円 5番人気 '
+        'ワイド 1-6 230円 4番人気 1-10 150円 1番人気 6-10 560円 7番人気 '
+        '3連複 1-6-10 840円 3番人気 '
+        '3連単 1-6-10 2,630円 8番人気'
+    )
+    divs = jra_scraper.parse_dividends(soup)
+    assert divs['tansho'] == {'num': 1, 'payout': 110}
+    assert len(divs['fukusho']) == 3
+    assert divs['wakuren'] == {'nums': [1, 6], 'payout': 880}
+    assert divs['umaren'] == {'nums': [1, 6], 'payout': 920}
+    assert divs['umatan'] == {'nums': [1, 6], 'payout': 960}
+    assert len(divs['wide']) == 3
+    assert divs['sanrenpuku'] == {'nums': [1, 6, 10], 'payout': 840}
+    assert divs['sanrentan'] == {'nums': [1, 6, 10], 'payout': 2630}
+
+
+def test_parse_dividends_kanji_sanrenpuku_sanrentan_still_works():
+    """旧「三連複」「三連単」表記（漢数字）でも従来どおり動作する（後方互換）"""
+    soup = _make_soup('三連複 2-4-6 1,000円 1番人気 三連単 2-4-6 5,000円 1番人気')
+    divs = jra_scraper.parse_dividends(soup)
+    assert divs['sanrenpuku'] == {'nums': [2, 4, 6], 'payout': 1000}
+    assert divs['sanrentan'] == {'nums': [2, 4, 6], 'payout': 5000}
+
+
 if __name__ == '__main__':
     test_parse_header_basic()
     print('✅ test_parse_header_basic passed')
