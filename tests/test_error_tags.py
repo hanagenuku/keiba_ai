@@ -1,6 +1,7 @@
 """エラータグ自動分類・蓄積・補正のテスト"""
 import json
 import os
+import sqlite3
 import tempfile
 
 import pytest
@@ -11,6 +12,7 @@ from src.features.error_tags import (
     _condition_key,
     _dist_band,
     _calc_corrections,
+    _build_race_result,
     accumulate_tags,
     classify_race_tags,
     get_correction_factor,
@@ -412,6 +414,57 @@ class TestErrorTagFeatures:
             assert feats['f_et_correction'] == 1.15
             assert abs(feats['f_et_escape_win_rate'] - 10 / 30) < 0.001
             assert abs(feats['f_et_dist_short_win_rate'] - 5 / 30) < 0.001
+
+
+class TestBuildRaceResult:
+    """_build_race_result は history.db から sqlite3.Row（dictではない）を受け取る。
+    sqlite3.Row は .get() を持たないため、dict専用のコードが紛れ込むと
+    AttributeError で本番の週次エラータグ処理全体が落ちる
+    （2026-07-18に実ログで発見・放置されていたバグの回帰テスト）。
+    """
+
+    def _make_hist_conn(self, race_class=None):
+        conn = sqlite3.connect(':memory:')
+        conn.row_factory = sqlite3.Row
+        conn.execute('''
+            CREATE TABLE race_history (
+                race_id TEXT, date TEXT, racecourse TEXT, surface TEXT,
+                distance INTEGER, track_condition TEXT, race_class TEXT,
+                first_3f REAL
+            )
+        ''')
+        conn.execute('''
+            CREATE TABLE horse_history (
+                race_id TEXT, date TEXT, horse_name TEXT, horse_num INTEGER,
+                place INTEGER, distance INTEGER, jockey TEXT
+            )
+        ''')
+        conn.execute(
+            'INSERT INTO race_history VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            ('R001', '2026-07-18', '東京', '芝', 1600, '良', race_class, 34.5)
+        )
+        conn.execute(
+            'INSERT INTO horse_history VALUES (?, ?, ?, ?, ?, ?, ?)',
+            ('R001', '2026-07-18', 'Horse1', 1, 1, 1600, 'jockeyA')
+        )
+        conn.commit()
+        return conn
+
+    def test_does_not_raise_with_real_sqlite_row(self):
+        """race_class が設定済みでも sqlite3.Row 経由でAttributeErrorが出ない。"""
+        conn = self._make_hist_conn(race_class='3勝クラス')
+        pred_horses = [{'horse_num': 1, 'rl_rank': 2, 'win_prob': 0.2}]
+        result = _build_race_result('R001', pred_horses, conn)
+        assert result is not None
+        assert result['race_class'] == '3勝クラス'
+
+    def test_none_race_class_becomes_empty_string(self):
+        """race_class が NULL の行でも例外にならず空文字にフォールバックする。"""
+        conn = self._make_hist_conn(race_class=None)
+        pred_horses = [{'horse_num': 1, 'rl_rank': 2, 'win_prob': 0.2}]
+        result = _build_race_result('R001', pred_horses, conn)
+        assert result is not None
+        assert result['race_class'] == ''
 
 
 class TestNoTagsReturnsNone:

@@ -720,7 +720,7 @@ def _build_race_result(race_id, pred_horses, hist_conn):
         'surface': race_row['surface'],
         'distance': race_row['distance'],
         'track_condition': race_row['track_condition'],
-        'race_class': race_row.get('race_class', ''),
+        'race_class': race_row['race_class'] or '',
         'first_3f': race_row['first_3f'],
         'horses': horses_with_history,
     }
