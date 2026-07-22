@@ -349,6 +349,7 @@ def calc_odds_movement_analysis(conn):
             'morning_odds': round(morning, 1),
             'chokuzen_odds': round(chokuzen, 1),
             'change_pct': round(change_pct, 1),
+            'abs_diff': round(morning - chokuzen, 2),
             'actual_place': r['actual_place'],
             'won': r['actual_place'] == 1,
             'top3': r['actual_place'] <= 3,
@@ -357,19 +358,38 @@ def calc_odds_movement_analysis(conn):
     if not records:
         return None
 
-    def _move_bucket(pct):
-        if pct <= -30:   return '急騰(↓30%+)'
-        if pct <= -15:   return '上昇(↓15-30%)'
-        if pct < 15:     return '横ばい(±15%)'
-        if pct < 30:     return '下降(↑15-30%)'
+    def _is_hot(pct, abs_diff):
+        """index.html updateOddsAndEV() の 急騰(hot) バッジ判定条件と完全一致させる。"""
+        return pct <= -30 and abs_diff >= 3.0
+
+    def _is_warm(pct, abs_diff):
+        """同、上昇(warm) バッジ判定条件と完全一致させる。"""
+        return pct <= -20 and abs_diff >= 2.0
+
+    def _move_bucket(pct, abs_diff):
+        """朝→直前オッズの変動を分類する。急騰/上昇バケットは、アプリ画面の
+        急騰/上昇バッジが実際に表示される条件（%下落かつオッズ差の絶対値）と
+        完全に一致させている。%だけ見れば同じ範囲でも、オッズの絶対差が小さく
+        バッジが出ない馬は「相当(バッジ対象外)」に分けて区別する
+        （2026-07-22、集計側の閾値がアプリのバッジ条件とズレていたため是正）。
+        """
+        if pct <= -30:
+            return '急騰(↓30%+)' if _is_hot(pct, abs_diff) else '急騰相当(バッジ対象外)'
+        if pct <= -15:
+            return '上昇(↓15-30%)' if _is_warm(pct, abs_diff) else '上昇相当(バッジ対象外)'
+        if pct < 15:
+            return '横ばい(±15%)'
+        if pct < 30:
+            return '下降(↑15-30%)'
         return '急落(↑30%+)'
 
-    bucket_order = ['急騰(↓30%+)', '上昇(↓15-30%)', '横ばい(±15%)',
-                    '下降(↑15-30%)', '急落(↑30%+)']
+    bucket_order = ['急騰(↓30%+)', '急騰相当(バッジ対象外)',
+                     '上昇(↓15-30%)', '上昇相当(バッジ対象外)',
+                     '横ばい(±15%)', '下降(↑15-30%)', '急落(↑30%+)']
 
     buckets = defaultdict(list)
     for rec in records:
-        buckets[_move_bucket(rec['change_pct'])].append(rec)
+        buckets[_move_bucket(rec['change_pct'], rec['abs_diff'])].append(rec)
 
     bucket_stats = []
     for bname in bucket_order:
@@ -407,9 +427,11 @@ def calc_odds_movement_analysis(conn):
     ai_agrees_market = []
     ai_disagrees_market = []
     for r in records:
-        if r['change_pct'] <= -20 and r['rl_rank'] and r['rl_rank'] <= 3:
+        # 「市場が急騰/上昇と判断した馬」の定義もアプリのバッジ条件と揃える
+        is_surge = _is_hot(r['change_pct'], r['abs_diff']) or _is_warm(r['change_pct'], r['abs_diff'])
+        if is_surge and r['rl_rank'] and r['rl_rank'] <= 3:
             ai_agrees_market.append(r)
-        elif r['change_pct'] <= -20 and (not r['rl_rank'] or r['rl_rank'] > 5):
+        elif is_surge and (not r['rl_rank'] or r['rl_rank'] > 5):
             ai_disagrees_market.append(r)
 
     return {
