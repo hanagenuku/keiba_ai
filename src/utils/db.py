@@ -397,6 +397,9 @@ def save_history_db(all_results, base_dir=None, db_path=None):
         "ALTER TABLE horse_history ADD COLUMN dam_sire TEXT",
         # 調教師所属（栗東/美浦）。2026-07-21〜、結果ページの調教師欄「名前(栗東)」表記から取得
         "ALTER TABLE horse_history ADD COLUMN trainer_affiliation TEXT",
+        # コーナー通過順位（同着グルーピング表記込みの生テキスト）。2026-07-21〜
+        "ALTER TABLE race_history ADD COLUMN corner_pass_3 TEXT",
+        "ALTER TABLE race_history ADD COLUMN corner_pass_4 TEXT",
     ]
     for sql in migrations:
         try:
@@ -417,14 +420,16 @@ def save_history_db(all_results, base_dir=None, db_path=None):
         cur = conn.execute(
             "INSERT OR IGNORE INTO race_history "
             "(race_id,date,racecourse,distance,surface,first_3f,last_3f,lap_times,"
-            " race_name,race_class,track_condition,num_finishers,weather,pace_label) "
-            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            " race_name,race_class,track_condition,num_finishers,weather,pace_label,"
+            " corner_pass_3,corner_pass_4) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
             (race_id, date_str, r.get('racecourse', ''),
              r.get('distance', 0), r.get('surface', ''),
              r.get('first_3f'), r.get('last_3f'), r.get('lap_times', ''),
              r.get('race_name', ''), r.get('race_class', ''),
              r.get('track_condition', '良'), r.get('num_finishers', 0),
-             r.get('weather'), r.get('pace_label')),
+             r.get('weather'), r.get('pace_label'),
+             r.get('corner_pass_3'), r.get('corner_pass_4')),
         )
         new_races += cur.rowcount
         # Stage 3 rescrape 用：既存行の新フィールドを UPDATE で充填
@@ -438,12 +443,15 @@ def save_history_db(all_results, base_dir=None, db_path=None):
             "  pace_label     = COALESCE(?, pace_label), "
             "  first_3f       = COALESCE(?, first_3f), "
             "  last_3f        = COALESCE(?, last_3f), "
-            "  lap_times      = COALESCE(NULLIF(?, ''), lap_times) "
+            "  lap_times      = COALESCE(NULLIF(?, ''), lap_times), "
+            "  corner_pass_3  = COALESCE(?, corner_pass_3), "
+            "  corner_pass_4  = COALESCE(?, corner_pass_4) "
             "WHERE race_id = ?",
             (r.get('race_name', ''), r.get('race_class', ''),
              r.get('track_condition'), r.get('num_finishers'),
              r.get('weather'), r.get('pace_label'),
              r.get('first_3f'), r.get('last_3f'), r.get('lap_times', ''),
+             r.get('corner_pass_3'), r.get('corner_pass_4'),
              race_id),
         )
 

@@ -840,8 +840,16 @@ def _split_trainer_affiliation(trainer_text):
     return trainer_text.strip(), None
 
 
-def _extract_weather_pace(header_text):
-    """ヘッダから天候とペース判定を抽出。"""
+def _extract_weather_pace(header_text, full_text=None):
+    """ヘッダから天候を、ページ全体からペース判定を抽出。
+
+    天候はヘッダ表（レース情報の1行目、例:「天候:晴」）から取得できるが、
+    ペース判定は実機（sp.jra.jp）ではヘッダとは別のセクション（タイム欄近辺）に
+    「ペース判定：ミドルペース」のような**単語表記**で載っている。旧実装は
+    「ペース」直後のH/M/S 1文字のみを探索しており、この単語表記には一致せず、
+    ペース判定が長期未取得だった可能性が高い。header_text・full_text の両方を
+    対象に、1文字表記(H/M/S)と単語表記(スロー/ミドル/ハイ)の両方を探索する。
+    """
     t = unicodedata.normalize('NFKC', header_text or '')
     weather = None
     wm = re.search(r'天候[\s:：]*([晴曇雨雪]+小?雨?)', t)
@@ -852,10 +860,16 @@ def _extract_weather_pace(header_text):
             if w in t:
                 weather = w
                 break
+
+    pace_text = unicodedata.normalize('NFKC', full_text) if full_text else t
     pace = None
-    pm = re.search(r'ペース[\s:：]*([HMS])', t)
+    pm = re.search(r'ペース[\s:：]*([HMS])\b', pace_text)
     if pm:
         pace = pm.group(1)
+    else:
+        pm2 = re.search(r'ペース(?:判定)?[\s:：]*(スロー|ミドル|ハイ)', pace_text)
+        if pm2:
+            pace = {'スロー': 'S', 'ミドル': 'M', 'ハイ': 'H'}[pm2.group(1)]
     return weather, pace
 
 
@@ -895,6 +909,41 @@ def _extract_lap_times(soup):
     return laps, first_3f, last_3f
 
 
+def _extract_corner_passage(soup):
+    """「コーナー通過順位」セクションから3角・4角の通過順を生テキストのまま抽出する。
+
+    実機（sp.jra.jp）で確認した表記例:
+        3コーナー: (1,*5)6,10(2,9)-(3,4)8=7
+        4コーナー: 1(5,6)-(9,10)-(2,3,4)=8=7
+    括弧は同着・並走、"-"は差、"="は同タイムを表す（推定）。現時点ではこの
+    構造を解釈せず生テキストのまま保存するに留める（特徴量化は将来の課題。
+    データを貯めてから設計する、血統・調教師所属と同じ段階的導入方針）。
+
+    Returns:
+        dict: {'corner_pass_3': str|None, 'corner_pass_4': str|None}
+        セクション自体が見つからない場合は空dict。
+    """
+    text = unicodedata.normalize('NFKC', soup.get_text(' ', strip=True))
+    idx = text.find('コーナー通過順位')
+    if idx < 0:
+        return {}
+    segment = text[idx:idx + 500]
+    end_candidates = [e for e in (segment.find('払戻金'), segment.find('タイム')) if e > 0]
+    if end_candidates:
+        segment = segment[:min(end_candidates)]
+
+    result = {}
+    for label, key in (('3コーナー', 'corner_pass_3'),
+                        ('4コーナー', 'corner_pass_4'),
+                        ('最終コーナー', 'corner_pass_4')):
+        if key in result:
+            continue
+        m = re.search(re.escape(label) + r'\s*([0-9,()（）*=-]+)', segment)
+        if m:
+            result[key] = m.group(1).strip()
+    return result
+
+
 def parse_result_soup(soup, racecourse, race_num, date, place_code):
     try:
         tables = soup.find_all('table')
@@ -932,7 +981,7 @@ def parse_result_soup(soup, racecourse, race_num, date, place_code):
         info['track_condition'] = tc_m.group(1) if tc_m else '良'
         info['race_class'] = _extract_class(header)
         # 天候・ペース判定（race-level）
-        weather, pace = _extract_weather_pace(header)
+        weather, pace = _extract_weather_pace(header, soup.get_text(' ', strip=True))
         info['weather'] = weather
         info['pace_label'] = pace
         # ラップタイム（区間タイム）と前半/後半3F
@@ -940,6 +989,10 @@ def parse_result_soup(soup, racecourse, race_num, date, place_code):
         info['lap_times'] = '-'.join(f'{v:.1f}' for v in laps) if laps else ''
         info['first_3f'] = first_3f
         info['last_3f'] = last_3f
+        # コーナー通過順位（同着グルーピング表記込みの生テキスト、収集のみ）
+        corner_pass = _extract_corner_passage(soup)
+        info['corner_pass_3'] = corner_pass.get('corner_pass_3')
+        info['corner_pass_4'] = corner_pass.get('corner_pass_4')
         finishers = []
         for row in tables[0].find_all('tr'):
             cells = row.find_all('td')
