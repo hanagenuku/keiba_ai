@@ -175,6 +175,40 @@ class TestOddsMovementAnalysis:
         found_fall = any(b['bucket'] == '急落(↑30%+)' for b in result['bucket_stats'])
         assert found_rise or found_fall
 
+    def test_movement_bucket_aligns_with_app_badge_thresholds(self):
+        """急騰/上昇バケットは index.html updateOddsAndEV() の急騰/上昇バッジ判定
+        条件（%下落かつオッズ差の絶対値）と完全に一致させている。%だけ見れば
+        同じ範囲でも、オッズ差の絶対値が小さくバッジが出ない馬は
+        「相当(バッジ対象外)」に分類され、混同されないことを確認する
+        （2026-07-22、集計側の閾値がアプリのバッジ条件とズレていた是正の回帰テスト）。
+        """
+        rows = _make_race('R001', '2026-07-06', '東京', winner=1)
+        odds = [
+            # 馬1 morning=2.5(mkt_fav補正) → 1.6: -36%だがabs差0.9(<3.0) → 急騰相当
+            ('R001', 1, 1.6, 0.8, '2026-07-06 15:00'),
+            # 馬2 morning=4.0 → 0.9: -77.5%・abs差3.1(>=3.0) → 急騰(バッジ有)
+            ('R001', 2, 0.9, 0.45, '2026-07-06 15:00'),
+            # 馬3 morning=6.0 → 4.5: -25%だがabs差1.5(<2.0) → 上昇相当
+            ('R001', 3, 4.5, 2.25, '2026-07-06 15:00'),
+            # 馬4 morning=8.0 → 6.0: -25%・abs差2.0(>=2.0) → 上昇(バッジ有)
+            ('R001', 4, 6.0, 3.0, '2026-07-06 15:00'),
+            # 馬5,6 変化なし → 横ばい
+            ('R001', 5, 10.0, 5.0, '2026-07-06 15:00'),
+            ('R001', 6, 12.0, 6.0, '2026-07-06 15:00'),
+        ]
+        rows += _make_race('R002', '2026-07-06', '東京', winner=1)
+        for i, m in {1: 2.5, 2: 4.0, 3: 6.0, 4: 8.0, 5: 10.0, 6: 12.0}.items():
+            odds.append(('R002', i, m, m * 0.5, '2026-07-06 15:00'))  # 全馬変化なし（件数確保用）
+
+        conn = _setup_predictions_db(rows, odds_rows=odds)
+        result = calc_odds_movement_analysis(conn)
+        assert result is not None
+        buckets = {b['bucket']: b['count'] for b in result['bucket_stats']}
+        assert buckets.get('急騰(↓30%+)') == 1
+        assert buckets.get('急騰相当(バッジ対象外)') == 1
+        assert buckets.get('上昇(↓15-30%)') == 1
+        assert buckets.get('上昇相当(バッジ対象外)') == 1
+
 
 class TestSaveDivergenceWeekly:
 
