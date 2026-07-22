@@ -356,6 +356,27 @@ def test_save_history_db_stores_trainer_affiliation(tmp_path):
     assert rows == [('栗東の馬', '栗東'), ('美浦の馬', '美浦')]
 
 
+def test_save_history_db_stores_corner_passage(tmp_path):
+    """race_history.corner_pass_3/4 に同着グルーピング表記が保存・取得できる。"""
+    import sqlite3
+    from src.utils.db import save_history_db
+    hist_path = tmp_path / 'history.db'
+    save_history_db([{
+        'race_id': '20260101_01_01', 'racecourse': '東京', 'distance': 1600, 'surface': '芝',
+        'corner_pass_3': '(1,*5)6,10(2,9)-(3,4)8=7',
+        'corner_pass_4': '1(5,6)-(9,10)-(2,3,4)=8=7',
+        'finishers': [{'num': 1, 'name': 'テスト馬', 'place': 1}],
+    }], db_path=str(hist_path))
+
+    conn = sqlite3.connect(str(hist_path))
+    row = conn.execute(
+        'SELECT corner_pass_3, corner_pass_4 FROM race_history WHERE race_id=?',
+        ('20260101_01_01',),
+    ).fetchone()
+    conn.close()
+    assert row == ('(1,*5)6,10(2,9)-(3,4)8=7', '1(5,6)-(9,10)-(2,3,4)=8=7')
+
+
 def test_fill_pedigree_skips_cached_horse(tmp_path):
     """history.dbに既に血統が記録済みの馬は再取得しない（ネットワークリクエストなし）。"""
     from src.utils.db import save_history_db
@@ -560,6 +581,60 @@ def test_parse_dividends_kanji_sanrenpuku_sanrentan_still_works():
     divs = jra_scraper.parse_dividends(soup)
     assert divs['sanrenpuku'] == {'nums': [2, 4, 6], 'payout': 1000}
     assert divs['sanrentan'] == {'nums': [2, 4, 6], 'payout': 5000}
+
+
+# ── ペース判定（単語表記対応）・コーナー通過順位（グルーピング表記の収集） ──
+def test_extract_weather_pace_matches_word_form():
+    """実機(sp.jra.jp)の「ペース判定：ミドルペース」のような単語表記に対応する。
+    旧実装は「ペース」直後のH/M/S 1文字のみ探索しており一致しなかった。"""
+    full_text = 'タイム ハロンタイム 9.5 - 11.1 ペース判定： ミドルペース コーナー通過順位'
+    weather, pace = jra_scraper._extract_weather_pace('天候:晴', full_text)
+    assert weather == '晴'
+    assert pace == 'M'
+
+
+def test_extract_weather_pace_slow_and_high():
+    _, pace_s = jra_scraper._extract_weather_pace('', 'ペース判定：スローペース')
+    _, pace_h = jra_scraper._extract_weather_pace('', 'ペース判定：ハイペース')
+    assert pace_s == 'S'
+    assert pace_h == 'H'
+
+
+def test_extract_weather_pace_still_matches_old_single_letter():
+    """旧「ペース:M」のような1文字表記でも従来どおり動作する（後方互換）"""
+    _, pace = jra_scraper._extract_weather_pace('', 'ペース: M')
+    assert pace == 'M'
+
+
+def test_extract_corner_passage_captures_grouping_notation():
+    """実機(sp.jra.jp)で確認した同着グルーピング表記を生テキストのまま抽出する。"""
+    soup = _make_soup(
+        'コーナー通過順位 3コーナー (1,*5)6,10(2,9)-(3,4)8=7 '
+        '4コーナー 1(5,6)-(9,10)-(2,3,4)=8=7 払戻金 単勝 1 110円'
+    )
+    result = jra_scraper._extract_corner_passage(soup)
+    assert result['corner_pass_3'] == '(1,*5)6,10(2,9)-(3,4)8=7'
+    assert result['corner_pass_4'] == '1(5,6)-(9,10)-(2,3,4)=8=7'
+
+
+def test_extract_corner_passage_no_section_returns_empty():
+    soup = _make_soup('見出しの無い本文のみ')
+    assert jra_scraper._extract_corner_passage(soup) == {}
+
+
+def test_parse_result_soup_stores_corner_passage():
+    """parse_result_soup() の info に corner_pass_3/4 が格納される。"""
+    html = _RESULT_HTML.replace(
+        '</table>',
+        '<tr><td colspan="15">'
+        'コーナー通過順位 3コーナー (1,*5)6,10(2,9)-(3,4)8=7 '
+        '4コーナー 1(5,6)-(9,10)-(2,3,4)=8=7'
+        '</td></tr></table>',
+    )
+    soup = BeautifulSoup(html, 'lxml')
+    result = parse_result_soup(soup, '中山', 1, '20230107', '06')
+    assert result['corner_pass_3'] == '(1,*5)6,10(2,9)-(3,4)8=7'
+    assert result['corner_pass_4'] == '1(5,6)-(9,10)-(2,3,4)=8=7'
 
 
 if __name__ == '__main__':
