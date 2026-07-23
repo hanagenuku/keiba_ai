@@ -22,6 +22,20 @@ import sqlite3
 _PACE_PERCENTILE_CACHE = {}  # (surface, dist_zone) → (p33, p67)
 
 
+def _format_accuracy_delta(acc, old_acc):
+    """新旧モデルのAccuracyを比較したラベルを返す（同値の場合を正しく扱う）。
+
+    厳密な `>` 比較だけだと acc == old_acc のとき常に else 節（悪化）に
+    落ちてしまい、変化が無いのに「↓悪化」と誤表示するバグがあったため、
+    同値のケースを明示的に「→変化なし」として区別する。
+    """
+    if acc > old_acc:
+        return '↑改善'
+    if acc < old_acc:
+        return '↓悪化'
+    return '→変化なし'
+
+
 def _dist_zone(distance):
     if distance <= 1400:
         return 'sprint'
@@ -428,7 +442,7 @@ def train_pace_model(base_dir,
             old_pred = old_model.predict(old_X)
             old_acc = accuracy_score(y_val, old_pred)
             print(f'  旧モデル Accuracy: {old_acc:.4f}  '
-                  f'({"↑改善" if acc > old_acc else "↓悪化"})')
+                  f'({_format_accuracy_delta(acc, old_acc)})')
         except Exception as e:
             print(f'  旧モデル比較スキップ: {e}')
 
