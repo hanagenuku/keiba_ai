@@ -10,6 +10,7 @@ from src.features.engine import (
     calc_course_aptitude_features, load_course_profiles, get_course_profile,
     calc_features_for_xgb, _ensure_escape_front_count, f_blood, _bayes_rate,
     _bayes_shrink, _check_xgb_feature_coverage, _warn_xgb_inference_fallback,
+    calc_course_distance_features, load_course_distance_profiles, _resolve_turf_loop,
 )
 import src.features.engine as engine
 
@@ -129,6 +130,80 @@ def test_course_aptitude_no_history():
     assert feats['f_same_course_rate'] == _bayes_rate([])
     assert feats['f_course_coverage'] == 0
     assert feats['f_agari_at_similar'] == 99.0
+
+
+# ── 距離依存コース特徴量（course_distance_profiles.json） ────────────────
+def test_course_distance_profiles_loads():
+    profiles = load_course_distance_profiles(ROOT)
+    assert profiles is not None
+    assert '中山' in profiles['dirt_turf_start']
+    assert 1200 in profiles['dirt_turf_start']['中山']
+
+
+def test_dirt_turf_start_true_for_nakayama_1200():
+    # 中山ダート1200mはJRA公式で「芝スタート」と明記されている距離
+    feats = calc_course_distance_features('中山', 'ダート', 1200, ROOT)
+    assert feats['f_dirt_turf_start'] == 1.0
+
+
+def test_dirt_turf_start_false_for_nakayama_1800():
+    feats = calc_course_distance_features('中山', 'ダート', 1800, ROOT)
+    assert feats['f_dirt_turf_start'] == 0.0
+
+
+def test_dirt_turf_start_hanshin_two_distances():
+    # 阪神は1400m・2000mの2距離が芝スタート
+    assert calc_course_distance_features('阪神', 'ダート', 1400, ROOT)['f_dirt_turf_start'] == 1.0
+    assert calc_course_distance_features('阪神', 'ダート', 2000, ROOT)['f_dirt_turf_start'] == 1.0
+    assert calc_course_distance_features('阪神', 'ダート', 1800, ROOT)['f_dirt_turf_start'] == 0.0
+
+
+def test_dirt_turf_start_venue_without_it():
+    # 札幌はダートの芝スタート区間が無い
+    feats = calc_course_distance_features('札幌', 'ダート', 1700, ROOT)
+    assert feats['f_dirt_turf_start'] == 0.0
+
+
+def test_course_hill_diff_nakayama():
+    feats = calc_course_distance_features('中山', '芝', 2500, ROOT)
+    assert feats['f_course_hill_diff'] == 2.2
+
+
+def test_course_hill_diff_unknown_course_defaults_zero():
+    feats = calc_course_distance_features('存在しない場', '芝', 1600, ROOT)
+    assert feats['f_course_hill_diff'] == 0.0
+    assert feats['f_dirt_turf_start'] == 0.0
+    assert feats['f_course_corner_tight'] == 2.0  # Normal相当のデフォルト
+
+
+def test_resolve_turf_loop_nakayama():
+    profiles = load_course_distance_profiles(ROOT)
+    # 中山芝2500m(有馬記念)はJRA公式の発走距離表記で(内)タグ＝内回りが舞台
+    # （発走地点自体は外回り上にあるが、周回するのは内回りコース）
+    assert _resolve_turf_loop(profiles, '中山', 2500) == '内回り'
+    assert _resolve_turf_loop(profiles, '中山', 1200) == '外回り'
+
+
+def test_resolve_turf_loop_no_split_venue_returns_none():
+    profiles = load_course_distance_profiles(ROOT)
+    # 東京は内回り/外回りの区別が無い競馬場
+    assert _resolve_turf_loop(profiles, '東京', 1600) is None
+
+
+def test_corner_tightness_differs_by_loop_hanshin():
+    # 阪神は内回りNormal・外回りWideで、コーナータイト度の値が距離によって変わる
+    inner = calc_course_distance_features('阪神', '芝', 1200, ROOT)   # 内回り
+    outer = calc_course_distance_features('阪神', '芝', 1800, ROOT)   # 外回り
+    assert inner['f_course_corner_tight'] < outer['f_course_corner_tight']
+
+
+def test_calc_features_for_xgb_includes_course_distance_features():
+    horses = [{'name': f'Horse{i}', 'num': i, 'running_style': '差し'} for i in range(1, 9)]
+    race = {'racecourse': '中山', 'surface': 'ダート', 'distance': 1200, 'horses': horses}
+    feats = calc_features_for_xgb(horses[0], race)
+    assert feats['f_dirt_turf_start'] == 1.0
+    assert 'f_course_hill_diff' in feats
+    assert 'f_course_corner_tight' in feats
 
 
 def test_course_aptitude_unknown_course():
