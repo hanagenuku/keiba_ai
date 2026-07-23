@@ -377,6 +377,65 @@ def test_save_history_db_stores_corner_passage(tmp_path):
     assert row == ('(1,*5)6,10(2,9)-(3,4)8=7', '1(5,6)-(9,10)-(2,3,4)=8=7')
 
 
+# ── get_history_from_db（推論時の過去走取得）の racecourse/corner_all 欠落（2026-07-23〜） ──
+
+def test_get_history_from_db_includes_racecourse_and_corner_all(tmp_path):
+    """get_history_from_db()（推論時にcalc_all→calc_features_for_xgbが使うh['history']を
+    構築する関数）が racecourse/corner_all を実際に返すことを確認する回帰テスト。
+
+    この2列が欠けていると、calc_course_aptitude_features() 内の
+    hrec.get('racecourse', '') が常に '' になり get_course_profile('', ...) が
+    常に None を返すため、f_same_course_rate 等のコース適性特徴量群が推論時は
+    常にデフォルト値に落ちる（学習時は build_training_data._get_history_before が
+    racecourse を正しく渡すため、これは学習/推論パリティ違反になる）。
+    本番のsave_history_db()で実際にDBへ書き込んだ上で読み出す（手打ちdictではない）。
+    """
+    from src.utils.db import save_history_db
+    from src.scraper.jra_scraper import get_history_from_db
+
+    hist_path = tmp_path / 'history.db'
+    save_history_db([{
+        'race_id': '20260101_05_11', 'racecourse': '中山', 'distance': 2500, 'surface': '芝',
+        'race_class': 'G1',
+        'finishers': [
+            {'num': 3, 'name': 'テスト馬', 'place': 1, 'agari3f': 34.5,
+             'corner_all': '3-3-2-1'},
+        ],
+    }], db_path=str(hist_path))
+
+    hist = get_history_from_db('テスト馬', str(hist_path))
+    assert len(hist) == 1
+    assert hist[0]['racecourse'] == '中山'
+    assert hist[0]['corner_all'] == '3-3-2-1'
+
+
+def test_calc_course_aptitude_features_uses_inference_time_history(tmp_path):
+    """get_history_from_db() が返す辞書（推論時と同じ形）を
+    calc_course_aptitude_features() にそのまま渡した場合に、同一競馬場での
+    経験が f_same_course_rate に反映されることを確認する統合テスト。
+    修正前は racecourse が常に '' だったため、このアサーションは常に失敗していた
+    （同一競馬場判定が一度も成立しなかった）。
+    """
+    from src.utils.db import save_history_db
+    from src.scraper.jra_scraper import get_history_from_db
+    from src.features.engine import calc_course_aptitude_features
+
+    hist_path = tmp_path / 'history.db'
+    save_history_db([{
+        'race_id': '20260101_05_11', 'racecourse': '中山', 'distance': 2500, 'surface': '芝',
+        'race_class': 'G1',
+        'finishers': [
+            {'num': 3, 'name': 'テスト馬', 'place': 1, 'agari3f': 34.5,
+             'corner_all': '3-3-2-1'},
+        ],
+    }], db_path=str(hist_path))
+
+    root = os.path.join(os.path.dirname(__file__), '..')
+    hist = get_history_from_db('テスト馬', str(hist_path))
+    feats = calc_course_aptitude_features('テスト馬', '中山', '芝', hist, root)
+    assert feats['f_course_coverage'] > 0  # 中山芝での経験走数がカウントされている
+
+
 def test_fill_pedigree_skips_cached_horse(tmp_path):
     """history.dbに既に血統が記録済みの馬は再取得しない（ネットワークリクエストなし）。"""
     from src.utils.db import save_history_db
