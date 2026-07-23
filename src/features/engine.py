@@ -82,6 +82,7 @@ _trainer_dict          = {}  # 調教師名 → 勝率
 _hist_db_path          = None  # Phase 3: DBパス（calc_prev_member_levelで使用）
 _BASE_DIR              = None  # init_engine で設定。course_profiles等の遅延ロードに使用
 _COURSE_PROFILES       = None  # data/course_profiles.json の内容（コース適性特徴量で使用）
+_COURSE_DISTANCE_PROFILES = None  # data/course_distance_profiles.json の内容（距離別コース特徴量）
 _ENSEMBLE_MODEL        = None  # XGB+LightGBM ensemble dict (train_ensemble() が生成)
 
 
@@ -1490,6 +1491,98 @@ def get_course_profile(racecourse, surface, base_dir=None):
     return profiles.get('courses', {}).get(key)
 
 
+# コーナーのタイト度を数値化（木モデルに渡すため）。Tight=小回り、Wide=大回り。
+_CORNER_TIGHTNESS_SCALE = {'Tight': 1.0, 'Normal': 2.0, 'Wide': 3.0, 'Very Wide': 4.0}
+
+
+def load_course_distance_profiles(base_dir=None):
+    """data/course_distance_profiles.json を読み込む（モジュールロード時に1回キャッシュ）。
+
+    course_profiles.json がvenue×surfaceのみで距離区別を持たないのに対し、
+    こちらはvenue×surface×distanceの粒度でダート芝スタート区間・坂・
+    コーナータイト度を持つ（2026-07-23、JRA公式のコース紹介文から作成）。
+    """
+    global _COURSE_DISTANCE_PROFILES
+    if _COURSE_DISTANCE_PROFILES is None:
+        bd = base_dir or _BASE_DIR
+        if bd is None:
+            return None
+        path = os.path.join(bd, 'data', 'course_distance_profiles.json')
+        if not os.path.exists(path):
+            return None
+        import json as _json
+        with open(path, encoding='utf-8') as f:
+            _COURSE_DISTANCE_PROFILES = _json.load(f)
+    return _COURSE_DISTANCE_PROFILES
+
+
+def _resolve_turf_loop(profiles, racecourse, distance):
+    """中山・阪神・京都・新潟の芝は内回り/外回りが距離で固定的に決まる
+    （レースごとの選択ではなくJRAのコース設計）。loop_by_distanceで解決する。
+    分岐を持たない競馬場や未定義の距離は None（=分岐なしとして扱う）を返す。
+    """
+    loop_map = profiles.get('loop_by_distance', {}).get(f'{racecourse}_芝')
+    if not loop_map:
+        return None
+    loop = loop_map.get(str(int(distance)))
+    if loop in ('内', '外内', '両', '直線'):
+        return '内回り'
+    if loop == '外':
+        return '外回り'
+    return None
+
+
+def calc_course_distance_features(racecourse, surface, distance, base_dir=None):
+    """競馬場×コース×距離のプロファイルから距離依存の特徴量を計算する。
+
+    course_distance_profiles.json が無い/未定義の組み合わせなら、いずれも
+    「該当なし」を表す安全なデフォルト値を返す（f_dirt_turf_start=0,
+    f_course_hill_diff=0, f_course_corner_tight=2.0=Normal相当）。
+
+    Returns dict:
+        f_dirt_turf_start   : このダート距離がスタート直後に芝を走る区間なら1.0
+        f_course_hill_diff  : このコースの主要な坂の高低差(m)。坂なし/不明なら0.0
+        f_course_corner_tight : コーナーのタイト度(1=Tight〜4=Very Wide、不明時2.0)
+    """
+    defaults = {
+        'f_dirt_turf_start': 0.0,
+        'f_course_hill_diff': 0.0,
+        'f_course_corner_tight': 2.0,
+    }
+    profiles = load_course_distance_profiles(base_dir)
+    if not profiles or not racecourse:
+        return defaults
+
+    out = dict(defaults)
+    if surface == 'ダート':
+        turf_start_list = profiles.get('dirt_turf_start', {}).get(racecourse, [])
+        out['f_dirt_turf_start'] = float(1.0 if int(distance) in turf_start_list else 0.0)
+        hill_key = f'{racecourse}_ダート'
+        corner_key = f'{racecourse}_ダート'
+    else:
+        loop = _resolve_turf_loop(profiles, racecourse, distance)
+        base_key = f'{racecourse}_芝'
+        # 内外回りで坂・コーナー特性が同じ場（例: 中山）はloop接尾辞なしの
+        # キーで登録しているため、まずloop付きキーを試し、無ければ
+        # loop無しキーにフォールバックする
+        hill_key = f'{base_key}_{loop}' if loop else base_key
+        corner_key = hill_key
+        if hill_key not in profiles.get('hill', {}):
+            hill_key = base_key
+        if corner_key not in profiles.get('corner_tightness', {}):
+            corner_key = base_key
+
+    hill = profiles.get('hill', {}).get(hill_key)
+    if hill and hill.get('elevation_diff_m') is not None:
+        out['f_course_hill_diff'] = float(hill['elevation_diff_m'])
+
+    tightness = profiles.get('corner_tightness', {}).get(corner_key)
+    if tightness in _CORNER_TIGHTNESS_SCALE:
+        out['f_course_corner_tight'] = _CORNER_TIGHTNESS_SCALE[tightness]
+
+    return out
+
+
 def _bayes_shrink(hits, n, prior=0.33, k=3):
     """(的中数, 試行数) からベイズ縮小レートを計算する共通ロジック。
 
@@ -2064,6 +2157,11 @@ def calc_features_for_xgb(h, race):
         h.get('name', ''), rc, surf, hist,
     )
     feats.update(course_feats)
+
+    # ── 距離依存コース特徴量（course_distance_profiles.json 駆動）──────
+    # course_profiles.json はvenue×surfaceのみで距離区別を持たないため、
+    # ダートの芝スタート区間・坂・コーナータイト度は距離ごとに別途持つ。
+    feats.update(calc_course_distance_features(rc, surf, dist))
 
     # ── 脚質×コース・展開適性（3特徴量） ──────────────────────────────────
     # pace_info はレース単位で1回だけ計算し race['_pace_info_cache'] に保存して使い回す。
