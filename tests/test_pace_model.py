@@ -220,3 +220,24 @@ class TestTrainPaceModelModule:
     def test_percentile_cache_defined(self):
         from src.tools.train_pace_model import _PACE_PERCENTILE_CACHE
         assert isinstance(_PACE_PERCENTILE_CACHE, dict)
+
+
+class TestFormatAccuracyDelta:
+    """新旧モデルAccuracy比較ラベルの検証（同値ケースの回帰テスト）。
+
+    2026-07-23、Colabでの実行時に新旧モデルのAccuracyが完全に同値(0.5436)
+    だったにもかかわらず「↓悪化」と表示される不具合を発見した。厳密な `>` 比較
+    だけだと acc == old_acc が常にelse節（悪化）に落ちることが原因だった。
+    """
+
+    def test_improved(self):
+        from src.tools.train_pace_model import _format_accuracy_delta
+        assert _format_accuracy_delta(0.60, 0.55) == '↑改善'
+
+    def test_worsened(self):
+        from src.tools.train_pace_model import _format_accuracy_delta
+        assert _format_accuracy_delta(0.50, 0.55) == '↓悪化'
+
+    def test_tied_is_not_worsened(self):
+        from src.tools.train_pace_model import _format_accuracy_delta
+        assert _format_accuracy_delta(0.5436, 0.5436) == '→変化なし'
