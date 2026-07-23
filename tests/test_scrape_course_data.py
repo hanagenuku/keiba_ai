@@ -54,6 +54,9 @@ NAKAYAMA_LIKE_HTML = """
 </div></div></div></li>
 </ul>
 
+<li><div class="block_unit">
+<h3>芝コース</h3>
+<div class="content"><div class="inner">
 <table>
 <caption>芝コース：コースデータ</caption>
 <thead><tr><th>直線距離</th><th>高低差</th><th>発走距離</th></tr></thead>
@@ -69,18 +72,64 @@ NAKAYAMA_LIKE_HTML = """
 <td>20〜32m(内回り) 24〜32m(外回り)</td></tr>
 </tbody>
 </table>
+</div></div></div></li>
 
+<li><div class="block_unit">
+<h3>ダートコース</h3>
+<div class="content"><div class="inner">
 <table>
 <caption>ダートコース：コースデータ</caption>
 <thead><tr><th>一周距離</th><th>幅員</th><th>直線距離</th><th>高低差</th><th>発走距離</th></tr></thead>
 <tr><td>1,493m</td><td>20〜25m</td><td>308m</td><td>4.5m</td>
 <td>1,000m、1,200m、1,700m、1,800m</td></tr>
 </table>
+</div></div></div></li>
 
 <div class="course_info">
 <p>コースは右回りで、ダートのレースは1200メートルのみが芝スタート。</p>
 <p>残り180メートルから残り70メートル地点にかけて設けられている上り坂の高低差は2.2メートル、
 最大勾配の2.24%も10場最大。</p>
+</div>
+</div>
+</body></html>
+"""
+
+# 2026-07-22、阪神競馬場の実機HTMLで確認した構造。tableのcaptionが
+# 「芝コース：コースデータ」のような文言ではなく「内回り」「外回り」のみ、
+# ダートtableに至ってはcaption自体が存在しない。芝コースブロックにtableが
+# 2つ（内回り用・外回り用）ある点も中山と異なる
+HANSHIN_LIKE_HTML = """
+<html><body>
+<div id="course_list">
+<li><div class="block_unit">
+<h3>芝コース</h3>
+<div class="content"><div class="inner">
+<table class="basic">
+<caption class="simple title-s"><div class="inner"><div class="main">内回り</div></div></caption>
+<thead><tr><th>コース</th><th>一周距離</th><th>幅員</th><th>直線距離</th><th>高低差</th><th>発走距離</th></tr></thead>
+<tbody><tr><td>A</td><td>1,689m</td><td>24〜28m</td><td>356.5m</td><td>1.9m</td>
+<td>1,200m、1,400m、2,000m</td></tr></tbody>
+</table>
+<table class="basic">
+<caption class="simple title-s"><div class="inner"><div class="main">外回り</div></div></caption>
+<thead><tr><th>コース</th><th>一周距離</th><th>幅員</th><th>直線距離</th><th>高低差</th><th>発走距離</th></tr></thead>
+<tbody><tr><td>A</td><td>2,089m</td><td>24〜29m</td><td>473.6m</td><td>2.4m</td>
+<td>1,400m、1,600m、1,800m</td></tr></tbody>
+</table>
+</div></div></div></li>
+
+<li><div class="block_unit">
+<h3>ダートコース</h3>
+<div class="content"><div class="inner">
+<table class="basic">
+<tr><th>一周距離</th><th>幅員</th><th>直線距離</th><th>高低差</th><th>発走距離</th></tr>
+<tr><td>1,517.6m</td><td>22〜25m</td><td>352.7m</td><td>1.6m</td>
+<td>1,200m、1,400m、1,800m、2,000m、2,600m</td></tr>
+</table>
+</div></div></div></li>
+
+<div class="course_info">
+<p>コースは右回り、ダートは1400メートル戦と2000メートル戦が芝スタート。</p>
 </div>
 </div>
 </body></html>
@@ -134,17 +183,32 @@ class TestParseDataTable:
 
 
 class TestExtractCourseTables:
-    def test_classifies_turf_basic_courses_dirt(self):
+    def test_groups_by_h3_heading_nakayama_style(self):
         soup = BeautifulSoup(NAKAYAMA_LIKE_HTML, 'lxml')
         tables = extract_course_tables(soup)
-        assert tables['turf_basic'][0]['直線距離'] == '310m'
-        assert tables['turf_courses'][0]['コース'] == 'A'
-        assert tables['dirt_basic'][0]['一周距離'] == '1,493m'
+        # 芝コースブロック内の2tableぶんの行がまとめて入る
+        assert len(tables['turf']) == 2
+        assert _first_value(tables['turf'], '直線距離') == '310m'
+        assert _first_value(tables['turf'], '一周距離') == '1,667.1m(内回り) 1,839.7m(外回り)'
+        assert tables['dirt'][0]['一周距離'] == '1,493m'
 
     def test_no_tables_returns_empty_lists(self):
         soup = BeautifulSoup('<html><body>no tables</body></html>', 'lxml')
         tables = extract_course_tables(soup)
-        assert tables == {'turf_basic': [], 'turf_courses': [], 'dirt_basic': []}
+        assert tables == {'turf': [], 'dirt': []}
+
+    def test_groups_by_h3_heading_hanshin_style(self):
+        """captionが「内回り」「外回り」のみ、ダートはcaption自体が無い実機構造でも
+        親h3見出し（芝コース/ダートコース）で正しくグルーピングできることを確認。
+        2026-07-22、阪神の実機HTMLでcaption文字列ベースの分類が全滅した
+        バグの回帰テスト。"""
+        soup = BeautifulSoup(HANSHIN_LIKE_HTML, 'lxml')
+        tables = extract_course_tables(soup)
+        assert len(tables['turf']) == 2  # 内回り・外回りの2table
+        assert _first_value(tables['turf'], '直線距離') == '356.5m'
+        assert _first_value(tables['turf'], '一周距離') == '1,689m'
+        assert len(tables['dirt']) == 1
+        assert tables['dirt'][0]['直線距離'] == '352.7m'
 
 
 class TestFirstValue:
@@ -202,6 +266,13 @@ class TestExtractCourseInfo:
         assert info['turn'] is None
         assert info['hill'] is None
         assert info['turf_start_distances'] == []
+
+    def test_multiple_turf_start_distances(self):
+        """阪神は「1400メートル戦と2000メートル戦が芝スタート」のように
+        1文に複数距離が入る（2000mは既定のDIRT_DISTANCES候補リストに無い距離）。"""
+        soup = BeautifulSoup(HANSHIN_LIKE_HTML, 'lxml')
+        info = extract_course_info(soup)
+        assert info['turf_start_distances'] == ['1400', '2000']
 
 
 class TestWriteCsv:

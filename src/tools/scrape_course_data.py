@@ -176,22 +176,32 @@ def _parse_data_table(table):
 
 
 def extract_course_tables(soup):
-    """全<table>を走査し、caption文字列から芝/ダートのコースデータ行を分類する。
+    """div.block_unit の h3見出し（「芝コース」「ダートコース」）でtableをグルーピングする。
 
-    Returns: dict with keys 'turf_basic', 'turf_courses', 'dirt_basic'
-             （それぞれ _parse_data_table の rows。見つからなければ空リスト）
+    tableごとのcaption文字列（「芝コース：コースデータ」等）は場によって表記が
+    バラバラ・またはcaption自体が存在しない場合がある（阪神は"内回り"/"外回り"の
+    みのcaption、京都は直線距離を含むtableにcaptionが無い、等を実機HTMLで確認済み）。
+    caption文字列に頼らず、より安定して存在する親h3見出しで分類することで、
+    同じ「芝コース」ブロック内にある複数tableの値をまとめて拾えるようにする。
+
+    Returns: dict with keys 'turf', 'dirt'（それぞれ _parse_data_table の rows の合計。
+             見つからなければ空リスト）
     """
-    out = {'turf_basic': [], 'turf_courses': [], 'dirt_basic': []}
-    for table in soup.find_all('table'):
-        caption, rows = _parse_data_table(table)
-        if not rows:
+    out = {'turf': [], 'dirt': []}
+    for block in soup.select('div.block_unit'):
+        h3 = block.find('h3')
+        if h3 is None:
             continue
-        if '芝コース' in caption and '各コース' in caption:
-            out['turf_courses'].extend(rows)
-        elif '芝コース' in caption:
-            out['turf_basic'].extend(rows)
-        elif 'ダートコース' in caption:
-            out['dirt_basic'].extend(rows)
+        heading = unicodedata.normalize('NFKC', h3.get_text(strip=True))
+        if heading == '芝コース':
+            key = 'turf'
+        elif heading == 'ダートコース':
+            key = 'dirt'
+        else:
+            continue
+        for table in block.find_all('table'):
+            _, rows = _parse_data_table(table)
+            out[key].extend(rows)
     return out
 
 
@@ -279,24 +289,24 @@ def _scrape_jra_venue(sess, venue_ja, venue_eng, images_dir, log_lines):
 
     tables = extract_course_tables(soup)
     if not any(tables.values()):
-        _log(log_lines, '  ⚠ コースデータtableが見つからない（caption文字列がこの場'
-                         'では異なる可能性）')
+        _log(log_lines, '  ⚠ コースデータtableが見つからない（h3見出し「芝コース」'
+                         '「ダートコース」がこの場では異なる可能性）')
 
     info = extract_course_info(soup)
     if info['hill'] is None:
         _log(log_lines, '  ⚠ ゴール前坂の位置・高低差をプロース文から抽出できず'
                          '（この場では言い回しが異なる可能性。目視確認が必要）')
 
-    straight_length = _first_value(tables['turf_basic'], '直線距離')
-    elevation_diff = _first_value(tables['turf_basic'], '高低差') or (
+    straight_length = _first_value(tables['turf'], '直線距離')
+    elevation_diff = _first_value(tables['turf'], '高低差') or (
         info['hill']['elevation_diff_m'] if info['hill'] else None)
-    turf_lap = _first_value(tables['turf_courses'], '一周距離')
-    width = _first_value(tables['turf_courses'], '幅員')
-    dirt_lap = _first_value(tables['dirt_basic'], '一周距離')
-    dirt_straight = _first_value(tables['dirt_basic'], '直線距離')
-    dirt_width = _first_value(tables['dirt_basic'], '幅員')
-    turf_start_desc = _first_value(tables['turf_basic'], '発走距離')
-    dirt_start_desc = _first_value(tables['dirt_basic'], '発走距離')
+    turf_lap = _first_value(tables['turf'], '一周距離')
+    width = _first_value(tables['turf'], '幅員')
+    dirt_lap = _first_value(tables['dirt'], '一周距離')
+    dirt_straight = _first_value(tables['dirt'], '直線距離')
+    dirt_width = _first_value(tables['dirt'], '幅員')
+    turf_start_desc = _first_value(tables['turf'], '発走距離')
+    dirt_start_desc = _first_value(tables['dirt'], '発走距離')
 
     return {
         'source': url,
@@ -369,13 +379,18 @@ def scrape_all_courses(output_dir, venues=None):
         })
 
         turf_start_dirt = set(basic.get('turf_start_dirt_distances') or [])
+        # プロース文で芝スタートと確認された距離が既定の候補リストに無い場合も
+        # 行が失われないよう、候補リストとの和集合を取る（例: 阪神の2000mダート）
+        dirt_distances_for_venue = sorted(
+            set(DIRT_DISTANCES) | {int(d) for d in turf_start_dirt if d.isdigit()}
+        )
         for dist in TURF_DISTANCES:
             distance_start_rows.append({
                 'venue': venue_ja, 'surface': '芝', 'distance_m': dist,
                 'start_position_desc': basic.get('turf_start_desc_raw') or '',
                 'start_image_file': '', 'source': basic.get('source') or '',
             })
-        for dist in DIRT_DISTANCES:
+        for dist in dirt_distances_for_venue:
             distance_start_rows.append({
                 'venue': venue_ja, 'surface': 'ダート', 'distance_m': dist,
                 'start_position_desc': (
@@ -384,7 +399,7 @@ def scrape_all_courses(output_dir, venues=None):
                 'start_image_file': '', 'source': basic.get('source') or '',
             })
 
-        for dist in TURF_DISTANCES + DIRT_DISTANCES:
+        for dist in TURF_DISTANCES + dirt_distances_for_venue:
             surface = '芝' if dist in TURF_DISTANCES else 'ダート'
             start_to_corner_rows.append({
                 'course': venue_ja, 'surface': surface, 'distance': dist,
