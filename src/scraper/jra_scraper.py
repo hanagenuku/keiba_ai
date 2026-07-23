@@ -560,7 +560,9 @@ def get_history_from_db(horse_name, hist_db_path, limit=5):
                    COALESCE(h.agari_rank, -1) as agari_rank_stored,
                    COALESCE(r.num_finishers, 0) as num_finishers,
                    COALESCE(r.race_name, '') as race_name,
-                   COALESCE(h.popularity, 0) as popularity
+                   COALESCE(h.popularity, 0) as popularity,
+                   COALESCE(h.racecourse, '') as racecourse,
+                   COALESCE(h.corner_all, '') as corner_all
             FROM horse_history h
             LEFT JOIN race_history r ON h.race_id = r.race_id
             WHERE h.horse_name = ?
@@ -579,7 +581,9 @@ def get_history_from_db(horse_name, hist_db_path, limit=5):
                        COALESCE(h.agari_rank, -1) as agari_rank_stored,
                        COALESCE(r.num_finishers, 0) as num_finishers,
                        COALESCE(r.race_name, '') as race_name,
-                       COALESCE(h.popularity, 0) as popularity
+                       COALESCE(h.popularity, 0) as popularity,
+                       COALESCE(h.racecourse, '') as racecourse,
+                       COALESCE(h.corner_all, '') as corner_all
                 FROM horse_history h
                 LEFT JOIN race_history r ON h.race_id = r.race_id
                 WHERE h.horse_name LIKE ?
@@ -596,7 +600,8 @@ def get_history_from_db(horse_name, hist_db_path, limit=5):
             (race_id, date, distance, surface, place, agari3f,
              running_style_hist, corner_3, first_3f_val, horse_num_val,
              race_class, track_condition, margin_stored,
-             agari_rank_stored, num_finishers, race_name, popularity) = row
+             agari_rank_stored, num_finishers, race_name, popularity,
+             racecourse, corner_all) = row
 
             if margin_stored >= 0:
                 margin = margin_stored
@@ -651,6 +656,8 @@ def get_history_from_db(horse_name, hist_db_path, limit=5):
                 "running_style": running_style_hist,
                 "race_name": race_name,
                 "popularity": popularity,
+                "racecourse": racecourse,
+                "corner_all": corner_all,
             })
         conn.close()
         return results
