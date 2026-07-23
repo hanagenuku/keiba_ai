@@ -1989,9 +1989,19 @@ def calc_features_for_xgb(h, race):
     feats['f_jockey_rate'] = float(h.get('jockey_rate', 0.15))
     feats['f_trainer']     = min(10, max(0, h.get('trainer_rate', 0.12) / 0.20 * 10))
 
-    bv  = POST_BIAS.get(rc, 0)
+    # 枠順バイアス: 優先度は「実データ統計(_post_zone_bias) > 距離帯別固定値
+    # (POST_BIAS_BY_ZONE) > 競馬場単体固定値(POST_BIAS)」の3段階フォールバック。
+    # 独立関数 f_post(h, race)（ルールベース_W専用）と同じロジック・符号規約
+    # （bvは正=内枠有利に正規化）だが、この関数の実行時に既に定まっている
+    # rc/dist/n をそのまま使う（別関数呼び出しによる重複デフォルト値を避ける）。
+    _zone = dist_zone_label(dist)
+    _bv = _post_zone_bias.get((rc, _zone))
+    if _bv is None:
+        _bv = POST_BIAS_BY_ZONE.get(rc, {}).get(_zone)
+    if _bv is None:
+        _bv = -POST_BIAS.get(rc, 0)  # 旧設定は外枠正値なので符号反転
     num = int(h.get('horse_num', 1) or 1)
-    feats['f_post'] = max(0, min(10, 5.0 + bv * ((num - 1) / max(n - 1, 1) - 0.5) * 4))
+    feats['f_post'] = max(0, min(10, 5.0 - _bv * ((num - 1) / max(n - 1, 1) - 0.5) * 4))
 
     if hist and hist[-1].get('date'):
         try:

@@ -345,6 +345,52 @@ def test_fukusho_rate_features_shrink_for_thin_history():
     assert 0.33 < feats['f_recent_fukusho'] < 1.0
 
 
+# ── 枠順バイアス（f_post）の3段階フォールバック ─────────────────────
+def _make_post_race(racecourse, distance, horse_num, n_horses=16):
+    horse = {'name': 'テスト馬', 'horse_num': horse_num, 'running_style': '差し'}
+    race = {
+        'racecourse': racecourse, 'surface': '芝', 'distance': distance,
+        'track_condition': '良', 'race_class': '1勝', 'first_3f': 35.0,
+        'horses': [dict(horse, horse_num=i) for i in range(1, n_horses + 1)],
+        'date': '2026-01-01',
+    }
+    return horse, race
+
+
+def test_f_post_falls_back_to_zone_when_no_real_data():
+    """_post_zone_bias に実データが無ければ POST_BIAS_BY_ZONE を使う。
+    中山の長距離は+2.0（強く内枠有利）で、競馬場単体の POST_BIAS(+0.5、
+    旧規約で外枠有利)とは示す傾向が異なるため、区別できる。"""
+    engine._post_zone_bias.pop(('中山', '長距離'), None)
+    inner, race = _make_post_race('中山', 2500, horse_num=1)
+    outer, _ = _make_post_race('中山', 2500, horse_num=16)
+    f_inner = calc_features_for_xgb(inner, race)['f_post']
+    f_outer = calc_features_for_xgb(outer, race)['f_post']
+    assert f_inner > f_outer  # 長距離の中山は内枠有利(+2.0)なので内枠が高スコア
+
+
+def test_f_post_prefers_real_data_over_zone_fallback():
+    """_post_zone_bias に実データがあれば、POST_BIAS_BY_ZONEより優先される。"""
+    try:
+        engine._post_zone_bias[('中山', '長距離')] = -3.0  # 実データが強い外枠有利を示す想定
+        inner, race = _make_post_race('中山', 2500, horse_num=1)
+        outer, _ = _make_post_race('中山', 2500, horse_num=16)
+        f_inner = calc_features_for_xgb(inner, race)['f_post']
+        f_outer = calc_features_for_xgb(outer, race)['f_post']
+        assert f_outer > f_inner  # 実データが優先され、外枠有利の判定に反転する
+    finally:
+        engine._post_zone_bias.pop(('中山', '長距離'), None)
+
+
+def test_f_post_falls_back_to_venue_only_when_unknown_venue():
+    """実データもゾーン別設定も無い競馬場は POST_BIAS（無ければ0=中立）にフォールバック。"""
+    inner, race = _make_post_race('存在しない場', 2500, horse_num=1)
+    outer, _ = _make_post_race('存在しない場', 2500, horse_num=16)
+    f_inner = calc_features_for_xgb(inner, race)['f_post']
+    f_outer = calc_features_for_xgb(outer, race)['f_post']
+    assert f_inner == f_outer == 5.0
+
+
 # ── 騎手・調教師勝率のベイズ縮小（_build_horse_dicts） ────────────────
 def _make_history_db(base_dir, rows):
     """テスト用の最小history.db（horse_history）を作成する。"""
