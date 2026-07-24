@@ -38,8 +38,43 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/xgb_fukusho_model.pkl data/xgb_calibrator.pkl \
-                  data/xgb_feature_cols.json data/horse_features.csv || true
-          git diff --cached --quiet || git commit -m "auto: monthly retrain $(date +%Y%m)"
-          GIT_LFS_SKIP_SMUDGE=1 git pull --rebase --autostash origin main
-          git push
+
+          # 生成物を退避してから常にmain最新の上に上書きコミットする方式にする。
+          # モデルファイルはバイナリでgitが自動マージできないため、旧来のpull --rebaseは
+          # 実行中に他の変更がmainにpushされるとコンフリクトして失敗する既知の問題があった
+          # （2026-07-24調査で判明、friday-predict等と同じ手口で修正）。
+          BACKUP_DIR=$(mktemp -d)
+          for f in data/xgb_fukusho_model.pkl data/xgb_calibrator.pkl \
+                   data/xgb_feature_cols.json data/horse_features.csv; do
+            [ -f "$f" ] && cp "$f" "$BACKUP_DIR/$(basename "$f")"
+          done
+
+          export GIT_LFS_SKIP_SMUDGE=1
+          PUSHED=0
+          for i in 1 2 3 4 5; do
+            git fetch origin main
+            git reset --hard origin/main
+            for f in xgb_fukusho_model.pkl xgb_calibrator.pkl xgb_feature_cols.json horse_features.csv; do
+              [ -f "$BACKUP_DIR/$f" ] && cp "$BACKUP_DIR/$f" "data/$f"
+            done
+            for f in data/xgb_fukusho_model.pkl data/xgb_calibrator.pkl \
+                     data/xgb_feature_cols.json data/horse_features.csv; do
+              [ -f "$f" ] && git add "$f"
+            done
+            if git diff --cached --quiet; then
+              echo "変更なし（既に反映済み）"
+              PUSHED=1
+              break
+            fi
+            git commit -m "auto: monthly retrain $(date +%Y%m)"
+            if git push; then
+              PUSHED=1
+              break
+            fi
+            echo "⚠ push失敗、mainの最新を取り直してリトライ ($i/5)"
+            sleep $((i * 5))
+          done
+          if [ "$PUSHED" != "1" ]; then
+            echo "::error::5回リトライしてもpushできませんでした"
+            exit 1
+          fi
