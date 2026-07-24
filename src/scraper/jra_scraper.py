@@ -562,7 +562,8 @@ def get_history_from_db(horse_name, hist_db_path, limit=5):
                    COALESCE(r.race_name, '') as race_name,
                    COALESCE(h.popularity, 0) as popularity,
                    COALESCE(h.racecourse, '') as racecourse,
-                   COALESCE(h.corner_all, '') as corner_all
+                   COALESCE(h.corner_all, '') as corner_all,
+                   h.finish_time, h.time_diff_sec
             FROM horse_history h
             LEFT JOIN race_history r ON h.race_id = r.race_id
             WHERE h.horse_name = ?
@@ -583,7 +584,8 @@ def get_history_from_db(horse_name, hist_db_path, limit=5):
                        COALESCE(r.race_name, '') as race_name,
                        COALESCE(h.popularity, 0) as popularity,
                        COALESCE(h.racecourse, '') as racecourse,
-                       COALESCE(h.corner_all, '') as corner_all
+                       COALESCE(h.corner_all, '') as corner_all,
+                       h.finish_time, h.time_diff_sec
                 FROM horse_history h
                 LEFT JOIN race_history r ON h.race_id = r.race_id
                 WHERE h.horse_name LIKE ?
@@ -601,7 +603,7 @@ def get_history_from_db(horse_name, hist_db_path, limit=5):
              running_style_hist, corner_3, first_3f_val, horse_num_val,
              race_class, track_condition, margin_stored,
              agari_rank_stored, num_finishers, race_name, popularity,
-             racecourse, corner_all) = row
+             racecourse, corner_all, finish_time_val, time_diff_sec_val) = row
 
             if margin_stored >= 0:
                 margin = margin_stored
@@ -648,6 +650,10 @@ def get_history_from_db(horse_name, hist_db_path, limit=5):
                 "margin": margin,
                 "agari3f_rank_pct": round(agari3f_rank_pct, 3),
                 "condition": track_condition,
+                # track_condition は f_heavy_track_rate / speed_index が参照するキー名。
+                # 'condition' と同じ値を別名でも持たせ、学習側(_get_history_before)の
+                # 両キー提供パターンに合わせる。
+                "track_condition": track_condition,
                 "date": date,
                 "last_3f": agari3f,
                 "first_3f": first_3f_val,
@@ -658,6 +664,8 @@ def get_history_from_db(horse_name, hist_db_path, limit=5):
                 "popularity": popularity,
                 "racecourse": racecourse,
                 "corner_all": corner_all,
+                "finish_time": finish_time_val,
+                "time_diff_sec": time_diff_sec_val,
             })
         conn.close()
         return results
