@@ -436,6 +436,72 @@ def test_calc_course_aptitude_features_uses_inference_time_history(tmp_path):
     assert feats['f_course_coverage'] > 0  # 中山芝での経験走数がカウントされている
 
 
+# ── get_history_from_db の finish_time/time_diff_sec/track_condition 欠落（2026-07-24） ──
+
+def test_get_history_from_db_includes_finish_time_and_time_diff_sec(tmp_path):
+    """get_history_from_db()が finish_time/time_diff_sec/track_condition を
+    実際に返すことを確認する回帰テスト。
+
+    time_diff_secとfinish_timeは完全に欠落しており、track_conditionは
+    'condition'という別名でしか提供されていなかった。これらが欠けると推論時は
+    calc_competitiveness()・f_finish_time_avg・f_time_diff_avg・
+    speed_index（f_speed_fig_*）・f_heavy_track_rateが軒並みデフォルト値/NaNに
+    落ちる。特にf_time_diff_avgは本番モデルの特徴量重要度で130特徴量中10位
+    （1.76%）と上位のため影響が大きい。
+    """
+    from src.utils.db import save_history_db
+    from src.scraper.jra_scraper import get_history_from_db
+
+    hist_path = tmp_path / 'history.db'
+    save_history_db([{
+        'race_id': '20260101_05_11', 'racecourse': '中山', 'distance': 2500, 'surface': '芝',
+        'race_class': 'G1', 'track_condition': '重',
+        'finishers': [
+            {'num': 3, 'name': 'テスト馬', 'place': 2, 'agari3f': 34.5,
+             'finish_time': 152.3, 'time_diff_sec': 0.5},
+        ],
+    }], db_path=str(hist_path))
+
+    hist = get_history_from_db('テスト馬', str(hist_path))
+    assert len(hist) == 1
+    assert hist[0]['finish_time'] == 152.3
+    assert hist[0]['time_diff_sec'] == 0.5
+    assert hist[0]['track_condition'] == '重'
+
+
+def test_calc_features_for_xgb_uses_time_diff_from_inference_time_history(tmp_path):
+    """get_history_from_db()の返り値をそのままcalc_features_for_xgbに渡した場合、
+    f_time_diff_avg・f_finish_time_avgが実データを反映しNaNのままにならないことを
+    確認する統合テスト。修正前はfinish_time/time_diff_secが常にNoneだったため、
+    このアサーションは常に失敗していた（両方とも常にNaN）。
+    """
+    import math
+    from src.utils.db import save_history_db
+    from src.scraper.jra_scraper import get_history_from_db
+    from src.features.engine import calc_features_for_xgb
+
+    hist_path = tmp_path / 'history.db'
+    save_history_db([{
+        'race_id': '20260101_05_11', 'racecourse': '中山', 'distance': 2500, 'surface': '芝',
+        'race_class': 'G1', 'track_condition': '良',
+        'finishers': [
+            {'num': 3, 'name': 'テスト馬', 'place': 2, 'agari3f': 34.5,
+             'finish_time': 152.3, 'time_diff_sec': 0.5},
+        ],
+    }], db_path=str(hist_path))
+
+    hist = get_history_from_db('テスト馬', str(hist_path))
+    horse = {'name': 'テスト馬', 'horse_num': 1, 'running_style': '差し', 'history': hist}
+    race = {
+        'racecourse': '中山', 'surface': '芝', 'distance': 2500,
+        'track_condition': '良', 'race_class': '2勝', 'first_3f': 35.0,
+        'horses': [horse], 'date': '2026-02-01',
+    }
+    feats = calc_features_for_xgb(horse, race)
+    assert not math.isnan(feats['f_time_diff_avg'])
+    assert not math.isnan(feats['f_finish_time_avg'])
+
+
 def test_fill_pedigree_skips_cached_horse(tmp_path):
     """history.dbに既に血統が記録済みの馬は再取得しない（ネットワークリクエストなし）。"""
     from src.utils.db import save_history_db
