@@ -563,7 +563,8 @@ def get_history_from_db(horse_name, hist_db_path, limit=5):
                    COALESCE(h.popularity, 0) as popularity,
                    COALESCE(h.racecourse, '') as racecourse,
                    COALESCE(h.corner_all, '') as corner_all,
-                   h.finish_time, h.time_diff_sec
+                   h.finish_time, h.time_diff_sec,
+                   h.body_weight, h.body_weight_diff
             FROM horse_history h
             LEFT JOIN race_history r ON h.race_id = r.race_id
             WHERE h.horse_name = ?
@@ -585,7 +586,8 @@ def get_history_from_db(horse_name, hist_db_path, limit=5):
                        COALESCE(h.popularity, 0) as popularity,
                        COALESCE(h.racecourse, '') as racecourse,
                        COALESCE(h.corner_all, '') as corner_all,
-                       h.finish_time, h.time_diff_sec
+                       h.finish_time, h.time_diff_sec,
+                       h.body_weight, h.body_weight_diff
                 FROM horse_history h
                 LEFT JOIN race_history r ON h.race_id = r.race_id
                 WHERE h.horse_name LIKE ?
@@ -603,7 +605,8 @@ def get_history_from_db(horse_name, hist_db_path, limit=5):
              running_style_hist, corner_3, first_3f_val, horse_num_val,
              race_class, track_condition, margin_stored,
              agari_rank_stored, num_finishers, race_name, popularity,
-             racecourse, corner_all, finish_time_val, time_diff_sec_val) = row
+             racecourse, corner_all, finish_time_val, time_diff_sec_val,
+             body_weight_val, body_weight_diff_val) = row
 
             if margin_stored >= 0:
                 margin = margin_stored
@@ -666,6 +669,8 @@ def get_history_from_db(horse_name, hist_db_path, limit=5):
                 "corner_all": corner_all,
                 "finish_time": finish_time_val,
                 "time_diff_sec": time_diff_sec_val,
+                "body_weight": body_weight_val,
+                "body_weight_diff": body_weight_diff_val,
             })
         conn.close()
         return results

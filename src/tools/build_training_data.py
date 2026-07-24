@@ -44,6 +44,7 @@ def _get_history_before(conn, horse_name, before_date_str, limit=10):
                    h.racecourse, h.date, h.race_id, h.running_style,
                    h.agari_rank, h.field_size, h.margin,
                    h.finish_time, h.time_diff_sec,
+                   h.body_weight, h.body_weight_diff,
                    COALESCE(h.popularity, 0)                    AS popularity,
                    COALESCE(h.class_grade, r.race_class, '1勝') AS race_class,
                    COALESCE(r.track_condition, '良')             AS track_condition,
@@ -131,6 +132,10 @@ def _get_history_before(conn, horse_name, before_date_str, limit=10):
             "race_id":          row['race_id'],
             "running_style":    row['running_style'] or '',
             "race_name":        row['race_name'] or '',
+            # 馬体重（f_weight_trend_avg / f_weight_last_diff 用。充足率が低いため
+            # 未記録の走はNoneのまま渡す＝欠損として扱う）
+            "body_weight":      row['body_weight'],
+            "body_weight_diff": row['body_weight_diff'],
         })
 
         if len(results) >= limit:

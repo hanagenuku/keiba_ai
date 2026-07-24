@@ -502,6 +502,95 @@ def test_calc_features_for_xgb_uses_time_diff_from_inference_time_history(tmp_pa
     assert not math.isnan(feats['f_finish_time_avg'])
 
 
+# ── 馬体重推移（f_weight_trend_avg / f_weight_last_diff、2026-07-24〜） ──────
+
+def test_get_history_from_db_includes_body_weight(tmp_path):
+    """get_history_from_db()が body_weight/body_weight_diff を実際に返すことを
+    確認する回帰テスト。この2列は元々SELECT文に含まれておらず、engine.pyの
+    どのf_*関数からも参照されていなかった（馬体重が完全に未活用だった）。
+    """
+    from src.utils.db import save_history_db
+    from src.scraper.jra_scraper import get_history_from_db
+
+    hist_path = tmp_path / 'history.db'
+    save_history_db([{
+        'race_id': '20260101_05_11', 'racecourse': '中山', 'distance': 2500, 'surface': '芝',
+        'race_class': 'G1',
+        'finishers': [
+            {'num': 3, 'name': 'テスト馬', 'place': 1, 'agari3f': 34.5,
+             'body_weight': 480, 'body_weight_diff': 6},
+        ],
+    }], db_path=str(hist_path))
+
+    hist = get_history_from_db('テスト馬', str(hist_path))
+    assert len(hist) == 1
+    assert hist[0]['body_weight'] == 480
+    assert hist[0]['body_weight_diff'] == 6
+
+
+def test_calc_features_for_xgb_computes_weight_trend_from_history(tmp_path):
+    """get_history_from_db()の返り値をそのままcalc_features_for_xgbに渡した場合、
+    f_weight_trend_avg・f_weight_last_diffが実データ(体重増減)を反映することを
+    確認する統合テスト。過去2走の増減(+6, -2)から平均+2.0・直近値+6.0を期待する。
+    """
+    import math
+    from src.utils.db import save_history_db
+    from src.scraper.jra_scraper import get_history_from_db
+    from src.features.engine import calc_features_for_xgb
+
+    hist_path = tmp_path / 'history.db'
+    save_history_db([
+        {'race_id': '20260101_05_11', 'racecourse': '中山', 'distance': 2500, 'surface': '芝',
+         'race_class': 'G1',
+         'finishers': [{'num': 3, 'name': 'テスト馬', 'place': 1, 'agari3f': 34.5,
+                        'body_weight': 480, 'body_weight_diff': 6}]},
+        {'race_id': '20251201_05_11', 'racecourse': '中山', 'distance': 2500, 'surface': '芝',
+         'race_class': 'G1',
+         'finishers': [{'num': 5, 'name': 'テスト馬', 'place': 2, 'agari3f': 35.0,
+                        'body_weight': 474, 'body_weight_diff': -2}]},
+    ], db_path=str(hist_path))
+
+    hist = get_history_from_db('テスト馬', str(hist_path))
+    horse = {'name': 'テスト馬', 'horse_num': 1, 'running_style': '差し', 'history': hist}
+    race = {
+        'racecourse': '中山', 'surface': '芝', 'distance': 2500,
+        'track_condition': '良', 'race_class': '2勝', 'first_3f': 35.0,
+        'horses': [horse], 'date': '2026-02-01',
+    }
+    feats = calc_features_for_xgb(horse, race)
+    assert not math.isnan(feats['f_weight_trend_avg'])
+    assert feats['f_weight_trend_avg'] == 2.0  # (+6 + -2) / 2
+    assert feats['f_weight_last_diff'] == 6.0  # 直近走(2026-01-01)の増減
+
+
+def test_calc_features_for_xgb_weight_trend_nan_when_no_data(tmp_path):
+    """body_weight_diffが未記録の過去走しかない場合、f_weight_trend_avg等は
+    0.0等に偽装せずNaN（欠損）として渡ることを確認する。
+    """
+    import math
+    from src.utils.db import save_history_db
+    from src.scraper.jra_scraper import get_history_from_db
+    from src.features.engine import calc_features_for_xgb
+
+    hist_path = tmp_path / 'history.db'
+    save_history_db([{
+        'race_id': '20260101_05_11', 'racecourse': '中山', 'distance': 2500, 'surface': '芝',
+        'race_class': 'G1',
+        'finishers': [{'num': 3, 'name': 'テスト馬', 'place': 1, 'agari3f': 34.5}],
+    }], db_path=str(hist_path))
+
+    hist = get_history_from_db('テスト馬', str(hist_path))
+    horse = {'name': 'テスト馬', 'horse_num': 1, 'running_style': '差し', 'history': hist}
+    race = {
+        'racecourse': '中山', 'surface': '芝', 'distance': 2500,
+        'track_condition': '良', 'race_class': '2勝', 'first_3f': 35.0,
+        'horses': [horse], 'date': '2026-02-01',
+    }
+    feats = calc_features_for_xgb(horse, race)
+    assert math.isnan(feats['f_weight_trend_avg'])
+    assert math.isnan(feats['f_weight_last_diff'])
+
+
 def test_fill_pedigree_skips_cached_horse(tmp_path):
     """history.dbに既に血統が記録済みの馬は再取得しない（ネットワークリクエストなし）。"""
     from src.utils.db import save_history_db
