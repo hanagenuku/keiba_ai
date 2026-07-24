@@ -57,10 +57,42 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git checkout HEAD -- data/xgb_fukusho_model.pkl data/xgb_calibrator.pkl data/horse_features.csv 2>/dev/null || true
-          git add data/
-          git diff --cached --quiet || git commit -m "auto: Sunday results $(date +%Y%m%d)"
-          GIT_LFS_SKIP_SMUDGE=1 git pull --rebase --autostash origin main
-          git push
+
+          # 生成物を退避してから常にmain最新の上に上書きコミットする方式にする。
+          # data/*.dbはバイナリでgitが自動マージできないため、旧来のpull --rebaseは
+          # 実行中(数分〜十数分かかる)に他の変更がmainにpushされるとコンフリクトして
+          # 失敗する既知の問題があった（2026-07-24調査で判明）。
+          BACKUP_DIR=$(mktemp -d)
+          git status --porcelain -- data/ | cut -c4- | while IFS= read -r f; do
+            [ -f "$f" ] || continue
+            mkdir -p "$BACKUP_DIR/$(dirname "$f")"
+            cp "$f" "$BACKUP_DIR/$f"
+          done
+
+          export GIT_LFS_SKIP_SMUDGE=1
+          PUSHED=0
+          for i in 1 2 3 4 5; do
+            git fetch origin main
+            git reset --hard origin/main
+            cp -a "$BACKUP_DIR"/. ./
+            git add data/
+            if git diff --cached --quiet; then
+              echo "変更なし（既に反映済み）"
+              PUSHED=1
+              break
+            fi
+            git commit -m "auto: Sunday results $(date +%Y%m%d)"
+            if git push; then
+              PUSHED=1
+              break
+            fi
+            echo "⚠ push失敗、mainの最新を取り直してリトライ ($i/5)"
+            sleep $((i * 5))
+          done
+          if [ "$PUSHED" != "1" ]; then
+            echo "::error::5回リトライしてもpushできませんでした"
+            exit 1
+          fi
 
       - name: Write status (always)
         if: always()
@@ -69,11 +101,19 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com" || true
           STATUS="${{ job.status }}"
           TS=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-          echo "{\"status\":\"$STATUS\",\"workflow\":\"sunday-results\",\"updated_at\":\"$TS\"}" > data/workflow_status.json
-          git add data/workflow_status.json
-          git diff --cached --quiet || git commit -m "auto: workflow status $STATUS $TS"
-          GIT_LFS_SKIP_SMUDGE=1 git pull --rebase --autostash origin main || true
-          git push || true
+
+          export GIT_LFS_SKIP_SMUDGE=1
+          for i in 1 2 3 4 5; do
+            git fetch origin main || true
+            git reset --hard origin/main || true
+            echo "{\"status\":\"$STATUS\",\"workflow\":\"sunday-results\",\"updated_at\":\"$TS\"}" > data/workflow_status.json
+            git add data/workflow_status.json
+            git diff --cached --quiet && break
+            git commit -m "auto: workflow status $STATUS $TS" || true
+            git push && break
+            echo "⚠ status push失敗、リトライ ($i/5)"
+            sleep $((i * 5))
+          done
 
   deploy:
     needs: results
