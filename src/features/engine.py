@@ -2101,6 +2101,17 @@ def calc_features_for_xgb(h, race):
         feats['f_finish_time_avg'] = float('nan')
     feats['f_time_diff_avg'] = float(sum(td_list) / len(td_list)) if td_list else float('nan')
 
+    # ── 馬体重推移（直近走のbody_weight_diffの平均・直近値）──────────────
+    # 血統ベースの成長曲線(f_blood内のage/peak/type)と実体重の増減を
+    # 組み合わせた解釈（例: 晩成型血統でピーク年齢が近く体重が増加傾向なら
+    # 上昇気配）は、XGBの木構造が特徴量間の交互作用として自動学習するため、
+    # ここでは単純な体重推移のみを独立特徴量として渡す。
+    # データなしはf_finish_time_avg等と同じ規約でNaN扱い（XGBは欠損方向として学習）。
+    bw_diffs = [float(r.get('body_weight_diff')) for r in hist[:5]
+                if r.get('body_weight_diff') is not None]
+    feats['f_weight_trend_avg'] = float(sum(bw_diffs) / len(bw_diffs)) if bw_diffs else float('nan')
+    feats['f_weight_last_diff'] = bw_diffs[0] if bw_diffs else float('nan')
+
     # ── 前走メンバーレベル（対戦相手のその後の成績で強度を評価）────────
     ml_levels = []
     for past_race in hist[:5]:

@@ -79,8 +79,8 @@
 | weight_load | REAL | 斤量 | 95.2% |
 | sex | TEXT | 性別 | 90.8% |
 | age | INTEGER | 年齢 | 90.8% |
-| body_weight | INTEGER | 馬体重 | **6.5%。Stage3列マッピング崩れが原因と推定、未修正（残っている課題）** |
-| body_weight_diff | INTEGER | 馬体重増減 | body_weightに連動、同様に低い |
+| body_weight | INTEGER | 馬体重 | **6.5%。Stage3列マッピング崩れが原因と推定、未修正（残っている課題）**。2026-07-24〜`f_weight_trend_avg`/`f_weight_last_diff`（推論時history経由）で使用開始。充足率が低い間はNaN（欠損）扱いでXGBに渡る |
+| body_weight_diff | INTEGER | 馬体重増減 | body_weightに連動、同様に低い。上記2特徴量が直接参照 |
 | bracket | INTEGER | 枠番 | **0%。tx[1]が枠番でない可能性、列マッピング要確認（残っている課題）** |
 | corner_all | TEXT | 全通過順位（ハイフン区切り） | 94.5% |
 | win_odds | REAL | 単勝オッズ（結果ページ由来） | **0%。tx[11]が単勝オッズでない可能性、列マッピング要確認（残っている課題）** |
