@@ -395,7 +395,78 @@ AIが市場と異なる本命を出した25Rで市場が6倍正確だったた�
 
 ## 現在の作業状況（セッション引き継ぎ用）
 
-### 最終更新: 2026-07-24⑤（残差学習モデルのbase_marginが学習時と推論時で人気情報の成熟度が違う問題を発見・記録）
+### 最終更新: 2026-07-25②（オッズ取得率・レース取得失敗をlatest.jsonに可視化するdata_qualityセクションを追加）
+
+---
+
+### 2026-07-25②：オッズ取得率・レース取得失敗をlatest.jsonに可視化するdata_qualityセクションを追加
+
+#### 背景
+直前セッション（①）で新潟R11のparse失敗を修正した際、ユーザーから同時に「日曜レース
+予想で直前オッズ取得後もオッズとRL順位がほぼ変わらない（人気のコピーに見える）」
+「現時点（前日取得だけ）での推奨レース0」という報告も受けていた。GitHub Actions
+の実行ログを直接確認したところ、当該実行では専用オッズページからのオッズ取得が
+全馬0頭（`オッズ反映: 0頭/34R`）で完全に失敗しており、推奨レース0件はその直接の
+結果だった。この種の障害（オッズ取得の全滅、個別レースのparse失敗）はこれまで
+コンソールログにしか残らず、latest.json経由でアプリ側からもユーザー自身からも
+一切気づく手段が無かった。①のバグ修正だけでは「次に別の原因で同じ現象が起きても
+また同じやり取りを繰り返す」ため、再発時に気づけるようにする仕組みを追加した。
+
+#### 対応
+1. `src/scraper/jra_scraper.py`: `fetch_races_on_date()`の戻り値を
+   `all_races`単体から`(all_races, failures)`のタプルに変更。
+   `failures`は`[{'racecourse': str, 'race_num': int, 'reason': str}, ...]`形式で、
+   **ページ自体が取得できた（＝そのレースは実在する）のにparseに失敗したもの
+   のみ**を記録する。障害レースのスキップ、および該当venueがその日12レース
+   未満で該当レース番号のページ自体が存在しないケース（suffix探索を尽くしても
+   soupがNoneのまま）は、`fetch_results()`（結果取得側）の既存の挙動に合わせ、
+   意図した挙動として含めない（多くのvenueは12レースに満たない日があり、
+   これを全部「失敗」扱いにするとfailuresが常に大量のノイズで埋まってしまうため）
+2. `src/betting/app_json.py`: `to_app_json()`に`odds_updated_count`・
+   `parse_failures`パラメータを追加（両方省略可、後方互換）。
+   `races_all`の全出走頭数に対する`odds_updated_count`の比率を
+   `data_quality.odds_coverage`として、`parse_failures`をそのまま
+   `data_quality.parse_failures`として出力JSONに追加
+3. `scripts/weekend.py` / `scripts/friday_predict.py`: 両方とも
+   `fetch_races_on_date()`の戻り値をタプルとして受け取り、`to_app_json()`
+   呼び出しに`odds_updated_count=n_odds, parse_failures=parse_failures`を
+   渡すよう更新
+4. `index.html`: `data_quality.odds_coverage`が50%未満、または
+   `data_quality.parse_failures`が空でない場合に、予想一覧の最上部
+   （結果バナーの上）にオレンジの警告ボックスを表示するようにした
+   （「⚠ 直前オッズ取得率0%（オッズ未反映のまま予想が生成された可能性）」
+   「⚠ 取得失敗レース: 新潟R11(parse失敗)」等）
+
+#### 学習/推論パリティ
+今回は表示専用の変更で、予想の計算ロジック自体（`calc_all`等）には一切触れていない。
+
+#### テスト
+- `tests/test_scraper.py`に2テスト追加。実際のネットワーク呼び出しを避けるため
+  `_try_fetch_shutuba`/`_parse_shutuba`/`get_kaisai_on_date`等をmonkeypatchし、
+  (a)ページ自体が存在しない大半のレース番号はfailuresに記録されず、実際に
+  parseに失敗したレースのみ記録されること、(b)障害レースのスキップは
+  failuresに記録されないことを確認
+- `tests/test_app_json_data_quality.py`新規作成（6テスト）。`calc_all`を
+  空リストにモックしdata_quality計算自体を分離してテスト。オッズ反映率の
+  計算（0%・部分・省略時None・0頭でのゼロ除算回避）、parse_failuresの
+  受け渡し・デフォルト空リストを確認
+- `node --check`でindex.htmlのJS構文を検証、実際の障害シナリオの数値
+  （odds_coverage=0, parse_failures=[新潟R11]）でJS側の警告文生成を
+  `node -e`で直接確認
+- 既存の`python -m pytest tests/ -q`は345テスト通過（337+8、回帰なし）
+
+#### 今回は対応していない改善案（別スコープ）
+調査時に合わせて2つの改善案を検討したが、今回はスコープ外として見送った。
+1. **オッズ取得が0件だった場合の自動リトライ**：GAS側の「直前オッズ取得」
+   ボタンは`force`パラメータをworkflow_dispatchに転送しない設計のため、
+   当日分の再生成を自分でトリガーする手段が無い（今回はGitHub Actions APIで
+   直接`workflow_dispatch`を叩いて回避した）。恒常的な対応にはGAS
+   （`gas/triggerWorkflow.gs`）の`force`転送、またはワークフロー側の
+   オッズ0件検知時の自動再試行ロジックが必要
+2. **index.htmlのJSテストハーネス**：`recalcGumbelBets()`のcal_prob/tan_pct
+   混同バグ（2026-07-24④）のように、数ヶ月気づかれないJS計算バグが今後も
+   起こりうる。既知の入出力ペアに対するNode.js経由の回帰テストを整備すると
+   再発防止になるが、今回は着手していない
 
 ---
 
