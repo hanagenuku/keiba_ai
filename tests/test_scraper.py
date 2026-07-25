@@ -851,6 +851,84 @@ def test_parse_result_soup_stores_corner_passage():
     assert result['corner_pass_4'] == '1(5,6)-(9,10)-(2,3,4)=8=7'
 
 
+# ── fetch_races_on_date の取得失敗トラッキング（2026-07-25、データ品質可視化） ──
+# 2026-07-25にparse_header()の芝ダ判定バグ（新潟R11）を修正したが、同種の
+# parse失敗が将来別レースで再発してもコンソールログにしか残らず気づけなかった。
+# fetch_races_on_date()が(all_races, failures)を返すよう変更し、failuresを
+# latest.jsonのdata_quality.parse_failuresとして可視化できるようにする。
+
+def test_fetch_races_on_date_tracks_genuine_parse_failures_only(monkeypatch):
+    """ページ自体が存在しない（そのvenueがその日12レース未満）ケースは
+    failuresに含めず、実際にページは取得できたのにparseに失敗した
+    ケースのみを記録することを確認する。
+    """
+    monkeypatch.setattr(jra_scraper.time, 'sleep', lambda *_: None)
+    monkeypatch.setattr(jra_scraper, 'get_kaisai_on_date',
+                        lambda target_date, sess: {'pw01dde0103202607269901': target_date})
+    monkeypatch.setattr(jra_scraper, 'find_r01_shutuba', lambda base, date_str, sess: 0x10)
+    monkeypatch.setattr(jra_scraper, 'find_r01_odds', lambda odds_base, date_str, sess: None)
+    monkeypatch.setattr(jra_scraper, '_fill_pedigree', lambda *a, **k: None)
+
+    def fake_try_fetch_shutuba(sess, base, r, date_str, sx):
+        if r == 1:
+            return None, '<success-marker>'  # _parse_shutubaをモックするので中身は使わない
+        if r == 11:
+            html = ('<html><body><table><tr><td>'
+                    '2026年7月26日 3歳以上1勝クラス'  # 芝ダ表記もメートル表記も無い
+                    '</td></tr></table></body></html>')
+            return None, BeautifulSoup(html, 'lxml')
+        return None, None  # そのレース番号のページ自体が存在しない
+
+    monkeypatch.setattr(jra_scraper, '_try_fetch_shutuba', fake_try_fetch_shutuba)
+
+    def fake_parse_shutuba(soup, rc, r, date_str, pc, hist_db_path):
+        if r == 1:
+            return {'id': f'{date_str}_99_01', 'racecourse': rc, 'race_num': 1,
+                    'race_name': 'テストR', 'distance': 1600, 'surface': '芝',
+                    'horses': [{'num': 1, 'name': 'テストウマ'}]}
+        return None
+
+    monkeypatch.setattr(jra_scraper, '_parse_shutuba', fake_parse_shutuba)
+
+    races, failures = jra_scraper.fetch_races_on_date(object(), '20260726', ':memory:')
+
+    assert len(races) == 1
+    assert races[0]['race_num'] == 1
+
+    # r=11のみが「ページは取れたがparseに失敗した」ケースとして記録され、
+    # ページ自体が無かった他のレース番号（2-10,12）はfailuresに含まれない
+    assert len(failures) == 1
+    assert failures[0]['race_num'] == 11
+    assert failures[0]['reason'] == 'parse失敗'
+    assert all(f['race_num'] != 2 for f in failures)
+
+
+def test_fetch_races_on_date_obstacle_skip_not_recorded_as_failure(monkeypatch):
+    """障害レースのスキップは意図した挙動のためfailuresに含めないことを確認する。"""
+    monkeypatch.setattr(jra_scraper.time, 'sleep', lambda *_: None)
+    monkeypatch.setattr(jra_scraper, 'get_kaisai_on_date',
+                        lambda target_date, sess: {'pw01dde0103202607269901': target_date})
+    monkeypatch.setattr(jra_scraper, 'find_r01_shutuba', lambda base, date_str, sess: 0x10)
+    monkeypatch.setattr(jra_scraper, 'find_r01_odds', lambda odds_base, date_str, sess: None)
+    monkeypatch.setattr(jra_scraper, '_fill_pedigree', lambda *a, **k: None)
+
+    def fake_try_fetch_shutuba(sess, base, r, date_str, sx):
+        if r == 1:
+            html = ('<html><body><table><tr><td>'
+                    '2026年7月26日 障害 3600メートル'
+                    '</td></tr></table></body></html>')
+            return None, BeautifulSoup(html, 'lxml')
+        return None, None
+
+    monkeypatch.setattr(jra_scraper, '_try_fetch_shutuba', fake_try_fetch_shutuba)
+    monkeypatch.setattr(jra_scraper, '_parse_shutuba', lambda *a, **k: None)
+
+    races, failures = jra_scraper.fetch_races_on_date(object(), '20260726', ':memory:')
+
+    assert races == []
+    assert failures == []
+
+
 if __name__ == '__main__':
     test_parse_header_basic()
     print('✅ test_parse_header_basic passed')

@@ -295,7 +295,8 @@ def _build_bet_list(bets):
     return result
 
 
-def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', market_odds_map=None, base_dir=None):
+def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', market_odds_map=None, base_dir=None,
+                odds_updated_count=None, parse_failures=None):
     """厳選レース＋全レース情報をアプリ用 JSON 形式で返す。
 
     Args:
@@ -307,6 +308,13 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
         market_odds_map : {race_id: {horse_num: {'tansho': float, 'fukusho': float}}}
                           形式の市場オッズ（省略可）。レース単位で
                           detect_value_horses / make_bets に渡される。
+        odds_updated_count : apply_odds_to_races() が返したオッズ反映頭数（省略可）。
+                          races_all の全出走頭数との比率を data_quality.odds_coverage
+                          として出力する（オッズが実質未取得のまま予想が生成された
+                          回を気づけるようにするため。2026-07-25調査で発見した
+                          「オッズ0頭のまま予想が静かに生成される」問題への対応）。
+        parse_failures  : fetch_races_on_date() が返す取得失敗レースのリスト（省略可）。
+                          [{'racecourse': str, 'race_num': int, 'reason': str}, ...]
 
     Returns:
         dict（JSON シリアライズ可能）
@@ -552,6 +560,15 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
     display_dt = jst_now + timedelta(days=1) if day_type in ('saturday', 'sunday') else jst_now
     jday = ['月', '火', '水', '木', '金', '土', '日'][display_dt.weekday()]
     rec_count = len(selected)
+
+    total_horses = sum(len(r.get('horses', [])) for r in races_all)
+    odds_coverage = (round(odds_updated_count / total_horses, 3)
+                     if (odds_updated_count is not None and total_horses > 0) else None)
+    data_quality = {
+        'odds_coverage':  odds_coverage,
+        'parse_failures': parse_failures or [],
+    }
+
     return {
         'generated_at':      jst_now.isoformat(),
         'date':              f'{display_dt.month}月{display_dt.day}日({jday})',
@@ -563,4 +580,5 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
                               if rec_count == 0 else None),
         'stats':             {'invest': total_inv, 'rec': rec_count, 'roi': 150},
         'races':             races_by_venue,
+        'data_quality':      data_quality,
     }

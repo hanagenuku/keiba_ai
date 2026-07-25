@@ -387,9 +387,20 @@ def apply_odds_to_races(races, market_odds_map):
 
 
 def fetch_races_on_date(sess, target_date, hist_db_path):
-    """指定日の全レース出走表を取得"""
+    """指定日の全レース出走表を取得
+
+    Returns:
+        (all_races, failures) のタプル。
+        failures: [{'racecourse': str, 'race_num': int, 'reason': str}, ...]
+        ページ自体が取得できた（=そのレースは実在する）のにパースに失敗した
+        もののみを記録する。障害レースのスキップ、および該当venueがその日
+        12レース未満で該当レース番号のページ自体が存在しないケース
+        （suffix探索を尽くしても soup が None のまま）は意図した挙動のため
+        含めない。
+    """
     print(f'📡 {target_date} 出走表取得中...')
     all_races = []
+    failures = []
     pedigree_budget = {'remaining': PEDIGREE_FETCH_BUDGET_DEFAULT}
     links = get_kaisai_on_date(target_date, sess)
     for base, date_str in links.items():
@@ -439,12 +450,15 @@ def fetch_races_on_date(sess, target_date, hist_db_path):
                     print(f'  R{r:02d}: suffix補正 {found_delta:+d} → {sx}')
 
             if soup is None:
+                # 開催venueがその日12レース未満しかない場合も含まれるため
+                # （fetch_results()の同種分岐と同じ扱い）、failuresには含めない。
                 print(f'  R{r:02d}: suffix={sx} → パラメータエラー/ページなし')
                 continue
 
             race = _parse_shutuba(soup, rc, r, date_str, pc, hist_db_path)
             if not race:
-                # 原因を特定するため詳細ログを出力
+                # 原因を特定するため詳細ログを出力（障害レースのスキップは
+                # 意図した挙動のためfailuresには記録しない）
                 try:
                     tables = soup.find_all('table')
                     if tables:
@@ -457,12 +471,16 @@ def fetch_races_on_date(sess, target_date, hist_db_path):
                             got_date = info_tmp.get('date', '?')
                             if got_date and got_date != expected:
                                 print(f'  R{r:02d}: 日付不一致 expected={expected} got={got_date} (suffix={sx})')
+                                failures.append({'racecourse': rc, 'race_num': r, 'reason': '日付不一致'})
                             else:
                                 print(f'  R{r:02d}: parse失敗 (馬なし or 例外) suffix={sx}')
+                                failures.append({'racecourse': rc, 'race_num': r, 'reason': 'parse失敗'})
                     else:
                         print(f'  R{r:02d}: テーブルなし suffix={sx}')
+                        failures.append({'racecourse': rc, 'race_num': r, 'reason': 'テーブルなし'})
                 except Exception:
                     print(f'  R{r:02d}: ログ取得中に例外 suffix={sx}')
+                    failures.append({'racecourse': rc, 'race_num': r, 'reason': '例外'})
                 time.sleep(0.3)
                 continue
 
@@ -478,8 +496,9 @@ def fetch_races_on_date(sess, target_date, hist_db_path):
                   f'{race.get("num_horses", 0)}頭 '
                   f'{race.get("distance", 0)}m{race.get("surface", "")}')
             time.sleep(0.8)
-    print(f'\n📋 出走表取得完了: {len(all_races)}レース')
-    return all_races
+    print(f'\n📋 出走表取得完了: {len(all_races)}レース'
+          + (f'（取得失敗 {len(failures)}件）' if failures else ''))
+    return all_races, failures
 
 
 def _parse_shutuba(soup, racecourse, race_num, date, place_code, hist_db_path):

@@ -123,6 +123,7 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
 .loading-spin{font-size:36px;animation:spin 1s linear infinite;display:inline-block;margin-bottom:12px}
 @keyframes spin{to{transform:rotate(360deg)}}
 .error-box{margin:16px;padding:16px;background:#fff3f3;border:1px solid #e74c3c;border-radius:10px;font-size:13px;color:#c0392b;line-height:1.6}
+.dq-warn-box{margin:8px 10px;padding:8px 12px;background:#fff8e6;border:1px solid #e67e22;border-radius:8px;font-size:11px;color:#a15c0a;line-height:1.6}
 .btm{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--g1);padding:10px 20px calc(10px + env(safe-area-inset-bottom,0px));display:flex;justify-content:space-around;z-index:200;border-top:1px solid rgba(255,255,255,0.1)}
 .btm-item{text-align:center}
 .btm-lbl{font-size:9px;color:rgba(255,255,255,0.6);letter-spacing:1px;text-transform:uppercase}
@@ -222,6 +223,7 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
   <button onclick="this.parentElement.style.display='none'">✕</button>
 </div>
 <div id="page-predict">
+<div id="dq-warning"></div>
 <div id="result-area"></div>
 <div class="summary" id="summary"></div>
 <div class="list" id="race-list"></div>
@@ -277,6 +279,17 @@ function initApp() {
   document.getElementById('b-inv').textContent = '¥'+(D.stats?.invest||0).toLocaleString();
   document.getElementById('b-rec').textContent = (D.stats?.rec||0)+'R';
   document.getElementById('b-roi').textContent = '~'+(D.stats?.roi||0)+'%';
+  const dq = D.data_quality || {};
+  const dqParts = [];
+  if (dq.odds_coverage != null && dq.odds_coverage < 0.5) {
+    dqParts.push('⚠ 直前オッズ取得率 ' + Math.round(dq.odds_coverage * 100) + '%（オッズ未反映のまま予想が生成された可能性）');
+  }
+  if ((dq.parse_failures || []).length > 0) {
+    const dqList = dq.parse_failures.map(f => f.racecourse + 'R' + f.race_num + '(' + f.reason + ')').join('、');
+    dqParts.push('⚠ 取得失敗レース: ' + dqList);
+  }
+  document.getElementById('dq-warning').innerHTML = dqParts.length
+    ? '<div class="dq-warn-box">' + dqParts.join('<br>') + '</div>' : '';
   const ra = document.getElementById('result-area');
   if (D.result) {
     const r = D.result;
