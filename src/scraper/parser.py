@@ -82,10 +82,21 @@ def parse_header(text):
             info['distance'] = 0
             info['direction'] = ''
             return info
-        info['distance'] = 0
-        info['surface'] = '不明'
-        info['direction'] = ''
-        print(f'  ⚠ surface判定失敗: {text[:80]}')
+        # 距離・芝ダ・回りが「メートル（芝・右）」の形で隣接していない場合の
+        # フォールバック。芝/ダート判定自体は_detect_surface()
+        # （結果ページ側で実績のある多段判定）に委ね、距離・回りは別途拾う。
+        fallback_surface = _detect_surface(text)
+        dist_m = re.search(r'([\d,]+)\s*メートル', text)
+        dir_m = re.search(r'([右左])', text)
+        if fallback_surface and dist_m:
+            info['distance'] = int(dist_m.group(1).replace(',', ''))
+            info['surface'] = fallback_surface
+            info['direction'] = dir_m.group(1) if dir_m else ''
+        else:
+            info['distance'] = 0
+            info['surface'] = '不明'
+            info['direction'] = ''
+            print(f'  ⚠ surface判定失敗: {text[:80]}')
     for kw, cls in [
         ('G1', 'G1'), ('G2', 'G2'), ('G3', 'G3'),
         ('3勝クラス', '3勝クラス'), ('2勝クラス', '2勝クラス'),
