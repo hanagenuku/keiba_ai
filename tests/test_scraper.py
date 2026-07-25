@@ -28,6 +28,21 @@ def test_parse_header_shogai():
     assert info.get('surface') == '障害'
 
 
+def test_parse_header_surface_not_adjacent_to_distance_falls_back():
+    """「メートル（芝・右）」のように芝ダ表記がメートルの直後に隣接していない
+    実機ケース（2026-07-25調査、新潟R11で実際にparse失敗を起こした形）でも、
+    _detect_surface()の多段判定にフォールバックして距離・surfaceを拾えることを
+    確認する回帰テスト。修正前は本文中に芝/ダートの単独記載があっても
+    surface='不明'・distance=0になり、そのままレース全体のparse失敗に繋がっていた。
+    """
+    text = ('2026年7月26日（日曜） 2回新潟2日 発走時刻： 18時00分 '
+            '3歳以上1勝クラス [指定] 定量 コース： 1,000 メートル ダート 右回り')
+    info = parse_header(text)
+    assert info.get('distance') == 1000
+    assert info.get('surface') == 'ダート'
+    assert info.get('direction') == '右'
+
+
 def test_get_class_from_racename():
     assert get_class_from_racename('G1天皇賞') == 'G1'
     assert get_class_from_racename('G2産経大阪杯') == 'G2'
