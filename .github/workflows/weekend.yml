@@ -4,18 +4,24 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: 'saturday or sunday'
+        description: 'saturday, sunday, or refresh（当日オッズによる予想更新）'
         required: true
         default: 'saturday'
         type: choice
         options:
           - saturday
           - sunday
+          - refresh
       force:
-        description: '予想を強制再生成する（--force）'
+        description: '予想を強制再生成する（--force、refreshモードでは無効）'
         required: false
         default: false
         type: boolean
+  schedule:
+    # 08:00 JST 毎週土曜・日曜（発走前、前夜生成時点より成熟したオッズで
+    # 予想を自動更新する。前夜生成のオッズが薄いまま予想の土台になる問題への
+    # 恒久対応。cronはUTC評価のため23:00 UTC金・土=08:00 JST土・日）
+    - cron: '0 23 * * 5,6'
 
 concurrency:
   group: keiba-weekly
@@ -52,9 +58,15 @@ jobs:
 
       - name: Run weekend script
         run: |
-          FORCE_FLAG=""
-          if [ "${{ inputs.force }}" = "true" ]; then FORCE_FLAG="--force"; fi
-          python scripts/weekend.py --mode ${{ inputs.mode }} $FORCE_FLAG
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            MODE="refresh"
+            FORCE_FLAG=""
+          else
+            MODE="${{ inputs.mode }}"
+            FORCE_FLAG=""
+            if [ "${{ inputs.force }}" = "true" ]; then FORCE_FLAG="--force"; fi
+          fi
+          python scripts/weekend.py --mode "$MODE" $FORCE_FLAG
 
       - name: Ingest pre-race odds log
         run: python scripts/ingest_odds_log.py
@@ -98,7 +110,8 @@ jobs:
               PUSHED=1
               break
             fi
-            git commit -m "auto: Weekend ${{ inputs.mode }} $(date +%Y%m%d)"
+            MODE="${{ github.event_name == 'schedule' && 'refresh' || inputs.mode }}"
+            git commit -m "auto: Weekend $MODE $(date +%Y%m%d)"
             if git push; then
               PUSHED=1
               break
