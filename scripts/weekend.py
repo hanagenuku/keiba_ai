@@ -236,7 +236,8 @@ def refresh_today(sess, hist_path, avg_bias, jst_now):
 
     app_data = to_app_json(selected, races, avg_bias, jst_now,
                            day_type=day_type, market_odds_map=market_odds_map,
-                           odds_updated_count=n_odds, parse_failures=parse_failures)
+                           odds_updated_count=n_odds, parse_failures=parse_failures,
+                           same_day=True)
     os.makedirs(os.path.dirname(APP_PATH), exist_ok=True)
     with open(APP_PATH, 'w', encoding='utf-8') as f:
         json.dump(app_data, f, ensure_ascii=False, indent=2)

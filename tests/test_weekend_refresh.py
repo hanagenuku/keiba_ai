@@ -70,10 +70,12 @@ def test_refresh_today_updates_latest_json_without_touching_bets_db(monkeypatch,
     captured = {}
 
     def _fake_to_app_json(selected, races_all, bias_data, jst_now, day_type=None,
-                          market_odds_map=None, odds_updated_count=None, parse_failures=None):
+                          market_odds_map=None, odds_updated_count=None, parse_failures=None,
+                          same_day=False):
         captured['day_type'] = day_type
         captured['odds_updated_count'] = odds_updated_count
         captured['parse_failures'] = parse_failures
+        captured['same_day'] = same_day
         return {'ok': True, 'day_type': day_type}
     monkeypatch.setattr(weekend, 'to_app_json', _fake_to_app_json)
 
@@ -89,6 +91,9 @@ def test_refresh_today_updates_latest_json_without_touching_bets_db(monkeypatch,
     assert captured['day_type'] == 'sunday'
     assert captured['odds_updated_count'] == 1
     assert captured['parse_failures'] == []
+    # 当日実行のため表示日付を+1日せずjst_nowそのまま使うことを
+    # to_app_json()に明示的に伝えている（実在しない翌日表示バグの回帰防止）
+    assert captured['same_day'] is True
     assert app_path.exists()
     with open(app_path, encoding='utf-8') as f:
         assert json.load(f) == {'ok': True, 'day_type': 'sunday'}

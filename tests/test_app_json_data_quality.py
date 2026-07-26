@@ -86,3 +86,33 @@ def test_data_quality_parse_failures_defaults_to_empty_list():
     with patch('src.betting.app_json.calc_all', return_value=[]):
         result = to_app_json([], races_all, None, jst_now, day_type='sunday')
     assert result['data_quality']['parse_failures'] == []
+
+
+# ── 表示日付（same_day）─────────────────────────────────────────
+# 2026-07-26、refresh_today()（当日実行）が生成したlatest.jsonの表示日付が
+# 「7月27日(月)」という実在しない開催日になっていた不具合の回帰テスト。
+# display_dtの+1日ロジックは「前夜に実行し翌日の予想を生成する」既存フロー
+# （friday_predict.py / predict_next_day）専用の前提だったが、refresh_today()
+# は当日に実行するため、day_type='sunday'だからと無条件に+1日すると
+# 実在しない翌日（月曜）を表示してしまっていた。
+
+def test_display_date_adds_one_day_for_night_before_generation():
+    """従来フロー（前夜生成、same_day省略=False）は土曜夜にjst_now=土曜で
+    day_type='sunday'を渡すと、表示日付は翌日（日曜）になる。"""
+    races_all = _races(1)
+    jst_now = datetime(2026, 7, 25, 20, 0, tzinfo=JST)  # 土曜夜
+    with patch('src.betting.app_json.calc_all', return_value=[]):
+        result = to_app_json([], races_all, None, jst_now, day_type='sunday')
+    assert result['date'] == '7月26日(日)'
+
+
+def test_display_date_uses_jst_now_directly_when_same_day():
+    """refresh_today()（当日実行、same_day=True）はjst_now自身の日付を
+    そのまま表示する。day_type='sunday'でも+1日せず、実在しない
+    「7月27日(月)」にならないことを確認する。"""
+    races_all = _races(1)
+    jst_now = datetime(2026, 7, 26, 9, 0, tzinfo=JST)  # 日曜朝（当日）
+    with patch('src.betting.app_json.calc_all', return_value=[]):
+        result = to_app_json([], races_all, None, jst_now, day_type='sunday',
+                             same_day=True)
+    assert result['date'] == '7月26日(日)'
