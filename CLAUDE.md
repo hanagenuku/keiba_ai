@@ -395,7 +395,45 @@ AIが市場と異なる本命を出した25Rで市場が6倍正確だったた�
 
 ## 現在の作業状況（セッション引き継ぎ用）
 
-### 最終更新: 2026-07-25④（find_r01_odds()の失敗内訳を診断ログに残すよう修正）
+### 最終更新: 2026-07-26①（refresh_today()生成のlatest.jsonが実在しない翌日を表示するバグを修正）
+
+---
+
+### 2026-07-26①：refresh_today()生成のlatest.jsonが実在しない翌日を表示するバグを修正
+
+#### 背景
+③で追加したrefreshモードを実際に本番実行した後、ユーザーがアプリのスクリーンショット
+（日曜9:26時点、中京・新潟・札幌の3場・14頭立てのレース）を提示し「本日のレースです」
+と述べたが、画面には「7月27日(月)」と表示されていた。JRA公式カレンダーを確認したところ
+その週は7/25(土)・7/26(日)のみが開催日で、7/27(月)という開催日は実在しなかった。
+
+#### 🔴 発見：`to_app_json()`の表示日付+1日ロジックが「当日実行」を考慮していなかった
+`to_app_json()`の`display_dt`計算は
+`jst_now + timedelta(days=1) if day_type in ('saturday', 'sunday') else jst_now`
+となっており、「前夜に実行して翌日ぶんの予想を生成する」既存フロー
+（`friday_predict.py`・`predict_next_day()`）専用の前提だった。③で追加した
+`refresh_today()`は**当日の朝**に実行し`day_type`をその日の曜日から
+`'saturday'`/`'sunday'`と推定するが、`to_app_json()`側はその違いを区別できず
+`day_type`が`'sunday'`であれば無条件に+1日していたため、日曜朝に実行した
+`refresh_today()`が生成した`latest.json`は実在しない月曜の日付を表示していた。
+中身のレースデータ自体（当日の中京・新潟・札幌、オッズ・予想）は正しく、
+表示ラベルのみが誤っていた。
+
+#### 対応
+`to_app_json()`に`same_day`引数（デフォルト`False`、後方互換）を追加。
+`True`の場合は`jst_now`をそのまま表示日付に使い、+1日しない。
+`refresh_today()`の`to_app_json()`呼び出しに`same_day=True`を追加。
+`friday_predict.py`・`predict_next_day()`側の呼び出しは変更していない
+（既存の「前夜生成→翌日表示」の挙動を維持）。
+
+#### テスト
+`tests/test_app_json_data_quality.py`に2テスト追加
+（`same_day`省略時は従来通り+1日されること、`same_day=True`ではjst_now
+そのものの日付になり実在しない翌日にならないことを確認）。既存の
+`tests/test_weekend_refresh.py`の`refresh_today`テストが`to_app_json`呼び出しに
+`same_day=True`が渡されていることを検証するよう更新（フェイク関数が新引数を
+受け取れず落ちる状態だったため合わせて修正）。
+`python -m pytest tests/ -q`は355テスト通過（353+2、回帰なし）。
 
 ---
 

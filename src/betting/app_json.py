@@ -296,7 +296,7 @@ def _build_bet_list(bets):
 
 
 def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', market_odds_map=None, base_dir=None,
-                odds_updated_count=None, parse_failures=None):
+                odds_updated_count=None, parse_failures=None, same_day=False):
     """厳選レース＋全レース情報をアプリ用 JSON 形式で返す。
 
     Args:
@@ -315,6 +315,10 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
                           「オッズ0頭のまま予想が静かに生成される」問題への対応）。
         parse_failures  : fetch_races_on_date() が返す取得失敗レースのリスト（省略可）。
                           [{'racecourse': str, 'race_num': int, 'reason': str}, ...]
+        same_day  : True の場合、表示日付を jst_now そのまま使う（当日実行の
+                          refresh_today()用）。False（デフォルト）は従来通り
+                          day_typeがsaturday/sundayなら+1日して表示する
+                          （前夜に実行し翌日の予想を生成する既存フロー用）。
 
     Returns:
         dict（JSON シリアライズ可能）
@@ -556,8 +560,11 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
         bias_tag = ('時計速め' if spd > 0.3 else '時計遅め' if spd < -0.3 else 'フラット')
 
     from datetime import timedelta
-    # friday→saturday, sunday は翌日の日付を表示（前夜に実行するため）
-    display_dt = jst_now + timedelta(days=1) if day_type in ('saturday', 'sunday') else jst_now
+    # friday→saturday, sunday は翌日の日付を表示（前夜に実行するため）。
+    # same_day=Trueの場合（refresh_today、当日実行）はjst_nowをそのまま使う。
+    display_dt = (jst_now if same_day
+                  else jst_now + timedelta(days=1) if day_type in ('saturday', 'sunday')
+                  else jst_now)
     jday = ['月', '火', '水', '木', '金', '土', '日'][display_dt.weekday()]
     rec_count = len(selected)
 
