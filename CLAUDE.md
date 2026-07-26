@@ -112,7 +112,7 @@ files = [
     'src/tools/generate_style_advantage.py',
     'src/tools/train_pace_model.py',
     'src/features/engine.py', 'src/features/speed_index.py', 'src/features/horse_type.py',
-    'src/features/error_tags.py',
+    'src/features/error_tags.py', 'src/features/shap_explain.py',
     'src/utils/config.py', 'src/utils/db.py', 'src/utils/model_registry.py',
     'src/scraper/parser.py', 'src/scraper/jra_scraper.py',
     'src/models/__init__.py', 'src/models/calibration.py', 'src/models/predict.py',
@@ -134,6 +134,7 @@ print('done')
 | ファイル | 役割 |
 |----------|------|
 | `src/features/engine.py` | 特徴量エンジン。f_rl/f_maturity/f_rotation/f_pace等。Phase 2-3 実装済み |
+| `src/features/shap_explain.py` | ability_marginをカテゴリ別SHAP寄与度に分解する説明可能性レイヤー |
 | `src/models/predict.py` | softmax_probs, calibrate_and_renormalize |
 | `src/betting/make_bets.py` | calc_ev, calc_kelly, make_bets |
 | `src/betting/ev_filter.py` | ability_first_loose（EV×pnフィルタ） |
@@ -396,7 +397,85 @@ AIが市場と異なる本命を出した25Rで市場が6倍正確だったた�
 
 ## 現在の作業状況（セッション引き継ぎ用）
 
-### 最終更新: 2026-07-26③（残差学習モデルのraw_marginが2重sigmoidになっていたバグを修正）
+### 最終更新: 2026-07-26④（ability_marginをカテゴリ別SHAP寄与度に分解する説明可能性機能を追加）
+
+---
+
+### 2026-07-26④：ability_marginをカテゴリ別SHAP寄与度に分解する説明可能性機能を追加
+
+#### 背景
+ユーザーから「AIが独自に予想を立てた後、オッズを見て“なぜこの馬は人気があるのに
+AIは評価が低いのか”を要因分解して考える仕組みが欲しい。人間的思考でAIでは無理
+というかナンセンスなのか？」という相談を受けた。②で残差学習モデルの出力を
+`ability_margin`（市場非依存のAI評価）と`base_margin`（市場の評価）に分離済み
+だったため、「AI vs 市場のギャップが+か-か」自体は既に計算上存在していた。
+足りないのは「なぜそのギャップが出たか」を人間が読める理由に分解する部分で、
+これはXGBoostのTreeSHAP（`pred_contribs=True`）を`ability_margin`に適用すれば
+実現できると判断し、モデル自体は変更しない解釈専用レイヤーとして実装した。
+
+#### 実装内容
+- `src/features/shap_explain.py` 新規作成
+  - `FEATURE_CATEGORY_MAP`: 本番の138特徴量列を15カテゴリ（騎手・厩舎・距離適性・
+    コース適性・ペース適性・スピード能力・近走成績・クラス適性・血統・斤量馬体・
+    枠順・馬場適性・ローテーション・AI自己補正・過去人気推移）に分類する辞書。
+    テストで`data/xgb_feature_cols.json`の全列が網羅されていることを確認済み
+  - `compute_ability_breakdown(booster, X_pred, feature_cols, base_margin)`:
+    `Booster.predict(dmat, pred_contribs=True)`（TreeSHAP）で特徴量ごとの
+    寄与度+バイアス項を取得し、バイアス項からbase_marginを差し引いた残りを
+    「基準値」カテゴリとして扱うことで、カテゴリ別寄与度の合計が
+    `ability_margin`（= raw_margin - base_margin）とほぼ一致するように分解する
+- `src/features/engine.py`（`calc_all()` Pass 2、`_XGB_RESIDUAL`分岐）:
+  `ability_margin`計算の直後に`compute_ability_breakdown()`を呼び、
+  `ability_breakdown`として出力辞書に追加。SHAP計算失敗時は`_warn_shap_breakdown_failure()`
+  で1回だけ警告した上で`None`にフォールバックし、予測自体（total/win_prob/
+  ability_margin）は止めない設計（`_warn_xgb_inference_fallback`と同じ思想）
+- `src/betting/app_json.py`（`_build_horses_list()`）: `ability_breakdown`を
+  馬ごとのJSONに追加
+- `index.html`: 馬テーブルのRL列に📊バッジを追加。`ability_breakdown`がある馬のみ、
+  上位2つの＋要因・上位2つの－要因を`title`ツールチップで表示
+  （例: 「AI評価の内訳: 騎手+0.35 / スピード能力+0.21 / 距離適性-0.30 / コース適性-0.12」）
+
+#### なぜ「基準値」カテゴリが必要か
+TreeSHAPの`pred_contribs=True`が返すバイアス項は、そのBoosterの学習データ全体に
+対する平均的な予測値（グローバルな基準値）であり、推論時に個別instanceへ設定した
+`base_margin`とは別物。実際に検証したところ、特徴量ごとの寄与度の単純合計は
+`ability_margin`と一致せず、「バイアス項 - 推論時base_margin」を追加の
+「基準値」カテゴリとして含めて初めて合計が一致することを確認した
+（`sum(feature_contribs) + (bias_term - base_margin) == ability_margin`）。
+
+#### パフォーマンス
+本番モデル（138特徴量）で実測したところ、`pred_contribs=True`は1頭あたり約6.8ms
+（`output_margin=True`単体の約5.9msとほぼ同等）で、週末ワークフローの規模
+（約500頭）でも合計3.4秒程度の増加に収まることを確認済み。GitHub Actionsの
+タイムアウトに影響する規模ではない。
+
+#### 学習/推論パリティ
+モデル自体・特徴量計算ロジックには一切触れていない。既存の推論経路
+（`booster`・`X_pred`・`_bm`）から追加で1個（カテゴリ別分解）を計算するのみ。
+
+#### テスト
+`tests/test_shap_explain.py`新規作成（8テスト）。North Starに従い、実際に
+`xgb.Booster`を使って検証：
+- `FEATURE_CATEGORY_MAP`が`data/xgb_feature_cols.json`（本番の138特徴量）を
+  完全に網羅していることを確認（未登録があれば失敗し早期に気づける設計）
+- `compute_ability_breakdown()`の寄与度合計が`ability_margin`と一致すること、
+  カテゴリへの正しい集約、contrib降順ソートを確認
+- `calc_all()`が残差学習モデル時に`ability_breakdown`を含み、非残差モデル時は
+  `None`になることを、実際に`save_model()`/`init_engine()`経由でロードした
+  本物の残差モデル環境で確認
+- `index.html`側は`node --check`でJS構文検証、`node -e`で実際のbreakdownデータを
+  使ったバッジ文字列生成を直接確認
+- `python -m pytest tests/ -q`は365テスト通過（359+6、回帰なし）
+
+#### 今後
+- カテゴリ分類（`FEATURE_CATEGORY_MAP`）は人間が設計した15分類であり、これが
+  最適な粒度かはユーザーからのフィードバック次第で調整の余地がある
+- 現状は表側のツールチップ表示のみ。乖離分析（`divergence_weekly.json`）と
+  組み合わせて「AIが市場と食い違ったレースで、どのカテゴリが的中/外れに
+  寄与したか」を週次で集計する拡張も将来検討できる（今回はスコープ外）
+- `index.html`側のバッジ生成ロジックは自動テストの対象外（Node.js経由の
+  手動クロスチェックのみ。以前から課題の「index.htmlのJSテストハーネス」が
+  整備されればここも自動回帰の対象にできる）
 
 ---
 

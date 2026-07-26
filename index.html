@@ -80,6 +80,8 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
 .gap-up{color:#fff;background:#27ae60;font-size:8px;font-weight:800;border-radius:3px;padding:0 3px;margin-left:1px;display:inline-block}
 .gap-down{color:#999;font-size:8px;font-weight:600;margin-left:1px;display:inline-block}
 .gap-converge{color:#e67e22;font-size:7px;font-weight:600;margin-left:1px;display:inline-block}
+/* AI評価内訳（ability_breakdown）バッジ。タップ/長押しでtitleツールチップ表示 */
+.ability-badge{font-size:9px;margin-left:2px;cursor:help;opacity:.75}
 /* オッズ列 */
 .htbl th.col-odds{background:#2c3e50}
 .htbl td.col-odds{font-size:10px;color:#666}
@@ -1316,7 +1318,22 @@ function render() {
           }
         }
 
-        html += '<tr'+(isH?' class="hl"':'')+'><td>'+(isH?'◎':'')+h.n+'</td><td class="col-name">'+h.name+surgeBadge+'</td><td class="col-pop">'+pop+'</td><td class="col-odds">'+odds+'</td><td>'+mkBadge(h.mark)+'</td><td class="col-rl">'+rl+gapBadge+'</td><td>'+tan+'</td><td class="'+(hi?'phi':'plo')+'">'+fuku+'</td><td class="'+valClass+'">'+valCell+'</td></tr>';
+        // AI評価内訳バッジ: ability_breakdown（SHAP寄与度分解）が使えるレース
+        // （残差学習モデル運用時のみ）で、「AIが市場と違う評価をした理由」を
+        // 上位の＋要因・－要因としてtitleツールチップに表示する
+        let breakdownBadge = '';
+        if (h.ability_breakdown && h.ability_breakdown.length > 0) {
+          const pos = h.ability_breakdown.filter(b => b.contrib > 0.005).slice(0, 2);
+          const neg = h.ability_breakdown.filter(b => b.contrib < -0.005).slice(-2).reverse();
+          const parts = pos.map(b => b.category + '+' + b.contrib.toFixed(2))
+            .concat(neg.map(b => b.category + b.contrib.toFixed(2)));
+          if (parts.length > 0) {
+            const title = ('AI評価の内訳: ' + parts.join(' / ')).replace(/"/g, '&quot;');
+            breakdownBadge = '<span class="ability-badge" title="' + title + '">📊</span>';
+          }
+        }
+
+        html += '<tr'+(isH?' class="hl"':'')+'><td>'+(isH?'◎':'')+h.n+'</td><td class="col-name">'+h.name+surgeBadge+'</td><td class="col-pop">'+pop+'</td><td class="col-odds">'+odds+'</td><td>'+mkBadge(h.mark)+'</td><td class="col-rl">'+rl+gapBadge+breakdownBadge+'</td><td>'+tan+'</td><td class="'+(hi?'phi':'plo')+'">'+fuku+'</td><td class="'+valClass+'">'+valCell+'</td></tr>';
       }
       html += '</table>';
       if (race.race_id) {
