@@ -2579,7 +2579,10 @@ def get_xgb_rating(xfeats_list, model=None, feature_cols=None):
     X    = _pd.DataFrame(rows)[fc].fillna(5.0)
     dmat = _xgb.DMatrix(X, feature_names=list(fc))
     if _XGB_RESIDUAL:
-        return [float(v) for v in m.predict(dmat)]
+        # ⚠ この関数はrace/popularityを受け取らないためbase_marginを設定しない。
+        # 残差学習モデルで市場込みの完全なマージンが必要な場合はcalc_all()を使うこと。
+        # output_margin=True必須（無指定だとsigmoid適用済み確率が返り2重sigmoidになる）
+        return [float(v) for v in m.predict(dmat, output_margin=True)]
     return [float(v) for v in m.get_booster().predict(dmat, output_margin=True)]
 
 
@@ -2664,7 +2667,12 @@ def calc_all(race, bias_data=None):
                     _bm    = math.log(_p_mkt / (1 - _p_mkt))
                     import numpy as _np_bm
                     _dmat.set_base_margin(_np_bm.array([_bm]))
-                    raw_margin = float(_XGB_FUKUSHO_MODEL.predict(_dmat)[0])
+                    # output_margin=True必須: 指定しないとBooster.predict()は
+                    # binary:logisticの逆リンク関数(sigmoid)を適用済みの確率を返す。
+                    # 2026-07-26セッションで、output_margin未指定のままraw_marginと
+                    # 呼んでいたため、直後のsigmoidで2重適用になっていたバグを発見・修正
+                    # （SHAP寄与度分解の検証中に数値不整合から発覚）。
+                    raw_margin = float(_XGB_FUKUSHO_MODEL.predict(_dmat, output_margin=True)[0])
                     prob   = 1 / (1 + math.exp(-raw_margin))
                     raw_prob = prob
                     rating = raw_margin

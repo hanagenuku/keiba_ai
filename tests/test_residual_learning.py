@@ -271,3 +271,117 @@ class TestAbilityMarginExposure:
                            'running_style': '差し', 'history': []}]}
         out = eng.calc_all(race)
         assert out[0]['ability_margin'] is None
+
+
+class TestRawMarginTrueLogOdds:
+    """raw_marginの2重sigmoidバグの回帰テスト — 2026-07-26セッション。
+
+    engine.py の残差学習分岐は `Booster.predict(dmat)` を `output_margin=True`
+    無しで呼び、その戻り値を"raw_margin"（生log-odds）として扱い、さらに
+    `1/(1+exp(-raw_margin))` でsigmoidを適用していた。しかし`output_margin=True`
+    無しのBooster.predict()は既にbinary:logisticの逆リンク関数(sigmoid)を
+    適用済みの確率を返すため、実質2重にsigmoidが掛かっていた。
+
+    2重sigmoidは単調関数の合成のため順位（AUC）は保たれるが、出力レンジが
+    大きく圧縮される（例: base_marginを3ポイント動かしても確率が0.70〜0.73に
+    しか動かない）。本テストはengine.py側の計算結果(cal_prob)と、テスト内で
+    独立に Booster.predict(dmat, output_margin=True) を直接呼んで得た
+    "真の"log-oddsから計算した確率が一致することを検証する
+    （TestAbilityMarginExposureのテストはengine.py内部の値同士を比較する
+    自己整合性チェックのため、この2重sigmoidバグ自体は検出できなかった。
+    本テストはengine.pyの外側で独立に計算した期待値と比較するため、
+    修正前のコードに対しては実際に失敗することを確認済み）。
+    """
+
+    def _make_residual_booster(self, tmp_path, feature_cols):
+        import numpy as np
+        import xgboost as xgb
+
+        rng = np.random.RandomState(2)
+        X = rng.rand(20, len(feature_cols))
+        y = rng.randint(0, 2, size=20)
+        dtrain = xgb.DMatrix(X, label=y, feature_names=feature_cols)
+        booster = xgb.train({'objective': 'binary:logistic', 'max_depth': 3}, dtrain, num_boost_round=10)
+        model_path = tmp_path / 'data' / 'xgb_fukusho_model.pkl'
+        booster.save_model(str(model_path))
+
+        cols_path = tmp_path / 'data' / 'xgb_feature_cols.json'
+        cols_path.write_text(json.dumps({'feature_cols': feature_cols, 'residual': True}))
+        return model_path
+
+    def _make_min_engine_files(self, tmp_path):
+        for name in ['horse_dist_dict.pkl', 'horse_course_dict.pkl',
+                     'horse_venue_dist_dict.pkl', 'post_zone_bias.pkl']:
+            with open(tmp_path / 'data' / name, 'wb') as f:
+                pickle.dump({}, f)
+
+    def _race(self, n_horses):
+        horses = [
+            {'num': i + 1, 'horse_num': i + 1, 'name': f'H{i+1}',
+             'win_odds': 1.5 * (i + 1), 'running_style': '差し', 'history': []}
+            for i in range(n_horses)
+        ]
+        return {'date': '2026-07-26', 'racecourse': '新潟', 'distance': 1600,
+                'surface': '芝', 'race_class': '3勝クラス', 'track_condition': '良',
+                'horses': horses}
+
+    def test_cal_prob_matches_independent_output_margin_prediction(self, tmp_path):
+        import xgboost as xgb
+
+        (tmp_path / 'data').mkdir()
+        feature_cols = [f'f{i}' for i in range(5)]
+        self._make_min_engine_files(tmp_path)
+        model_path = self._make_residual_booster(tmp_path, feature_cols)
+
+        from src.features import engine
+        engine.init_engine(str(tmp_path))
+        assert engine._XGB_RESIDUAL is True
+
+        race = self._race(12)
+        out = engine.calc_all(race)
+        n = len(out)
+
+        # engine.pyの内部実装を一切経由せず、独立にBoosterをロードして
+        # output_margin=Trueで"真の"marginを計算する（ground truth）
+        ref_booster = xgb.Booster()
+        ref_booster.load_model(str(model_path))
+        xrow = {c: 5.0 for c in feature_cols}
+        X = pd.DataFrame([xrow])[feature_cols]
+
+        for h in out:
+            pop = h['popularity']
+            harm = math.log(n) + 0.5772
+            p_mkt = max(min((1.0 / max(pop, 1)) / harm, 0.999), 0.001)
+            bm = math.log(p_mkt / (1 - p_mkt))
+
+            dmat = xgb.DMatrix(X, feature_names=feature_cols)
+            dmat.set_base_margin([bm])
+            true_margin = float(ref_booster.predict(dmat, output_margin=True)[0])
+            expected_prob = 1 / (1 + math.exp(-true_margin))
+
+            assert abs(h['cal_prob'] - expected_prob) < 1e-6, (
+                f"cal_probが独立計算のoutput_margin=True予測と一致しない（2重sigmoid疑い）: "
+                f"{h['name']} cal_prob={h['cal_prob']} expected={expected_prob}"
+            )
+
+    def test_cal_prob_spans_wide_range_across_popularity(self, tmp_path):
+        """2重sigmoidバグがあるとbase_marginを大きく動かしてもcal_probが
+        狭い帯（実測: 0.70〜0.73程度）に圧縮される。1番人気と最下位人気で
+        cal_probが十分に離れることを確認し、圧縮バグの再発を検知する。
+        """
+        (tmp_path / 'data').mkdir()
+        feature_cols = [f'f{i}' for i in range(5)]
+        self._make_min_engine_files(tmp_path)
+        self._make_residual_booster(tmp_path, feature_cols)
+
+        from src.features import engine
+        engine.init_engine(str(tmp_path))
+
+        out = engine.calc_all(self._race(12))
+        by_pop = {h['popularity']: h['cal_prob'] for h in out}
+        fav_prob = by_pop[1]
+        dog_prob = by_pop[max(by_pop)]
+        assert fav_prob - dog_prob > 0.15, (
+            f"1番人気と最下位人気のcal_prob差が小さすぎる（2重sigmoid圧縮の疑い）: "
+            f"fav={fav_prob} dog={dog_prob} diff={fav_prob - dog_prob}"
+        )

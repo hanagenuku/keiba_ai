@@ -213,7 +213,9 @@ def train_xgb(base_dir,
         import xgboost as _xgb_eval
         dval_eval = _xgb_eval.DMatrix(X_val, feature_names=feat_cols)
         dval_eval.set_base_margin(bm_val)
-        raw_margin = model.predict(dval_eval)
+        # output_margin=True必須（無指定だとsigmoid適用済み確率が返り2重sigmoidになる。
+        # 2026-07-26セッションでengine.py側の同種バグと合わせて発見・修正）
+        raw_margin = model.predict(dval_eval, output_margin=True)
         val_prob = 1 / (1 + np.exp(-raw_margin))
     else:
         val_prob = model.predict_proba(X_val)[:, 1]
@@ -246,7 +248,7 @@ def train_xgb(base_dir,
                 import xgboost as _xgb_old
                 d_old = _xgb_old.DMatrix(old_X, feature_names=list(old_feats))
                 d_old.set_base_margin(bm_val)
-                old_margin = old_model.predict(d_old)
+                old_margin = old_model.predict(d_old, output_margin=True)
                 old_prob = 1 / (1 + np.exp(-old_margin))
             else:
                 old_prob = old_model.predict_proba(old_X)[:, 1]
