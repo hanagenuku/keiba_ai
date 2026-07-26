@@ -178,9 +178,74 @@ def predict_next_day(sess, hist_path, avg_bias, jst_now, force=False):
     print(f'✅ アプリJSON保存: {APP_PATH}')
 
 
+def refresh_today(sess, hist_path, avg_bias, jst_now):
+    """当日のレースを、その時点の（前夜より成熟した）オッズで予想を再生成する。
+
+    前日夜の生成時点ではオッズがまだ薄く、popularity（残差学習モデルの
+    base_marginの土台）も未成熟な情報になっている
+    （2026-07-24⑤で記録した既知の構造的課題）。発走前・当日のうちに
+    このモードを実行すると、より情報量の多いオッズを土台にした予想へ
+    latest.jsonを更新できる。
+
+    keiba.db（bets/bet_simulation等の実績記録）は書き換えない。
+    save_bets_db/log_bet_simulationは同一race_idへの再実行を想定した
+    重複排除を備えていない（bet_simulationは重複排除自体が無く、betsも
+    「新しい買い目が前回と違う馬番なら古い行を残したまま追加」される）ため、
+    これらは前日夜生成時点の記録のまま維持し、本関数はrace_predictions
+    （UNIQUE制約で安全に上書きされる）とlatest.json（表示専用）のみを更新する。
+    """
+    weekday = jst_now.weekday()  # 5=土 6=日
+    if weekday == 5:
+        day_type = 'saturday'
+    elif weekday == 6:
+        day_type = 'sunday'
+    else:
+        print(f'⚠ refreshモードは土日の実行を想定しています（weekday={weekday}）。スキップします。')
+        return
+
+    target_date = jst_now.strftime('%Y%m%d')
+    print(f'📅 再取得日: {target_date}（当日・直前オッズによる予想更新）')
+
+    races, parse_failures = fetch_races_on_date(sess, target_date, hist_path)
+    print(f'📋 取得レース: {len(races)}R')
+
+    if not races:
+        print(f'⚠️ {target_date} のレースが0件のため予想更新をスキップ（latest.json は上書きしません）')
+        return
+
+    print('💴 オッズ取得中（専用オッズページ）...')
+    market_odds_map = fetch_odds_map(sess, races)
+    n_odds = apply_odds_to_races(races, market_odds_map)
+    print(f'   オッズ反映: {n_odds}頭 / {len(races)}R')
+
+    print('💾 全レース予測を race_predictions に更新保存中...')
+    for race in races:
+        scored_all = calc_all(race, avg_bias)
+        if scored_all:
+            save_race_predictions(race, scored_all, ROOT)
+    print(f'   {len(races)}レース完了')
+
+    selected = select_quality_races(races, avg_bias)
+    print(f'⭐ 厳選: {len(selected)}レース'
+          + ('（推奨レースなし）' if not selected else ''))
+
+    _fallback = build_market_odds_from_races(races)
+    for _rid, _om in _fallback.items():
+        if not market_odds_map.get(_rid):
+            market_odds_map[_rid] = _om
+
+    app_data = to_app_json(selected, races, avg_bias, jst_now,
+                           day_type=day_type, market_odds_map=market_odds_map,
+                           odds_updated_count=n_odds, parse_failures=parse_failures)
+    os.makedirs(os.path.dirname(APP_PATH), exist_ok=True)
+    with open(APP_PATH, 'w', encoding='utf-8') as f:
+        json.dump(app_data, f, ensure_ascii=False, indent=2)
+    print(f'✅ アプリJSON更新: {APP_PATH}')
+
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--mode', choices=['saturday', 'sunday'], required=True)
+    parser.add_argument('--mode', choices=['saturday', 'sunday', 'refresh'], required=True)
     parser.add_argument('--force', action='store_true',
                         help='当日予想済みでも強制的に再生成する')
     args = parser.parse_args()
@@ -197,9 +262,20 @@ def main():
                   ren_amt=REN_AMT, tan2_amt=TAN2_AMT, san_amt=SAN_AMT)
 
     jst_now = datetime.now(JST)
-    target_date = jst_now.strftime('%Y%m%d')
-
     sess = create_session()
+
+    if args.mode == 'refresh':
+        # 当日・発走前にオッズを再取得して予想を更新する（結果取得は行わない）
+        avg_bias = None
+        if os.path.exists(BIAS_PATH):
+            with open(BIAS_PATH, encoding='utf-8') as f:
+                avg_bias = json.load(f)
+        refresh_today(sess, hist_path, avg_bias, jst_now)
+        checkpoint_db(db_path)
+        checkpoint_db(hist_path)
+        return
+
+    target_date = jst_now.strftime('%Y%m%d')
     all_results = fetch_and_save_results(sess, hist_path, target_date)
 
     if args.mode == 'saturday':
