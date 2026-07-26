@@ -241,21 +241,39 @@ def find_r01_odds(odds_base, date_str, sess):
 
     CNAMEは「レース番号(01) + 日付 + Z + / + suffix」の形式（実機検証済み）。
     suffixを0x00〜0xFFで総当たりし、テーブルが取得できた値を返す。
+
+    256件全て不一致で終わった場合、原因の内訳（パラメータエラー/テーブルなし/
+    例外）をログに残す。2026-07-25にこの関数が全venueで原因不明のまま
+    「未発見」になる障害が発生した際、例外を無条件に握りつぶす実装のため
+    実際に何が起きていたのか（JRA側の遅延か別の問題か）を後から特定できな
+    かった反省による（詳細はCLAUDE.md参照）。
     """
+    n_param_error = 0
+    n_no_table = 0
+    n_exception = 0
+    last_exception = None
     for s in range(256):
         cn = f'{odds_base}01{date_str}Z/{s:02X}'
         try:
             r = sess.post(f'{JRA_BASE}/JRADB/accessO.html',
                           data={'cname': cn, 'CNAME': cn}, headers=HEADERS, timeout=10)
             r.encoding = 'shift_jis'
-        except Exception:
+        except Exception as e:
+            n_exception += 1
+            last_exception = e
             continue
         text = r.text
         if 'パラメータエラー' in text:
+            n_param_error += 1
             continue
         if BeautifulSoup(text, 'lxml').find_all('table'):
             return s
+        n_no_table += 1
         time.sleep(0.02)
+    detail = f'パラメータエラー={n_param_error} テーブルなし={n_no_table} 例外={n_exception}'
+    if last_exception is not None:
+        detail += f' (直近の例外: {last_exception!r})'
+    print(f'  ⚠ find_r01_odds: 256件全て不一致 [{detail}]')
     return None
 
 

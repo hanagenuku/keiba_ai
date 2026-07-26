@@ -918,6 +918,44 @@ def test_fetch_races_on_date_tracks_genuine_parse_failures_only(monkeypatch):
     assert all(f['race_num'] != 2 for f in failures)
 
 
+# ── find_r01_odds の失敗内訳ログ（2026-07-25、全venue原因不明で「未発見」に
+#    なった障害の再発時に原因を特定できるようにするための診断ログ追加） ──
+
+def test_find_r01_odds_finds_target_suffix():
+    """既存の成功パス（該当suffixでtableを検出して返す）は変更しないことを確認。"""
+    sess = _FakeSession(target_suffix=0x42)
+    found = jra_scraper.find_r01_odds('pw151ouS30320260201', '20260627', sess)
+    assert found == 0x42
+
+
+def test_find_r01_odds_logs_breakdown_when_none_found(monkeypatch, capsys):
+    """256件全て「パラメータエラー」だった場合、内訳をログに残しNoneを返す。"""
+    monkeypatch.setattr(jra_scraper.time, 'sleep', lambda *_: None)
+    sess = _FakeSession(target_suffix=999)  # 256内に存在しない → 全てパラメータエラー
+    found = jra_scraper.find_r01_odds('pw151ouS30320260201', '20260627', sess)
+    assert found is None
+    out = capsys.readouterr().out
+    assert 'find_r01_odds' in out
+    assert 'パラメータエラー=256' in out
+    assert '例外=0' in out
+
+
+def test_find_r01_odds_counts_exceptions_separately(monkeypatch, capsys):
+    """通信例外はパラメータエラーと区別してカウントされることを確認。"""
+    monkeypatch.setattr(jra_scraper.time, 'sleep', lambda *_: None)
+
+    class _RaisingSession:
+        def post(self, url, data=None, headers=None, timeout=None):
+            raise TimeoutError('boom')
+
+    found = jra_scraper.find_r01_odds('pw151ouS30320260201', '20260627', _RaisingSession())
+    assert found is None
+    out = capsys.readouterr().out
+    assert '例外=256' in out
+    assert 'パラメータエラー=0' in out
+    assert 'boom' in out
+
+
 def test_fetch_races_on_date_obstacle_skip_not_recorded_as_failure(monkeypatch):
     """障害レースのスキップは意図した挙動のためfailuresに含めないことを確認する。"""
     monkeypatch.setattr(jra_scraper.time, 'sleep', lambda *_: None)
