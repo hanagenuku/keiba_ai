@@ -2644,6 +2644,8 @@ def calc_all(race, bias_data=None):
 
     # ── Pass 2: XGB予測（相対特徴量込み） ───────────────────────────────
     for h, sc, career, xfeats in horse_data:
+        ability_margin = None  # 市場非依存のAI能力スコア（残差学習時のみ設定。直前オッズ取得時の
+                                # クライアント側再同期用。base_marginを含まない「純粋な木モデル出力」）
         if use_xgb:
             try:
                 import pandas as _pd_xgb
@@ -2666,6 +2668,11 @@ def calc_all(race, bias_data=None):
                     prob   = 1 / (1 + math.exp(-raw_margin))
                     raw_prob = prob
                     rating = raw_margin
+                    # base_margin（人気由来）を差し引いた市場非依存の生スコア。
+                    # 直前オッズ取得時にJS側でbase_marginだけ新しい人気順位で
+                    # 引き直し、ability_marginと足し合わせて勝率を再計算できる
+                    # （2026-07-26セッション：勝率とオッズの時点ずれ解消の一環）
+                    ability_margin = raw_margin - _bm
                 elif _ENSEMBLE_MODEL is not None:
                     xgb_prob = float(_XGB_FUKUSHO_MODEL.predict_proba(X_pred)[0][1])
                     lgbm_prob = float(_ENSEMBLE_MODEL['lgbm'].predict_proba(X_pred)[0][1])
@@ -2715,6 +2722,7 @@ def calc_all(race, bias_data=None):
             'market_prob': market_prob,
             'pop_gap':     round(prob - market_prob, 4),
             'rating':      round(rating, 4),  # 能力値（XGB生マージン or ルールベースtotal-5）
+            'ability_margin': round(ability_margin, 6) if ability_margin is not None else None,
         })
 
     if not out:
