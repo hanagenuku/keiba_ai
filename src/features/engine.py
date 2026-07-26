@@ -60,6 +60,23 @@ def _warn_xgb_inference_fallback(horse_name, err):
               f'ルールベーススコアへフォールバック: {err_key}')
 
 
+_SHAP_BREAKDOWN_ERRORS_WARNED = set()  # 一度警告した例外の組み合わせは再度出さない
+
+
+def _warn_shap_breakdown_failure(horse_name, err):
+    """ability_breakdown（SHAP寄与度分解）の計算失敗を警告する。
+
+    説明可能性レイヤーの失敗であり予測自体（total/win_prob/ability_margin）には
+    影響しないため無音フォールバック（ability_breakdown=None）で予測は継続するが、
+    2026-07-21②で追加した_warn_xgb_inference_fallbackと同じ理由（例外を握りつぶす
+    箇所は必ず可視化する）で、原因を問わず例外発生時は必ず警告する。
+    """
+    err_key = f'{type(err).__name__}: {err}'
+    if err_key not in _SHAP_BREAKDOWN_ERRORS_WARNED:
+        _SHAP_BREAKDOWN_ERRORS_WARNED.add(err_key)
+        print(f'⚠ [SHAP分解失敗] {horse_name} でability_breakdownの計算が例外により失敗: {err_key}')
+
+
 _KEIBA_DB_PATH      = None  # race_predictions 参照用
 _W                 = {
     'rl':       0.35,   # Phase 2: スピード指数ベースRLスコア
@@ -98,9 +115,11 @@ def init_engine(base_dir,
     global _W, _horse_dist_dict, _horse_course_dict, _horse_venue_dist_dict, _post_zone_bias
     global _jockey_dict, _trainer_dict, _hist_db_path, _SPEED_INDEX_CALC, _MEMBER_LEVEL_CACHE
     global _KEIBA_DB_PATH, _BASE_DIR, _XGB_MISSING_FEATS_WARNED, _XGB_INFERENCE_ERRORS_WARNED
+    global _SHAP_BREAKDOWN_ERRORS_WARNED
     _BASE_DIR      = base_dir
     _XGB_MISSING_FEATS_WARNED    = set()  # モデル/特徴量再ロード時に警告抑制状態をリセット
     _XGB_INFERENCE_ERRORS_WARNED = set()
+    _SHAP_BREAKDOWN_ERRORS_WARNED = set()
     _hist_db_path  = os.path.join(base_dir, 'data', 'history.db')
     _KEIBA_DB_PATH = os.path.join(base_dir, 'data', 'keiba.db')
 
@@ -2649,6 +2668,7 @@ def calc_all(race, bias_data=None):
     for h, sc, career, xfeats in horse_data:
         ability_margin = None  # 市場非依存のAI能力スコア（残差学習時のみ設定。直前オッズ取得時の
                                 # クライアント側再同期用。base_marginを含まない「純粋な木モデル出力」）
+        ability_breakdown = None  # ability_marginのカテゴリ別SHAP寄与度分解（残差学習時のみ設定）
         if use_xgb:
             try:
                 import pandas as _pd_xgb
@@ -2681,6 +2701,17 @@ def calc_all(race, bias_data=None):
                     # 引き直し、ability_marginと足し合わせて勝率を再計算できる
                     # （2026-07-26セッション：勝率とオッズの時点ずれ解消の一環）
                     ability_margin = raw_margin - _bm
+                    # ability_marginをカテゴリ別SHAP寄与度に分解する（「AIが市場と
+                    # 違う評価をした理由」の説明可能性レイヤー）。予測自体には影響
+                    # しない解釈専用の計算のため、失敗しても推論は止めない
+                    try:
+                        from src.features.shap_explain import compute_ability_breakdown
+                        ability_breakdown = compute_ability_breakdown(
+                            _XGB_FUKUSHO_MODEL, X_pred, _XGB_FEATURE_COLS, _bm
+                        )
+                    except Exception as _shap_err:
+                        _warn_shap_breakdown_failure(h.get('name', '?'), _shap_err)
+                        ability_breakdown = None
                 elif _ENSEMBLE_MODEL is not None:
                     xgb_prob = float(_XGB_FUKUSHO_MODEL.predict_proba(X_pred)[0][1])
                     lgbm_prob = float(_ENSEMBLE_MODEL['lgbm'].predict_proba(X_pred)[0][1])
@@ -2731,6 +2762,7 @@ def calc_all(race, bias_data=None):
             'pop_gap':     round(prob - market_prob, 4),
             'rating':      round(rating, 4),  # 能力値（XGB生マージン or ルールベースtotal-5）
             'ability_margin': round(ability_margin, 6) if ability_margin is not None else None,
+            'ability_breakdown': ability_breakdown,  # カテゴリ別SHAP寄与度（[{category, contrib}, ...]降順）
         })
 
     if not out:

@@ -120,6 +120,10 @@ def _build_horses_list(scored, top1, by_odds, odds_lookup=None):
             # 直前オッズ取得時にクライアント側でbase_marginを引き直し、
             # 勝率・複勝率を最新オッズと同じ時点に再同期するために使う。
             'ability_margin': h.get('ability_margin'),
+            # ability_marginのカテゴリ別SHAP寄与度（騎手/距離適性/コース適性等）。
+            # 「AIが市場と違う評価をした理由」を人間可読に説明するための項目。
+            # 非残差モデル時・SHAP計算失敗時はNone
+            'ability_breakdown': h.get('ability_breakdown'),
         }
         od = odds_lookup.get(h['num'])
         if od:
