@@ -553,6 +553,62 @@ async function fetchFreshOdds(raceKey, btn) {
   }
 }
 
+// ── 勝率・複勝率の再同期用ヘルパー（2026-07-26セッション） ──────────────
+// 直前オッズ取得ボタンは従来オッズだけを更新し、勝率(tan_pct)は予想生成時点の
+// まま据え置いていた。生成後に市場が動くと「勝率は生成時点の古い人気のまま・
+// オッズだけ新しい」という時点のずれたEVが表示される構造的な問題があった。
+// 残差学習モデルのability_margin（市場非依存のAI能力スコア）は現在の人気に
+// 依存しないため、新しい人気順位からbase_marginだけ引き直して安全に
+// 勝率を再計算できる。式はsrc/features/engine.py・src/models/predict.pyの
+// Python実装と完全に一致させること（乖離するとここが新たなバグの温床になる）。
+
+function _baseMarginFromPopularity(pop, nHorses) {
+  const n = Math.max(nHorses, 2);
+  const harm = Math.log(n) + 0.5772;
+  const pMkt = Math.max(Math.min((1.0 / Math.max(pop, 1)) / harm, 0.999), 0.001);
+  return Math.log(pMkt / (1 - pMkt));
+}
+
+function _softmaxTotals(totals, temperature) {
+  const maxT = Math.max(...totals);
+  const exps = totals.map(t => Math.exp((t - maxT) / temperature));
+  const s = exps.reduce((a, b) => a + b, 0);
+  return exps.map(e => e / s);
+}
+
+function _harvilleTop3(winProbs) {
+  const n = winProbs.length;
+  const ps = winProbs.map(p => Math.max(1e-9, p));
+  const top2 = [];
+  for (let i = 0; i < n; i++) {
+    let v = ps[i];
+    for (let j = 0; j < n; j++) {
+      if (j === i) continue;
+      const dj = 1.0 - ps[j];
+      if (dj > 1e-9) v += ps[j] * ps[i] / dj;
+    }
+    top2.push(Math.min(1.0, v));
+  }
+  if (n < 3) return top2.map(t => [t, t]);
+  const top3 = [];
+  for (let i = 0; i < n; i++) {
+    let v = top2[i];
+    for (let j = 0; j < n; j++) {
+      if (j === i) continue;
+      const dj = 1.0 - ps[j];
+      if (dj < 1e-9) continue;
+      for (let k = 0; k < n; k++) {
+        if (k === i || k === j) continue;
+        const djk = 1.0 - ps[j] - ps[k];
+        if (djk < 1e-9) continue;
+        v += ps[j] * (ps[k] / dj) * (ps[i] / djk);
+      }
+    }
+    top3.push(Math.min(1.0, v));
+  }
+  return top2.map((t2, i) => [t2, top3[i]]);
+}
+
 function updateOddsAndEV(race, freshOdds) {
   for (const h of (race.horses || [])) {
     const od = freshOdds[String(h.n)];
@@ -563,9 +619,6 @@ function updateOddsAndEV(race, freshOdds) {
     if (od && od.fukusho) {
       h.fukusho_odds = od.fukusho;
     }
-    h.ev = (h.odds && h.odds > 0 && h.tan_pct != null)
-         ? Math.round((h.tan_pct / 100) * h.odds * 1000) / 1000
-         : null;
     // 人気急上昇検出: 朝オッズ→直前オッズの下落率
     h._odds_surge = null;
     if (h._morning_odds && h._morning_odds > 0 && h.odds && h.odds > 0) {
@@ -581,6 +634,33 @@ function updateOddsAndEV(race, freshOdds) {
   const ranked = (race.horses || []).filter(h => h.odds != null && h.odds > 0);
   ranked.sort((a, b) => a.odds - b.odds);
   ranked.forEach((h, i) => { h.pop = i + 1; });
+
+  // 残差学習モデル（全馬にability_marginがある場合）のみ勝率・複勝率を再同期する。
+  // 一部の馬だけ欠けている場合はレース全体で再同期をスキップし、
+  // 従来通り（勝率は生成時点のまま・オッズだけ更新）にフォールバックする。
+  const allHorses = race.horses || [];
+  const hasAbility = allHorses.length > 0 && allHorses.every(h => h.ability_margin != null);
+  if (hasAbility) {
+    const n = allHorses.length;
+    const totals = allHorses.map(h => {
+      const pop = h.pop || n;  // オッズ欠損馬は最下位人気扱い
+      const bm = _baseMarginFromPopularity(pop, n);
+      const rawProb = 1 / (1 + Math.exp(-(h.ability_margin + bm)));
+      return rawProb * 10;
+    });
+    const winProbs = _softmaxTotals(totals, 3.5);
+    const top3s = _harvilleTop3(winProbs);
+    allHorses.forEach((h, i) => {
+      h.tan_pct  = Math.round(Math.min(60, winProbs[i] * 100) * 10) / 10;
+      h.fuku_pct = Math.round(top3s[i][1] * 100 * 10) / 10;
+    });
+  }
+
+  for (const h of allHorses) {
+    h.ev = (h.odds && h.odds > 0 && h.tan_pct != null)
+         ? Math.round((h.tan_pct / 100) * h.odds * 1000) / 1000
+         : null;
+  }
 }
 
 function updateRecFlag(race) {

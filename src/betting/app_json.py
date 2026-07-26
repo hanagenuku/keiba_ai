@@ -116,6 +116,10 @@ def _build_horses_list(scored, top1, by_odds, odds_lookup=None):
             'prob_gap': round(h.get('prob_gap', 0.0), 4),
             'cal_prob': round(h.get('cal_prob', pn), 4),
             'mark':     marks[h['num']],
+            # 市場非依存のAI能力スコア（残差学習モデル時のみ非None）。
+            # 直前オッズ取得時にクライアント側でbase_marginを引き直し、
+            # 勝率・複勝率を最新オッズと同じ時点に再同期するために使う。
+            'ability_margin': h.get('ability_margin'),
         }
         od = odds_lookup.get(h['num'])
         if od:

@@ -339,7 +339,8 @@ result = train_pace_model(BASE_DIR)
 
 | 課題 | 深刻度 | 備考 |
 |------|--------|------|
-| 残差学習モデルのbase_marginが学習時(確定人気)と推論時(発売直後の薄いオッズ由来人気)で情報の成熟度が違う | **高（新規）** | 2026-07-24⑤で発見。ユーザーからの「前日の薄いオッズを土台にするのは腑に落ちない」という指摘がきっかけ。市場KPI・乖離分析で観測されている「AIより市場の方が正確」という結果の一部は、AI手法自体の欠陥ではなく比較の土台（AIは金曜夜の薄い人気、比較対象の結果は最終確定オッズ）が不公平である可能性がある。次回モデル見直し時の最有力調査候補。詳細は本セクション末尾のセッション履歴参照 |
+| Gumbel rating温度(`DEFAULT_GUMBEL_RATING_T=2.5`)が残差モデルのスケール修正後に未検証 | **高（新規）** | 2026-07-26③で発見・記録。2重sigmoidバグ修正により`rating`（Gumbelシミュレーション入力）のスケールが本来の（より広い）log-odds幅に戻ったが、T=2.5は2026-07-06に旧（非残差）モデルのスケールを基準にフォワードデータで最適化された値で、修正後の残差モデルに対して再検証されていない。次回フォワードデータ蓄積後、Gumbel買い目のlog-loss/ECEを確認しT再校正を検討すること |
+| 残差学習モデルのbase_marginが学習時(確定人気)と推論時(発売直後の薄いオッズ由来人気)で情報の成熟度が違う | **高** | 2026-07-24⑤で発見。ユーザーからの「前日の薄いオッズを土台にするのは腑に落ちない」という指摘がきっかけ。市場KPI・乖離分析で観測されている「AIより市場の方が正確」という結果の一部は、AI手法自体の欠陥ではなく比較の土台（AIは金曜夜の薄い人気、比較対象の結果は最終確定オッズ）が不公平である可能性がある。次回モデル見直し時の最有力調査候補。詳細は本セクション末尾のセッション履歴参照 |
 | horse_history.bracket が 0% | 低（旧:中） | db.pyへの書き込みのみでどのf_*関数からも読まれておらず、現状のモデル・特徴量に影響なし。将来bracketベースの特徴量を新設する時まで対応不要 |
 | horse_history.win_odds が 0% | 低（旧:中） | 2026-07-06に代替済み。engine.pyに「win_odds0%のためpopularity(99.2%充足)を使う」との明示コメントあり。実質解消済み |
 | horse_history.body_weight が 6.5% しか埋まっていない | 低（旧:中） | build_training_data.pyがSQLで取得するのみでどのf_*関数にも渡されておらず未使用。将来馬体重ベースの特徴量を新設する時まで対応不要 |
@@ -395,7 +396,200 @@ AIが市場と異なる本命を出した25Rで市場が6倍正確だったた�
 
 ## 現在の作業状況（セッション引き継ぎ用）
 
-### 最終更新: 2026-07-26①（refresh_today()生成のlatest.jsonが実在しない翌日を表示するバグを修正）
+### 最終更新: 2026-07-26③（残差学習モデルのraw_marginが2重sigmoidになっていたバグを修正）
+
+---
+
+### 2026-07-26③：残差学習モデルのraw_marginが2重sigmoidになっていたバグを修正
+
+#### 背景
+②のability_margin（AIが市場と違う評価をした理由を騎手・距離適性等のカテゴリで
+説明するSHAP機能）を実装・検証している最中、`ability_margin + base_margin`から
+再構成した確率が、独立に計算した期待値と一致しない現象に遭遇した。掘り下げた
+結果、②自体とは別の、より根の深い既存バグを発見した。
+
+#### 🔴 発見：`raw_margin`という変数名の中身が実は既に確率で、直後にsigmoidを再適用していた
+`engine.py`の残差学習分岐（2026-07-12導入、`_XGB_RESIDUAL`分岐）:
+```python
+raw_margin = float(_XGB_FUKUSHO_MODEL.predict(_dmat)[0])   # ← 実際は確率が返る
+prob = 1 / (1 + math.exp(-raw_margin))                      # ← さらにsigmoidを適用
+```
+XGBoostの`Booster.predict()`は`output_margin=True`を指定しない限り、
+`binary:logistic`の逆リンク関数(sigmoid)を適用済みの**確率**を返す。`base_margin`を
+DMatrixに設定していてもこの既定動作は変わらない。つまり`raw_margin`という変数名
+にもかかわらず中身は既にsigmoid適用済みの確率であり、その後さらに`math.exp(-raw_margin)`
+でsigmoidをもう一度掛けていた。同一パターンが`src/tools/train_xgb.py`の残差モデル
+評価コード（val_prob計算、旧モデル比較）と、`engine.py`の未使用関数`get_xgb_rating()`
+にも存在した。
+
+実際の本番モデル（`data/xgb_fukusho_model.pkl`）で検証した数値:
+
+| base_margin | 既存コードのprob（2重sigmoid） | 本来のprob |
+|---|---|---|
+| -1.5 | 0.6969 | 0.8328 |
+| 0.0 | 0.7225 | 0.9571 |
+| +1.5 | 0.7291 | 0.9901 |
+
+base_marginを3ポイント動かしても既存コードの出力は0.70〜0.73にほぼ張り付いたまま
+だった。本来は0.83〜0.99まで動くはずの値が大きく圧縮されていた。
+
+#### 気づかれなかった理由
+- sigmoidは単調増加関数のため2重に掛けても**順位（AUC）は変わらない**→AUC評価
+  では検出不可能
+- `_XGB_CALIBRATOR`（Isotonic回帰）が有効な場合、Isotonicは順位さえ合っていれば
+  入力のスケールに関係なく正しい確率へ較正し直せるため、`cal_prob`（表示用複勝
+  確率）は較正層で結果的にある程度救われていた可能性が高い
+- ただし`rating`（`= raw_margin`、`bet_optimizer.py`のGumbelシミュレーション入力）と
+  ②で追加した`ability_margin`は較正層を経由しないため、このバグの影響を直接受ける
+
+#### 対応
+- `src/features/engine.py`: 残差学習分岐と`get_xgb_rating()`の両方で
+  `_XGB_FUKUSHO_MODEL.predict(_dmat, output_margin=True)`に修正
+- `src/tools/train_xgb.py`: 残差モデルの評価コード（新モデル・旧モデル比較の
+  両方）で同様に`output_margin=True`を追加
+- `dual_model.py`/`rating_calibration.py`/`compare_models.py`の同様の
+  `model.predict(dmat)`呼び出しも確認したが、これらは`rank:ndcg`/`rank:pairwise`
+  （ランキング目的関数、B2_ndcg/pairwiseモデル）向けで、ランキング目的関数は
+  `predict()`にsigmoid変換が無く元々正しい実装だったため対象外
+
+#### 影響範囲
+- **`cal_prob`/`win_prob`（表示用確率）**: 較正層（Isotonic）が入っていれば実害は
+  限定的だったと推測されるが未検証。次回フォワードデータで較正曲線を確認すること
+- **`rating`（Gumbelシミュレーション入力、📊EV買い目）**: 較正層を経由しないため
+  直接影響。修正によりratingのスケールが本来の（より広い）log-odds幅に戻るため、
+  `bet_optimizer.py`の`DEFAULT_GUMBEL_RATING_T = 2.5`は2026-07-06に**旧（非残差）
+  モデルのtotal-5.0スケール**を基準にフォワードデータで最適化された値であり、
+  今回のスケール修正後の残差モデルに対して再検証されていない。次回フォワード
+  データ蓄積後、Gumbel買い目のlog-loss/ECEを確認し、必要ならT再校正を検討すること
+  （**要フォローアップ**。今回は「今変えると二重補正リスク」の教訓に従い、
+  Tの値自体は変更していない）
+- `get_xgb_rating()`は本番のどこからも呼ばれていない未使用関数のため実害なし
+- モデルの学習内容自体（重み・分割点）には影響なし。あくまで推論・評価コードの
+  読み出し方のバグ
+
+#### 学習/推論パリティ
+モデル自体は変更していない。学習時の評価コード（`train_xgb.py`）と推論時の
+コード（`engine.py`）の両方で同じ修正を適用したため、パリティは保たれる。
+
+#### テスト
+`tests/test_residual_learning.py`に`TestRawMarginTrueLogOdds`を新規追加（2テスト）。
+North Starに従い、実際の`xgb.Booster`で検証：
+- `test_cal_prob_matches_independent_output_margin_prediction`: engine.pyの内部
+  実装を経由せず、テスト内で独立に`Booster.predict(dmat, output_margin=True)`を
+  呼んで得た"真の"marginから計算した確率と、`calc_all()`が返す`cal_prob`が一致
+  することを確認。②のテスト（`TestAbilityMarginExposure`）はengine.py内部の値
+  同士を比較する自己整合性チェックのため今回のバグを検出できなかった。本テストは
+  engine.pyの外側で独立に計算した期待値と比較するため、修正前のコードに対しては
+  実際に失敗することを確認済み
+- `test_cal_prob_spans_wide_range_across_popularity`: 1番人気と最下位人気で
+  `cal_prob`が十分に離れることを確認（2重sigmoidバグ再発時の圧縮を検知する
+  ガード）。修正前のコードに対しては実際に失敗することを確認済み
+
+既存の`python -m pytest tests/ -q`は359テスト通過（357+2、回帰なし）。
+
+#### 今後
+- **要フォローアップ（優先度高）**: `DEFAULT_GUMBEL_RATING_T = 2.5`の再検証
+  （上記「影響範囲」参照）
+- ②で実装したability_marginの計算式自体（`raw_margin - base_margin`）は変更
+  していない。今回の修正で`raw_margin`が正しく計算されるようになったことで、
+  ability_marginも意図通りの値になる
+
+---
+
+### 2026-07-26②：直前オッズ取得時に勝率・複勝率をability_marginで再同期する仕組みを追加
+
+#### 背景
+ユーザーから「前日の薄い市場で情報取得した時点でA・B2頭の実力馬がいて、その時点でAに
+買いが集中していたとする。その後Aの調子が悪化しBに人気が偏ってきたら、直前オッズ取得は
+オッズだけ更新するので、AIの勝率は生成時点の高いまま・オッズだけ下がった見せかけのエッジが
+出るのでは？」という指摘を受けた。実際にコードを確認したところ、`index.html`の
+`updateOddsAndEV()`は従来オッズ（`h.odds`/`h.fukusho_odds`）を更新するのみで、
+`tan_pct`（勝率）・`fuku_pct`（複勝率）は`to_app_json()`生成時点（前夜〜当日朝）の値の
+まま据え置かれていた。指摘の通り、勝率が古いまま・オッズだけ新しいという「時点がずれた
+EV」を表示し続ける構造的な問題があった。
+
+合わせて「複勝確率だけでなく1着（単勝）の予測精度自体を上げたい」という要望も受け、
+`train_xgb.py`を確認したところ`y_train = train_df['is_fukusho']`で本番モデルは
+**複勝(3着内)の二値分類器として学習**されており、単勝確率(`tan_pct`)は
+`softmax_probs(total, temperature=3.5)`というフィールド内相対化のみで導出され、
+専用の単勝学習シグナルが一切存在しないことを確認した。この単勝精度向上（ランキング
+モデル化）は大掛かりな変更でありフォワードデータ（残差モデル本番化は7/14からのみ、
+現状69〜100レース強）ではまだ判断材料が足りないため、今回は着手を見送り、
+まず即効性のある①（時点ずれ解消）のみ実装する方針でユーザーと合意した。
+
+#### 実装内容：ability_margin（市場非依存のAI能力スコア）の公開とクライアント側再同期
+残差学習モデルは`logit(p) = base_margin(人気由来) + f_AI(非市場特徴量)`という構造で、
+`base_margin`は人気順位のみから決まる（Zipf近似）。この構造を利用し、
+**`raw_margin - base_margin`（＝人気に依存しない「純粋なAI能力スコア」）を
+`ability_margin`として推論結果に追加で保持**する設計とした。
+
+- `src/features/engine.py`（`calc_all()` Pass 2、`_XGB_RESIDUAL`分岐）:
+  `ability_margin = raw_margin - _bm`を計算し、出力辞書に`'ability_margin'`を追加
+  （非残差モデル・ルールベースフォールバック時は`None`）
+- `src/betting/app_json.py`（`_build_horses_list()`）: `ability_margin`を馬ごとのJSONに追加
+- `index.html`: `_baseMarginFromPopularity()`（Zipf近似のbase_margin計算）・
+  `_softmaxTotals()`（T=3.5固定softmax）・`_harvilleTop3()`（Harville公式、
+  `calc_harville_probs()`の移植）の3つの純粋関数を新設。`updateOddsAndEV()`を、
+  レース内の全馬が`ability_margin`を持つ場合（＝残差学習モデル）にのみ、
+  直前オッズから再算出した新しい人気順位で`base_margin`を引き直し、
+  `ability_margin + 新base_margin` → softmax → Harvilleという経路で
+  `tan_pct`/`fuku_pct`/`ev`を再計算するよう変更。**1頭でも`ability_margin`が
+  欠けていれば（非残差モデル運用時等）レース全体で再同期をスキップし、
+  従来通り（勝率は生成時点のまま・オッズだけ更新）にフォールバック**する
+  安全設計とした。
+
+#### ⚠ 意図的な近似（本来のtotalとの差異、要理解）
+`engine.py`の`total`（softmaxに渡される最終スコア）は、Pass 2のXGB生シグモイド確率
+(`raw_prob*10`)だけでなく、その後に**レース内の相対順位に基づくブレンド
+（`f_relative_score`、重み10%）・ペースボーナス・エラータグ補正係数(`et_factor`)**が
+順に適用された値である。今回のクライアント側再同期は`ability_margin`（=XGB生
+シグモイド確率相当、`cal_prob`と等価）のみを人気の変化に応じて引き直しており、
+これら後段の補正（いずれも市場情報とは無関係な固定値）までは再現していない**近似**である。
+後段補正は通常小さく（相対ブレンド10%・補正係数は概ね1.0付近）、かつオッズ変化とは
+無関係な定数であるため、「時点のずれたEVを表示し続ける」という本来の問題（本セッションの
+主眼）は解消されるが、直前オッズ取得後の`tan_pct`/`fuku_pct`は完全な backend 再計算とは
+わずかに異なりうる。今後もし乖離が無視できないと分かった場合は、`f_relative_score`等の
+後段補正も含めてJS側に移植することを検討する（ただし相対ブレンドはレース内全馬の
+総入れ替えが必要でやや複雑）。
+
+#### 本来の課題（07-24⑤）との関係
+2026-07-24⑤で記録した「残差学習モデルのbase_marginが学習時(確定人気)と推論時
+(発売直後の薄い人気)で情報の成熟度が違う」という課題は、**モデルの学習構造そのもの**に
+起因する別の問題であり、今回の対応では解消していない（引き続き「残っている課題」表に
+深刻度高として残置）。今回解決したのは、その一段下流にある「一度生成した予想の勝率が、
+オッズだけ後から更新されると時点不整合を起こす」という表示・運用レイヤーの問題であり、
+両者は関連するが別物である。
+
+#### 学習/推論パリティ
+今回はモデル自体・特徴量計算ロジックには一切触れていない。`ability_margin`は既存の
+推論経路（`raw_margin`と`_bm`）から追加で1個計算するのみで、既存の`total`/`cal_prob`等の
+計算過程・値は変更していない。
+
+#### テスト
+`tests/test_residual_learning.py`に`TestAbilityMarginExposure`を新規追加（2テスト）。
+North Starに従い、実際に`xgb.Booster`を`.save_model()`で保存し`init_engine()`経由で
+ロードした本物の残差モデル環境で検証：
+- `test_ability_margin_reconstructs_cal_prob`: `ability_margin + base_margin(popularity)`
+  から`cal_prob`（キャリブレーター未ロード時は生シグモイド確率と一致）が厳密に
+  再構成できることを確認。**`total`ではなく`cal_prob`を検証対象にした**理由は
+  上記「意図的な近似」の通り、`total`は後段補正で厳密再現できないため
+- `test_ability_margin_none_without_residual_model`: 非残差モデル時に`ability_margin`が
+  `None`になることを確認
+
+また`index.html`側のJS実装は、同じ入力（`ability_margin`・人気順位）に対して
+Python参照実装と完全に同じ`totals`/`win_probs`/`top3`を返すことを、一時スクリプトで
+浮動小数点精度まで一致することを直接確認した（`node --check`によるJS構文検証も実施）。
+既存の`python -m pytest tests/ -q`は357テスト通過（355+2、回帰なし）。
+
+#### 今後
+- 単勝(1着)専用の学習シグナルを持つモデル（例: `rank:ndcg`の残差学習対応版）は
+  今回スコープ外。残差モデル本番化(7/14)からのフォワードデータがまだ少なく
+  （kpi_weekly.json・divergence_weekly.jsonとも数週分のみ）、着手は次回以降の
+  データ蓄積を待つ
+- クライアント側再同期のJS関数群（`_baseMarginFromPopularity`/`_softmaxTotals`/
+  `_harvilleTop3`）は自動テストの対象外（Node.js経由の手動クロスチェックのみ）。
+  以前から課題として残っている「index.htmlのJSテストハーネス」（2026-07-25②で
+  言及）が整備されればここも自動回帰の対象にできる
 
 ---
 
