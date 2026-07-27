@@ -250,6 +250,42 @@ class TestBoostOnlyWinSelection:
         bets = build_optimal_bets(probs, odds_map, horses, {}, base_dir=str(tmp_path))
         assert bets['win'], "マトリクス不在時は従来通り単勝を買うべき"
 
+    def test_all_boost_horses_bought_not_just_one(self, tmp_path):
+        """boost馬が複数居れば全て買う（2026-07-27⑨）。
+
+        従来はEV最大の1点のみ買っており、EV最大＝オッズが高い馬を選ぶ
+        傾向から実際に的中馬を取り逃していた（7/26の中京R4・札幌R5）。
+        ROI自体は同等だが、同じ利益率でベット数を増やす目的。
+        """
+        base = _write_divergence_weekly(tmp_path, SAMPLE_MATRIX)
+        horses = [
+            {'horse_num': 1, 'num': 1, 'name': 'A', 'rl_rank': 1, 'popularity': 1, 'win_odds': 8.0},
+            # #2,#3 とも 市場2-3人気×RL4-5 = boostセル
+            {'horse_num': 2, 'num': 2, 'name': 'B', 'rl_rank': 4, 'popularity': 2, 'win_odds': 8.0},
+            {'horse_num': 3, 'num': 3, 'name': 'C', 'rl_rank': 5, 'popularity': 3, 'win_odds': 12.0},
+        ]
+        probs, odds_map = self._probs_and_odds([1, 2, 3])
+        odds_map['win'][3] = 12.0
+        bets = build_optimal_bets(probs, odds_map, horses, {}, base_dir=base)
+        keys = sorted(b['key'] for b in bets['win'])
+        assert keys == [2, 3], (
+            f"boost馬2頭とも買うべきだが {keys} だった"
+        )
+
+    def test_legacy_mode_still_single_bet(self, tmp_path):
+        """マトリクス無効時は従来通り1点のみ（複数買いはboost限定時だけ）。"""
+        (tmp_path / 'data').mkdir()
+        horses = [
+            {'horse_num': 1, 'num': 1, 'name': 'A', 'rl_rank': 1, 'popularity': 1, 'win_odds': 8.0},
+            {'horse_num': 2, 'num': 2, 'name': 'B', 'rl_rank': 2, 'popularity': 2, 'win_odds': 8.0},
+            {'horse_num': 3, 'num': 3, 'name': 'C', 'rl_rank': 3, 'popularity': 3, 'win_odds': 8.0},
+        ]
+        probs, odds_map = self._probs_and_odds([1, 2, 3])
+        bets = build_optimal_bets(probs, odds_map, horses, {}, base_dir=str(tmp_path))
+        assert len(bets['win']) == 1, (
+            f"マトリクス無効時は1点のみのはず: {bets['win']}"
+        )
+
     def test_kill_switch_restores_legacy_win_bet(self, tmp_path, monkeypatch):
         """RANK_MATRIX_FILTER=0 で従来挙動に戻る（緊急停止）。"""
         base = _write_divergence_weekly(tmp_path, SAMPLE_MATRIX)

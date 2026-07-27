@@ -147,18 +147,26 @@ def _build_rl_ranking(horses):
 
 def _select_win(ev_list, unit, rl_ranking, mx_flags=None, mx_active=False):
     """
-    単勝: オッズに妙味がある馬を最大1点。
+    単勝: オッズに妙味がある馬を買う。
 
     人気×RL乖離マトリクスが有効な場合（mx_active=True、2026-07-27②導入）:
-        **boost馬（実測回収率120%以上のセル）に限定して買う**。
+        **boost馬（実測回収率120%以上のセル）に限定し、該当馬は全て買う**。
         boost馬が居ないレースは単勝を見送る。
         実データ検証（out-of-sample, 検証期68レース）:
           従来(RL上位3頭)      : 68点 ROI  74.3%
           boost優先+従来併用   : 68点 ROI 193.8%
-          **boost限定(本実装)  : 46点 ROI 241.1%**
+          boost限定・1レース1点 : 46点 ROI 241.1%
+          **boost限定・全頭    : 59点 ROI 254.6%**
         従来ロジックはboost馬の有無に関わらずROI 94%前後の負け筋で、
         「良いレース/悪いレース」ではなく「良い馬が居るかどうか」が
         効いていたため、居ない時は見送るのが正しいと判断した。
+
+        1点に絞らず全頭買う理由（2026-07-27⑨）:
+        ROI自体はほぼ同じ（ウォークフォワードで184.0% vs 182.8%）で
+        **効率は改善しない**。目的は規模で、同じ利益率でベット数を増やす
+        （通算 +¥5,460 → +¥6,290）。従来のEV最大1点はオッズの高い方を
+        選ぶ傾向があり、実際に7/26の中京R4・札幌R5で的中馬を取り逃していた。
+        副次的に、点数が増えることで統計的な判断（目安N=300）に早く到達する。
 
     マトリクスが無効な場合（旧環境・base_dir未指定・初回実行等）は従来挙動:
         - RL上位3頭のうちオッズ妙味がある馬(2〜30倍)をEV順で1点
@@ -186,7 +194,10 @@ def _select_win(ev_list, unit, rl_ranking, mx_flags=None, mx_active=False):
                   and WIN_MIN_ODDS <= e['odds'] <= WIN_MAX_ODDS]
 
     candidates.sort(key=lambda x: x['ev'], reverse=True)
-    return [dict(e, amount=unit) for e in candidates[:1]]
+    # マトリクス有効時は候補が既にboost馬のみに絞られているため全て買う。
+    # 無効時（従来挙動）はRL上位3頭が候補なので1点に絞る
+    limit = len(candidates) if mx_active else 1
+    return [dict(e, amount=unit) for e in candidates[:limit]]
 
 
 def _select_place(ev_list, unit, rl_ranking, mx_flags=None):
