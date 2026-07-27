@@ -379,6 +379,9 @@ def apply_odds_to_races(races, market_odds_map):
     バリュー表示・EV買い目がすべて空になる。
 
     market_odds_map に無い / tansho が None・0 の馬は既存 win_odds を保持する。
+    単勝として成立しない値（1.0倍未満）は取得失敗時のゴミ値とみなして
+    反映しない（2026-07-26に0.1〜0.2倍が45頭混入し、オッズ昇順で導出する
+    popularity が壊れた事故への対応。詳細は CLAUDE.md 2026-07-27⑦）。
 
     Args:
         races           : fetch_races_on_date が返すレースリスト
@@ -387,7 +390,10 @@ def apply_odds_to_races(races, market_odds_map):
     Returns:
         int: win_odds を更新した馬の数
     """
+    from src.features.engine import MIN_VALID_WIN_ODDS
+
     updated = 0
+    invalid = 0
     for race in races:
         om = market_odds_map.get(race.get('id')) or {}
         if not om:
@@ -398,9 +404,14 @@ def apply_odds_to_races(races, market_odds_map):
                 continue
             info = om.get(num) or om.get(int(num))
             tansho = info.get('tansho') if isinstance(info, dict) else None
-            if tansho and tansho > 0:
+            if tansho and tansho >= MIN_VALID_WIN_ODDS:
                 h['win_odds'] = float(tansho)
                 updated += 1
+            elif tansho and tansho > 0:
+                invalid += 1
+    if invalid:
+        print(f'⚠ [オッズ異常] 単勝1.0倍未満の値を{invalid}頭ぶん破棄'
+              f'（オッズ取得の部分失敗の可能性）')
     return updated
 
 

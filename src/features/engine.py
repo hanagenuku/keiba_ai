@@ -60,6 +60,46 @@ def _warn_xgb_inference_fallback(horse_name, err):
               f'ルールベーススコアへフォールバック: {err_key}')
 
 
+# 単勝オッズの理論下限。JRAの単勝は最低1.0倍（元返し）で、1.0未満は原理的に
+# 存在しない。オッズ取得が部分的に失敗した際に0.1〜0.4倍というゴミ値が
+# 混入する事例が複数回あった（2026-06-28 / 07-05 / 07-26）。
+MIN_VALID_WIN_ODDS = 1.0
+
+_INVALID_ODDS_WARNED = set()  # 一度警告した(race_id, 頭数)の組み合わせは再度出さない
+
+
+def _sanitize_win_odds(horses, race_id=''):
+    """単勝オッズとして成立しない値（1.0倍未満）を None に落とす。
+
+    オッズ昇順で `popularity` を導出しているため、0.1倍のようなゴミ値が
+    1頭でも混入すると**そのレース全体の人気順位が壊れ**、残差学習モデルの
+    base_margin（予測の出発点）が誤る。実際に2026-07-26の日曜予想では
+    420頭中45頭が0.1〜0.2倍となり、同時に183頭がオッズ欠損していた
+    （オッズ取得の部分失敗による「欠損」と「ゴミ値」の同時発生。
+    詳細は CLAUDE.md 2026-07-27⑦）。
+
+    None にすることで「オッズ不明」として扱われ、popularity 導出では
+    既存の `or 999` フォールバックにより最後尾へ回る。市場確率・EV等も
+    既存の欠損時フォールバックに乗るため、追加の分岐は不要。
+
+    Returns:
+        int: 無効化した頭数
+    """
+    bad = [h for h in horses
+           if h.get('win_odds') is not None
+           and 0 < h['win_odds'] < MIN_VALID_WIN_ODDS]
+    if not bad:
+        return 0
+    for h in bad:
+        h['win_odds'] = None
+    key = (race_id, len(bad))
+    if key not in _INVALID_ODDS_WARNED:
+        _INVALID_ODDS_WARNED.add(key)
+        print(f'⚠ [オッズ異常] {race_id or "?"}: 単勝1.0倍未満の値が{len(bad)}頭に'
+              f'混入していたため無効化（オッズ取得の部分失敗の可能性）')
+    return len(bad)
+
+
 _SHAP_BREAKDOWN_ERRORS_WARNED = set()  # 一度警告した例外の組み合わせは再度出さない
 
 
@@ -2624,6 +2664,9 @@ def calc_all(race, bias_data=None):
     # 結果ページ由来の確定人気が既に入っている馬は上書きしない。
     _horses_in = race.get('horses', [])
     if _horses_in:
+        # 人気順位を導出する前に、単勝として成立しないオッズ(1.0倍未満)を
+        # 無効化する。1頭でも残るとレース全体の人気順位＝base_marginが壊れる
+        _sanitize_win_odds(_horses_in, race.get('id', ''))
         for _rank, _h in enumerate(
                 sorted(_horses_in, key=lambda x: x.get('win_odds') or 999), 1):
             if not _h.get('popularity') or _h.get('popularity') == 99:
