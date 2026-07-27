@@ -734,6 +734,8 @@ function recalcGumbelBets(race) {
   // マトリクスが有効なレース（＝mx_flagを持つ馬が1頭でも居る）では
   // **boost馬に限定**して買い、boost馬が居なければ単勝を見送る。
   // out-of-sample検証: 従来74.3% → boost優先併用193.8% → boost限定241.1%
+  // マトリクス有効時はboost馬を**全て**買う（ROIは同等だが点数が増え、
+  // EV最大1点だと実際に的中馬を取り逃していたため。2026-07-27⑨）。
   // マトリクス未適用のデータ（旧latest.json等）では従来のRL上位3頭ロジック。
   const mxActive = sorted.some(h => h.mx_flag != null);
   const rlTop3 = sorted.slice(0, 3);
@@ -751,8 +753,7 @@ function recalcGumbelBets(race) {
     return { h, prob, odds: o, ev: Math.round(prob * o * 100) / 100 };
   }).filter(c => c.ev >= 1.0);
   winCands.sort((a, b) => b.ev - a.ev);
-  if (winCands.length > 0) {
-    const c = winCands[0];
+  for (const c of (mxActive ? winCands : winCands.slice(0, 1))) {
     result.push({
       tag: 'tan', label: '単勝',
       horse: '#' + c.h.n + ' ' + c.h.name,
