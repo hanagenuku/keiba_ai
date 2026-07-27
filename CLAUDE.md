@@ -399,7 +399,97 @@ AIが市場と異なる本命を出した25Rで市場が6倍正確だったた�
 
 ## 現在の作業状況（セッション引き継ぎ用）
 
-### 最終更新: 2026-07-27⑨（単勝を全boost馬購入に変更＋ワイドの相手選択を調査）
+### 最終更新: 2026-07-27⑩（予想の時点別記録 prediction_snapshots を追加）
+
+---
+
+### 2026-07-27⑩：予想の時点別記録（prediction_snapshots）を追加
+
+#### 背景
+「夜の手動実行で出た予想は、朝の自動refreshで書き換えられるのか」という
+質問を受けて調査した結果、**書き換えられる（無条件・全再計算）**と判明。
+7/26の実データ（夜・朝の両方がgitに残っている唯一の日）で比較すると:
+
+| | |
+|---|---|
+| 勝率が変わらなかった馬 | **22/192頭（11.5%）だけ** |
+| 勝率が1ポイント以上動いた馬 | **90頭** |
+
+例: 札幌R7 ランドスター 1.0倍→6.1倍で勝率 18.8%→12.8%。
+残差学習モデルは `オッズ→popularity→base_margin→勝率` という構造なので、
+オッズが動けば勝率も動く（設計通りの挙動）。
+
+続けて「その記録は両方取れているのか」と問われ、確認したところ**取れていな
+かった**。`race_predictions` は `(race_id, horse_num)` にUNIQUE制約があり
+`INSERT OR REPLACE` で上書きされるため、**前夜の予想はDBから完全に消える**。
+実際にこれが原因で、本セッション中に私が「オッズ異常は06-28と07-05の2日
+だけ」と誤った記録をした（⑦で訂正）。
+
+#### 🔴 設計判断：race_predictions は変更せず、別テーブルに追記する
+当初「`race_predictions` のUNIQUE制約を `(race_id, horse_num, snapshot)` に
+変更する」案を検討したが、**読み出し箇所を数えたところ11箇所**あった
+（generate_stats.py×3、error_tags.py×2、shap_diagnosis.py×2、engine.py、
+correction.py、shadow.py、db.py）。いずれも「1頭1行」を前提にしており、
+行が増えると**全ての集計が二重カウントになる**。
+
+そのため `race_predictions` は一切変更せず、`prediction_snapshots` を新設して
+そちらに時点別の記録を追記する設計にした。既存の集計コードは**1行も変更していない**。
+
+```sql
+CREATE TABLE prediction_snapshots (
+    ..., snapshot TEXT,   -- 'initial'(前夜/前日生成) | 'refresh'(当日朝)
+    UNIQUE(race_id, horse_num, snapshot)
+);
+```
+
+- `save_race_predictions(..., snapshot='initial')`: 両テーブルに書く。
+  **snapshot省略時は 'initial'** なので既存の呼び出し（friday_predict.py・
+  weekend.pyの通常経路）は変更不要
+- `refresh_today()` のみ `snapshot='refresh'` を渡す
+- 同一snapshotの再実行（--force/リトライ）は上書きされ増殖しない
+
+#### 新設: `compare_prediction_snapshots()`
+前夜と朝の予想を突合し、結果(actual_place)と付き合わせて評価する関数。
+返す情報: RL順位が変わった馬数、AI本命が入れ替わったレース数、
+**前夜の本命が勝った数 vs 朝の本命が勝った数**、差分の明細。
+
+これにより「オッズ変動を取り込んだ朝の予想の方が本当に当たるのか」を
+DBだけで検証できるようになる（従来はgit履歴を掘る必要があった）。
+
+#### 既存集計への影響：なし（実データで検証済み）
+本番keiba.dbのコピーに `init_db()` でマイグレーションを適用し、
+適用前後で集計値が完全に一致することを確認した:
+
+| 指標 | 適用前 | 適用後 |
+|---|---|---|
+| 乖離分析 総レース数 | 318 | 318 |
+| 乖離分析 総頭数 | 3,983 | 3,983 |
+| 市場KPI AI log-loss | 0.2601 | 0.2601 |
+
+#### ⚠ 過去分は復元できない
+`prediction_snapshots` は今回以降の実行から蓄積される。**7/26以前の
+「前夜の予想」は既に上書きされて失われており、復元できない**
+（`latest.json` のgit履歴からレース単位で読むことは可能だが、
+DBへの遡及投入は行っていない）。
+
+#### テスト
+`tests/test_prediction_snapshots.py` 新規8テスト。North Starに従い
+実際に `save_race_predictions()` で書き込んだ行を sqlite3 から読み出して検証:
+- 前夜(initial)と朝(refresh)の両方が併存すること（本機能の目的）
+- **`race_predictions` は従来通り1頭1行のまま**（既存集計を壊さない回帰テスト）
+- 同一snapshotの再実行で増殖しないこと
+- snapshot省略時が 'initial' であること（既存呼び出しの後方互換）
+- `compare_prediction_snapshots()` が本命の入れ替わりを検出し、
+  **どちらの時点の本命が勝ったかを集計できること**
+
+`tests/test_weekend_refresh.py` のフェイク関数を新引数に対応（2箇所）。
+`python -m pytest tests/ -q` は424テスト通過（416+8、回帰なし）。
+
+#### 次回以降にできるようになること
+8/1・8/2の週末から、前夜の予想と当日朝の予想が両方DBに残る。数週間後に
+`compare_prediction_snapshots()` を実行すれば「refreshは本当に予想を
+改善しているのか」を実測で判定できる（現状は「オッズが新しい方が
+正しいはず」という理屈ベースの推定に留まっている）。
 
 ---
 

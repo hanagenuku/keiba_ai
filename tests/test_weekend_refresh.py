@@ -62,8 +62,10 @@ def test_refresh_today_updates_latest_json_without_touching_bets_db(monkeypatch,
     monkeypatch.setattr(weekend, 'calc_all', lambda race, bias: [{'num': 1, 'name': 'テストウマ',
                                                                     'total': 5.0, 'pn': 0.5}])
     saved_predictions = []
-    monkeypatch.setattr(weekend, 'save_race_predictions',
-                        lambda race, scored, root: saved_predictions.append(race['id']))
+    monkeypatch.setattr(
+        weekend, 'save_race_predictions',
+        lambda race, scored, root, snapshot='initial':
+            saved_predictions.append((race['id'], snapshot)))
     monkeypatch.setattr(weekend, 'select_quality_races', lambda races, bias: [])
     monkeypatch.setattr(weekend, 'build_market_odds_from_races', lambda races: {})
 
@@ -87,7 +89,9 @@ def test_refresh_today_updates_latest_json_without_touching_bets_db(monkeypatch,
     jst_now = datetime(2026, 7, 26, 9, 0, tzinfo=JST)  # 日曜
     weekend.refresh_today(object(), 'dummy_hist.db', None, jst_now)
 
-    assert saved_predictions == ['r1']
+    assert saved_predictions == [('r1', 'refresh')], (
+        'refreshモードは snapshot="refresh" で保存し、前夜の予想(initial)を'
+        'prediction_snapshots 側に残すべき')
     assert captured['day_type'] == 'sunday'
     assert captured['odds_updated_count'] == 1
     assert captured['parse_failures'] == []
@@ -109,7 +113,8 @@ def test_refresh_today_infers_saturday_day_type(monkeypatch, tmp_path):
     monkeypatch.setattr(weekend, 'fetch_odds_map', lambda sess, races: {})
     monkeypatch.setattr(weekend, 'apply_odds_to_races', lambda races, mom: 0)
     monkeypatch.setattr(weekend, 'calc_all', lambda race, bias: [])
-    monkeypatch.setattr(weekend, 'save_race_predictions', lambda race, scored, root: None)
+    monkeypatch.setattr(weekend, 'save_race_predictions',
+                        lambda race, scored, root, snapshot='initial': None)
     monkeypatch.setattr(weekend, 'select_quality_races', lambda races, bias: [])
     monkeypatch.setattr(weekend, 'build_market_odds_from_races', lambda races: {})
 

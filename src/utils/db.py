@@ -125,6 +125,33 @@ def init_db(base_dir=None, db_path=None):
         );
         CREATE INDEX IF NOT EXISTS idx_rp_horse ON race_predictions(horse_name, date);
         CREATE INDEX IF NOT EXISTS idx_rp_race  ON race_predictions(race_id);
+        -- 予想の「時点別」履歴（2026-07-27⑩導入）。
+        -- race_predictions は (race_id, horse_num) にUNIQUE制約があり
+        -- INSERT OR REPLACE で上書きされるため、当日朝のrefresh実行後は
+        -- 前夜の予想が完全に消える。実際に2026-07-26のオッズ障害を
+        -- 「DBだけ見て起きていない」と誤判定する事故が起きた。
+        -- 集計側(11箇所)を壊さないよう race_predictions はそのまま残し、
+        -- 時点別の記録はこの別テーブルに追記する。
+        CREATE TABLE IF NOT EXISTS prediction_snapshots (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            date        TEXT,
+            race_id     TEXT,
+            racecourse  TEXT,
+            race_num    INTEGER,
+            horse_num   INTEGER,
+            horse_name  TEXT,
+            snapshot    TEXT,     -- 'initial'(前夜/前日生成) | 'refresh'(当日朝)
+            popularity  INTEGER,
+            tansho_odds REAL,
+            rl_rank     INTEGER,
+            win_prob    REAL,
+            cal_prob    REAL,
+            fuku_prob   REAL,
+            created_at  TEXT DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(race_id, horse_num, snapshot)
+        );
+        CREATE INDEX IF NOT EXISTS idx_ps_race ON prediction_snapshots(race_id);
+        CREATE INDEX IF NOT EXISTS idx_ps_date ON prediction_snapshots(date, snapshot);
         CREATE TABLE IF NOT EXISTS odds_snapshots (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             race_id     TEXT,
@@ -797,10 +824,22 @@ def update_bet_results(race_id, results, base_dir=None, db_path=None):
     conn.close()
 
 
-def save_race_predictions(race, scored_horses, base_dir=None, db_path=None):
-    """全レース・全馬の予測スナップショットを race_predictions に保存。
+def save_race_predictions(race, scored_horses, base_dir=None, db_path=None,
+                          snapshot='initial'):
+    """全レース・全馬の予測スナップショットを保存する。
 
     予測時（金曜/土日の予想生成後）に呼ぶ。推奨・非推奨を問わず全レース保存。
+
+    2つのテーブルに書く:
+      race_predictions    : (race_id, horse_num) UNIQUE。常に最新で上書きされる。
+                            既存の集計コード（乖離分析・市場KPI・エラータグ等
+                            11箇所）が「1頭1行」を前提にしているため構造は変えない
+      prediction_snapshots: (race_id, horse_num, snapshot) UNIQUE。時点別に併存する。
+                            当日朝のrefreshで前夜の予想が消える問題への対応
+                            （2026-07-27⑩）
+
+    Args:
+        snapshot: 'initial'（前夜/前日の通常生成）または 'refresh'（当日朝の再生成）
     """
     path = db_path or get_db_path(base_dir)
     conn = _connect(path)
@@ -808,6 +847,13 @@ def save_race_predictions(race, scored_horses, base_dir=None, db_path=None):
         _race_id = race.get('id') or race.get('race_id', '')
         _fuku = (h.get('top3_prob') if h.get('top3_prob') is not None
                  else (h.get('fuku_pct', 0) or 0) / 100.0)
+        _row = (
+            race.get('date', ''), _race_id,
+            race.get('racecourse', ''), race.get('race_num', 0),
+            h.get('horse_num', h.get('num', 0)), h.get('name', ''),
+            h.get('popularity', 99), h.get('win_odds') or h.get('odds'),
+            h.get('rl_rank', 99), h.get('win_prob', 0), h.get('cal_prob', 0), _fuku,
+        )
         conn.execute("""
             INSERT OR REPLACE INTO race_predictions
             (date, race_id, racecourse, race_num, horse_num, bracket, horse_name,
@@ -819,6 +865,17 @@ def save_race_predictions(race, scored_horses, base_dir=None, db_path=None):
             h.get('horse_num', h.get('num', 0)), h.get('bracket'), h.get('name', ''),
             h.get('popularity', 99), h.get('win_odds') or h.get('odds'),
             h.get('rl_rank', 99), h.get('win_prob', 0), h.get('cal_prob', 0), _fuku,
+        ))
+        # 時点別の履歴。同一 snapshot の再実行（--force/リトライ）は上書きし、
+        # 異なる snapshot は別行として併存させる
+        conn.execute("""
+            INSERT OR REPLACE INTO prediction_snapshots
+            (date, race_id, racecourse, race_num, horse_num, horse_name, snapshot,
+             popularity, tansho_odds, rl_rank, win_prob, cal_prob, fuku_prob)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            _row[0], _row[1], _row[2], _row[3], _row[4], _row[5], snapshot,
+            _row[6], _row[7], _row[8], _row[9], _row[10], _row[11],
         ))
     conn.commit()
     conn.close()
@@ -853,6 +910,88 @@ def update_prediction_results(all_results, base_dir=None, db_path=None):
     conn.commit()
     conn.close()
     return updated
+
+
+def compare_prediction_snapshots(base_dir=None, db_path=None, date_from=None):
+    """『前夜の予想』と『当日朝refreshの予想』を突合して差分を返す。
+
+    当日朝のrefreshは前夜の予想を上書きするため、race_predictions だけでは
+    「オッズ変動で予想がどう変わったか」「どちらが正しかったか」を後から
+    検証できない。prediction_snapshots に両時点が残るようになったため、
+    それを結果(actual_place)と突き合わせて評価する。
+
+    Returns:
+        dict: {
+          'n_horses', 'n_races',
+          'rank_changed'   : RL順位が変わった馬の数,
+          'fav_changed'    : AI本命(RL1)が入れ替わったレース数,
+          'initial_rl1_win': 前夜のRL1が勝った数,
+          'refresh_rl1_win': 朝のRL1が勝った数,
+          'rows'           : 差分が出た馬の明細（最大200件）
+        }
+        両時点が揃ったデータが無ければ None
+    """
+    path = db_path or get_db_path(base_dir)
+    conn = _connect(path)
+    conn.row_factory = sqlite3.Row
+    where = "AND i.date >= ?" if date_from else ""
+    args = (date_from,) if date_from else ()
+    rows = conn.execute(f"""
+        SELECT i.race_id, i.date, i.racecourse, i.race_num, i.horse_num, i.horse_name,
+               i.popularity ip, r.popularity rp,
+               i.tansho_odds io, r.tansho_odds ro,
+               i.rl_rank irl, r.rl_rank rrl,
+               i.win_prob iwp, r.win_prob rwp,
+               p.actual_place
+        FROM prediction_snapshots i
+        JOIN prediction_snapshots r
+          ON r.race_id = i.race_id AND r.horse_num = i.horse_num
+         AND r.snapshot = 'refresh'
+        LEFT JOIN race_predictions p
+          ON p.race_id = i.race_id AND p.horse_num = i.horse_num
+        WHERE i.snapshot = 'initial' {where}
+    """, args).fetchall()
+    conn.close()
+
+    if not rows:
+        return None
+
+    races = {}
+    rank_changed = 0
+    detail = []
+    for r in rows:
+        if r['irl'] != r['rrl']:
+            rank_changed += 1
+            if len(detail) < 200:
+                detail.append({
+                    'date': r['date'], 'racecourse': r['racecourse'],
+                    'race_num': r['race_num'], 'horse_num': r['horse_num'],
+                    'horse_name': r['horse_name'],
+                    'odds': (r['io'], r['ro']), 'pop': (r['ip'], r['rp']),
+                    'rl': (r['irl'], r['rrl']),
+                    'win_prob': (r['iwp'], r['rwp']),
+                    'actual_place': r['actual_place'],
+                })
+        g = races.setdefault(r['race_id'], {'i1': None, 'r1': None})
+        if r['irl'] == 1:
+            g['i1'] = r
+        if r['rrl'] == 1:
+            g['r1'] = r
+
+    fav_changed = sum(
+        1 for g in races.values()
+        if g['i1'] and g['r1'] and g['i1']['horse_num'] != g['r1']['horse_num'])
+    i_win = sum(1 for g in races.values()
+                if g['i1'] and g['i1']['actual_place'] == 1)
+    r_win = sum(1 for g in races.values()
+                if g['r1'] and g['r1']['actual_place'] == 1)
+
+    return {
+        'n_horses': len(rows), 'n_races': len(races),
+        'rank_changed': rank_changed, 'fav_changed': fav_changed,
+        'initial_rl1_win': i_win, 'refresh_rl1_win': r_win,
+        'rows': detail,
+    }
 
 
 def get_latest_odds_snapshot_time(db_path):
