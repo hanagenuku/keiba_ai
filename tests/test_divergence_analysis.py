@@ -125,6 +125,87 @@ class TestDivergenceAnalysis:
         assert result['disagree_count'] >= 0
 
 
+class TestRankMatrixAndRoi:
+    """人気帯×RL帯マトリクス + 厳密単勝回収率 — 2026-07-27導入。
+
+    「市場1番人気なのにRL5」「市場5番人気なのにRL1」のような順位の食い違いが
+    実際の勝率・回収率にどう出るかをセル単位で蓄積する機能の検証。
+    回収率は「バケット平均オッズ×勝率」の概算ではなく、勝ち馬の実オッズの
+    合計から厳密に計算されることを、手計算で検証可能な小さいデータで確認する。
+    """
+
+    def test_bucket_stats_include_exact_tansho_roi(self):
+        rows = _make_race('R001', '2026-07-06', '東京', winner=1)
+        rows += _make_race('R002', '2026-07-06', '東京', winner=2)
+        rows += _make_race('R003', '2026-07-06', '阪神', winner=1)
+        rows += _make_race('R004', '2026-07-06', '阪神', winner=3)
+        conn = _setup_predictions_db(rows)
+        result = calc_divergence_analysis(conn)
+        for bs in result['bucket_stats']:
+            assert 'tansho_roi' in bs
+            assert bs['tansho_roi'] >= 0
+
+    def test_tansho_roi_exact_computation(self):
+        """回収率が勝ち馬の実オッズから厳密計算されることを手計算で検証。
+
+        4レース×6頭=24頭。_make_raceの構造では
+        winner=1のレースは1番人気(odds2.5)が勝ち、winner=2のレースは
+        2番馬(odds4.0)が勝つ。全マトリクスセルの回収率合計を検算する。
+        """
+        rows = _make_race('R001', '2026-07-06', '東京', winner=1)   # 勝ち馬odds=2.5
+        rows += _make_race('R002', '2026-07-06', '東京', winner=2)  # 勝ち馬odds=4.0
+        rows += _make_race('R003', '2026-07-06', '阪神', winner=1)  # 勝ち馬odds=2.5
+        rows += _make_race('R004', '2026-07-06', '阪神', winner=3)  # 勝ち馬odds=6.0
+        conn = _setup_predictions_db(rows)
+        result = calc_divergence_analysis(conn)
+
+        # 全セルの (roi × n) の合計 = 総払戻。総投資=24頭。
+        # 総払戻 = 2.5 + 4.0 + 2.5 + 6.0 = 15.0 → 全体回収率 15/24 = 62.5%
+        matrix = result['rank_matrix']
+        assert matrix, "rank_matrixが空"
+        total_n = sum(c['count'] for c in matrix)
+        total_payout = sum(c['tansho_roi'] / 100 * c['count'] for c in matrix)
+        assert total_n == 24
+        assert abs(total_payout - 15.0) < 0.1, (
+            f"総払戻が勝ち馬実オッズ合計(15.0)と一致しない: {total_payout}"
+        )
+
+    def test_rank_matrix_cell_structure_and_bands(self):
+        rows = _make_race('R001', '2026-07-06', '東京', winner=1)
+        rows += _make_race('R002', '2026-07-06', '東京', winner=2)
+        rows += _make_race('R003', '2026-07-06', '阪神', winner=1)
+        rows += _make_race('R004', '2026-07-06', '阪神', winner=3)
+        conn = _setup_predictions_db(rows)
+        result = calc_divergence_analysis(conn)
+        valid_bands = {'1', '2-3', '4-5', '6-9', '10+'}
+        for cell in result['rank_matrix']:
+            assert set(cell.keys()) == {
+                'pop_band', 'rl_band', 'count', 'win_rate', 'top3_rate', 'tansho_roi'}
+            assert cell['pop_band'] in valid_bands
+            assert cell['rl_band'] in valid_bands
+            assert cell['count'] > 0
+
+    def test_rank_matrix_divergence_cell(self):
+        """「市場5番人気×RL1」の馬が正しいセルに入ることを確認。
+
+        ai_fav=5: 5番馬(人気5, odds10.0)がRL1になる → pop_band='4-5', rl_band='1'
+        のセルが存在し、そのレースでこの馬が勝てば回収率にodds10.0が計上される。
+        """
+        rows = _make_race('R001', '2026-07-06', '東京', ai_fav=5, winner=5)
+        rows += _make_race('R002', '2026-07-06', '東京', winner=1)
+        rows += _make_race('R003', '2026-07-06', '阪神', winner=1)
+        rows += _make_race('R004', '2026-07-06', '阪神', winner=2)
+        conn = _setup_predictions_db(rows)
+        result = calc_divergence_analysis(conn)
+        cell = next((c for c in result['rank_matrix']
+                     if c['pop_band'] == '4-5' and c['rl_band'] == '1'), None)
+        assert cell is not None, "市場4-5人気×RL1のセルが存在しない"
+        assert cell['count'] == 1
+        assert cell['win_rate'] == 100.0
+        # 5番馬のodds = 2.0 + (5-1)*2.0 = 10.0 → 1頭賭けて10.0倍払戻 = 1000%
+        assert cell['tansho_roi'] == 1000.0
+
+
 class TestOddsMovementAnalysis:
 
     def test_returns_none_without_snapshots(self):
