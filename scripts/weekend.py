@@ -237,7 +237,9 @@ def refresh_today(sess, hist_path, avg_bias, jst_now):
     for race in races:
         scored_all = calc_all(race, avg_bias)
         if scored_all:
-            save_race_predictions(race, scored_all, ROOT)
+            # snapshot='refresh': 前夜の予想(initial)を prediction_snapshots 側で
+            # 消さずに併存させる。race_predictions 側は従来通り最新で上書き
+            save_race_predictions(race, scored_all, ROOT, snapshot='refresh')
     print(f'   {len(races)}レース完了')
 
     selected = select_quality_races(races, avg_bias)
