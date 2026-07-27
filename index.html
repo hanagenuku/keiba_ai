@@ -730,9 +730,15 @@ function recalcGumbelBets(race) {
 
   const result = [];
 
-  // 単勝: RL上位3頭からオッズ妙味(2〜30倍)のある馬を1点
+  // 単勝: RL上位3頭からオッズ妙味(2〜30倍)のある馬を1点。
+  // 人気×RL乖離マトリクスのフィルタ（mx_flag、サーバ側bet_optimizer.pyと同じ規則）:
+  //   suppress馬（実測回収率50%未満のセル）は候補から除外、
+  //   boost馬（実測回収率120%以上のセル）はRL4-5でも候補に含める
   const rlTop3 = sorted.slice(0, 3);
-  const winCands = rlTop3.filter(h => {
+  const boostCands = sorted.slice(0, 5).filter(h => h.mx_flag === 'boost');
+  const winPool = [...new Set([...rlTop3, ...boostCands])];
+  const winCands = winPool.filter(h => {
+    if (h.mx_flag === 'suppress') return false;
     const o = h.tansho_odds || h.odds;
     return o >= WIN_MIN_ODDS && o <= WIN_MAX_ODDS;
   }).map(h => {
@@ -754,11 +760,13 @@ function recalcGumbelBets(race) {
     });
   }
 
-  // 複勝: RL上位5頭からRL順で最大2点
+  // 複勝: RL上位5頭からRL順で最大2点（suppress馬は除外。boost拡張は
+  // 適用しない: マトリクスの実測は単勝回収率のみで複勝は未測定のため）
   const rlTop5 = sorted.slice(0, 5);
   let placeCount = 0;
   for (const h of rlTop5) {
     if (placeCount >= 2) break;
+    if (h.mx_flag === 'suppress') continue;
     const fo = h.fukusho_odds || (h.tansho_odds ? Math.round(h.tansho_odds * 0.344 * 10) / 10 : 0);
     if (fo <= 0) continue;
     const prob = (h.fuku_pct || 0) / 100;
@@ -1318,6 +1326,16 @@ function render() {
           }
         }
 
+        // 人気×RL乖離マトリクスのセル実績バッジ:
+        // 💎 = 実測回収率120%以上のセル（買い目候補が拡張される）
+        // ▽ = 実測回収率50%未満のセル（単勝・複勝候補から除外される）
+        let mxBadge = '';
+        if (h.mx_flag === 'boost') {
+          mxBadge = '<span style="font-size:8px;margin-left:1px" title="人気×AI順位の実績マトリクスで回収率120%以上のセル（買い目候補を拡張）">💎</span>';
+        } else if (h.mx_flag === 'suppress') {
+          mxBadge = '<span style="color:#bbb;font-size:8px;margin-left:1px" title="人気×AI順位の実績マトリクスで回収率50%未満のセル（単勝・複勝候補から除外）">▽</span>';
+        }
+
         // AI評価内訳バッジ: ability_breakdown（SHAP寄与度分解）が使えるレース
         // （残差学習モデル運用時のみ）で、「AIが市場と違う評価をした理由」を
         // 上位の＋要因・－要因としてtitleツールチップに表示する
@@ -1333,7 +1351,7 @@ function render() {
           }
         }
 
-        html += '<tr'+(isH?' class="hl"':'')+'><td>'+(isH?'◎':'')+h.n+'</td><td class="col-name">'+h.name+surgeBadge+'</td><td class="col-pop">'+pop+'</td><td class="col-odds">'+odds+'</td><td>'+mkBadge(h.mark)+'</td><td class="col-rl">'+rl+gapBadge+breakdownBadge+'</td><td>'+tan+'</td><td class="'+(hi?'phi':'plo')+'">'+fuku+'</td><td class="'+valClass+'">'+valCell+'</td></tr>';
+        html += '<tr'+(isH?' class="hl"':'')+'><td>'+(isH?'◎':'')+h.n+'</td><td class="col-name">'+h.name+surgeBadge+'</td><td class="col-pop">'+pop+'</td><td class="col-odds">'+odds+'</td><td>'+mkBadge(h.mark)+'</td><td class="col-rl">'+rl+gapBadge+mxBadge+breakdownBadge+'</td><td>'+tan+'</td><td class="'+(hi?'phi':'plo')+'">'+fuku+'</td><td class="'+valClass+'">'+valCell+'</td></tr>';
       }
       html += '</table>';
       if (race.race_id) {

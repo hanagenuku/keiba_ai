@@ -82,14 +82,23 @@ def _assign_marks(scored, by_odds):
     return marks
 
 
-def _build_horses_list(scored, top1, by_odds, odds_lookup=None):
+def _build_horses_list(scored, top1, by_odds, odds_lookup=None, base_dir=None):
     """アプリ表示用の馬リストを生成する（馬番順）。
 
     本命はAI確率1位の馬。マークは _assign_marks で決定。
     Val列はEV（pn × win_odds）を使用。オッズ欠損時はNone（"-"表示）。
+    base_dir 指定時は人気×RL乖離マトリクスのセル判定（mx_flag）を馬ごとに付与
+    （クライアント側の直前オッズ再計算でも同じフィルタを適用するため）。
     """
     marks = _assign_marks(scored, by_odds)
     odds_lookup = odds_lookup or {}
+
+    _mx_classify = None
+    if base_dir is not None:
+        try:
+            from src.betting.rank_matrix_filter import classify_horse as _mx_classify
+        except Exception:
+            _mx_classify = None
 
     horses = []
     for h in scored:
@@ -124,6 +133,10 @@ def _build_horses_list(scored, top1, by_odds, odds_lookup=None):
             # 「AIが市場と違う評価をした理由」を人間可読に説明するための項目。
             # 非残差モデル時・SHAP計算失敗時はNone
             'ability_breakdown': h.get('ability_breakdown'),
+            # 人気×RL乖離マトリクスのセル判定: 'boost'（実測回収率120%以上の
+            # セル）/'suppress'（同50%未満）/None。クライアント側の
+            # 直前オッズ再計算（recalcGumbelBets）でも同じフィルタを使う
+            'mx_flag': _mx_classify(pop, h.get('rl_rank'), base_dir) if _mx_classify else None,
         }
         od = odds_lookup.get(h['num'])
         if od:
@@ -386,7 +399,7 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
                      'pattern': 'fallback', 'chaos_grade': _grade}]
 
         # ④ フォーメーション生成（_build_horses_list が _pop をセット後に実行）
-        _horses_list = _build_horses_list(scored, top1, by_odds, odds_lookup=_odds_lookup)
+        _horses_list = _build_horses_list(scored, top1, by_odds, odds_lookup=_odds_lookup, base_dir=base_dir)
         for _h in scored:
             _h['popularity'] = _h.get('_pop', 99)
         _formation = build_formation(scored, race)
@@ -514,7 +527,7 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
                       'pattern': 'fallback', 'chaos_grade': _grade2}]
 
         # ④ フォーメーション生成（_build_horses_list が _pop をセット後）
-        _horses_list2 = _build_horses_list(scored, top1, by_odds, odds_lookup=_odds_lookup2)
+        _horses_list2 = _build_horses_list(scored, top1, by_odds, odds_lookup=_odds_lookup2, base_dir=base_dir)
         for _h in scored:
             _h['popularity'] = _h.get('_pop', 99)
         _formation2 = build_formation(scored, race)

@@ -78,7 +78,7 @@ def _load_gumbel_rating_temperature(base_dir):
     return T
 
 
-def build_optimal_bets(probs, odds_map, horses, race):
+def build_optimal_bets(probs, odds_map, horses, race, base_dir=None):
     """
     RL上位馬を起点に、オッズ妙味のある買い目を生成する。
 
@@ -88,6 +88,8 @@ def build_optimal_bets(probs, odds_map, horses, race):
                {bet_type: {key: float}}
     odds_map : 推定配当 or 実オッズ（estimate_payouts_from_win_odds と同じ構造）
                {bet_type: {key: float}}
+    base_dir : プロジェクトルート（省略可）。指定時は人気×RL乖離マトリクスの
+               実績フィルタ（rank_matrix_filter）が単勝・複勝候補に適用される
     horses   : calc_all() の出力リスト（horse_num / win_odds / name / rl_rank 等）
     race     : レース辞書
 
@@ -107,11 +109,15 @@ def build_optimal_bets(probs, odds_map, horses, race):
 
     rl_ranking = _build_rl_ranking(horses)
 
+    # 人気×RL乖離マトリクスの実績に基づくフィルタ（base_dirが無ければ空=従来挙動）
+    from src.betting.rank_matrix_filter import build_flag_map
+    mx_flags = build_flag_map(horses, base_dir)
+
     UNIT = 100
 
     result = {
-        'win':      _select_win(ev_results.get('win', []), UNIT, rl_ranking),
-        'place':    _select_place(ev_results.get('place', []), UNIT, rl_ranking),
+        'win':      _select_win(ev_results.get('win', []), UNIT, rl_ranking, mx_flags),
+        'place':    _select_place(ev_results.get('place', []), UNIT, rl_ranking, mx_flags),
         'quinella': _select_quinella(ev_results.get('quinella', []), UNIT, rl_ranking),
         'trio':     _build_trio(
                         probs.get('trio', {}),
@@ -138,20 +144,31 @@ def _build_rl_ranking(horses):
     return ranking
 
 
-def _select_win(ev_list, unit, rl_ranking):
+def _select_win(ev_list, unit, rl_ranking, mx_flags=None):
     """
     単勝: RL上位3頭の中から、オッズに妙味がある馬を最大1点。
 
     - RL1が本命すぎ(2倍未満)ならスキップ → RL2-3から選ぶ
     - RL1-3のうちオッズ妙味がある馬(2〜30倍)をEV順で1点
     - 全員本命すぎ or 全員穴すぎなら買わない
+
+    人気×RL乖離マトリクスのフィルタ（mx_flags、2026-07-27導入）:
+    - suppress馬（実測回収率50%未満のセル）は候補から除外
+    - boost馬（実測回収率120%以上のセル）はRL4-5でも候補に含める
+      （従来はRL上位3頭のみが候補で、実測が最も良い「市場中位人気×RL4-5」の
+      馬は構造的に候補にすら入らなかった）
     """
+    mx_flags = mx_flags or {}
     rl_top3 = {num for num, rank in rl_ranking.items() if rank <= 3}
     if not rl_top3:
         rl_top3 = {e['key'] for e in sorted(ev_list, key=lambda x: x['prob'], reverse=True)[:3]}
 
+    boost_nums = {num for num, flag in mx_flags.items()
+                  if flag == 'boost' and rl_ranking.get(num, 99) <= 5}
+
     candidates = [e for e in ev_list
-                  if e['key'] in rl_top3
+                  if (e['key'] in rl_top3 or e['key'] in boost_nums)
+                  and mx_flags.get(e['key']) != 'suppress'
                   and e['ev'] >= MIN_EV['win']
                   and e['prob'] >= MIN_PROB['win']
                   and WIN_MIN_ODDS <= e['odds'] <= WIN_MAX_ODDS]
@@ -160,18 +177,23 @@ def _select_win(ev_list, unit, rl_ranking):
     return [dict(e, amount=unit) for e in candidates[:1]]
 
 
-def _select_place(ev_list, unit, rl_ranking):
+def _select_place(ev_list, unit, rl_ranking, mx_flags=None):
     """
     複勝: RL上位5頭からEV足切りを通る馬を最大2点。
 
     RL順で優先し、EV >= 1.0 で足切り。
+    suppress馬（人気×RLセルの実測回収率が悪い馬）は候補から除外する。
+    boost拡張は適用しない（マトリクスの実測は単勝回収率のみで、
+    複勝の回収率は未測定のため）。
     """
+    mx_flags = mx_flags or {}
     rl_top5 = {num for num, rank in rl_ranking.items() if rank <= 5}
     if not rl_top5:
         rl_top5 = {e['key'] for e in sorted(ev_list, key=lambda x: x['prob'], reverse=True)[:5]}
 
     candidates = [e for e in ev_list
                   if e['key'] in rl_top5
+                  and mx_flags.get(e['key']) != 'suppress'
                   and e['ev'] >= MIN_EV['place']
                   and e['prob'] >= MIN_PROB['place']]
 
@@ -445,5 +467,5 @@ def make_bets_v2(horses, race, base_dir, market_odds_map=None,
     odds_map = estimate_payouts_from_win_odds(win_odds, n_sims=min(n_sims, 10000))
 
     # ── 買い目生成 ─────────────────────────────────────────────────────────
-    bets = build_optimal_bets(probs, odds_map, horses, race)
+    bets = build_optimal_bets(probs, odds_map, horses, race, base_dir=base_dir)
     return bets, probs, odds_map, meta
