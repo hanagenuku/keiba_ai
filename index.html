@@ -730,13 +730,15 @@ function recalcGumbelBets(race) {
 
   const result = [];
 
-  // 単勝: RL上位3頭からオッズ妙味(2〜30倍)のある馬を1点。
-  // 人気×RL乖離マトリクスのフィルタ（mx_flag、サーバ側bet_optimizer.pyと同じ規則）:
-  //   suppress馬（実測回収率50%未満のセル）は候補から除外、
-  //   boost馬（実測回収率120%以上のセル）はRL4-5でも候補に含める
+  // 単勝: サーバ側 bet_optimizer.py の _select_win と同じ規則。
+  // マトリクスが有効なレース（＝mx_flagを持つ馬が1頭でも居る）では
+  // **boost馬に限定**して買い、boost馬が居なければ単勝を見送る。
+  // out-of-sample検証: 従来74.3% → boost優先併用193.8% → boost限定241.1%
+  // マトリクス未適用のデータ（旧latest.json等）では従来のRL上位3頭ロジック。
+  const mxActive = sorted.some(h => h.mx_flag != null);
   const rlTop3 = sorted.slice(0, 3);
   const boostCands = sorted.slice(0, 5).filter(h => h.mx_flag === 'boost');
-  const winPool = [...new Set([...rlTop3, ...boostCands])];
+  const winPool = mxActive ? boostCands : rlTop3;
   const winCands = winPool.filter(h => {
     if (h.mx_flag === 'suppress') return false;
     const o = h.tansho_odds || h.odds;
@@ -760,9 +762,12 @@ function recalcGumbelBets(race) {
     });
   }
 
-  // 複勝: RL上位5頭からRL順で最大2点（suppress馬は除外。boost拡張は
-  // 適用しない: マトリクスの実測は単勝回収率のみで複勝は未測定のため）
-  const rlTop5 = sorted.slice(0, 5);
+  // 複勝: RL上位5頭から最大2点。suppress馬は除外し、**boost馬を優先**する
+  // （実払戻データ検証: boost複勝回収率97.2% vs neutral 67.1%）。
+  // 単勝と違い100%未満のためboost限定にはせず優先順位のみ変える。
+  const rlTop5 = sorted.slice(0, 5).slice().sort((a, b) =>
+    ((a.mx_flag === 'boost' ? 0 : 1) - (b.mx_flag === 'boost' ? 0 : 1))
+    || ((a.rl_rank || 99) - (b.rl_rank || 99)));
   let placeCount = 0;
   for (const h of rlTop5) {
     if (placeCount >= 2) break;

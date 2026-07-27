@@ -110,13 +110,14 @@ def build_optimal_bets(probs, odds_map, horses, race, base_dir=None):
     rl_ranking = _build_rl_ranking(horses)
 
     # 人気×RL乖離マトリクスの実績に基づくフィルタ（base_dirが無ければ空=従来挙動）
-    from src.betting.rank_matrix_filter import build_flag_map
-    mx_flags = build_flag_map(horses, base_dir)
+    from src.betting.rank_matrix_filter import build_flag_map, is_matrix_active
+    mx_flags  = build_flag_map(horses, base_dir)
+    mx_active = is_matrix_active(base_dir)
 
     UNIT = 100
 
     result = {
-        'win':      _select_win(ev_results.get('win', []), UNIT, rl_ranking, mx_flags),
+        'win':      _select_win(ev_results.get('win', []), UNIT, rl_ranking, mx_flags, mx_active),
         'place':    _select_place(ev_results.get('place', []), UNIT, rl_ranking, mx_flags),
         'quinella': _select_quinella(ev_results.get('quinella', []), UNIT, rl_ranking),
         'trio':     _build_trio(
@@ -144,19 +145,24 @@ def _build_rl_ranking(horses):
     return ranking
 
 
-def _select_win(ev_list, unit, rl_ranking, mx_flags=None):
+def _select_win(ev_list, unit, rl_ranking, mx_flags=None, mx_active=False):
     """
-    単勝: RL上位3頭の中から、オッズに妙味がある馬を最大1点。
+    単勝: オッズに妙味がある馬を最大1点。
 
-    - RL1が本命すぎ(2倍未満)ならスキップ → RL2-3から選ぶ
-    - RL1-3のうちオッズ妙味がある馬(2〜30倍)をEV順で1点
-    - 全員本命すぎ or 全員穴すぎなら買わない
+    人気×RL乖離マトリクスが有効な場合（mx_active=True、2026-07-27②導入）:
+        **boost馬（実測回収率120%以上のセル）に限定して買う**。
+        boost馬が居ないレースは単勝を見送る。
+        実データ検証（out-of-sample, 検証期68レース）:
+          従来(RL上位3頭)      : 68点 ROI  74.3%
+          boost優先+従来併用   : 68点 ROI 193.8%
+          **boost限定(本実装)  : 46点 ROI 241.1%**
+        従来ロジックはboost馬の有無に関わらずROI 94%前後の負け筋で、
+        「良いレース/悪いレース」ではなく「良い馬が居るかどうか」が
+        効いていたため、居ない時は見送るのが正しいと判断した。
 
-    人気×RL乖離マトリクスのフィルタ（mx_flags、2026-07-27導入）:
-    - suppress馬（実測回収率50%未満のセル）は候補から除外
-    - boost馬（実測回収率120%以上のセル）はRL4-5でも候補に含める
-      （従来はRL上位3頭のみが候補で、実測が最も良い「市場中位人気×RL4-5」の
-      馬は構造的に候補にすら入らなかった）
+    マトリクスが無効な場合（旧環境・base_dir未指定・初回実行等）は従来挙動:
+        - RL上位3頭のうちオッズ妙味がある馬(2〜30倍)をEV順で1点
+        - 全員本命すぎ or 全員穴すぎなら買わない
     """
     mx_flags = mx_flags or {}
     rl_top3 = {num for num, rank in rl_ranking.items() if rank <= 3}
@@ -166,8 +172,14 @@ def _select_win(ev_list, unit, rl_ranking, mx_flags=None):
     boost_nums = {num for num, flag in mx_flags.items()
                   if flag == 'boost' and rl_ranking.get(num, 99) <= 5}
 
+    if mx_active:
+        # boost限定。該当馬が居なければ買わない（見送り）
+        pool = boost_nums
+    else:
+        pool = rl_top3
+
     candidates = [e for e in ev_list
-                  if (e['key'] in rl_top3 or e['key'] in boost_nums)
+                  if e['key'] in pool
                   and mx_flags.get(e['key']) != 'suppress'
                   and e['ev'] >= MIN_EV['win']
                   and e['prob'] >= MIN_PROB['win']
@@ -181,10 +193,15 @@ def _select_place(ev_list, unit, rl_ranking, mx_flags=None):
     """
     複勝: RL上位5頭からEV足切りを通る馬を最大2点。
 
-    RL順で優先し、EV >= 1.0 で足切り。
+    EV >= 1.0 で足切りし、**boost馬を優先**した上でRL順に選ぶ。
     suppress馬（人気×RLセルの実測回収率が悪い馬）は候補から除外する。
-    boost拡張は適用しない（マトリクスの実測は単勝回収率のみで、
-    複勝の回収率は未測定のため）。
+
+    boost優先は実際の複勝払戻データ（results.fukusho_payout）で検証済み
+    （2026-07-27②、全期間4,148頭）:
+        boost   : N= 387  複勝率 34.6%  複勝回収率 97.2%
+        neutral : N=2996  複勝率 22.3%  複勝回収率 67.1%
+    単勝と違い100%には届かないため「boost限定」にはせず、優先順位のみ変える
+    （買い目点数を維持しつつ期待値の高い方から埋める）。
     """
     mx_flags = mx_flags or {}
     rl_top5 = {num for num, rank in rl_ranking.items() if rank <= 5}
@@ -197,7 +214,9 @@ def _select_place(ev_list, unit, rl_ranking, mx_flags=None):
                   and e['ev'] >= MIN_EV['place']
                   and e['prob'] >= MIN_PROB['place']]
 
-    candidates.sort(key=lambda x: rl_ranking.get(x['key'], 99))
+    # boost馬を先頭に、その中ではRL順。以降は従来通りRL順
+    candidates.sort(key=lambda x: (0 if mx_flags.get(x['key']) == 'boost' else 1,
+                                   rl_ranking.get(x['key'], 99)))
     return [dict(e, amount=unit) for e in candidates[:2]]
 
 
