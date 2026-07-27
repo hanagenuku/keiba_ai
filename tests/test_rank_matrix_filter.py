@@ -187,3 +187,121 @@ class TestBuildOptimalBetsWithFilter:
         # RL上位3頭(1,2,3)のみが単勝候補。EV: #1=0.75(足切り), #2=1.0, #3=1.2
         assert bets['win'], "単勝買い目が生成されていない"
         assert bets['win'][0]['key'] in (1, 2, 3), "従来挙動(RL上位3頭)が保たれていない"
+
+
+class TestBoostOnlyWinSelection:
+    """単勝のboost限定化（2026-07-27②）。
+
+    out-of-sample検証で、boost馬が居ないレースの従来ピックはROI 94.8%の
+    負け筋であり、boost限定にすると241.1%（従来74.3%）になることを確認した。
+    マトリクスが有効な時のみ適用し、無効時（旧環境・base_dir未指定）は
+    従来挙動を保つ。
+    """
+
+    def _probs_and_odds(self, nums):
+        probs = {'win': {n: 0.2 for n in nums}, 'place': {n: 0.5 for n in nums}}
+        odds_map = {'win': {n: 8.0 for n in nums}, 'place': {n: 2.5 for n in nums}}
+        return probs, odds_map
+
+    def test_no_boost_horse_means_no_win_bet(self, tmp_path):
+        """マトリクス有効かつboost馬が居ないレースでは単勝を見送る。"""
+        base = _write_divergence_weekly(tmp_path, SAMPLE_MATRIX)
+        # 全馬がneutralセル（市場1人気×RL1=ROI69.2%等）になる構成
+        horses = [
+            {'horse_num': 1, 'num': 1, 'name': 'A', 'rl_rank': 1, 'popularity': 1, 'win_odds': 8.0},
+            {'horse_num': 2, 'num': 2, 'name': 'B', 'rl_rank': 2, 'popularity': 2, 'win_odds': 8.0},
+            {'horse_num': 3, 'num': 3, 'name': 'C', 'rl_rank': 3, 'popularity': 1, 'win_odds': 8.0},
+        ]
+        probs, odds_map = self._probs_and_odds([1, 2, 3])
+        bets = build_optimal_bets(probs, odds_map, horses, {}, base_dir=base)
+        # EV=0.2*8.0=1.6 と十分高いが、boost馬が居ないので買わない
+        assert bets['win'] == [], (
+            f"boost馬が居ないのに単勝を買っている: {bets['win']}"
+        )
+
+    def test_boost_horse_selected_when_present(self, tmp_path):
+        """boost馬が居ればその馬を買う（従来のRL上位馬より優先）。"""
+        base = _write_divergence_weekly(tmp_path, SAMPLE_MATRIX)
+        horses = [
+            {'horse_num': 1, 'num': 1, 'name': 'A', 'rl_rank': 1, 'popularity': 1, 'win_odds': 8.0},
+            {'horse_num': 2, 'num': 2, 'name': 'B', 'rl_rank': 2, 'popularity': 1, 'win_odds': 8.0},
+            # #3: 市場3番人気×RL4 → (2-3, 4-5) = boostセル
+            {'horse_num': 3, 'num': 3, 'name': 'C', 'rl_rank': 4, 'popularity': 3, 'win_odds': 8.0},
+        ]
+        probs, odds_map = self._probs_and_odds([1, 2, 3])
+        bets = build_optimal_bets(probs, odds_map, horses, {}, base_dir=base)
+        assert bets['win'], "boost馬が居るのに単勝が生成されていない"
+        assert bets['win'][0]['key'] == 3, (
+            f"boost馬(#3)が選ばれるべきだが {bets['win'][0]['key']} だった"
+        )
+
+    def test_matrix_missing_keeps_legacy_win_bet(self, tmp_path):
+        """マトリクスが無い環境ではboost限定を適用せず従来通り買う。
+
+        （初回実行時・旧latest.json等でマトリクスが未生成の場合に
+        単勝が一切買えなくなる事故を防ぐ）
+        """
+        (tmp_path / 'data').mkdir()   # divergence_weekly.json を置かない
+        horses = [
+            {'horse_num': 1, 'num': 1, 'name': 'A', 'rl_rank': 1, 'popularity': 1, 'win_odds': 8.0},
+            {'horse_num': 2, 'num': 2, 'name': 'B', 'rl_rank': 2, 'popularity': 2, 'win_odds': 8.0},
+        ]
+        probs, odds_map = self._probs_and_odds([1, 2])
+        bets = build_optimal_bets(probs, odds_map, horses, {}, base_dir=str(tmp_path))
+        assert bets['win'], "マトリクス不在時は従来通り単勝を買うべき"
+
+    def test_kill_switch_restores_legacy_win_bet(self, tmp_path, monkeypatch):
+        """RANK_MATRIX_FILTER=0 で従来挙動に戻る（緊急停止）。"""
+        base = _write_divergence_weekly(tmp_path, SAMPLE_MATRIX)
+        monkeypatch.setenv('RANK_MATRIX_FILTER', '0')
+        rmf.clear_cache()
+        horses = [
+            {'horse_num': 1, 'num': 1, 'name': 'A', 'rl_rank': 1, 'popularity': 1, 'win_odds': 8.0},
+            {'horse_num': 2, 'num': 2, 'name': 'B', 'rl_rank': 2, 'popularity': 2, 'win_odds': 8.0},
+        ]
+        probs, odds_map = self._probs_and_odds([1, 2])
+        bets = build_optimal_bets(probs, odds_map, horses, {}, base_dir=base)
+        assert bets['win'], "kill switch時は従来通り単勝を買うべき"
+
+
+class TestPlaceBoostPriority:
+    """複勝のboost優先（2026-07-27②）。
+
+    実際の複勝払戻データ（results.fukusho_payout, 全期間4,148頭）で
+    boost 97.2% / neutral 67.1% と確認したため、買い目点数は変えずに
+    boost馬を優先して埋める。
+    """
+
+    def test_boost_horse_prioritized_over_better_rl(self, tmp_path):
+        """RL順位が下でもboost馬が先に選ばれる。"""
+        base = _write_divergence_weekly(tmp_path, SAMPLE_MATRIX)
+        horses = [
+            # #1,#2: 市場1人気×RL1-2 → neutral（RL順では先）
+            {'horse_num': 1, 'num': 1, 'name': 'A', 'rl_rank': 1, 'popularity': 1, 'win_odds': 3.0},
+            {'horse_num': 2, 'num': 2, 'name': 'B', 'rl_rank': 2, 'popularity': 1, 'win_odds': 4.0},
+            # #3: 市場3人気×RL4 → boostセル（RL順では後）
+            {'horse_num': 3, 'num': 3, 'name': 'C', 'rl_rank': 4, 'popularity': 3, 'win_odds': 6.0},
+        ]
+        probs = {'win': {1: 0.3, 2: 0.2, 3: 0.2},
+                 'place': {1: 0.60, 2: 0.55, 3: 0.50}}
+        odds_map = {'win': {1: 3.0, 2: 4.0, 3: 6.0},
+                    'place': {1: 2.0, 2: 2.2, 3: 2.5}}
+        bets = build_optimal_bets(probs, odds_map, horses, {}, base_dir=base)
+        chosen = [b['key'] for b in bets['place']]
+        assert chosen, "複勝買い目が生成されていない"
+        assert chosen[0] == 3, (
+            f"boost馬(#3)が最優先で選ばれるべきだが {chosen} の順だった"
+        )
+
+    def test_place_order_unchanged_without_matrix(self, tmp_path):
+        """マトリクスが無ければ従来通りRL順。"""
+        (tmp_path / 'data').mkdir()
+        horses = [
+            {'horse_num': 1, 'num': 1, 'name': 'A', 'rl_rank': 1, 'popularity': 1, 'win_odds': 3.0},
+            {'horse_num': 3, 'num': 3, 'name': 'C', 'rl_rank': 4, 'popularity': 3, 'win_odds': 6.0},
+        ]
+        probs = {'win': {1: 0.3, 3: 0.2}, 'place': {1: 0.60, 3: 0.50}}
+        odds_map = {'win': {1: 3.0, 3: 6.0}, 'place': {1: 2.0, 3: 2.5}}
+        bets = build_optimal_bets(probs, odds_map, horses, {}, base_dir=str(tmp_path))
+        chosen = [b['key'] for b in bets['place']]
+        assert chosen[0] == 1, f"従来のRL順が保たれていない: {chosen}"

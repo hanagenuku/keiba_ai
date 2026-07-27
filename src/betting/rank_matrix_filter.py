@@ -112,6 +112,20 @@ def classify_horse(popularity, rl_rank, base_dir):
     return None
 
 
+def is_matrix_active(base_dir):
+    """マトリクスが実際にロードできているか（＝フィルタが機能する状態か）。
+
+    `build_flag_map` の結果が空でも「マトリクスは有るがboost/suppress該当馬が
+    そのレースに居なかった」のか「マトリクス自体が無い（旧環境・初回実行）」のか
+    を区別する必要があるため、別途この判定を提供する。
+    単勝の「boost馬がいなければ買わない」判断はマトリクスが有効な時のみ
+    適用し、無効時は従来挙動を保つ。
+    """
+    if base_dir is None or not _filter_enabled():
+        return False
+    return bool(load_rank_matrix(base_dir))
+
+
 def build_flag_map(horses, base_dir):
     """calc_all() 出力の馬リストから {horse_num: 'suppress'|'boost'} を作る。
 
