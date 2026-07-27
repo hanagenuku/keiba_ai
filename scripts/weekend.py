@@ -15,7 +15,8 @@ from src.utils.db import (init_db, get_db_path, get_history_db_path,
                            backup_db, checkpoint_db,
                            save_race_db, save_bets_db,
                            save_history_db, save_results_db, check_and_update_bets,
-                           save_race_predictions, update_prediction_results)
+                           save_race_predictions, update_prediction_results,
+                           settle_bet_simulation)
 from src.betting.make_bets import init_betting, make_bets, log_bet_simulation
 from src.betting.ev_filter import select_quality_races, build_market_odds_from_races
 from src.features.engine import calc_all
@@ -75,6 +76,20 @@ def fetch_and_save_results(sess, hist_path, target_date):
           f'ROI {chk["roi"]:.1f}%')
     for d in chk['details']:
         print(d)
+
+    # bet_simulation（全券種を買った想定の記録）の決済。
+    # 実際に買ったbetsより遥かに多いサンプルが得られ、券種別の
+    # 有効性評価に使う。失敗しても結果取得自体は止めない。
+    try:
+        sim = settle_bet_simulation(all_results, ROOT)
+        if sim['settled']:
+            print(f'【シミュ決済】 {sim["hit"]}/{sim["settled"]}的中')
+            for bt, st in sorted(sim['by_type'].items(),
+                                 key=lambda x: -x[1]['n']):
+                roi = st['payout'] / (st['n'] * 100) * 100 if st['n'] else 0
+                print(f'  {bt:<6} {st["n"]:>4}点 的中{st["hit"]:>3} ROI{roi:>7.1f}%')
+    except Exception as e:
+        print(f'⚠ bet_simulation決済失敗（結果取得には影響なし）: {e}')
 
     return all_results
 

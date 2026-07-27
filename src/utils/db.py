@@ -612,7 +612,14 @@ def check_and_update_bets(all_results, base_dir=None, db_path=None):
                     payout = int(amount * w['payout'] / 100)
                     break
         elif bet_type in ('馬連', '馬単') and h2:
-            is_hit = (h1 in top3[:2] and h2 in top3[:2])
+            # 馬連は順不同、馬単は着順まで一致して初めて的中。
+            # 2026-07-27⑤修正: 以前は両方とも `h1 in top3[:2] and h2 in top3[:2]`
+            # で判定しており、馬単で着順が逆でも的中扱いになっていた
+            top2 = top3[:2]
+            if bet_type == '馬連':
+                is_hit = (h1 in top2 and h2 in top2)
+            else:
+                is_hit = ([h1, h2] == top2)
             if is_hit:
                 key = 'umaren' if bet_type == '馬連' else 'umatan'
                 payout = int(amount * divs.get(key, {}).get('payout', 0) / 100)
@@ -640,6 +647,124 @@ def check_and_update_bets(all_results, base_dir=None, db_path=None):
     roi = recovered / invested * 100 if invested > 0 else 0
     return {'hit': hit, 'total': total, 'invested': invested,
             'recovered': recovered, 'roi': roi, 'details': details}
+
+
+def _parse_sim_horse_nums(bet_type, horse_num_str):
+    """bet_simulation.horse_num の文字列から馬番リストを取り出す。
+
+    log_bet_simulation が書き込む形式:
+        単勝/複勝 : '3'
+        ワイド/馬連: '3-8'
+        馬単      : '3->8'   （順序に意味がある）
+        三連複    : '3-8-10'
+    """
+    s = str(horse_num_str or '').strip()
+    if not s:
+        return []
+    sep = '->' if '->' in s else '-'
+    try:
+        return [int(x) for x in s.split(sep) if x.strip()]
+    except ValueError:
+        return []
+
+
+def settle_bet_simulation(all_results, base_dir=None, db_path=None):
+    """bet_simulation の未決済行(is_hit=-1)をレース結果で決済する。
+
+    log_bet_simulation は全券種を「買った想定」で記録するが、決済処理が
+    どこにも実装されておらず 2,160行が is_hit=-1 のまま放置されていた
+    （2026-07-27④で発覚）。実際に買った bets（数百点）より遥かに多い
+    サンプルが得られるため、券種別の有効性を評価するために決済する。
+
+    payout は odds_est（推定オッズ）ではなく**実際の配当**を使う。
+    推定オッズで決済すると「推定が甘い券種ほど成績が良く見える」という
+    バイアスが入るため。実配当が取得できない券種・組み合わせは
+    is_hit のみ更新し payout=0 のままにする（回収率の分母には入るが
+    分子には入らないため過大評価にならない）。
+
+    Returns:
+        dict: {settled, hit, by_type: {bet_type: {n, hit, payout}}}
+    """
+    path = db_path or get_db_path(base_dir)
+    conn = _connect(path)
+    conn.row_factory = sqlite3.Row
+
+    rows = conn.execute(
+        'SELECT id, race_id, bet_type, horse_num FROM bet_simulation WHERE is_hit=-1'
+    ).fetchall()
+
+    by_race = {r.get('race_id'): r for r in all_results if r.get('race_id')}
+    settled = hit = 0
+    by_type = {}
+
+    for row in rows:
+        result = by_race.get(row['race_id'])
+        if not result:
+            continue
+
+        fin  = result.get('finishers', [])
+        divs = result.get('dividends', {})
+        order = [h['num'] for h in fin]      # 着順どおりの馬番
+        top3  = order[:3]
+        top2  = order[:2]
+        top1  = order[0] if order else 0
+
+        nums = _parse_sim_horse_nums(row['bet_type'], row['horse_num'])
+        if not nums:
+            continue
+
+        bt = row['bet_type']
+        is_hit, payout = False, 0
+
+        if bt == '単勝':
+            if nums[0] == top1:
+                is_hit = True
+                payout = int(divs.get('tansho', {}).get('payout', 0))
+        elif bt == '複勝':
+            if nums[0] in top3:
+                is_hit = True
+                for f in divs.get('fukusho', []):
+                    if f['num'] == nums[0]:
+                        payout = int(f['payout'])
+                        break
+        elif bt == 'ワイド' and len(nums) >= 2:
+            if nums[0] in top3 and nums[1] in top3:
+                is_hit = True
+                for w in divs.get('wide', []):
+                    if set(w['nums']) == set(nums[:2]):
+                        payout = int(w['payout'])
+                        break
+        elif bt == '馬連' and len(nums) >= 2:
+            if set(nums[:2]) == set(top2):
+                is_hit = True
+                payout = int(divs.get('umaren', {}).get('payout', 0))
+        elif bt == '馬単' and len(nums) >= 2:
+            # 馬単は着順まで一致して初めて的中（順序を見る）
+            if nums[:2] == top2:
+                is_hit = True
+                payout = int(divs.get('umatan', {}).get('payout', 0))
+        elif bt == '三連複' and len(nums) >= 3:
+            if set(nums[:3]) == set(top3):
+                is_hit = True
+                payout = int(divs.get('sanrenpuku', {}).get('payout', 0))
+        else:
+            continue  # 未知の券種は触らない
+
+        conn.execute(
+            'UPDATE bet_simulation SET is_hit=?, payout=? WHERE id=?',
+            (1 if is_hit else 0, payout, row['id']),
+        )
+        settled += 1
+        if is_hit:
+            hit += 1
+        st = by_type.setdefault(bt, {'n': 0, 'hit': 0, 'payout': 0})
+        st['n'] += 1
+        st['hit'] += 1 if is_hit else 0
+        st['payout'] += payout
+
+    conn.commit()
+    conn.close()
+    return {'settled': settled, 'hit': hit, 'by_type': by_type}
 
 
 def update_bet_results(race_id, results, base_dir=None, db_path=None):
