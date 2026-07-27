@@ -186,6 +186,7 @@ def calc_divergence_analysis(conn):
                 'ai_prob': round(ai_p, 4),
                 'mkt_prob': round(mkt_p, 4),
                 'ratio': round(ratio, 3),
+                'tansho_odds': h['tansho_odds'],
                 'actual_place': h['actual_place'],
                 'won': h['actual_place'] == 1,
                 'top3': h['actual_place'] <= 3,
@@ -211,6 +212,19 @@ def calc_divergence_analysis(conn):
     for rec in records:
         buckets[_ratio_bucket(rec['ratio'])].append(rec)
 
+    def _tansho_roi(recs):
+        """全頭に単勝100円を賭けた場合の実回収率(%)。
+
+        「バケット平均オッズ×勝率」の概算はバケット内で実際に勝つ馬が
+        低オッズ側に偏る分だけ上振れするため、勝ち馬の実オッズの合計で
+        厳密に計算する（払戻 = Σ won×odds×100 / 投資 = n×100）。
+        """
+        n = len(recs)
+        if n == 0:
+            return 0.0
+        payout = sum(r['tansho_odds'] for r in recs if r['won'])
+        return round(payout / n * 100, 1)
+
     bucket_stats = []
     for bname in bucket_order:
         br = buckets.get(bname, [])
@@ -224,9 +238,50 @@ def calc_divergence_analysis(conn):
             'count': n,
             'win_rate': round(wins / n * 100, 1),
             'top3_rate': round(top3s / n * 100, 1),
+            'tansho_roi': _tansho_roi(br),
             'avg_ai_prob': round(sum(r['ai_prob'] for r in br) / n, 4),
             'avg_mkt_prob': round(sum(r['mkt_prob'] for r in br) / n, 4),
         })
+
+    # ── 人気帯×RL帯マトリクス ──────────────────────────────────────────
+    # 「市場1番人気なのにRL5」「市場5番人気なのにRL1」のような順位の食い違いが
+    # 実際の勝率・回収率にどう出るかをセル単位で蓄積する（2026-07-27導入）。
+    def _rank_band(rank):
+        if rank == 1:
+            return '1'
+        if rank <= 3:
+            return '2-3'
+        if rank <= 5:
+            return '4-5'
+        if rank <= 9:
+            return '6-9'
+        return '10+'
+
+    band_order = ['1', '2-3', '4-5', '6-9', '10+']
+    matrix_cells = defaultdict(list)
+    for rec in records:
+        pop, rl = rec['popularity'], rec['rl_rank']
+        if pop is None or rl is None or pop >= 99 or rl >= 99:
+            continue  # 順位不明の馬はマトリクスから除外
+        matrix_cells[(_rank_band(pop), _rank_band(rl))].append(rec)
+
+    rank_matrix = []
+    for pop_band in band_order:
+        for rl_band in band_order:
+            cell = matrix_cells.get((pop_band, rl_band), [])
+            if not cell:
+                continue
+            n = len(cell)
+            wins = sum(1 for r in cell if r['won'])
+            top3s = sum(1 for r in cell if r['top3'])
+            rank_matrix.append({
+                'pop_band': pop_band,
+                'rl_band': rl_band,
+                'count': n,
+                'win_rate': round(wins / n * 100, 1),
+                'top3_rate': round(top3s / n * 100, 1),
+                'tansho_roi': _tansho_roi(cell),
+            })
 
     ai_fav_wins = sum(1 for r in records if r['rl_rank'] == 1 and r['won'])
     ai_fav_total = sum(1 for r in records if r['rl_rank'] == 1)
@@ -281,6 +336,7 @@ def calc_divergence_analysis(conn):
         'total_horses': len(records),
         'total_races': len(races),
         'bucket_stats': bucket_stats,
+        'rank_matrix': rank_matrix,
         'ai_fav_win_rate': round(ai_fav_wins / ai_fav_total * 100, 1) if ai_fav_total else 0,
         'mkt_fav_win_rate': round(mkt_fav_wins / mkt_fav_total * 100, 1) if mkt_fav_total else 0,
         'agree_count': agree,

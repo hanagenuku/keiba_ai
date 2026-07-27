@@ -1841,6 +1841,42 @@ function renderStats(S) {
   }
   h += '</div>';
 
+  // ── 人気×RL乖離マトリクス（2026-07-27導入） ─────────────────────────
+  // 「市場1番人気なのにRL5」「市場5番人気なのにRL1」のような順位の食い違いが
+  // 実際の勝率・単勝回収率にどう出るかのセル別実績。回収率は勝ち馬の実オッズで
+  // 厳密計算（generate_stats.py の _tansho_roi）
+  const dv = S.divergence_analysis || {};
+  const rm = dv.rank_matrix || [];
+  h += '<div class="stat-card"><div class="stat-title">🎲 人気×AI順位 実績マトリクス（単勝回収率）</div>';
+  if (rm.length) {
+    h += `<div style="font-size:11px;color:var(--sub);margin-bottom:8px">集計対象: ${dv.total_races}レース ${dv.total_horses}頭　行=市場人気帯 / 列=AI RL帯。各セル上段=単勝回収率、下段=勝率(件数)</div>`;
+    const bands = ['1', '2-3', '4-5', '6-9', '10+'];
+    const cellMap = {};
+    for (const c of rm) cellMap[c.pop_band + '|' + c.rl_band] = c;
+    h += '<div style="overflow-x:auto"><table style="width:100%;font-size:10px;border-collapse:collapse;text-align:center">';
+    h += '<tr style="background:var(--g1);color:#fff"><th style="padding:4px">人気＼RL</th>' + bands.map(b => `<th style="padding:4px">RL${b}</th>`).join('') + '</tr>';
+    for (const pb of bands) {
+      h += `<tr><td style="padding:4px;font-weight:700;background:#f5f2ea">${pb}人気</td>`;
+      for (const rb of bands) {
+        const c = cellMap[pb + '|' + rb];
+        if (!c) { h += '<td style="padding:4px;color:#ccc">-</td>'; continue; }
+        // 回収率の色: 100%以上=緑 / 80-100=橙 / 80未満=グレー。N<30は薄字（サンプル不足）
+        const roiColor = c.tansho_roi >= 100 ? '#27ae60' : c.tansho_roi >= 80 ? '#e67e22' : '#999';
+        const thin = c.count < 30 ? 'opacity:.55' : '';
+        h += `<td style="padding:4px;border-bottom:1px solid #f0ece4;${thin}" title="市場${pb}人気×RL${rb}: ${c.count}頭 勝率${c.win_rate}% 複勝${c.top3_rate}% 単勝回収率${c.tansho_roi}%">`;
+        h += `<div style="font-weight:800;color:${roiColor}">${c.tansho_roi}%</div>`;
+        h += `<div style="color:var(--sub)">${c.win_rate}%<span style="font-size:9px">(${c.count})</span></div>`;
+        h += '</td>';
+      }
+      h += '</tr>';
+    }
+    h += '</table></div>';
+    h += '<div style="font-size:10px;color:var(--sub);margin-top:4px">薄い表示のセルはN&lt;30でサンプル不足。回収率100%超でもNが小さい間は偶然の可能性があります</div>';
+  } else {
+    h += '<div style="color:var(--sub);font-size:12px">データ蓄積中（次回の結果取得後に表示されます）</div>';
+  }
+  h += '</div>';
+
   // ── 直近レース一覧 ───────────────────────────────────────────────────
   const recent = S.recent_races || [];
   h += '<div class="stat-card"><div class="stat-title">📋 直近レース（RL vs 実着順）</div>';
