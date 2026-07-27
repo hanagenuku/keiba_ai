@@ -118,6 +118,7 @@ files = [
     'src/models/__init__.py', 'src/models/calibration.py', 'src/models/predict.py',
     'src/betting/__init__.py', 'src/betting/make_bets.py',
     'src/betting/ev_filter.py', 'src/betting/app_json.py',
+    'src/betting/rank_matrix_filter.py',
 ]
 for rel in files:
     dest = f'{BASE_DIR}/{rel}'
@@ -139,6 +140,7 @@ print('done')
 | `src/betting/make_bets.py` | calc_ev, calc_kelly, make_bets |
 | `src/betting/ev_filter.py` | ability_first_loose（EV×pnフィルタ） |
 | `src/betting/app_json.py` | to_app_json（アプリ用JSON） |
+| `src/betting/rank_matrix_filter.py` | 人気×RL乖離マトリクス実績に基づく買い目フィルタ（boost/suppress判定） |
 | `src/utils/model_registry.py` | save_version, rollback |
 | `src/scraper/jra_scraper.py` | JRAスクレイピング。Phase 1-3 対応済み |
 | `src/tools/tune_weights.py` | 重みチューニング。Phase 2-3 の新キー(rl/maturity/rotation)対応済み |
@@ -397,7 +399,115 @@ AIが市場と異なる本命を出した25Rで市場が6倍正確だったた�
 
 ## 現在の作業状況（セッション引き継ぎ用）
 
-### 最終更新: 2026-07-27②（人気×RL乖離マトリクス＋厳密単勝回収率を週次乖離分析に追加）
+### 最終更新: 2026-07-27③（人気×RL乖離マトリクス実績に基づく買い目フィルタを実装）
+
+---
+
+### 2026-07-27③：人気×RL乖離マトリクス実績に基づく買い目フィルタを実装
+
+#### 背景
+②で追加したマトリクスの**実データによる集計を、このセッション内で実施できた**
+（後述「本環境からkeiba.dbを読む方法」）。その結果に基づき、実績のあるセルへ
+買い目を寄せ、実績の悪いセルを切るフィルタを実装した。
+
+#### 🔑 本環境からLFS管理のkeiba.db実データを読む方法（重要・今後も使う）
+これまで「本環境ではkeiba.dbがLFSポインタのため分析できない」と繰り返し記録して
+きたが、**`media.githubusercontent.com/media/{owner}/{repo}/{branch}/{path}` から
+LFS実体を直接HTTP取得できる**ことが判明した（git-lfsコマンド不要）：
+```bash
+curl -sL -o /tmp/keiba.db \
+  "https://media.githubusercontent.com/media/hanagenuku/keiba_ai/main/data/keiba.db"
+```
+これにより、以降のセッションでは**ユーザーにColab実行を依頼せずとも、その場で
+本番の実データを使った分析・検証が可能**。今後「LFSだから読めない」と諦める前に
+必ずこの方法を試すこと。
+
+#### 実データによる集計結果（累積332レース、うち残差モデル期137レース）
+まず②で概算した「AI強気乖離ゾーンのROI 124%」は、**厳密計算では77.3%**だった
+（概算は「バケット平均オッズ×勝率」で、実際に勝つ馬がバケット内の低オッズ側に
+偏るぶん上振れする——②で警告した通りの結果）。全6バケットとも100%未満。
+
+さらに重要な発見として、**ユーザーの当初仮説「市場5番人気×RL1に妙味がある」は
+実データでは否定された**（市場4-5人気×RL1: N=22, 勝率9.1%, ROI 38.6%）。加えて
+残差モデル期では「RL1が市場4番人気以下」という状況自体がほぼ消滅している
+（137レース中4頭のみ）。残差学習モデルは市場を土台にするため、AIの本命は
+構造的に市場上位3人気に収束する。
+
+代わりに**中位帯の乖離セルに一貫した好成績**が見つかった（全期間318レース）：
+
+| セル | N | 勝率 | 単勝回収率 | 判定 |
+|---|---|---|---|---|
+| 市場2-3人気×RL4-5 | 123 | 23.6% | **144.9%** | BOOST |
+| 市場6-9人気×RL4-5 | 168 | 10.1% | **145.7%** | BOOST |
+| 市場6-9人気×RL2-3 | 88 | 9.1% | **130.3%** | BOOST |
+| 市場2-3人気×RL6-9 | 92 | 6.5% | 37.7% | SUPPRESS |
+| 市場4-5人気×RL10+ | 50 | 4.0% | 36.4% | SUPPRESS |
+
+**「AIが本命に推す馬」ではなく「AIが中位に評価しているが市場はもっと低く見ている馬」
+に妙味がある**という構造。従来の買い目ロジックは単勝候補をRL上位3頭に限定して
+いたため、最も実績の良い「市場中位人気×RL4-5」の馬は**構造的に候補にすら
+入らなかった**。
+
+#### 実装内容
+- `src/betting/rank_matrix_filter.py` 新規作成
+  - `divergence_weekly.json` の最新 `rank_matrix` を読み（キャッシュ付き）、
+    セル実績から `'boost'` / `'suppress'` / `None` を判定
+  - 閾値: `MIN_N=50`（これ未満は判定しない）、`SUPPRESS_ROI=50`、`BOOST_ROI=120`
+  - `_rank_band()` は `generate_stats.py` の帯定義と完全一致させること
+    （ズレると集計と適用で違うセルを見ることになる。テストで検証済み）
+  - 環境変数 `RANK_MATRIX_FILTER=0` で全体無効化（kill switch）
+- `src/betting/bet_optimizer.py`:
+  `build_optimal_bets(..., base_dir=None)` を追加（**省略時は完全に従来挙動**）。
+  `_select_win()` は suppress馬を除外し、boost馬はRL4-5でも候補に含める。
+  `_select_place()` は suppress除外のみ（複勝回収率は未測定のためboost拡張はしない）
+- `src/betting/app_json.py`: 馬ごとのJSONに `mx_flag` を追加
+- `index.html`: `recalcGumbelBets()`（直前オッズ取得後のクライアント側再計算）に
+  サーバ側と同一のフィルタ規則を実装。馬テーブルに💎(boost)/▽(suppress)バッジ追加
+
+#### ★ out-of-sample検証（最重要・この施策の根拠）
+閾値を決めたのと同じデータで評価すると楽観的になるため、**時系列で分割した
+out-of-sample検証**を実施した。学習期（〜7/19、3,166頭）だけでセルを判定し、
+検証期（7/20以降、836頭）に適用した結果：
+
+| 判定 | N | 勝率 | 単勝回収率 |
+|---|---|---|---|
+| **boost** | 64 | 21.9% | **234.7%** |
+| neutral | 599 | 8.0% | 68.4% |
+| suppress | 173 | 3.5% | 99.5% |
+
+boostの内訳は64頭中14勝、的中オッズは3.4〜25.0倍に分散しており、**最高配当3頭を
+除いてもROI 138%を維持**する（1〜2頭のまぐれ当たりではない）。学習期に判定された
+boostセルは「市場2-3人気×RL4-5」「市場6-9人気×RL2-3」「市場6-9人気×RL4-5」で、
+全期間集計で見つかったセルとほぼ一致した（期間を変えても同じセルが出る＝安定）。
+
+一方 **suppress は検証期で99.5%** と、学習期の40%前後から大きく戻った。
+suppressシグナルはboostより信頼性が低い可能性があり、継続観察が必要。
+
+#### ⚠ 既知の限界（重要）
+- 上記out-of-sample検証でも**検証期のboostはN=64**と小さい。また閾値
+  （MIN_N=50/BOOST_ROI=120）自体は全期間データを見た上で決めたため、
+  完全に独立した検証ではない（選択効果が残る）
+- `rank_matrix` は**全期間累積**のため、旧・市場コピー型モデル期（〜2026-07-14）の
+  データが混ざっている。残差モデル期のみのデータが蓄積するほど純化される
+- N=50〜168はまだ小さく、数回の的中で回収率が動く段階。ただし「中位乖離帯の
+  複数セルが揃って100%超」というパターンの一貫性は偶然にしては整っている
+- 回収率は単勝ベースの実測のみ。複勝・馬連・三連複の回収率は未測定
+- **これは意思決定層のフィルタであり、モデルの予測精度自体は変えていない**
+
+#### テスト
+`tests/test_rank_matrix_filter.py` 新規12テスト。North Starに従い
+`divergence_weekly.json` は本番と同じフォーマットで実ファイルとして書き出して検証：
+- boost/suppress/N不足/中間帯/順位不明/ファイル欠損/kill switchの各判定
+- `_rank_band()` が `generate_stats.py` の帯定義と一致すること
+- `build_optimal_bets` 統合: boost馬が単勝候補に入り選ばれること、suppress馬が
+  高EVでも単勝・複勝から除外されること、**base_dir省略時は従来挙動が保たれること**
+- `index.html` 側は `node --check` ＋ 同一入力でPython側と同じ選択結果になることを確認
+- `python -m pytest tests/ -q` は383テスト通過（371+12、回帰なし）
+
+#### 次回確認事項
+次回の予想生成（金曜/土日ワークフロー）から、アプリの馬テーブルに💎/▽バッジが
+表示され、単勝・複勝の買い目がフィルタを反映する。**💎が付いた馬が実際に
+買い目に選ばれているか**、および数週間後のROI推移を確認すること。
 
 ---
 
@@ -2429,9 +2539,19 @@ XGB予測を一切使わずルールベーススコアのみで予想が生成�
 本セッションの環境では以下が**不可能**と判明した。「残作業をやる」系の依頼を
 受けた際は、着手前にこの制約を思い出すこと。
 - `jra.go.jp`へのネットワークアクセス（プロキシポリシーで拒否）
-- `data/*.db` / 一部`.pkl`の実データ読み込み（`.gitattributes`でLFS指定されており、
-  このチェックアウトではLFSの中身が取得されず133バイト程度のポインタのみ存在）
+- ~~`data/*.db` / 一部`.pkl`の実データ読み込み~~
+  → **2026-07-27③で解決済み。下記の方法で取得可能**
 - Colabでのモデル学習・Google Driveアクセス
+
+> 🔑 **LFS管理ファイル（keiba.db/history.db等）の実データ取得方法（2026-07-27③発見）**
+> `git checkout`ではLFSポインタ（133バイト）しか得られないが、
+> `media.githubusercontent.com`からLFS実体を直接HTTP取得できる（git-lfs不要）:
+> ```bash
+> curl -sL -o /tmp/keiba.db \
+>   "https://media.githubusercontent.com/media/hanagenuku/keiba_ai/main/data/keiba.db"
+> ```
+> これにより**ユーザーにColab実行を依頼せずとも、その場で本番実データの
+> 分析・検証が可能**。「LFSだから読めない」と諦める前に必ずこの方法を試すこと。
 
 一方、`.gitattributes`で`-filter -diff -merge`によりLFS除外指定されている
 `data/horse_features.csv`（学習特徴量, 37MB）・`xgb_fukusho_model.pkl`・
