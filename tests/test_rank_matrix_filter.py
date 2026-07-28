@@ -49,10 +49,60 @@ SAMPLE_MATRIX = [
 
 
 @pytest.fixture(autouse=True)
-def _clear_cache():
+def _clear_cache(monkeypatch):
+    # 2026-07-28以降このフィルタは**デフォルトOFF**（大規模検証で否定されたため）。
+    # 以下のテスト群はフィルタ有効時の挙動を検証するものなので明示的に有効化する。
+    # デフォルトがOFFであること自体は TestDisabledByDefault で検証する。
+    monkeypatch.setenv('RANK_MATRIX_FILTER', '1')
     rmf.clear_cache()
     yield
     rmf.clear_cache()
+
+
+class TestDisabledByDefault:
+    """🔴 買い目への適用はデフォルトOFF（2026-07-28）。
+
+    大規模out-of-sample検証（約2,000レース）で否定されたため:
+      - 本番の主戦場(2-9人気)でのboost回収率 71.3%（552点）
+      - 本番のboost 2セルが両方とも崩れた
+        （市場6-9人気×RL4-5: 検証後半86.0% / 市場2-3人気×RL4-5: SUPPRESS判定）
+      - 本番で見えていた182.8%は4開催日・76点の偶然だった
+
+    誤って再有効化されないよう、デフォルトOFFを回帰テストで固定する。
+    """
+
+    def test_classify_returns_none_by_default(self, tmp_path, monkeypatch):
+        monkeypatch.delenv('RANK_MATRIX_FILTER', raising=False)
+        rmf.clear_cache()
+        base = _write_divergence_weekly(tmp_path, SAMPLE_MATRIX)
+        # 有効なら 'boost' になるセルでも None が返る
+        assert rmf.classify_horse(3, 4, base) is None
+        assert rmf.classify_horse(2, 7, base) is None
+
+    def test_matrix_not_active_by_default(self, tmp_path, monkeypatch):
+        monkeypatch.delenv('RANK_MATRIX_FILTER', raising=False)
+        rmf.clear_cache()
+        base = _write_divergence_weekly(tmp_path, SAMPLE_MATRIX)
+        assert rmf.is_matrix_active(base) is False
+
+    def test_win_selection_falls_back_to_legacy(self, tmp_path, monkeypatch):
+        """デフォルトでは従来ロジック（RL上位3頭から1点）で買う。
+
+        boost限定が効いたままだと「boost馬が居ない＝単勝を一切買わない」
+        状態が続いてしまうため、従来挙動に戻ることを確認する。
+        """
+        monkeypatch.delenv('RANK_MATRIX_FILTER', raising=False)
+        rmf.clear_cache()
+        base = _write_divergence_weekly(tmp_path, SAMPLE_MATRIX)
+        horses = [
+            {'horse_num': 1, 'num': 1, 'name': 'A', 'rl_rank': 1, 'popularity': 1, 'win_odds': 8.0},
+            {'horse_num': 2, 'num': 2, 'name': 'B', 'rl_rank': 2, 'popularity': 2, 'win_odds': 8.0},
+        ]
+        probs = {'win': {1: 0.2, 2: 0.2}, 'place': {1: 0.5, 2: 0.5}}
+        odds_map = {'win': {1: 8.0, 2: 8.0}, 'place': {1: 2.5, 2: 2.5}}
+        bets = build_optimal_bets(probs, odds_map, horses, {}, base_dir=base)
+        assert bets['win'], 'デフォルトでは従来通り単勝を買うべき'
+        assert len(bets['win']) == 1, '従来ロジックは1点のみ'
 
 
 class TestClassifyHorse:
