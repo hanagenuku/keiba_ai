@@ -81,7 +81,28 @@ def clear_cache():
 
 
 def _filter_enabled():
-    return os.environ.get('RANK_MATRIX_FILTER', '1') != '0'
+    """買い目への適用が有効か。**2026-07-28よりデフォルトOFF**。
+
+    🔴 大規模out-of-sample検証（2026-07-28、約2,000レース）でこのフィルタは
+    否定された。詳細は CLAUDE.md 2026-07-28①。要点:
+
+    - 本番の主戦場(2-9人気)でのboost回収率 **71.3%**（552点）。100%未満
+    - 本番でboost判定していた2セルが両方とも崩れた:
+        市場6-9人気×RL4-5 : 検証前半164.3% → 後半 **86.0%**
+        市場2-3人気×RL4-5 : 検証では最初から **SUPPRESS**(45.9%)
+    - 10+人気帯を除くと 84.0% → **71.3%** と悪化（本番が買わない帯が
+      数字を押し上げていただけだった）
+    - 本番で見えていた182.8%は4開催日・76点の偶然だったと判断
+
+    マトリクスの**測定機能**（generate_stats.py が stats.json /
+    divergence_weekly.json に出力する rank_matrix）は引き続き有用なので残す。
+    止めたのは**買い目への適用のみ**。
+
+    将来データが増えて再評価する場合は環境変数 RANK_MATRIX_FILTER=1 で
+    有効化できるが、**再度有効化する前に必ず大規模out-of-sample検証を
+    やり直すこと**（KEIBA_買い目フィルタ検証_v1.ipynb）。
+    """
+    return os.environ.get('RANK_MATRIX_FILTER', '0') == '1'
 
 
 def classify_horse(popularity, rl_rank, base_dir):
