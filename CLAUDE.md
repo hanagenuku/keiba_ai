@@ -66,6 +66,7 @@ JRA競馬AI予想システム。Google Colab + Google Drive で運用。
 | `KEIBA_金曜_v5_最新.ipynb` | 金曜夜（翌週レース確認・準備） |
 | `KEIBA_チューニング_v1.ipynb` | 月1〜2回：重みチューニング＋キャリブレーション |
 | `KEIBA_XGB_retrain_v5.ipynb` | XGB再学習＋残差学習モデル本番投入（セル1〜10を順に実行） |
+| `KEIBA_買い目フィルタ検証_v1.ipynb` | **買い目フィルタの大規模out-of-sample検証**（2025年末までで再学習→2026年で検証。約2,000レース規模。本番ファイルは上書きしない） |
 | `KEIBA_過去データ一括取得_v4.ipynb` | 過去データ一括取得専用（GitHubには未push・Drive管理） |
 
 > ⚠ `KEIBA_過去データ一括取得_v4.ipynb` はGitHubに含まれていない。Driveのみで管理。
