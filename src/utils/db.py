@@ -736,6 +736,19 @@ def settle_bet_simulation(all_results, base_dir=None, db_path=None):
         top2  = order[:2]
         top1  = order[0] if order else 0
 
+        # 複勝の配当対象は出走頭数で決まる
+        # （JRA: 8頭以上→3着まで / 5〜7頭→2着まで / 4頭以下→複勝の発売なし）。
+        # 7頭立ての3着馬を的中扱いにすると券種別評価が汚れるため、
+        # num_runners が渡された場合のみ厳密に判定する。
+        # 未指定の呼び出し元（fetch_results 経由の既存パス）は
+        # 従来どおり3着までとみなし、挙動を変えない。
+        n_run = result.get('num_runners')
+        if n_run:
+            fuku_n = 3 if n_run >= 8 else 2 if n_run >= 5 else 0
+        else:
+            fuku_n = 3
+        fuku_zone = order[:fuku_n]
+
         nums = _parse_sim_horse_nums(row['bet_type'], row['horse_num'])
         if not nums:
             continue
@@ -748,7 +761,7 @@ def settle_bet_simulation(all_results, base_dir=None, db_path=None):
                 is_hit = True
                 payout = int(divs.get('tansho', {}).get('payout', 0))
         elif bt == '複勝':
-            if nums[0] in top3:
+            if nums[0] in fuku_zone:
                 is_hit = True
                 for f in divs.get('fukusho', []):
                     if f['num'] == nums[0]:
@@ -792,6 +805,138 @@ def settle_bet_simulation(all_results, base_dir=None, db_path=None):
     conn.commit()
     conn.close()
     return {'settled': settled, 'hit': hit, 'by_type': by_type}
+
+
+def build_results_from_db(race_ids=None, base_dir=None, db_path=None,
+                          hist_db_path=None):
+    """DBに保存済みのレース結果から all_results 形式を再構築する。
+
+    settle_bet_simulation() は fetch_results() が返す「その回スクレイプした
+    結果」しか参照しないため、過去に蓄積された未決済 bet_simulation は
+    週次ワークフローを何度回しても決済されない（2026-07-28に発覚）。
+    ここでは keiba.db / history.db に既に入っている結果から同じ形を
+    組み立て、settle 側の判定ロジックをそのまま再利用する。
+
+    ⚠ 単勝・複勝の実配当は保存されているが、ワイド・馬連・馬単・三連複の
+    組み合わせ配当はどのテーブルにも存在しない。そのため dividends には
+    tansho / fukusho のみを載せる。settle 側は該当配当が無ければ
+    payout=0 のまま is_hit だけ確定するため、**的中率は正しく求まるが
+    回収率は算出できない**（分子に入らないだけなので過大評価にはならない）。
+
+    Args:
+        race_ids: 対象race_idの集合。Noneなら全レース。
+
+    Returns:
+        list[dict]: {'race_id', 'finishers', 'dividends', 'num_runners'}
+    """
+    main_path = db_path or (get_db_path(base_dir) if base_dir else None)
+    hist_path = hist_db_path or (get_history_db_path(base_dir) if base_dir else None)
+
+    wanted = set(race_ids) if race_ids is not None else None
+    by_race = {}
+
+    def _ingest(rows):
+        for rid, place, num, tp, fp in rows:
+            if not rid or num is None:
+                continue
+            if wanted is not None and rid not in wanted:
+                continue
+            try:
+                place = int(place or 0)
+                num = int(num)
+            except (TypeError, ValueError):
+                continue
+            if place <= 0:          # 取消・除外・失格は着順を持たない
+                continue
+            # 同一(race, horse)が複数ソースに存在する場合は先に読んだ方を採用
+            by_race.setdefault(rid, {}).setdefault(num, (place, tp or 0, fp or 0))
+
+    # history.db を優先（未決済レースの97%をカバー）、keiba.db.results で補完
+    for path, sql in (
+        (hist_path, 'SELECT race_id, place, horse_num, tansho_payout, '
+                    'fukusho_payout FROM horse_history'),
+        (main_path, 'SELECT race_id, place, horse_num, tansho_payout, '
+                    'fukusho_payout FROM results'),
+    ):
+        if not path or not os.path.exists(path):
+            continue
+        try:
+            c = _connect(path)
+            _ingest(c.execute(sql).fetchall())
+            c.close()
+        except Exception:
+            continue
+
+    results = []
+    for rid, horses in by_race.items():
+        ordered = sorted(horses.items(), key=lambda kv: kv[1][0])   # 着順昇順
+        tansho_payout = 0
+        fukusho = []
+        for num, (place, tp, fp) in ordered:
+            if place == 1 and tp:
+                tansho_payout = int(tp)
+            if fp:
+                fukusho.append({'num': num, 'payout': int(fp)})
+        divs = {}
+        if tansho_payout:
+            divs['tansho'] = {'payout': tansho_payout}
+        if fukusho:
+            divs['fukusho'] = fukusho
+        results.append({
+            'race_id':     rid,
+            'finishers':   [{'num': num} for num, _ in ordered],
+            'dividends':   divs,
+            'num_runners': len(ordered),
+        })
+    return results
+
+
+def backfill_bet_simulation(base_dir=None, db_path=None, hist_db_path=None):
+    """過去に蓄積された未決済 bet_simulation を、DB内の既存結果で決済する。
+
+    is_hit=-1 の行だけを対象にするため、何度実行しても二重計上されない。
+
+    Returns:
+        dict: settle_bet_simulation の戻り値に加えて
+              races_total / races_covered / races_missing /
+              payout_unavailable（的中したが実配当が保存されていない件数）
+    """
+    path = db_path or get_db_path(base_dir)
+    conn = _connect(path)
+    pending = [r[0] for r in conn.execute(
+        'SELECT DISTINCT race_id FROM bet_simulation WHERE is_hit=-1'
+    ).fetchall() if r[0]]
+    conn.close()
+
+    empty = {'settled': 0, 'hit': 0, 'by_type': {}, 'races_total': 0,
+             'races_covered': 0, 'races_missing': 0, 'payout_unavailable': {}}
+    if not pending:
+        return empty
+
+    results = build_results_from_db(race_ids=set(pending), base_dir=base_dir,
+                                    db_path=path, hist_db_path=hist_db_path)
+    covered = {r['race_id'] for r in results}
+    out = settle_bet_simulation(results, base_dir=base_dir, db_path=path)
+
+    # 今回決済した範囲で「的中したが実配当が無い」件数を券種別に数える
+    unavail = {}
+    if covered:
+        conn = _connect(path)
+        conn.row_factory = sqlite3.Row
+        marks = ','.join('?' * len(covered))
+        for r in conn.execute(
+            f'SELECT bet_type, COUNT(*) n FROM bet_simulation '
+            f'WHERE is_hit=1 AND payout=0 AND race_id IN ({marks}) '
+            f'GROUP BY bet_type', tuple(covered)
+        ):
+            unavail[r['bet_type']] = r['n']
+        conn.close()
+
+    out.update({'races_total': len(set(pending)),
+                'races_covered': len(covered),
+                'races_missing': len(set(pending) - covered),
+                'payout_unavailable': unavail})
+    return out
 
 
 def update_bet_results(race_id, results, base_dir=None, db_path=None):

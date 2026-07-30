@@ -42,7 +42,7 @@ def _get_history_before(conn, horse_name, before_date_str, limit=10):
         rows = conn.execute("""
             SELECT h.agari3f, h.place, h.corner_3, h.distance, h.surface,
                    h.racecourse, h.date, h.race_id, h.running_style,
-                   h.agari_rank, h.field_size, h.margin,
+                   h.agari_rank, h.margin,
                    h.finish_time, h.time_diff_sec,
                    h.body_weight, h.body_weight_diff,
                    COALESCE(h.popularity, 0)                    AS popularity,
@@ -71,10 +71,13 @@ def _get_history_before(conn, horse_name, before_date_str, limit=10):
         agari3f    = float(row['agari3f'] or 0.0)
         agari_rank = int(row['agari_rank'] or 0)
 
-        # 出走頭数: num_finishers → field_size → race内COUNT
+        # 出走頭数: num_finishers → race内COUNT
+        # field_size は実出走頭数より少ない値が入っているレースがあり
+        # (5,411R中240Rでズレ・ズレは全て過少方向)、推論側の
+        # get_history_from_db はこの列を一切SELECTせず num_finishers →
+        # race内COUNT に落とす。学習側だけが field_size を経由すると
+        # 学習/推論パリティが崩れるため、中間段を廃止して揃える。
         n_fin = int(row['num_finishers_r'] or 0)
-        if n_fin < 2:
-            n_fin = int(row['field_size'] or 0)
         if n_fin < 2:
             try:
                 r2 = conn.execute(
