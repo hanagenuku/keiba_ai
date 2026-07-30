@@ -15,6 +15,9 @@ import os
 import shutil
 from datetime import datetime
 
+# 脚質推定は推論時（jra_scraper）と同じ関数を使い、学習/推論パリティを保つ
+from src.scraper.jra_scraper import _infer_running_style
+
 
 def _parse_date(date_str):
     """'2025-01-05' と '20260426' の両形式に対応。"""
@@ -42,7 +45,8 @@ def _get_history_before(conn, horse_name, before_date_str, limit=10):
         rows = conn.execute("""
             SELECT h.agari3f, h.place, h.corner_3, h.distance, h.surface,
                    h.racecourse, h.date, h.race_id, h.running_style,
-                   h.agari_rank, h.field_size, h.margin,
+                   h.agari_rank, h.margin,
+                   COALESCE(h.corner_all, '') AS corner_all,
                    h.finish_time, h.time_diff_sec,
                    h.body_weight, h.body_weight_diff,
                    COALESCE(h.popularity, 0)                    AS popularity,
@@ -71,10 +75,13 @@ def _get_history_before(conn, horse_name, before_date_str, limit=10):
         agari3f    = float(row['agari3f'] or 0.0)
         agari_rank = int(row['agari_rank'] or 0)
 
-        # 出走頭数: num_finishers → field_size → race内COUNT
+        # 出走頭数: num_finishers → race内COUNT
+        # field_size は実出走頭数より少ない値が入っているレースがあり
+        # (5,411R中240Rでズレ・ズレは全て過少方向)、推論側の
+        # get_history_from_db はこの列を一切SELECTせず num_finishers →
+        # race内COUNT に落とす。学習側だけが field_size を経由すると
+        # 学習/推論パリティが崩れるため、中間段を廃止して揃える。
         n_fin = int(row['num_finishers_r'] or 0)
-        if n_fin < 2:
-            n_fin = int(row['field_size'] or 0)
         if n_fin < 2:
             try:
                 r2 = conn.execute(
@@ -124,6 +131,11 @@ def _get_history_before(conn, horse_name, before_date_str, limit=10):
             "surface":          row['surface'] or '芝',
             "racecourse":       row['racecourse'] or '',
             "corner_3":         row['corner_3'],
+            # calc_course_aptitude_features が3→4角の位置変動
+            # (f_corner_position_change) を出すのに使う。推論側の
+            # get_history_from_db は2026-07-23に追加済みだったが学習側が
+            # 漏れており、学習時だけ常に空＝この特徴量が定数0.0だった。
+            "corner_all":       row['corner_all'] or '',
             "margin":           float(row['margin'] or 0.0),
             # 市場評価（f_pop_last / f_pop_avg / f_beat_market_rate 用）
             "popularity":       int(row['popularity'] or 0),
@@ -237,7 +249,11 @@ def build_training_data(base_dir, output_csv='data/horse_features.csv',
             'racecourse':      rc,
             'distance':        int(race_row['distance'] or 1600),
             'surface':         surf,
-            'first_3f':        float(race_row['first_3f'] or 0.0),
+            # ⚠ 当該レースの first_3f は「レースが終わって初めて分かる値」。
+            # ここに実測値を入れると f_early_speed が結果由来になり、
+            # 推論時（出馬表には first_3f が存在せず 36.0 固定）と食い違う。
+            # 学習/推論パリティを守るため推論時と同じ既定値に倒す。
+            'first_3f':        0.0,
             'race_class':      race_row['race_class'] or '1勝',
             'race_name':       race_row['race_name'] or '',
             'track_condition': race_row['track_condition'] or '良',
@@ -254,7 +270,11 @@ def build_training_data(base_dir, output_csv='data/horse_features.csv',
                 'name':         hdb['horse_name'],
                 'horse_num':    int(hdb['horse_num'] or 1),
                 'place':        int(hdb['place'] or 99),
-                'running_style':hdb['running_style'] or '差し',
+                # ⚠ 当該レースの running_style は結果（コーナー通過順）から
+                # 導出される値であり、レース前には存在しない。推論時は
+                # _infer_running_style() が過去走から推定するため、
+                # ここでは仮置きし、過去走取得後に同じ関数で埋め直す。
+                'running_style': '差し',
                 'agari3f':      hdb['agari3f'],
                 'jockey':       hdb['jockey'] or '',
                 'trainer':      hdb['trainer'] or '',
@@ -282,6 +302,13 @@ def build_training_data(base_dir, output_csv='data/horse_features.csv',
         # 各馬の過去走を「このレースの日付より前」で取得
         for h in horse_objs:
             h['history'] = _get_history_before(conn, h['name'], date_str, limit=10)
+
+        # 脚質は過去走から推定する（推論時と同一の関数・同一の入力）。
+        # 当該レースの実測脚質を使うと結果由来の情報が学習に混入し、
+        # 推論時（出馬表に脚質は無く常に推定）と分布がずれる。
+        for h in horse_objs:
+            h['running_style'] = _infer_running_style(
+                h['name'], h['history'], h.get('horse_num'))
 
         # 絶対特徴量を計算
         all_xfeats = []

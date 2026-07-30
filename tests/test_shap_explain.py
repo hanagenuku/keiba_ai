@@ -20,12 +20,16 @@ class TestFeatureCategoryMapCoverage:
         壊れないが、新特徴量追加時にカテゴリ分類が漏れたまま気づかれないのを
         防ぐための早期警告テスト。
         """
-        from src.features.shap_explain import FEATURE_CATEGORY_MAP
+        from src.features.shap_explain import (FEATURE_CATEGORY_MAP,
+                                                REMOVED_FEATURE_COLS)
 
         with open('data/xgb_feature_cols.json') as f:
             cols = json.load(f)['feature_cols']
 
-        missing = [c for c in cols if c not in FEATURE_CATEGORY_MAP]
+        # 意図的に廃止した列は対象外（旧モデルのJSONにはまだ残っている）
+        missing = [c for c in cols
+                   if c not in FEATURE_CATEGORY_MAP
+                   and c not in REMOVED_FEATURE_COLS]
         assert not missing, (
             f"本番特徴量{len(missing)}列がFEATURE_CATEGORY_MAPに未登録（'その他'に"
             f"フォールバックする）: {missing}。src/features/shap_explain.pyの"

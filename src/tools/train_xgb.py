@@ -18,6 +18,7 @@ import json
 import math
 import pickle
 import shutil
+import sqlite3
 
 
 # 除外する列（ラベル・識別子・リーク情報）
@@ -27,6 +28,81 @@ _EXCLUDE_COLS = {'race_id', 'date', 'horse_name', 'horse_num', 'place', 'is_fuku
 _MARKET_FEAT_COLS = {'f_popularity'}
 
 _CLIP_PROB = 0.001
+
+
+def load_popularity_drift(base_dir):
+    """「予想生成時点の人気 − 確定人気」の実測ドリフト分布を作る。
+
+    学習データの popularity は結果ページ由来の**確定人気**だが、本番の推論時に
+    渡されるのは予想生成時点（朝〜前夜）の薄いオッズから導いた人気であり、
+    情報の成熟度が違う。実測すると平均1.51位ずれ、順位が変わらない馬は34.5%
+    しかない。この状態で確定人気を前提に学習すると、本番では base_margin が
+    学習時より劣化した状態で渡される（＝学習/推論パリティ違反）。
+
+    keiba.db の race_predictions（朝オッズ）と odds_snapshots（直前オッズ）を
+    突き合わせ、確定人気ごとの「朝人気とのズレ」の経験分布を返す。
+
+    Returns:
+        dict {確定人気: np.ndarray(ズレの標本)} / データ不足なら None
+    """
+    import numpy as np
+    from collections import defaultdict
+
+    db = os.path.join(base_dir, 'data', 'keiba.db')
+    if not os.path.exists(db):
+        return None
+    try:
+        conn = sqlite3.connect(db)
+        rows = conn.execute("""
+            SELECT p.race_id, p.horse_num, p.tansho_odds, s.tansho
+            FROM race_predictions p
+            JOIN (SELECT race_id, horse_num, tansho, MAX(captured_at)
+                  FROM odds_snapshots WHERE tansho >= 1.0
+                  GROUP BY race_id, horse_num) s
+              ON s.race_id = p.race_id AND s.horse_num = p.horse_num
+            WHERE p.tansho_odds >= 1.0
+        """).fetchall()
+        conn.close()
+    except Exception:
+        return None
+
+    by_race = defaultdict(list)
+    for rid, hn, morn, late in rows:
+        by_race[rid].append((hn, morn, late))
+
+    pairs = []
+    for hs in by_race.values():
+        if len(hs) < 8:
+            continue
+        morn_rank = {h[0]: i for i, h in enumerate(sorted(hs, key=lambda x: x[1]), 1)}
+        late_rank = {h[0]: i for i, h in enumerate(sorted(hs, key=lambda x: x[2]), 1)}
+        for h in hs:
+            pairs.append((late_rank[h[0]], morn_rank[h[0]] - late_rank[h[0]]))
+
+    if len(pairs) < 500:          # 標本が薄いうちはノイズ注入しない
+        return None
+    arr = np.array(pairs)
+    drift = {int(p): arr[arr[:, 0] == p][:, 1]
+             for p in np.unique(arr[:, 0]) if (arr[:, 0] == p).sum() >= 30}
+    drift['_all'] = arr[:, 1]
+    return drift
+
+
+def _apply_popularity_drift(pop_series, race_ids, drift, seed=0):
+    """確定人気に実測ドリフトを注入し「予想生成時点の人気」を再現する。
+
+    レース内で再ランク付けするため、出力は必ず 1..N の正しい順列になる。
+    """
+    import numpy as np
+    import pandas as pd
+
+    rng = np.random.default_rng(seed)
+    pop = pop_series.values.astype(float)
+    fallback = drift['_all']
+    jitter = np.array([rng.choice(drift.get(int(p), fallback)) for p in pop])
+    key = pop + jitter + rng.normal(0, 0.01, len(pop))   # 同値解消
+    tmp = pd.DataFrame({'r': np.asarray(race_ids), 'k': key})
+    return tmp.groupby('r')['k'].rank(method='first').values
 
 
 def _popularity_to_base_margin(pop_series, n_horses_series):
@@ -62,7 +138,8 @@ def train_xgb(base_dir,
               reg_lambda=1.0,
               early_stopping_rounds=50,
               use_optuna=False,
-              residual=False):
+              residual=False,
+              simulate_serving_popularity=True):
     """
     Parameters
     ----------
@@ -158,9 +235,29 @@ def train_xgb(base_dir,
         train_pop = train_df[pop_col].fillna(train_df['_n_horses'] / 2)
         val_pop   = val_df[pop_col].fillna(val_df['_n_horses'] / 2)
 
+        # ── 学習/推論パリティ: 確定人気を「予想生成時点の人気」に劣化させる ──
+        # CSVの popularity は結果ページ由来の確定人気だが、本番の推論時に渡る
+        # のは朝〜前夜の薄いオッズ由来の人気（平均1.51位ズレ・不変は34.5%）。
+        # 確定人気のまま学習すると、本番でだけ base_margin が劣化して届く。
+        # 実測ドリフトを注入して学習側の情報量を推論側に揃える。
+        # データが足りない環境では None が返り、従来どおりの挙動になる。
+        drift_applied = False
+        if simulate_serving_popularity:
+            drift = load_popularity_drift(base_dir)
+            if drift is not None:
+                train_pop = pd.Series(_apply_popularity_drift(
+                    train_pop, train_df['race_id'].values, drift, seed=11))
+                val_pop = pd.Series(_apply_popularity_drift(
+                    val_pop, val_df['race_id'].values, drift, seed=12))
+                drift_applied = True
+                print('  base_margin: 実測ドリフトを注入し推論時の情報量に合わせた')
+            else:
+                print('  base_margin: ドリフト標本が不足のため注入せず（従来動作）')
+
         bm_train = _popularity_to_base_margin(train_pop, train_df['_n_horses'])
         bm_val   = _popularity_to_base_margin(val_pop, val_df['_n_horses'])
-        print(f'  base_margin: train mean={bm_train.mean():.3f}, val mean={bm_val.mean():.3f}')
+        print(f'  base_margin: train mean={bm_train.mean():.3f}, val mean={bm_val.mean():.3f}'
+              f'  (drift={"ON" if drift_applied else "OFF"})')
 
     # ── scale_pos_weight: 複勝率の逆数 ──────────────────────────────────
     pos_rate = y_train.mean()

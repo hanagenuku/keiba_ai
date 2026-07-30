@@ -835,6 +835,41 @@ def test_extract_weather_pace_still_matches_old_single_letter():
     assert pace == 'M'
 
 
+class TestPaceLabelDiagnostic:
+    """ペース判定が取れないときの診断ログ（2026-07-28導入）。
+
+    race_history.pace_label は5,411レース全てNULL。単語表記対応を入れた後
+    （2026-07-25・07-26）も0件のままで、関数自体は上のテストどおり
+    正しく拾えるため、取得元ページに文字列が無い可能性が高い。
+    実HTMLを確認できないので決め打ち修正はせず、次回実行で
+    どちらなのかを判別できる情報を残す。
+    """
+
+    def _run(self, capsys, text):
+        jra_scraper._PACE_LABEL_DIAG_DONE = False
+        jra_scraper.diag_pace_label_missing(text)
+        return capsys.readouterr().out
+
+    def test_reports_when_word_absent(self, capsys):
+        """「ペース」の文字自体が無い＝取得元にその情報が無いケース。"""
+        out = self._run(capsys, '天候:晴 ハロンタイム 12.1-11.2 上り 3F 34.5')
+        assert 'ペース' in out and '存在しない' in out
+
+    def test_reports_surrounding_text_when_word_present(self, capsys):
+        """「ペース」はあるが表記が違うケース。周辺文字列を出して次の手がかりにする。"""
+        out = self._run(capsys, 'レース情報 天候:晴 テンのペースは平均的 上り3F 34.5')
+        assert 'テンのペースは平均的' in out
+
+    def test_logs_only_once_per_run(self, capsys):
+        """1レースごとに出すとログが溢れるため実行あたり1回に抑える。"""
+        jra_scraper._PACE_LABEL_DIAG_DONE = False
+        jra_scraper.diag_pace_label_missing('ペースあり')
+        first = capsys.readouterr().out
+        jra_scraper.diag_pace_label_missing('ペースあり')
+        second = capsys.readouterr().out
+        assert first.strip() and not second.strip()
+
+
 def test_extract_corner_passage_captures_grouping_notation():
     """実機(sp.jra.jp)で確認した同着グルーピング表記を生テキストのまま抽出する。"""
     soup = _make_soup(

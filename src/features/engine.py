@@ -132,6 +132,10 @@ _W                 = {
     'weight':   0.00,
     'rotation': 0.05,   # Phase 3: 前走メンバーレベル・ローテーション
 }
+# init_engine は pkl も引数も無い場合にこれらを参照して再構築要否を判定するため、
+# モジュール級で初期化しておく（未初期化だと pkl 不在の新規環境で NameError になる）
+_horse_dist_dict       = {}  # (name, dist_zone) → {出走, 勝率, 複勝率}
+_horse_course_dict     = {}  # (name, venue, surface) → {出走, 勝率, 複勝率}
 _horse_venue_dist_dict = {}  # (name, venue, dist_zone, surface) → {出走, 勝率, 複勝率}
 _post_zone_bias        = {}  # (venue, dist_zone) → float  正=内枠有利, 負=外枠有利
 _jockey_dict           = {}  # (騎手名, 競馬場, surface) → 勝率
@@ -1490,36 +1494,10 @@ def apply_career_flags(total, career):
     return round(total + adj, 2)
 
 
-def calc_prediction_gap_features(horse_name, race_date):
-    """過去レースでのAI予測(rl_rank)と実着順の乖離を特徴量として返す。
-
-    データが溜まるまでデフォルト値(0.0)を返すので既存モデルに影響しない。
-    race_date: 'YYYY-MM-DD' または 'YYYYMMDD'
-    """
-    if not _KEIBA_DB_PATH:
-        return 0.0, 0.0, 0.0
-    try:
-        import sqlite3 as _sq
-        # 日付を YYYY-MM-DD に正規化
-        rd = str(race_date).replace('-', '')[:8]
-        date_norm = f'{rd[:4]}-{rd[4:6]}-{rd[6:8]}' if len(rd) == 8 else str(race_date)
-        conn = _sq.connect(_KEIBA_DB_PATH)
-        rows = conn.execute("""
-            SELECT prediction_gap FROM race_predictions
-            WHERE horse_name = ? AND date < ? AND actual_place IS NOT NULL
-            ORDER BY date DESC LIMIT 3
-        """, (horse_name, date_norm)).fetchall()
-        conn.close()
-        gaps = [r[0] for r in rows if r[0] is not None]
-        if not gaps:
-            return 0.0, 0.0, 0.0
-        avg  = sum(gaps) / len(gaps)
-        worst = max(gaps, key=abs)
-        std  = (sum((g - avg) ** 2 for g in gaps) / len(gaps)) ** 0.5 if len(gaps) > 1 else 0.0
-        return round(avg, 2), round(worst, 2), round(std, 2)
-    except Exception:
-        return 0.0, 0.0, 0.0
-
+# calc_prediction_gap_features は2026-07-28に削除。
+# 「AIの予測乖離は同じ馬で繰り返す」という前提が実データで否定されたため
+# （過去の乖離と今走の乖離の相関 -0.066）。呼び出し元も同時に撤去済み。
+# race_predictions テーブル自体は乖離分析・stats生成で引き続き使用する。
 
 # ── コース適性特徴量（course_profiles.json 駆動）─────────────────────────
 def load_course_profiles(base_dir=None):
@@ -2171,20 +2149,15 @@ def calc_features_for_xgb(h, race):
     feats['f_weight_trend_avg'] = float(sum(bw_diffs) / len(bw_diffs)) if bw_diffs else float('nan')
     feats['f_weight_last_diff'] = bw_diffs[0] if bw_diffs else float('nan')
 
-    # ── 前走メンバーレベル（対戦相手のその後の成績で強度を評価）────────
-    ml_levels = []
-    for past_race in hist[:5]:
-        rid = past_race.get('race_id', '')
-        if rid and _MEMBER_LEVEL_CACHE:
-            ml_levels.append(_MEMBER_LEVEL_CACHE.get(rid, 5.0))
-    if ml_levels:
-        feats['f_member_level_avg']  = float(sum(ml_levels) / len(ml_levels))
-        feats['f_member_level_max']  = float(max(ml_levels))
-        feats['f_member_level_last'] = float(ml_levels[0])  # 直近走
-    else:
-        feats['f_member_level_avg']  = 5.0
-        feats['f_member_level_max']  = 5.0
-        feats['f_member_level_last'] = 5.0
+    # ── 前走メンバーレベル: XGB特徴量からは廃止（2026-07-28）────────
+    # build_member_level_cache は「対戦相手の"その後"の成績」でレース強度を
+    # 測る設計のため、学習データでは対象行から見た未来を参照してしまう。
+    # 実測では、これを含めると市場フリーAIの「市場より高評価」帯の単勝
+    # 回収率が 252.5%(勝率4.65%) と出るのに対し、除外すると 73.1%(1.54%)
+    # ＝市場ベースラインまで落ちた。一方で複勝AUCの低下は 0.7715→0.7678 と
+    # ほぼ無く、予測力にはほとんど寄与していない純粋なリークだったため削除。
+    # （ルールベースの f_rotation は calc_prev_member_level を引き続き使う。
+    #   推論時は未来を見ないため、そちらは問題ない）
 
     # 競争力指数（着差÷着順：小さいほど着順より実力が上位に近い）
     f_comp_avg, f_comp_best = calc_competitiveness(hist)
@@ -2222,13 +2195,18 @@ def calc_features_for_xgb(h, race):
         feats['f_speed_fig_avg']  = float('nan')
         feats['f_speed_fig_max']  = float('nan')
 
-    # ── 予測乖離特徴量（race_predictions テーブルから取得）──────────────
-    horse_name = h.get('name', '')
-    race_date  = race.get('date', '')
-    gap_avg, gap_worst, gap_std = calc_prediction_gap_features(horse_name, race_date)
-    feats['f_pred_gap_avg']         = float(gap_avg)
-    feats['f_pred_gap_worst']       = float(gap_worst)
-    feats['f_pred_gap_consistency'] = float(gap_std)
+    # ── 予測乖離特徴量: 廃止（2026-07-28）─────────────────────────────
+    # 「AIが以前この馬を買い被ったなら今回も買い被る」という前提だったが、
+    # 実データ（発動824行）で前提が否定された:
+    #   過去の乖離 と 今走の乖離 の相関 = -0.066（ほぼ無相関・符号も逆）
+    #   帯別の今走複勝率も単調でない（過小評価帯18.1% < ほぼ的中帯28.6%）
+    # 乖離は馬の持続的性質ではなくレース固有のノイズであり、
+    # データが溜まっても機能しない。加えて
+    #   - 学習データ5,411レース中98.98%が既定値（発動上限も約20%）
+    #   - 馬ごと・レースごとに sqlite 接続を張るため約7.5万回の接続が発生
+    #   - keiba.db が無い環境では静かに既定値化する隠れた環境依存
+    # の3点も抱えていたため削除する。
+    # （市場基準の類似指標 f_beat_market_rate は充足80.7%で継続使用）
 
     # ── コース適性特徴量（course_profiles.json 駆動）──────────────────
     # 過去走をコース形状（直線長・回り・坂）で分類し、今走コースへの適性を算出。
@@ -2361,12 +2339,8 @@ def add_relative_features(all_xfeats):
     _assign('f_speed_fig_last', float('nan'), 'rl_f_speed_fig_last')
     _assign('f_speed_fig_avg',  float('nan'), 'rl_f_speed_fig_avg')
     _assign('f_speed_fig_max',  float('nan'), 'rl_f_speed_fig_max')
-    # 前走メンバーレベル（高いほど強い相手と戦った実績）
-    _assign('f_member_level_avg',  5.0, 'rl_f_member_level_avg')
-    _assign('f_member_level_last', 5.0, 'rl_f_member_level_last')
-    # 予測乖離（正=AI過小評価、負=AI過大評価。乖離なし馬は 0）
-    _assign('f_pred_gap_avg',   0.0, 'rl_f_pred_gap_avg',   reverse=False)
-    _assign('f_pred_gap_worst', 0.0, 'rl_f_pred_gap_worst', reverse=False)
+    # 前走メンバーレベルの相対化も廃止（上記のリークにより削除）
+    # 予測乖離の相対化も廃止（乖離が繰り返さないことを実データで確認）
     # 脚質×コース・展開適性（高いほど有利）
     _assign('f_style_course_fit', 0.25, 'cl_f_style_course_fit')
     _assign('f_pace_fit',         0.50, 'cl_f_pace_fit')

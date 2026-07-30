@@ -23,7 +23,7 @@ def calc_agari_ability(history):
     ranks = []
     for h in history:
         ar = h.get('agari_rank')
-        fs = h.get('field_size') or h.get('finishers') or h.get('num_finishers')
+        fs = h.get('finishers') or h.get('num_finishers') or h.get('field_size')
         if ar and fs and fs > 1:
             ranks.append(1.0 - (ar - 1) / (fs - 1))
 
@@ -41,7 +41,7 @@ def calc_stamina_score(history):
     for h in history:
         d = h.get('distance')
         p = h.get('place')
-        fs = h.get('field_size') or h.get('finishers') or h.get('num_finishers')
+        fs = h.get('finishers') or h.get('num_finishers') or h.get('field_size')
         if not d or not p or p <= 0 or not fs or fs < 2:
             continue
 
@@ -73,7 +73,7 @@ def calc_speed_score(history):
     for h in history:
         d = h.get('distance')
         p = h.get('place')
-        fs = h.get('field_size') or h.get('finishers') or h.get('num_finishers')
+        fs = h.get('finishers') or h.get('num_finishers') or h.get('field_size')
         if not d or not p or p <= 0 or not fs or fs < 2:
             continue
 
@@ -107,7 +107,7 @@ def calc_optimal_distance(history):
     for h in history:
         d = h.get('distance')
         p = h.get('place')
-        fs = h.get('field_size') or h.get('finishers') or h.get('num_finishers')
+        fs = h.get('finishers') or h.get('num_finishers') or h.get('field_size')
         if not d or not p or p <= 0 or not fs or fs < 2:
             continue
 

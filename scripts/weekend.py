@@ -16,7 +16,7 @@ from src.utils.db import (init_db, get_db_path, get_history_db_path,
                            save_race_db, save_bets_db,
                            save_history_db, save_results_db, check_and_update_bets,
                            save_race_predictions, update_prediction_results,
-                           settle_bet_simulation)
+                           settle_bet_simulation, backfill_bet_simulation)
 from src.betting.make_bets import init_betting, make_bets, log_bet_simulation
 from src.betting.ev_filter import select_quality_races, build_market_odds_from_races
 from src.features.engine import calc_all
@@ -90,6 +90,17 @@ def fetch_and_save_results(sess, hist_path, target_date):
                 print(f'  {bt:<6} {st["n"]:>4}点 的中{st["hit"]:>3} ROI{roi:>7.1f}%')
     except Exception as e:
         print(f'⚠ bet_simulation決済失敗（結果取得には影響なし）: {e}')
+
+    # 上の settle は「今回スクレイプしたレース」しか決済しないため、
+    # 過去に溜まった未決済行はDB内の既存結果を使って別途決済する。
+    # is_hit=-1 の行だけが対象なので二重計上はしない。
+    try:
+        bf = backfill_bet_simulation(ROOT)
+        if bf['settled']:
+            print(f'【シミュ決済(過去分)】 {bf["hit"]}/{bf["settled"]}的中  '
+                  f'レース {bf["races_covered"]}/{bf["races_total"]}')
+    except Exception as e:
+        print(f'⚠ bet_simulation過去分決済失敗（結果取得には影響なし）: {e}')
 
     return all_results
 

@@ -908,6 +908,41 @@ def _split_trainer_affiliation(trainer_text):
     return trainer_text.strip(), None
 
 
+_PACE_LABEL_DIAG_DONE = False
+
+
+def diag_pace_label_missing(full_text):
+    """ペース判定が取れなかった原因を1回だけ診断ログに残す。
+
+    race_history.pace_label は 5,411レースすべてで NULL（充足0%）。
+    2026-07-22に単語表記（スロー/ミドル/ハイ）対応を入れたが、その後に
+    取得した 2026-07-25・07-26 も 0件のままだった。関数自体は
+    「ペース判定：ミドルペース」等を正しく拾えることを単体で確認済みなので、
+    正規表現ではなく **取得元ページにその文字列が無い** 可能性が高い
+    （7/22の修正根拠は sp.jra.jp のスクリーンショットだが、
+      スクレイパーの実際の取得元は www.jra.go.jp の JRADB ページ）。
+
+    実HTMLをこの環境から確認できないため決め打ちの修正はせず、
+    次回のワークフロー実行でページに何が載っているかを判別できる
+    情報だけを残す（find_r01_odds と同じ方針）。
+
+    なお pace_label が無くても展開分類は機能する
+    （train_pace_model._classify_pace が first_3f から導出。充足88.9%）。
+    """
+    global _PACE_LABEL_DIAG_DONE
+    if _PACE_LABEL_DIAG_DONE:
+        return
+    _PACE_LABEL_DIAG_DONE = True
+    t = unicodedata.normalize('NFKC', full_text or '')
+    if 'ペース' not in t:
+        print('⚠ ペース判定: ページに「ペース」の文字自体が存在しない '
+              '（取得元にこの情報が無い可能性が高い）')
+        return
+    i = t.find('ペース')
+    print(f'⚠ ペース判定: 「ペース」は存在するが既知の表記に一致せず。'
+          f'周辺: ...{t[max(0, i - 40):i + 60]}...')
+
+
 def _extract_weather_pace(header_text, full_text=None):
     """ヘッダから天候を、ページ全体からペース判定を抽出。
 
@@ -1049,9 +1084,12 @@ def parse_result_soup(soup, racecourse, race_num, date, place_code):
         info['track_condition'] = tc_m.group(1) if tc_m else '良'
         info['race_class'] = _extract_class(header)
         # 天候・ペース判定（race-level）
-        weather, pace = _extract_weather_pace(header, soup.get_text(' ', strip=True))
+        _full_text = soup.get_text(' ', strip=True)
+        weather, pace = _extract_weather_pace(header, _full_text)
         info['weather'] = weather
         info['pace_label'] = pace
+        if not pace:
+            diag_pace_label_missing(_full_text)
         # ラップタイム（区間タイム）と前半/後半3F
         laps, first_3f, last_3f = _extract_lap_times(soup)
         info['lap_times'] = '-'.join(f'{v:.1f}' for v in laps) if laps else ''
