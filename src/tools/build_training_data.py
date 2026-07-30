@@ -15,6 +15,9 @@ import os
 import shutil
 from datetime import datetime
 
+# 脚質推定は推論時（jra_scraper）と同じ関数を使い、学習/推論パリティを保つ
+from src.scraper.jra_scraper import _infer_running_style
+
 
 def _parse_date(date_str):
     """'2025-01-05' と '20260426' の両形式に対応。"""
@@ -240,7 +243,11 @@ def build_training_data(base_dir, output_csv='data/horse_features.csv',
             'racecourse':      rc,
             'distance':        int(race_row['distance'] or 1600),
             'surface':         surf,
-            'first_3f':        float(race_row['first_3f'] or 0.0),
+            # ⚠ 当該レースの first_3f は「レースが終わって初めて分かる値」。
+            # ここに実測値を入れると f_early_speed が結果由来になり、
+            # 推論時（出馬表には first_3f が存在せず 36.0 固定）と食い違う。
+            # 学習/推論パリティを守るため推論時と同じ既定値に倒す。
+            'first_3f':        0.0,
             'race_class':      race_row['race_class'] or '1勝',
             'race_name':       race_row['race_name'] or '',
             'track_condition': race_row['track_condition'] or '良',
@@ -257,7 +264,11 @@ def build_training_data(base_dir, output_csv='data/horse_features.csv',
                 'name':         hdb['horse_name'],
                 'horse_num':    int(hdb['horse_num'] or 1),
                 'place':        int(hdb['place'] or 99),
-                'running_style':hdb['running_style'] or '差し',
+                # ⚠ 当該レースの running_style は結果（コーナー通過順）から
+                # 導出される値であり、レース前には存在しない。推論時は
+                # _infer_running_style() が過去走から推定するため、
+                # ここでは仮置きし、過去走取得後に同じ関数で埋め直す。
+                'running_style': '差し',
                 'agari3f':      hdb['agari3f'],
                 'jockey':       hdb['jockey'] or '',
                 'trainer':      hdb['trainer'] or '',
@@ -285,6 +296,13 @@ def build_training_data(base_dir, output_csv='data/horse_features.csv',
         # 各馬の過去走を「このレースの日付より前」で取得
         for h in horse_objs:
             h['history'] = _get_history_before(conn, h['name'], date_str, limit=10)
+
+        # 脚質は過去走から推定する（推論時と同一の関数・同一の入力）。
+        # 当該レースの実測脚質を使うと結果由来の情報が学習に混入し、
+        # 推論時（出馬表に脚質は無く常に推定）と分布がずれる。
+        for h in horse_objs:
+            h['running_style'] = _infer_running_style(
+                h['name'], h['history'], h.get('horse_num'))
 
         # 絶対特徴量を計算
         all_xfeats = []

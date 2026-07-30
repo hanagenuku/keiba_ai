@@ -132,6 +132,10 @@ _W                 = {
     'weight':   0.00,
     'rotation': 0.05,   # Phase 3: 前走メンバーレベル・ローテーション
 }
+# init_engine は pkl も引数も無い場合にこれらを参照して再構築要否を判定するため、
+# モジュール級で初期化しておく（未初期化だと pkl 不在の新規環境で NameError になる）
+_horse_dist_dict       = {}  # (name, dist_zone) → {出走, 勝率, 複勝率}
+_horse_course_dict     = {}  # (name, venue, surface) → {出走, 勝率, 複勝率}
 _horse_venue_dist_dict = {}  # (name, venue, dist_zone, surface) → {出走, 勝率, 複勝率}
 _post_zone_bias        = {}  # (venue, dist_zone) → float  正=内枠有利, 負=外枠有利
 _jockey_dict           = {}  # (騎手名, 競馬場, surface) → 勝率
