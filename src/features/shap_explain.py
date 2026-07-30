@@ -85,10 +85,8 @@ FEATURE_CATEGORY_MAP = {
     # ローテーション
     'f_days_since_last': 'ローテーション', 'f_interval_score': 'ローテーション',
     # AIの自己反省的補正（過去の予想外れの蓄積から学習する項目）
-    'f_pred_gap_avg': 'AI自己補正', 'f_pred_gap_worst': 'AI自己補正',
-    'f_pred_gap_consistency': 'AI自己補正',
-    'rl_f_pred_gap_avg_rank': 'AI自己補正', 'rl_f_pred_gap_avg_vs_field': 'AI自己補正',
-    'rl_f_pred_gap_worst_rank': 'AI自己補正', 'rl_f_pred_gap_worst_vs_field': 'AI自己補正',
+    # f_pred_gap_* は「乖離が繰り返す」前提が実データで否定され2026-07-28に削除
+    # （カテゴリ「AI自己補正」は該当列がなくなったため消滅）
     # 過去の人気推移（市場情報だが「現在の」オッズではなく履歴のため残差モデルの
     # 特徴量として残置されている。f_popularity（現在の人気）自体は除外済み）
     'f_pop_last': '過去人気推移', 'f_pop_avg': '過去人気推移',
@@ -102,6 +100,10 @@ REMOVED_FEATURE_COLS = {
     'f_member_level_avg', 'f_member_level_max', 'f_member_level_last',
     'rl_f_member_level_avg_rank', 'rl_f_member_level_avg_vs_field',
     'rl_f_member_level_last_rank', 'rl_f_member_level_last_vs_field',
+    # 「AIの予測乖離は繰り返す」という前提が実データで否定され2026-07-28に削除
+    'f_pred_gap_avg', 'f_pred_gap_worst', 'f_pred_gap_consistency',
+    'rl_f_pred_gap_avg_rank', 'rl_f_pred_gap_avg_vs_field',
+    'rl_f_pred_gap_worst_rank', 'rl_f_pred_gap_worst_vs_field',
 }
 
 BASELINE_LABEL = '基準値'
