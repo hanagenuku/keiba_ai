@@ -2175,20 +2175,15 @@ def calc_features_for_xgb(h, race):
     feats['f_weight_trend_avg'] = float(sum(bw_diffs) / len(bw_diffs)) if bw_diffs else float('nan')
     feats['f_weight_last_diff'] = bw_diffs[0] if bw_diffs else float('nan')
 
-    # ── 前走メンバーレベル（対戦相手のその後の成績で強度を評価）────────
-    ml_levels = []
-    for past_race in hist[:5]:
-        rid = past_race.get('race_id', '')
-        if rid and _MEMBER_LEVEL_CACHE:
-            ml_levels.append(_MEMBER_LEVEL_CACHE.get(rid, 5.0))
-    if ml_levels:
-        feats['f_member_level_avg']  = float(sum(ml_levels) / len(ml_levels))
-        feats['f_member_level_max']  = float(max(ml_levels))
-        feats['f_member_level_last'] = float(ml_levels[0])  # 直近走
-    else:
-        feats['f_member_level_avg']  = 5.0
-        feats['f_member_level_max']  = 5.0
-        feats['f_member_level_last'] = 5.0
+    # ── 前走メンバーレベル: XGB特徴量からは廃止（2026-07-28）────────
+    # build_member_level_cache は「対戦相手の"その後"の成績」でレース強度を
+    # 測る設計のため、学習データでは対象行から見た未来を参照してしまう。
+    # 実測では、これを含めると市場フリーAIの「市場より高評価」帯の単勝
+    # 回収率が 252.5%(勝率4.65%) と出るのに対し、除外すると 73.1%(1.54%)
+    # ＝市場ベースラインまで落ちた。一方で複勝AUCの低下は 0.7715→0.7678 と
+    # ほぼ無く、予測力にはほとんど寄与していない純粋なリークだったため削除。
+    # （ルールベースの f_rotation は calc_prev_member_level を引き続き使う。
+    #   推論時は未来を見ないため、そちらは問題ない）
 
     # 競争力指数（着差÷着順：小さいほど着順より実力が上位に近い）
     f_comp_avg, f_comp_best = calc_competitiveness(hist)
@@ -2365,9 +2360,7 @@ def add_relative_features(all_xfeats):
     _assign('f_speed_fig_last', float('nan'), 'rl_f_speed_fig_last')
     _assign('f_speed_fig_avg',  float('nan'), 'rl_f_speed_fig_avg')
     _assign('f_speed_fig_max',  float('nan'), 'rl_f_speed_fig_max')
-    # 前走メンバーレベル（高いほど強い相手と戦った実績）
-    _assign('f_member_level_avg',  5.0, 'rl_f_member_level_avg')
-    _assign('f_member_level_last', 5.0, 'rl_f_member_level_last')
+    # 前走メンバーレベルの相対化も廃止（上記のリークにより削除）
     # 予測乖離（正=AI過小評価、負=AI過大評価。乖離なし馬は 0）
     _assign('f_pred_gap_avg',   0.0, 'rl_f_pred_gap_avg',   reverse=False)
     _assign('f_pred_gap_worst', 0.0, 'rl_f_pred_gap_worst', reverse=False)
