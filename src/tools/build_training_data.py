@@ -46,6 +46,7 @@ def _get_history_before(conn, horse_name, before_date_str, limit=10):
             SELECT h.agari3f, h.place, h.corner_3, h.distance, h.surface,
                    h.racecourse, h.date, h.race_id, h.running_style,
                    h.agari_rank, h.margin,
+                   COALESCE(h.corner_all, '') AS corner_all,
                    h.finish_time, h.time_diff_sec,
                    h.body_weight, h.body_weight_diff,
                    COALESCE(h.popularity, 0)                    AS popularity,
@@ -130,6 +131,11 @@ def _get_history_before(conn, horse_name, before_date_str, limit=10):
             "surface":          row['surface'] or '芝',
             "racecourse":       row['racecourse'] or '',
             "corner_3":         row['corner_3'],
+            # calc_course_aptitude_features が3→4角の位置変動
+            # (f_corner_position_change) を出すのに使う。推論側の
+            # get_history_from_db は2026-07-23に追加済みだったが学習側が
+            # 漏れており、学習時だけ常に空＝この特徴量が定数0.0だった。
+            "corner_all":       row['corner_all'] or '',
             "margin":           float(row['margin'] or 0.0),
             # 市場評価（f_pop_last / f_pop_avg / f_beat_market_rate 用）
             "popularity":       int(row['popularity'] or 0),

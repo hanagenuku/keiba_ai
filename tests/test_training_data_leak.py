@@ -18,6 +18,7 @@ history.db に書き込み、build_training_data() を通して出力CSVを検�
 """
 
 import os
+import shutil
 import sys
 
 import pandas as pd
@@ -29,14 +30,14 @@ from src.utils.db import save_history_db
 from src.tools.build_training_data import build_training_data
 
 
-def _race(rid, date, style, first_3f, corner_3=None):
+def _race(rid, date, style, first_3f, corner_3=None, racecourse='東京'):
     """1レース分の結果を本番と同じ形で作る。
 
     style / first_3f が「そのレースの実際の結果」に相当する。
     """
     return {
         'id': rid, 'race_id': rid, 'date': date,
-        'racecourse': '東京', 'race_num': 1, 'race_name': 'T',
+        'racecourse': racecourse, 'race_num': 1, 'race_name': 'T',
         'distance': 1600, 'surface': '芝', 'first_3f': first_3f,
         'track_condition': '良', 'race_class': '1勝クラス', 'weather': '晴',
         'finishers': [
@@ -100,6 +101,42 @@ class TestTargetRaceResultDoesNotLeak:
         b = _build(str(tmp_path / 'oikomi'), '追込', 35.0, hist_style='先行')
         cols = [c for c in a.columns if c.startswith(('f_', 'rl_', 'cl_'))]
         pd.testing.assert_frame_equal(a[cols], b[cols])
+
+    def test_corner_all_reaches_training_features(self, tmp_path):
+        """過去走の corner_all が学習側にも渡ること（2026-07-28修正）。
+
+        2026-07-23に推論側 get_history_from_db へ corner_all を追加したが
+        学習側 _get_history_before への追加が漏れており、
+        f_corner_position_change が学習時だけ常に 0.0 の定数になっていた
+        （実データ5,411レースの監査で発覚。推論時は実値が入るため
+        典型的な学習/推論パリティ違反）。
+        """
+        base = str(tmp_path / 'corner')
+        os.makedirs(os.path.join(base, 'data'), exist_ok=True)
+        # コース種別の判定に course_profiles.json が要る（無いと既定値に落ちる）
+        shutil.copy('data/course_profiles.json',
+                    os.path.join(base, 'data', 'course_profiles.json'))
+        # 3→4角の位置変動は小回りコース(course_type=tight)でのみ計算される
+        races = []
+        for d in range(1, 6):
+            r = _race(f'2025010{d}_05_01', f'2025-01-0{d}', '先行', 35.0,
+                      racecourse='中山')
+            for i, f in enumerate(r['finishers']):
+                f['corner_all'] = f'{i+1}-{i+1}-{i+1}-{max(1, i)}'
+            races.append(r)
+        tgt = _race('20250601_05_01', '2025-06-01', '先行', 35.0,
+                    racecourse='中山')
+        for i, f in enumerate(tgt['finishers']):
+            f['corner_all'] = f'{i+1}-{i+1}-{i+1}-{max(1, i)}'
+        races.append(tgt)
+        save_history_db(races,
+                        db_path=os.path.join(base, 'data', 'history.db'))
+        build_training_data(base)
+        df = pd.read_csv(os.path.join(base, 'data', 'horse_features.csv'))
+        assert df.f_corner_position_change.nunique() > 1, (
+            'f_corner_position_change が定数のまま＝corner_all が'
+            '学習側の history に渡っていない'
+        )
 
     def test_style_still_reflects_past_races(self, tmp_path):
         """一方で、過去走の脚質は特徴量に反映されること。
