@@ -183,6 +183,21 @@ def _detect_trio_structure(trio):
     return {'type': 'list', 'nums': all_nums}
 
 
+
+def _build_ai_pair_bets(scored):
+    """AI強気ペア(A×D)の馬連・ワイド推奨。
+
+    2026-07-31の大規模検証で比1.82/1.56（損益分岐1.29）。
+    ⚠ 実配当が無く回収率は未検証。詳細は src/betting/ai_pair_bets.py の
+    docstring を参照。AI_PAIR_BETS=0 で無効化できる。
+    """
+    try:
+        from src.betting.ai_pair_bets import build_ai_pair_bets
+        return build_ai_pair_bets(scored) or None
+    except Exception:
+        return None
+
+
 def _format_gumbel_bets(gb, scored):
     """build_optimal_bets の出力をアプリ表示リストに変換する。"""
     if not gb:
@@ -441,6 +456,7 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
             'horses':       _horses_list,
             'bets':         _build_bet_list(bets),
             'gumbel_bets':  _gumbel_bets,
+            'ai_pair_bets': _build_ai_pair_bets(scored),
             'formation':    _formation,
             'chaos_level':  _grade,
             'chaos_grade':  _grade,
@@ -568,6 +584,7 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
             'horses':      _horses_list2,
             'bets':        _build_bet_list(bets2),
             'gumbel_bets': _gumbel_bets2,
+            'ai_pair_bets': _build_ai_pair_bets(scored),
             'formation':   _formation2,
             'cmt':         auto_comment(c_ref, bias_data) + ('\n' + maiden_note if maiden_note else ''),
         }
