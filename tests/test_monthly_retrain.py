@@ -43,3 +43,21 @@ def test_monthly_retrain_copies_residual_files_to_production_paths():
     assert 'xgb_fukusho_model.pkl' in src
     assert 'xgb_feature_cols_residual.json' in src
     assert 'xgb_feature_cols.json' in src
+
+
+def test_monthly_retrain_runs_calibration_and_checks_result():
+    """キャリブレータを自動更新し、戻り値を必ず確認していること。
+
+    2026-07-31以前はここを丸ごと飛ばしていた（残差モデル非対応のため）。
+    run_xgb_calibration は失敗しても例外ではなく None を返す作りなので、
+    戻り値を見ずに「完了」と表示すると、新モデルに旧モデル用の較正器が
+    付いたまま残り cal_prob だけが静かに誤る。
+    """
+    src_path = os.path.join(os.path.dirname(__file__), '..',
+                            'scripts', 'monthly_retrain.py')
+    with open(src_path, encoding='utf-8') as f:
+        src = f.read()
+    assert 'run_xgb_calibration' in src, 'キャリブレーションを実行していません'
+    assert 'cal is not None' in src, '戻り値(None)の確認をしていません'
+    # 失敗時に旧較正器を残さないこと
+    assert '.stale' in src, '失敗時に旧較正器を退避していません'
