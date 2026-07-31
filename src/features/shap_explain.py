@@ -77,6 +77,9 @@ FEATURE_CATEGORY_MAP = {
     # 馬体・斤量
     'f_weight_load': '斤量・馬体', 'cl_f_weight_load_rank': '斤量・馬体',
     'cl_f_weight_load_vs_field': '斤量・馬体', 'f_sex': '斤量・馬体', 'f_age': '斤量・馬体',
+    # 馬体重推移（2026-07-24追加）。旧モデルは追加前日の学習で列を持たず、
+    # 2026-07-31の再学習で初めて本番入りしたためカテゴリ登録が漏れていた。
+    'f_weight_trend_avg': '斤量・馬体', 'f_weight_last_diff': '斤量・馬体',
     # 枠順
     'f_post': '枠順',
     # 馬場適性
