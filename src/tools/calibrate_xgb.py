@@ -27,6 +27,7 @@ data/xgb_calibrator.pkl  ← 既存 calibrator.pkl とは別ファイルで管�
 - 単調化: PAV (Pool Adjacent Violators) で強制単調増加
 """
 import argparse
+import math
 import os
 import sys
 import sqlite3
@@ -55,6 +56,44 @@ def _precompute_horse_past_races(conn):
     for r in rows:
         d[r['horse_name']].append((str(r['date'] or ''), r['race_id']))
     return d
+
+
+def _predict_fukusho_probs(X, horses):
+    """複勝確率を返す。残差学習モデル(xgb.Booster)にも対応する。
+
+    残差モデルは sklearn API ではなく `xgb.Booster` なので `predict_proba` を
+    持たない。それを知らずに `predict_proba` を呼んでいたため、レース単位の
+    try/except に毎回吸われて **ペアが1件も作れず**「データ不足(0ペア)」で
+    静かに None を返していた（＝キャリブレーションが事実上ずっと動いていない）。
+
+    base_margin の作り方は engine.py の推論経路と同一にすること。
+    ここがズレると較正が本番と違う分布に対して当たってしまう。
+    """
+    from src.features.engine import _XGB_FUKUSHO_MODEL, _XGB_RESIDUAL
+
+    if not _XGB_RESIDUAL:
+        return _XGB_FUKUSHO_MODEL.predict_proba(X)[:, 1].tolist()
+
+    import numpy as np
+    import xgboost as xgb
+
+    n_h = max(len(horses), 2)
+    harmonic = math.log(n_h) + 0.5772
+    bm = []
+    for h in horses:
+        pop = h.get('popularity') or 0
+        # 人気が取れない馬は中位人気とみなす（engine 側の or 999 と違い、
+        # 学習データ側は確定人気が 99.2% 埋まっているため実質発生しない）
+        pop = min(max(pop if pop and pop != 99 else (n_h + 1) / 2, 1), n_h)
+        p_mkt = max(min((1.0 / pop) / harmonic, 0.999), 0.001)
+        bm.append(math.log(p_mkt / (1 - p_mkt)))
+
+    dmat = xgb.DMatrix(X)
+    dmat.set_base_margin(np.array(bm))
+    # output_margin=True で真の log-odds を取り、こちらで1回だけ sigmoid する。
+    # 未指定だと sigmoid 適用済みの確率が返り 2重適用になる（2026-07-26の既知バグ）
+    margins = _XGB_FUKUSHO_MODEL.predict(dmat, output_margin=True)
+    return [1.0 / (1.0 + math.exp(-float(m))) for m in margins]
 
 
 def _build_xgb_pairs(base_dir, verbose=True):
@@ -144,6 +183,7 @@ def _build_xgb_pairs(base_dir, verbose=True):
                 'agari3f': hrow['agari3f'],
                 'corner_3': hrow['corner_3'],
                 'running_style': hrow['running_style'] or '',
+                'popularity': hrow['popularity'] or 0,
             }
             race_dict['horses'].append(h)
 
@@ -151,7 +191,7 @@ def _build_xgb_pairs(base_dir, verbose=True):
             xfeats = [calc_features_for_xgb(h, race_dict) for h in race_dict['horses']]
             X = pd.DataFrame([{c: xf.get(c, 5.0) for c in _XGB_FEATURE_COLS}
                               for xf in xfeats])[_XGB_FEATURE_COLS].fillna(5.0)
-            raw_probs = _XGB_FUKUSHO_MODEL.predict_proba(X)[:, 1].tolist()
+            raw_probs = _predict_fukusho_probs(X, race_dict['horses'])
 
             for h, raw_prob in zip(race_dict['horses'], raw_probs):
                 is_fukusho = 1 if (1 <= h['place'] <= 3) else 0

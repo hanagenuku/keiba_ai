@@ -65,17 +65,33 @@ def main():
                  os.path.join(data_dir, 'xgb_feature_cols.json'))
     print('✅ 本番ファイル（xgb_fukusho_model.pkl / xgb_feature_cols.json）に反映')
 
-    # ⚠ xgb_calibrator.pkl の自動更新は今回未対応（意図的）。
-    # src/tools/calibrate_xgb.py の run_xgb_calibration() は
-    # _XGB_FUKUSHO_MODEL.predict_proba() を前提とした実装で、残差学習モデル
-    # （xgb.Booster形式、predict()のみでpredict_proba()を持たない）を渡すと
-    # AttributeErrorで失敗する。誤ったキャリブレーションを自動生成するリスクを
-    # 避けるため、次回のColabセッションで手動キャリブレーション
-    # （run_xgb_calibration経由）を実行するまで xgb_calibrator.pkl は更新しない。
-    # 本番の予測順位（RL/CL）自体には影響しない。表示用の複勝確率較正が
-    # やや古いデータのまま据え置かれるのみ。
-    print('⚠ xgb_calibrator.pkl は自動更新していません（残差モデル非対応のため）。'
-          'Colabで手動キャリブレーションを実行してください')
+    # キャリブレータ再作成。特徴量が変わると raw_prob の分布も変わるため、
+    # 旧モデル用の較正器を残したままにすると cal_prob だけが静かに誤る。
+    #
+    # 2026-07-31以前は「残差モデル非対応」としてここを丸ごと飛ばしていた。
+    # 実際には run_xgb_calibration() がレース単位の try/except で
+    # predict_proba の AttributeError を吸ってしまい、例外ではなく
+    # 「0ペア → None」を返す作りだった（＝呼び出し側では検知できない）。
+    # 残差モデル対応は 2026-07-31 に入れたので、ここで自動更新する。
+    print('🎯 キャリブレータ再作成中...')
+    try:
+        from src.tools.calibrate_xgb import run_xgb_calibration
+        cal = run_xgb_calibration(ROOT)
+    except Exception as e:
+        cal = None
+        print(f'⚠ キャリブレーション実行中に例外: {e}')
+
+    if cal is not None:
+        print('✅ xgb_calibrator.pkl を更新しました')
+    else:
+        # 新モデルに旧モデル用の較正器を付けたままにしない。
+        # 較正器が無ければ engine は生シグモイド確率を使う（RL順位は不変）。
+        stale = os.path.join(data_dir, 'xgb_calibrator.pkl')
+        if os.path.exists(stale):
+            shutil.move(stale, stale + '.stale')
+            print('⚠ キャリブレーション失敗。旧較正器は新モデルと不整合なため退避しました'
+                  '（xgb_calibrator.pkl → .stale）')
+        print('⚠ cal_prob は生シグモイド確率になります（RL順位・買い目には影響なし）')
 
     print('✅ 月次再学習完了')
 
