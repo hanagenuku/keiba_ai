@@ -164,6 +164,22 @@ def init_db(base_dir=None, db_path=None):
             UNIQUE(race_id, horse_num, captured_at)
         );
         CREATE INDEX IF NOT EXISTS idx_os_race ON odds_snapshots(race_id);
+        -- 全券種の実配当。parse_dividends は8券種すべてを取得しているのに、
+        -- 保存していたのは単勝・複勝だけ（results テーブル）で、
+        -- ワイド・馬連・馬単・三連複などの組み合わせ配当は
+        -- パースした直後に捨てられていた（2026-07-31に判明）。
+        -- そのため単勝・複勝以外は回収率を一度も検証できない状態が続いていた。
+        CREATE TABLE IF NOT EXISTS race_dividends (
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            race_id    TEXT NOT NULL,
+            date       TEXT,
+            bet_type   TEXT NOT NULL,   -- tansho/fukusho/wakuren/umaren/umatan/wide/sanrenpuku/sanrentan
+            combo      TEXT NOT NULL,   -- '3' / '3-8' / '3-8-10'（馬単・三連単は着順どおり）
+            payout     INTEGER,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(race_id, bet_type, combo)
+        );
+        CREATE INDEX IF NOT EXISTS idx_rd_race ON race_dividends(race_id);
         CREATE TABLE IF NOT EXISTS race_notes (
             id              INTEGER PRIMARY KEY AUTOINCREMENT,
             date            TEXT NOT NULL,
@@ -553,6 +569,129 @@ def save_history_db(all_results, base_dir=None, db_path=None):
     conn.close()
     print(f'📚 history.db に追記: {new_races}レース / {new_horses}頭 (重複スキップ済み)')
 
+# parse_dividends が返すキー → 保存する券種名
+# 値が dict（1組だけ）か list（複数組）かが券種で違うため両方を扱う
+_DIVIDEND_KEYS = ('tansho', 'fukusho', 'wakuren', 'umaren',
+                  'umatan', 'wide', 'sanrenpuku', 'sanrentan')
+
+
+def _dividend_rows(divs):
+    """parse_dividends の出力を (bet_type, combo, payout) の並びに正規化する。
+
+    combo は馬番をハイフンでつないだ文字列。
+    **馬単・三連単は着順に意味があるため並べ替えない**。
+    それ以外（馬連・ワイド・三連複・枠連）は順不同なので昇順に正規化し、
+    照合時に組の並び順で取りこぼさないようにする。
+    """
+    ordered = {'umatan', 'sanrentan'}
+    out = []
+    for bt in _DIVIDEND_KEYS:
+        v = divs.get(bt)
+        if not v:
+            continue
+        entries = v if isinstance(v, list) else [v]
+        for e in entries:
+            if not isinstance(e, dict):
+                continue
+            nums = e.get('nums')
+            if nums is None:
+                n = e.get('num')
+                nums = [n] if n is not None else None
+            if not nums:
+                continue
+            try:
+                nums = [int(x) for x in nums]
+            except (TypeError, ValueError):
+                continue
+            if bt not in ordered:
+                nums = sorted(nums)
+            payout = e.get('payout')
+            try:
+                payout = int(payout)
+            except (TypeError, ValueError):
+                continue
+            out.append((bt, '-'.join(str(x) for x in nums), payout))
+    return out
+
+
+def save_dividends_db(all_results, base_dir=None, db_path=None):
+    """全券種の実配当を race_dividends に保存する。
+
+    ⚠ これ以降に取得したレースぶんしか貯まらない。過去分の組み合わせ配当は
+    どこにも保存されていないため、遡って復元することはできない
+    （必要なら結果ページの再スクレイプが要る）。
+
+    Returns:
+        dict: {'races': 保存対象レース数, 'rows': 追加行数}
+    """
+    path = db_path or get_db_path(base_dir)
+    conn = _connect(path)
+    races = rows = 0
+    for r in all_results or []:
+        race_id = r.get('race_id') or r.get('id')
+        divs = r.get('dividends') or {}
+        if not race_id or not divs:
+            continue
+        recs = _dividend_rows(divs)
+        if not recs:
+            continue
+        races += 1
+        date = r.get('date') or (r.get('info') or {}).get('date')
+        for bt, combo, payout in recs:
+            cur = conn.execute(
+                'INSERT OR IGNORE INTO race_dividends '
+                '(race_id, date, bet_type, combo, payout) VALUES (?,?,?,?,?)',
+                (race_id, date, bt, combo, payout))
+            rows += cur.rowcount if cur.rowcount and cur.rowcount > 0 else 0
+    conn.commit()
+    conn.close()
+    return {'races': races, 'rows': rows}
+
+
+def get_dividends_for_races(race_ids, base_dir=None, db_path=None):
+    """race_dividends から {race_id: parse_dividends 相当の dict} を組み立てる。
+
+    settle_bet_simulation / build_results_from_db がそのまま使える形に戻す。
+    """
+    path = db_path or get_db_path(base_dir)
+    if not os.path.exists(path):
+        return {}
+    multi = {'fukusho', 'wide'}          # 1レースに複数組ある券種
+    out = {}
+    try:
+        conn = _connect(path)
+        ids = list(race_ids) if race_ids is not None else None
+        if ids:
+            res = []
+            for i in range(0, len(ids), 500):     # SQLite の変数上限対策
+                chunk = ids[i:i + 500]
+                marks = ','.join('?' * len(chunk))
+                res += conn.execute(
+                    f'SELECT race_id, bet_type, combo, payout FROM race_dividends '
+                    f'WHERE race_id IN ({marks})', tuple(chunk)).fetchall()
+        else:
+            res = conn.execute(
+                'SELECT race_id, bet_type, combo, payout FROM race_dividends').fetchall()
+        conn.close()
+    except Exception:
+        return {}
+    for race_id, bt, combo, payout in res:
+        try:
+            nums = [int(x) for x in str(combo).split('-') if x != '']
+        except ValueError:
+            continue
+        d = out.setdefault(race_id, {})
+        if bt == 'fukusho':
+            d.setdefault('fukusho', []).append({'num': nums[0], 'payout': payout})
+        elif bt in multi:
+            d.setdefault(bt, []).append({'nums': nums, 'payout': payout})
+        elif bt == 'tansho':
+            d['tansho'] = {'num': nums[0], 'payout': payout}
+        else:
+            d[bt] = {'nums': nums, 'payout': payout}
+    return out
+
+
 def save_results_db(all_results, base_dir=None, db_path=None):
     """レース結果を keiba.db の results テーブルに保存する。"""
     path = db_path or get_db_path(base_dir)
@@ -851,6 +990,10 @@ def build_results_from_db(race_ids=None, base_dir=None, db_path=None,
             # 同一(race, horse)が複数ソースに存在する場合は先に読んだ方を採用
             by_race.setdefault(rid, {}).setdefault(num, (place, tp or 0, fp or 0))
 
+    # 組み合わせ配当（ワイド・馬連・馬単・三連複）は race_dividends に貯まる。
+    # 2026-07-31より前に取得したレースには存在しないため、取れた分だけ使う。
+    combo_divs = get_dividends_for_races(wanted, db_path=main_path) if main_path else {}
+
     # history.db を優先（未決済レースの97%をカバー）、keiba.db.results で補完
     for path, sql in (
         (hist_path, 'SELECT race_id, place, horse_num, tansho_payout, '
@@ -877,7 +1020,9 @@ def build_results_from_db(race_ids=None, base_dir=None, db_path=None,
                 tansho_payout = int(tp)
             if fp:
                 fukusho.append({'num': num, 'payout': int(fp)})
-        divs = {}
+        # 組み合わせ配当を先に載せ、単勝・複勝は horse_history 側の値を優先する
+        # （こちらは馬ごとに紐づいており取りこぼしが少ないため）
+        divs = dict(combo_divs.get(rid) or {})
         if tansho_payout:
             divs['tansho'] = {'payout': tansho_payout}
         if fukusho:
