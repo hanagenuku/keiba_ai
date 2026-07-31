@@ -74,6 +74,14 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
 .htbl td.phi{color:#c0392b;font-weight:800}
 .htbl td.plo{color:var(--g2);font-weight:600}
 /* 人気列 */
+.htbl th.col-um{background:#7d3c98;width:22px}
+.htbl td.col-um{padding:0;width:22px}
+/* 自分でつける印。AI本命の◎（番号列）と混ざらないよう紫系で区別する */
+.umark{display:inline-block;min-width:20px;padding:7px 2px;font-size:13px;font-weight:800;
+  line-height:1;color:#ccc;cursor:pointer;user-select:none;-webkit-user-select:none;
+  -webkit-tap-highlight-color:transparent}
+.umark:empty::before{content:'＋';font-size:10px;color:#d5d5d5;font-weight:400}
+.umark-on{color:#7d3c98}
 .htbl th.col-pop{background:#34495e;width:22px}
 .htbl td.col-pop{font-weight:700;color:#555;font-size:10px}
 /* 乖離バッジ */
@@ -139,6 +147,8 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
 .odds-time{font-size:10px;color:#888;margin-left:8px}
 .note-btn{background:#8e44ad;color:#fff;border:none;border-radius:6px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;margin-left:8px}
 .note-btn:active{background:#6c3483}
+.umark-clear{background:#fff;color:#7d3c98;border:1px solid #c9a8dd;border-radius:6px;padding:8px 12px;font-size:11px;font-weight:700;cursor:pointer;margin-left:8px}
+.umark-clear:active{background:#f3e8f8}
 .note-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center;z-index:1000}
 .note-modal{background:#fff;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;border-radius:14px 14px 0 0;padding:16px}
 .note-modal h3{margin:0 0 10px;font-size:15px}
@@ -327,6 +337,64 @@ function toggle(k) { opened[k]=!opened[k]; render(); }
 function mkBadge(m) {
   if (!m) return '';
   return '<span class="mk mk-'+m+'">'+m+'</span>';
+}
+
+// ── 自分でつける印（端末内だけに保存。サーバには送らない）──────────────
+// タップするたび ◎ → ○ → ▲ → △ → ✕ → 無印 と一周する。
+// AIの評価とは完全に独立（AI本命の◎は番号列に出るので色で区別している）。
+const UMARKS = ['◎','○','▲','△','✕'];
+const UMARK_KEY = 'keiba_user_marks_v1';
+const UMARK_KEEP_DAYS = 90;
+
+function _umarkPrune(m) {
+  // race_id は先頭8桁が YYYYMMDD。古い開催分は捨てて肥大化を防ぐ。
+  const cut = new Date(Date.now() - UMARK_KEEP_DAYS*86400000);
+  const cutStr = cut.getFullYear()
+    + String(cut.getMonth()+1).padStart(2,'0')
+    + String(cut.getDate()).padStart(2,'0');
+  for (const rid of Object.keys(m)) {
+    const d = String(rid).slice(0,8);
+    if (/^\d{8}$/.test(d) && d < cutStr) delete m[rid];
+  }
+  return m;
+}
+
+function _umarkLoad() {
+  try { return _umarkPrune(JSON.parse(localStorage.getItem(UMARK_KEY)) || {}); }
+  catch (e) { return {}; }
+}
+function _umarkSave() {
+  try { localStorage.setItem(UMARK_KEY, JSON.stringify(USER_MARKS)); } catch (e) {}
+}
+let USER_MARKS = _umarkLoad();
+
+// race_id が無いデータでも印を保てるようにフォールバックキーを作る
+function umarkRaceKey(race) {
+  return race.race_id || ((D && D.date ? D.date : '') + '_' + venue + '_' + race.r);
+}
+function getUserMark(rid, n) {
+  return (USER_MARKS[rid] || {})[n] || '';
+}
+function cycleUserMark(rid, n, el) {
+  const i = UMARKS.indexOf(getUserMark(rid, n));
+  const next = i < 0 ? UMARKS[0] : (i + 1 >= UMARKS.length ? '' : UMARKS[i + 1]);
+  if (!USER_MARKS[rid]) USER_MARKS[rid] = {};
+  if (next) USER_MARKS[rid][n] = next; else delete USER_MARKS[rid][n];
+  if (!Object.keys(USER_MARKS[rid]).length) delete USER_MARKS[rid];
+  _umarkSave();
+  // 全体を再描画すると画面が跳ねるので、押されたセルだけ書き換える
+  el.textContent = next;
+  el.className = 'umark' + (next ? ' umark-on' : '');
+}
+function clearUserMarks(rid) {
+  if (!USER_MARKS[rid]) { alert('このレースにはまだ印がありません'); return; }
+  if (!confirm('このレースの印を全部消しますか？')) return;
+  delete USER_MARKS[rid];
+  _umarkSave();
+  // data-rid で対象レースの分だけに絞れるので、コンテナを辿る必要はない
+  document.querySelectorAll('.umark[data-rid="'+rid+'"]').forEach(el => {
+    el.textContent = ''; el.className = 'umark';
+  });
 }
 
 function findRace(raceKey) {
@@ -1270,7 +1338,8 @@ function render() {
           html += '</div>';
         }
       }
-      html += '<table class="htbl"><tr><th style="width:20px">番</th><th class="col-name">馬名</th><th class="col-pop" style="width:22px">人</th><th class="col-odds" style="width:34px">ｵｯｽﾞ</th><th class="col-mk">特記</th><th class="col-rl" style="width:24px">RL</th><th style="width:32px">勝率</th><th style="width:32px">複勝</th><th class="col-val" style="width:32px" title="勝率×オッズの参考値。単体では買い目の根拠になりません（下のEV買い目欄を参照）">EV</th></tr>';
+      const _umRid = umarkRaceKey(race);
+      html += '<table class="htbl"><tr><th class="col-um" title="タップで ◎○▲△✕ を切り替え。端末内だけに保存されます">印</th><th style="width:20px">番</th><th class="col-name">馬名</th><th class="col-pop" style="width:22px">人</th><th class="col-odds" style="width:34px">ｵｯｽﾞ</th><th class="col-mk">特記</th><th class="col-rl" style="width:24px">RL</th><th style="width:32px">勝率</th><th style="width:32px">複勝</th><th class="col-val" style="width:32px" title="勝率×オッズの参考値。単体では買い目の根拠になりません（下のEV買い目欄を参照）">EV</th></tr>';
       for (const h of (race.horses||[])) {
         const isH = race.honmei && h.n === race.honmei.n;
         const rl = (!h.rl_rank || h.rl_rank >= 99) ? '-' : h.rl_rank;
@@ -1357,13 +1426,18 @@ function render() {
           }
         }
 
-        html += '<tr'+(isH?' class="hl"':'')+'><td>'+(isH?'◎':'')+h.n+'</td><td class="col-name">'+h.name+surgeBadge+'</td><td class="col-pop">'+pop+'</td><td class="col-odds">'+odds+'</td><td>'+mkBadge(h.mark)+'</td><td class="col-rl">'+rl+gapBadge+mxBadge+breakdownBadge+'</td><td>'+tan+'</td><td class="'+(hi?'phi':'plo')+'">'+fuku+'</td><td class="'+valClass+'">'+valCell+'</td></tr>';
+        const _um = getUserMark(_umRid, h.n);
+        const _umCell = '<td class="col-um"><span class="umark'+(_um?' umark-on':'')
+          + '" data-rid="'+_umRid+'" onclick="cycleUserMark(\''+_umRid+'\','+h.n+',this)">'
+          + _um + '</span></td>';
+        html += '<tr'+(isH?' class="hl"':'')+'>'+_umCell+'<td>'+(isH?'◎':'')+h.n+'</td><td class="col-name">'+h.name+surgeBadge+'</td><td class="col-pop">'+pop+'</td><td class="col-odds">'+odds+'</td><td>'+mkBadge(h.mark)+'</td><td class="col-rl">'+rl+gapBadge+mxBadge+breakdownBadge+'</td><td>'+tan+'</td><td class="'+(hi?'phi':'plo')+'">'+fuku+'</td><td class="'+valClass+'">'+valCell+'</td></tr>';
       }
       html += '</table>';
       if (race.race_id) {
         html += '<div style="padding:6px 14px;text-align:center">';
         html += '<button class="odds-btn" onclick="fetchFreshOdds(\''+k+'\', this)">🔄 直前オッズ取得</button>';
         html += '<button class="note-btn" onclick="openNoteEditor(\''+k+'\')">📝 不利メモ</button>';
+        html += '<button class="umark-clear" onclick="clearUserMarks(\''+_umRid+'\')">印クリア</button>';
         html += '<span class="odds-time" id="odds-time-'+k+'">'+(race._update_time ? ('更新: '+race._update_time) : '')+'</span>';
         html += '</div>';
       }
