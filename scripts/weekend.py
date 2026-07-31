@@ -14,7 +14,8 @@ from src.features.engine import init_engine
 from src.utils.db import (init_db, get_db_path, get_history_db_path,
                            backup_db, checkpoint_db,
                            save_race_db, save_bets_db,
-                           save_history_db, save_results_db, check_and_update_bets,
+                           save_history_db, save_results_db, save_dividends_db,
+                           check_and_update_bets,
                            save_race_predictions, update_prediction_results,
                            settle_bet_simulation, backfill_bet_simulation)
 from src.betting.make_bets import init_betting, make_bets, log_bet_simulation
@@ -59,6 +60,14 @@ def fetch_and_save_results(sess, hist_path, target_date):
 
         save_history_db(all_results, ROOT)
         save_results_db(all_results, ROOT)
+        # 全券種の実配当を保存。ワイド・馬連・馬単・三連複の配当は
+        # これまでパース後に捨てられており、単勝・複勝以外は回収率を
+        # 検証できなかった（2026-07-31修正）。失敗しても結果取得は止めない。
+        try:
+            _dv = save_dividends_db(all_results, ROOT)
+            print(f'   配当保存: {_dv["rows"]}行 / {_dv["races"]}レース')
+        except Exception as _e:
+            print(f'⚠ 配当保存に失敗（結果取得には影響なし）: {_e}')
         updated = update_prediction_results(all_results, ROOT)
         print(f'   race_predictions 更新: {updated}件')
 
