@@ -1520,6 +1520,34 @@ function render() {
           }
         }
       }
+      // AI強気ペア(A×D) 馬連・ワイド。回収率未検証のため必ず注記を出す。
+      const apb = race.ai_pair_bets;
+      if (apb && (apb.umaren||[]).length) {
+        html += '<div class="sec" style="margin-top:12px;font-size:11px;color:#8e44ad">'
+             +  '🧪 AI強気ペア（馬連・ワイド）'
+             +  '<span style="font-size:9px;color:#fff;background:#8e44ad;border-radius:3px;padding:1px 5px;margin-left:6px;font-weight:700">検証中</span>'
+             +  '</div>';
+        for (const p of apb.umaren) {
+          const chip = 'display:inline-block;min-width:22px;text-align:center;background:#8e44ad;color:#fff;border-radius:50%;padding:2px 5px;font-size:11px;font-weight:700';
+          html += '<div class="bet" style="align-items:flex-start">';
+          html += '<span class="btype" style="background:#8e44ad">馬連/ワイド</span>';
+          html += '<span class="bhorse"><span style="'+chip+'">'+p.nums[0]+'</span>'
+               +  ' - <span style="'+chip+'">'+p.nums[1]+'</span></span>';
+          html += '</div>';
+          html += '<div style="font-size:10px;color:#666;margin:-2px 0 6px 4px">'
+               +  '軸 #'+p.axis_num+' '+p.axis_pop+'番人気→AI'+p.axis_ai+'位 ／ '
+               +  '相手 #'+p.partner_num+' '+p.partner_pop+'番人気→AI'+p.partner_ai+'位'
+               +  '</div>';
+        }
+        const m = apb.measured || {};
+        html += '<div style="font-size:9px;color:#999;margin:0 0 4px 4px;line-height:1.5">'
+             +  '⚠ 実配当が保存されていないため<b>回収率は未検証</b>です。'
+             +  (m.races ? m.races.toLocaleString()+'レースの検証で市場示唆比 馬連'
+                 +(m.umaren?m.umaren.ratio:'-')+' / ワイド'+(m.wide?m.wide.ratio:'-')
+                 +'（損益分岐'+(m.breakeven_ratio||1.29)+'）ですが、' : '')
+             +  'これは近似確率との比率であり期待値の確認ではありません。'
+             +  '</div>';
+      }
       html += '</div>';
       if (race.rec && race.formation && !hasGumbel) {
         html += formationHtml(race.formation);
