@@ -106,3 +106,64 @@ class TestApplyPopularityDrift:
         a = _apply_popularity_drift(pop, rid, drift, seed=7)
         b = _apply_popularity_drift(pop, rid, drift, seed=7)
         np.testing.assert_array_equal(a, b)
+
+
+class TestLoadXgbModelAny:
+    """旧モデル比較が残差モデルで一度も動いていなかった件（2026-07-31）。
+
+    残差モデルは `Booster.save_model()` の UBJ 形式で保存されるのに、
+    比較側が `pickle.load()` していたため必ず
+    `invalid load key, '{'` で失敗し、「旧モデル評価スキップ」と出ていた。
+    """
+
+    def _residual_model(self, path):
+        import numpy as np
+        import xgboost as xgb
+        X = np.random.default_rng(0).normal(size=(50, 3))
+        y = (X[:, 0] > 0).astype(int)
+        b = xgb.train({'objective': 'binary:logistic', 'max_depth': 2},
+                      xgb.DMatrix(X, label=y), 3)
+        b.save_model(str(path))
+        return b
+
+    def test_pickle_cannot_read_residual_model(self, tmp_path):
+        """前提の固定: 残差モデルは pickle では読めない。"""
+        import pickle
+        p = tmp_path / 'res.pkl'
+        self._residual_model(p)
+        with pytest.raises(Exception):
+            pickle.load(open(p, 'rb'))
+
+    def test_loads_residual_model(self, tmp_path):
+        import xgboost as xgb
+        from src.tools.train_xgb import _load_xgb_model_any
+        p = tmp_path / 'res.pkl'
+        self._residual_model(p)
+        assert isinstance(_load_xgb_model_any(str(p), True), xgb.Booster)
+
+    def test_loads_residual_model_even_if_flag_wrong(self, tmp_path):
+        """residual フラグが欠けている古いメタでも読めること。"""
+        import xgboost as xgb
+        from src.tools.train_xgb import _load_xgb_model_any
+        p = tmp_path / 'res.pkl'
+        self._residual_model(p)
+        assert isinstance(_load_xgb_model_any(str(p), False), xgb.Booster)
+
+    def test_loads_pickled_sklearn_model(self, tmp_path):
+        import pickle
+        import numpy as np
+        import xgboost as xgb
+        from src.tools.train_xgb import _load_xgb_model_any
+        X = np.random.default_rng(0).normal(size=(50, 3))
+        y = (X[:, 0] > 0).astype(int)
+        m = xgb.XGBClassifier(n_estimators=3, max_depth=2).fit(X, y)
+        p = tmp_path / 'norm.pkl'
+        pickle.dump(m, open(p, 'wb'))
+        assert isinstance(_load_xgb_model_any(str(p), False), xgb.XGBClassifier)
+
+    def test_raises_for_garbage_file(self, tmp_path):
+        from src.tools.train_xgb import _load_xgb_model_any
+        p = tmp_path / 'junk.pkl'
+        p.write_bytes(b'not a model')
+        with pytest.raises(Exception):
+            _load_xgb_model_any(str(p), True)

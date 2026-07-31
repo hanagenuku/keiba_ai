@@ -105,6 +105,35 @@ def _apply_popularity_drift(pop_series, race_ids, drift, seed=0):
     return tmp.groupby('r')['k'].rank(method='first').values
 
 
+def _load_xgb_model_any(path, is_residual=False):
+    """保存形式を問わず XGB モデルを読む。
+
+    残差モデルは `Booster.save_model()`（UBJ形式）で保存されるため
+    `pickle.load()` では読めない。逆に非残差モデルは sklearn API を
+    pickle で保存している。どちらで保存されたか分からない場面があるので、
+    residual フラグを優先しつつ両方試す。
+    """
+    import xgboost as xgb
+
+    def _as_booster():
+        b = xgb.Booster()
+        b.load_model(path)
+        return b
+
+    def _as_pickle():
+        with open(path, 'rb') as f:
+            return pickle.load(f)
+
+    order = (_as_booster, _as_pickle) if is_residual else (_as_pickle, _as_booster)
+    first_err = None
+    for loader in order:
+        try:
+            return loader()
+        except Exception as e:      # noqa: BLE001 - 形式判定のため両方試す
+            first_err = first_err or e
+    raise first_err
+
+
 def _popularity_to_base_margin(pop_series, n_horses_series):
     """人気順位からレース内正規化確率→logitのbase_marginを算出する。
 
@@ -329,12 +358,18 @@ def train_xgb(base_dir,
     old_result = {}
     if os.path.exists(old_model_path):
         try:
-            with open(old_model_path, 'rb') as f:
-                old_model = pickle.load(f)
             old_cols_path_check = old_cols_path if os.path.exists(old_cols_path) else None
+            _old_meta = {}
             if old_cols_path_check:
                 with open(old_cols_path_check) as f:
-                    info = json.load(f)
+                    _old_meta = json.load(f)
+            # 残差モデルは save_model() の UBJ 形式で保存されるので pickle では読めない
+            # （先頭が '{' のため "invalid load key" になる）。旧実装はここで必ず
+            # 失敗し、残差モデルでは旧モデル比較が一度も動いていなかった。
+            old_model = _load_xgb_model_any(old_model_path,
+                                            _old_meta.get('residual', False))
+            if old_cols_path_check:
+                info = _old_meta
                 old_feats = info.get('feature_cols', feat_cols)
                 old_is_residual = info.get('residual', False)
             else:
