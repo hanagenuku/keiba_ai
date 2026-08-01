@@ -4,19 +4,6 @@
   "track_speed": -0.66,
   "summary": "時計遅め",
   "by_course": {
-    "中京": {
-      "inner_outer": -0.1,
-      "pace_bias": 0.03,
-      "track_speed": -0.28,
-      "summary": "フラット",
-      "style_dist": {
-        "差し": 12,
-        "追込": 6,
-        "先行": 11,
-        "逃げ": 4
-      },
-      "race_count": 11
-    },
     "新潟": {
       "inner_outer": 0.35,
       "pace_bias": -0.53,
@@ -29,6 +16,19 @@
         "逃げ": 4
       },
       "race_count": 12
+    },
+    "中京": {
+      "inner_outer": -0.1,
+      "pace_bias": 0.03,
+      "track_speed": -0.28,
+      "summary": "フラット",
+      "style_dist": {
+        "差し": 12,
+        "追込": 6,
+        "先行": 11,
+        "逃げ": 4
+      },
+      "race_count": 11
     },
     "札幌": {
       "inner_outer": 0.04,
