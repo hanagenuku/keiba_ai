@@ -724,6 +724,16 @@ function updateOddsAndEV(race, freshOdds) {
       h.tan_pct  = Math.round(Math.min(60, winProbs[i] * 100) * 10) / 10;
       h.fuku_pct = Math.round(top3s[i][1] * 100 * 10) / 10;
     });
+
+    // RL順位は「勝率の順位」そのもの。engine.py の calc_all() 末尾で
+    //   for i, h in enumerate(sorted(out, key=win_prob, reverse=True)): h['rl_rank'] = i+1
+    // と付け直している（calc_rl_cl_ranks の rl_raw は上書きされて使われない）。
+    // 勝率を再計算したらRL順位も振り直さないと、RL1の勝率がRL2より低いという
+    // 矛盾した表示になり、乖離バッジ・買い目候補・AI強気ペアまで狂う。
+    allHorses.forEach(h => { if (h._morning_rl == null) h._morning_rl = h.rl_rank; });
+    allHorses.slice()
+      .sort((a, b) => (b.tan_pct || 0) - (a.tan_pct || 0))
+      .forEach((h, i) => { h.rl_rank = i + 1; });
   }
 
   for (const h of allHorses) {
