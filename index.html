@@ -731,6 +731,54 @@ function updateOddsAndEV(race, freshOdds) {
          ? Math.round((h.tan_pct / 100) * h.odds * 1000) / 1000
          : null;
   }
+
+  // AI強気ペアは「市場人気 vs AI順位」で決まるので、人気が変われば選び直す必要がある。
+  // rl_rank はルールベース特徴量から算出され市場に依存しないため据え置きでよい。
+  recalcAiPairBets(race);
+}
+
+// ── AI強気ペア(A×D)の選び直し ─────────────────────────────────────────
+// サーバ側 src/betting/ai_pair_bets.py と同じ規則。ズレると表の乖離バッジと
+// 推奨が食い違うので、条件を変えるときは必ず両方直すこと。
+const APB_AXIS_POP_MIN = 4, APB_AXIS_POP_MAX = 6, APB_PARTNER_POP_MIN = 7;
+
+function _apbClassify(h) {
+  const pop = h.pop, ai = h.rl_rank;
+  if (!(pop >= 1 && pop <= 18) || !(ai >= 1 && ai <= 18)) return null;
+  if (ai >= pop) return null;                       // AI強気でなければ対象外
+  if (pop >= APB_AXIS_POP_MIN && pop <= APB_AXIS_POP_MAX) return 'A';
+  if (pop >= APB_PARTNER_POP_MIN) return 'D';
+  return null;
+}
+
+function recalcAiPairBets(race) {
+  const prev = race.ai_pair_bets;
+  if (!prev) return;                                 // 元々出ていなければ何もしない
+  const axis = [], partners = [];
+  for (const h of (race.horses || [])) {
+    const g = _apbClassify(h);
+    if (g === 'A') axis.push(h); else if (g === 'D') partners.push(h);
+  }
+  if (!axis.length || !partners.length) {
+    // 条件を満たす馬が居なくなったら推奨を消す（古い組を残さない）
+    race.ai_pair_bets = null;
+    return;
+  }
+  // 各群のAI最上位1頭ずつ（検証で的中率が最も高かった構成）
+  axis.sort((a, b) => a.rl_rank - b.rl_rank);
+  partners.sort((a, b) => a.rl_rank - b.rl_rank);
+  const a = axis[0], p = partners[0];
+  const pair = {
+    // 馬連・ワイドは順不同。サーバ側・配当照合と同じく昇順に正規化する
+    nums: [a.n, p.n].sort((x, y) => x - y),
+    axis_num: a.n, axis_pop: a.pop, axis_ai: a.rl_rank,
+    partner_num: p.n, partner_pop: p.pop, partner_ai: p.rl_rank,
+  };
+  race.ai_pair_bets = {
+    umaren: [pair], wide: [pair],
+    axis: [a.n], partners: [p.n],
+    unverified: true, measured: prev.measured,
+  };
 }
 
 function updateRecFlag(race) {
