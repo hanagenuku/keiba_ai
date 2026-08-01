@@ -992,9 +992,20 @@ function recalcGumbelBets(race) {
       const others = allNums.filter(n => !axN.includes(n));
       const legs = axN.length === 1 ? [[axN[0]], others, others]
                  : axN.length === 2 ? [[axN[0], axN[1]], others, []] : [allNums, allNums, allNums];
+
+      // ⚠「流し」表示にしてよいのは、実際に買う組が legs の総当たりと
+      //   **完全に一致するとき**だけ。EV足切りで一部が落ちているのに
+      //   総当たりの形で見せると、画面どおり買うと点数が増えてしまう。
+      //   （例: 軸1頭×相手5頭で8点を選んだのに 5×5 と表示 → 読むと10点）
+      //   サーバ側 app_json._trio_shape() は同じ判定をしている。合わせる。
+      const _expected = axN.length === 1 ? others.length * (others.length - 1) / 2
+                      : axN.length === 2 ? others.length : -1;
+      const _isExactFlow = axN.length > 0 && _expected === pts;
+
       result.push({
-        tag: 'sanfuku', label: '三連複' + formLabel + '(' + pts + '点)',
-        trio_type: axN.length > 0 ? 'formation' : 'box',
+        tag: 'sanfuku',
+        label: '三連複' + (_isExactFlow ? formLabel : '') + '(' + pts + '点)',
+        trio_type: _isExactFlow ? 'formation' : (axN.length > 0 ? 'list' : 'box'),
         legs: legs, axis: axN.length > 0 ? {num: axN[0]} : null,
         nums: allNums, combos: comboStrs,
         est: '¥' + Math.round(minPay).toLocaleString() + '〜¥' + Math.round(maxPay).toLocaleString(),
