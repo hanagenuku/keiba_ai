@@ -60,7 +60,16 @@ def main():
     init_engine(ROOT)
 
     jst_now = datetime.now(JST)
-    target_date = jst_now.strftime('%Y%m%d')
+    # 対象日は既定で当日だが、TARGET_DATE で過去日を指定できる。
+    # ⚠ これが無いと**取りこぼした開催を後から取り直せない**。
+    #   2026-08-02は新潟・札幌のスキャンが全滅して24レースを落としたが、
+    #   翌日に再実行しても当日(月曜)を見に行って6秒で空振りに終わった。
+    target_date = (os.environ.get('TARGET_DATE') or '').strip() \
+        or jst_now.strftime('%Y%m%d')
+    if not (len(target_date) == 8 and target_date.isdigit()):
+        raise SystemExit(f'TARGET_DATE は YYYYMMDD で指定してください: {target_date!r}')
+    if target_date != jst_now.strftime('%Y%m%d'):
+        print(f'📅 対象日を指定して実行: {target_date}（当日ではありません）')
 
     sess = create_session()
     all_results = fetch_and_save_results(sess, hist_path, target_date)
@@ -76,7 +85,9 @@ def main():
         record_all_shadow_bets(all_results, ROOT, recommended_race_ids=_rec_ids)
 
     # ② SHAP診断レポート生成
-    jst_date = jst_now.strftime('%Y-%m-%d')
+    # 当日基準にすると TARGET_DATE 指定時に別の日を集計してしまうため、
+    # 結果取得と同じ対象日から作る
+    jst_date = f'{target_date[:4]}-{target_date[4:6]}-{target_date[6:]}'
     generate_shap_report(ROOT, db_path, target_date=jst_date)
 
     # ③ エラータグ分類・蓄積（翌週予想の補正係数を自動更新）

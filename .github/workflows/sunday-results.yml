@@ -2,6 +2,12 @@ name: Sunday Results
 
 on:
   workflow_dispatch:
+    inputs:
+      date:
+        description: '対象日 YYYYMMDD（空なら当日）。取りこぼした開催の取り直しに使う'
+        required: false
+        default: ''
+        type: string
 
 concurrency:
   group: keiba-weekly
@@ -38,6 +44,8 @@ jobs:
 
       - name: Get Sunday results
         run: python scripts/sunday_results.py
+        env:
+          TARGET_DATE: ${{ inputs.date }}
 
       - name: Ingest pre-race odds log
         run: python scripts/ingest_odds_log.py

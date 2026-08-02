@@ -15,6 +15,19 @@ JST = timezone(timedelta(hours=9))
 AUC_THRESHOLD = 0.75
 
 
+def _restore_rejected_residual(data_dir):
+    """AUC不足で不採用にしたモデルを、退避済みの旧モデルへ戻す。
+
+    train_xgb は評価より前に *_residual.pkl を新モデルで上書きするため、
+    ここで戻さないと「中止したのにファイルは新モデル」という状態が残る。
+    """
+    old = os.path.join(data_dir, 'xgb_fukusho_model_residual_old.pkl')
+    cur = os.path.join(data_dir, 'xgb_fukusho_model_residual.pkl')
+    if os.path.exists(old):
+        shutil.copy2(old, cur)
+        print('   ↩ 残差モデルを更新前の状態に戻しました')
+
+
 def main():
     jst_now = datetime.now(JST)
 
@@ -51,6 +64,12 @@ def main():
 
     if auc < AUC_THRESHOLD:
         print(f'❌ AUC {auc:.4f} < {AUC_THRESHOLD} — モデル更新を中止します')
+        # ⚠ train_xgb は閾値判定より前に *_residual.pkl を新モデルで
+        #   置き換えてしまう（「新モデルを正式採用」のログが出る）。
+        #   中止したのに残差モデルだけ差し替わった状態を残すと、
+        #   将来この後段に push が足された時に不採用モデルが本番へ出る。
+        #   退避済みの *_residual_old.pkl から戻して整合を保つ。
+        _restore_rejected_residual(os.path.join(ROOT, 'data'))
         sys.exit(1)
 
     # train_xgb(residual=True) は xgb_fukusho_model_residual.pkl /
