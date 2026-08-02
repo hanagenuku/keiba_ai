@@ -1,0 +1,46 @@
+name: Probe Result Access (診断)
+
+# 過去日のレース結果ページへの到達経路を実地で切り分けるための調査用。
+# 読み取り専用で、DB・モデル・latest.json には一切書き込まない。
+# 2026-08-02 に新潟・札幌の R01 探索が全滅して24レースを落とした件の原因調査用に追加。
+
+on:
+  workflow_dispatch:
+    inputs:
+      date:
+        description: '調べたい開催日 YYYYMMDD（例: 20260802）'
+        required: true
+        type: string
+      places:
+        description: '場コード カンマ区切り（01札幌 04新潟 07中京 …。空なら全場）'
+        required: false
+        default: ''
+        type: string
+
+# 読み取り専用であることを権限でも担保する（誤って push できないように）
+permissions:
+  contents: read
+
+concurrency:
+  group: keiba-weekly
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Probe
+        run: python scripts/probe_result_access.py
+        env:
+          TARGET_DATE: ${{ inputs.date }}
+          PLACES: ${{ inputs.places }}
