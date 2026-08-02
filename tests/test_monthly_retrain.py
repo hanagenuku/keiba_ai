@@ -61,3 +61,20 @@ def test_monthly_retrain_runs_calibration_and_checks_result():
     assert 'cal is not None' in src, '戻り値(None)の確認をしていません'
     # 失敗時に旧較正器を残さないこと
     assert '.stale' in src, '失敗時に旧較正器を退避していません'
+
+
+def test_shap_diagnosis_uses_format_agnostic_model_loader():
+    """SHAP診断が残差モデル(UBJ)を pickle で読もうとしないこと（2026-08-03）。
+
+    旧実装は pickle.load() で必ず失敗し、shap がインストール済みでも
+    「SHAP: 未インストール」と誤表示していた。原因の切り分けを誤らせるため、
+    失敗理由を区別して出すことも合わせて固定する。
+    """
+    src_path = os.path.join(os.path.dirname(__file__), '..',
+                            'src', 'tools', 'shap_diagnosis.py')
+    with open(src_path, encoding='utf-8') as f:
+        src = f.read()
+    assert '_load_xgb_model_any' in src, '共通ローダーを使っていない'
+    assert 'model = pickle.load(f)' not in src, 'pickle.load が残っている'
+    assert 'shap_error' in src and '利用できません' in src, \
+        '失敗理由を区別して表示していない'

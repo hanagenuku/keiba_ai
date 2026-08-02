@@ -105,16 +105,22 @@ def generate_shap_report(base_dir, db_path, target_date=None):
     report['shap_available'] = False
     try:
         import shap  # noqa: F401
-        import pickle
         import pandas as pd
+
+        # ⚠ 残差モデルは Booster.save_model() の UBJ 形式で保存されるため
+        #    pickle.load() では読めない（先頭が '{' で invalid load key）。
+        #    旧実装はここで必ず失敗し、shap は入っているのに
+        #    「SHAP: 未インストール」と誤表示していた。
+        #    calibrate_xgb(#127)・train_xgb(#128) と同じ構図の3件目。
+        from src.tools.train_xgb import _load_xgb_model_any
 
         model_path = os.path.join(base_dir, 'data', 'xgb_fukusho_model.pkl')
         cols_path  = os.path.join(base_dir, 'data', 'xgb_feature_cols.json')
         if os.path.exists(model_path) and os.path.exists(cols_path):
-            with open(model_path, 'rb') as f:
-                model = pickle.load(f)
             with open(cols_path, 'r') as f:
-                feature_cols = json.load(f)['feature_cols']
+                _meta = json.load(f)
+            feature_cols = _meta['feature_cols']
+            model = _load_xgb_model_any(model_path, _meta.get('residual', False))
             report['shap_available'] = True
             # TODO: 外れ馬の特徴量を race_predictions から取得し SHAP 値を計算
             # （特徴量は build_training_data で horse_features.csv に保存済み）
@@ -145,7 +151,13 @@ def generate_shap_report(base_dir, db_path, target_date=None):
                   f'（{g["popularity"]}番人気）')
 
     if not report['shap_available']:
-        print('   ℹ SHAP: 未インストール（pip install shap で有効化可）')
+        # 失敗理由を区別して出す。「未インストール」と決めつけると、
+        # 実際にはモデルが読めていないだけの時に原因を見誤る。
+        _err = report.get('shap_error')
+        if _err:
+            print(f'   ⚠ SHAP: 利用できません（{_err}）')
+        else:
+            print('   ℹ SHAP: 未インストール（pip install shap で有効化可）')
 
     logs_dir = os.path.join(base_dir, 'data', 'logs')
     os.makedirs(logs_dir, exist_ok=True)
