@@ -7,3 +7,6 @@ scikit-learn>=1.2
 numpy>=1.24
 pandas>=1.5
 shap>=0.42
+# ワークフロー定義(.github/workflows/*.yml)の構造を検証するテストで使う。
+# スキップ扱いにすると CI で検査が効かなくなるため依存として明示する。
+PyYAML>=6.0
