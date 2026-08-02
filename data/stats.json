@@ -103,15 +103,15 @@
     }
   ],
   "rl_accuracy": {
-    "total_races": 384,
-    "rl1_win_rate": 24.5,
-    "rl1_top3_rate": 46.1,
-    "rl2_top3_rate": 38.5,
-    "rl3_top3_rate": 35.7,
+    "total_races": 408,
+    "rl1_win_rate": 24.8,
+    "rl1_top3_rate": 46.8,
+    "rl2_top3_rate": 39.7,
+    "rl3_top3_rate": 36.0,
     "by_chaos": {
       "A": {
-        "total": 38,
-        "rl1_win_rate": 44.7,
+        "total": 45,
+        "rl1_win_rate": 42.2,
         "rl1_top3_rate": 71.1
       },
       "B": {
@@ -120,9 +120,9 @@
         "rl1_top3_rate": 10.6
       },
       "C": {
-        "total": 280,
-        "rl1_win_rate": 26.8,
-        "rl1_top3_rate": 51.1
+        "total": 297,
+        "rl1_win_rate": 26.9,
+        "rl1_top3_rate": 51.2
       }
     }
   },
@@ -323,6 +323,438 @@
       "fuku_hit": 1,
       "fuku_pay": 130.0,
       "wide_hit": 1,
+      "rec": 0
+    },
+    {
+      "date": "2026-08-02",
+      "racecourse": "新潟",
+      "race_num": 1,
+      "race_class": "未勝利",
+      "chaos": "A",
+      "rl1": 4,
+      "rl2": 5,
+      "rl3": 9,
+      "win": 7,
+      "sec": 5,
+      "thr": 4,
+      "tan_hit": 0,
+      "fuku_hit": 1,
+      "fuku_pay": 120.0,
+      "wide_hit": 1,
+      "rec": 0
+    },
+    {
+      "date": "2026-08-02",
+      "racecourse": "新潟",
+      "race_num": 2,
+      "race_class": "新馬",
+      "chaos": "A",
+      "rl1": 5,
+      "rl2": 12,
+      "rl3": 10,
+      "win": 5,
+      "sec": 10,
+      "thr": 6,
+      "tan_hit": 1,
+      "fuku_hit": 1,
+      "fuku_pay": 200.0,
+      "wide_hit": 0,
+      "rec": 0
+    },
+    {
+      "date": "2026-08-02",
+      "racecourse": "新潟",
+      "race_num": 3,
+      "race_class": "新馬",
+      "chaos": "C",
+      "rl1": 4,
+      "rl2": 5,
+      "rl3": 11,
+      "win": 13,
+      "sec": 5,
+      "thr": 11,
+      "tan_hit": 0,
+      "fuku_hit": 0,
+      "fuku_pay": null,
+      "wide_hit": 0,
+      "rec": 0
+    },
+    {
+      "date": "2026-08-02",
+      "racecourse": "新潟",
+      "race_num": 4,
+      "race_class": "未勝利",
+      "chaos": "C",
+      "rl1": 9,
+      "rl2": 8,
+      "rl3": 3,
+      "win": 9,
+      "sec": 8,
+      "thr": 10,
+      "tan_hit": 1,
+      "fuku_hit": 1,
+      "fuku_pay": 160.0,
+      "wide_hit": 1,
+      "rec": 0
+    },
+    {
+      "date": "2026-08-02",
+      "racecourse": "新潟",
+      "race_num": 5,
+      "race_class": "未勝利",
+      "chaos": "C",
+      "rl1": 7,
+      "rl2": 5,
+      "rl3": 1,
+      "win": 3,
+      "sec": 4,
+      "thr": 7,
+      "tan_hit": 0,
+      "fuku_hit": 1,
+      "fuku_pay": 140.0,
+      "wide_hit": 0,
+      "rec": 0
+    },
+    {
+      "date": "2026-08-02",
+      "racecourse": "新潟",
+      "race_num": 6,
+      "race_class": "2勝",
+      "chaos": "C",
+      "rl1": 10,
+      "rl2": 6,
+      "rl3": 4,
+      "win": 1,
+      "sec": 10,
+      "thr": 5,
+      "tan_hit": 0,
+      "fuku_hit": 1,
+      "fuku_pay": 170.0,
+      "wide_hit": 0,
+      "rec": 0
+    },
+    {
+      "date": "2026-08-02",
+      "racecourse": "新潟",
+      "race_num": 7,
+      "race_class": "OP",
+      "chaos": "C",
+      "rl1": 6,
+      "rl2": 16,
+      "rl3": 10,
+      "win": 6,
+      "sec": 11,
+      "thr": 4,
+      "tan_hit": 1,
+      "fuku_hit": 1,
+      "fuku_pay": 160.0,
+      "wide_hit": 0,
+      "rec": 0
+    },
+    {
+      "date": "2026-08-02",
+      "racecourse": "新潟",
+      "race_num": 8,
+      "race_class": "1勝",
+      "chaos": "C",
+      "rl1": 2,
+      "rl2": 8,
+      "rl3": 1,
+      "win": 4,
+      "sec": 1,
+      "thr": 8,
+      "tan_hit": 0,
+      "fuku_hit": 0,
+      "fuku_pay": null,
+      "wide_hit": 0,
+      "rec": 0
+    },
+    {
+      "date": "2026-08-02",
+      "racecourse": "新潟",
+      "race_num": 9,
+      "race_class": "1勝",
+      "chaos": "C",
+      "rl1": 14,
+      "rl2": 2,
+      "rl3": 7,
+      "win": 6,
+      "sec": 13,
+      "thr": 2,
+      "tan_hit": 0,
+      "fuku_hit": 0,
+      "fuku_pay": null,
+      "wide_hit": 0,
+      "rec": 0
+    },
+    {
+      "date": "2026-08-02",
+      "racecourse": "新潟",
+      "race_num": 10,
+      "race_class": "1勝",
+      "chaos": "C",
+      "rl1": 1,
+      "rl2": 10,
+      "rl3": 9,
+      "win": 4,
+      "sec": 11,
+      "thr": 3,
+      "tan_hit": 0,
+      "fuku_hit": 0,
+      "fuku_pay": null,
+      "wide_hit": 0,
+      "rec": 0
+    },
+    {
+      "date": "2026-08-02",
+      "racecourse": "新潟",
+      "race_num": 11,
+      "race_class": "未勝利",
+      "chaos": "C",
+      "rl1": 13,
+      "rl2": 12,
+      "rl3": 14,
+      "win": 13,
+      "sec": 12,
+      "thr": 4,
+      "tan_hit": 1,
+      "fuku_hit": 1,
+      "fuku_pay": 140.0,
+      "wide_hit": 1,
+      "rec": 0
+    },
+    {
+      "date": "2026-08-02",
+      "racecourse": "新潟",
+      "race_num": 12,
+      "race_class": "未勝利",
+      "chaos": "C",
+      "rl1": 14,
+      "rl2": 15,
+      "rl3": 13,
+      "win": 13,
+      "sec": 14,
+      "thr": 15,
+      "tan_hit": 0,
+      "fuku_hit": 1,
+      "fuku_pay": 110.0,
+      "wide_hit": 1,
+      "rec": 0
+    },
+    {
+      "date": "2026-08-02",
+      "racecourse": "札幌",
+      "race_num": 1,
+      "race_class": "未勝利",
+      "chaos": "A",
+      "rl1": 1,
+      "rl2": 8,
+      "rl3": 6,
+      "win": 5,
+      "sec": 1,
+      "thr": 8,
+      "tan_hit": 0,
+      "fuku_hit": 1,
+      "fuku_pay": 130.0,
+      "wide_hit": 1,
+      "rec": 0
+    },
+    {
+      "date": "2026-08-02",
+      "racecourse": "札幌",
+      "race_num": 2,
+      "race_class": "未勝利",
+      "chaos": "A",
+      "rl1": 3,
+      "rl2": 8,
+      "rl3": 2,
+      "win": 8,
+      "sec": 11,
+      "thr": 10,
+      "tan_hit": 0,
+      "fuku_hit": 0,
+      "fuku_pay": null,
+      "wide_hit": 0,
+      "rec": 0
+    },
+    {
+      "date": "2026-08-02",
+      "racecourse": "札幌",
+      "race_num": 3,
+      "race_class": "未勝利",
+      "chaos": "C",
+      "rl1": 3,
+      "rl2": 8,
+      "rl3": 5,
+      "win": 3,
+      "sec": 8,
+      "thr": 5,
+      "tan_hit": 1,
+      "fuku_hit": 1,
+      "fuku_pay": 110.0,
+      "wide_hit": 1,
+      "rec": 0
+    },
+    {
+      "date": "2026-08-02",
+      "racecourse": "札幌",
+      "race_num": 4,
+      "race_class": "1勝",
+      "chaos": "A",
+      "rl1": 5,
+      "rl2": 2,
+      "rl3": 6,
+      "win": 10,
+      "sec": 5,
+      "thr": 6,
+      "tan_hit": 0,
+      "fuku_hit": 1,
+      "fuku_pay": 110.0,
+      "wide_hit": 0,
+      "rec": 0
+    },
+    {
+      "date": "2026-08-02",
+      "racecourse": "札幌",
+      "race_num": 5,
+      "race_class": "新馬",
+      "chaos": "C",
+      "rl1": 4,
+      "rl2": 2,
+      "rl3": 3,
+      "win": 2,
+      "sec": 7,
+      "thr": 3,
+      "tan_hit": 0,
+      "fuku_hit": 0,
+      "fuku_pay": null,
+      "wide_hit": 0,
+      "rec": 0
+    },
+    {
+      "date": "2026-08-02",
+      "racecourse": "札幌",
+      "race_num": 6,
+      "race_class": "1勝",
+      "chaos": "C",
+      "rl1": 3,
+      "rl2": 6,
+      "rl3": 5,
+      "win": 10,
+      "sec": 1,
+      "thr": 2,
+      "tan_hit": 0,
+      "fuku_hit": 0,
+      "fuku_pay": null,
+      "wide_hit": 0,
+      "rec": 0
+    },
+    {
+      "date": "2026-08-02",
+      "racecourse": "札幌",
+      "race_num": 7,
+      "race_class": "未勝利",
+      "chaos": "A",
+      "rl1": 1,
+      "rl2": 8,
+      "rl3": 9,
+      "win": 4,
+      "sec": 9,
+      "thr": 12,
+      "tan_hit": 0,
+      "fuku_hit": 0,
+      "fuku_pay": null,
+      "wide_hit": 0,
+      "rec": 0
+    },
+    {
+      "date": "2026-08-02",
+      "racecourse": "札幌",
+      "race_num": 8,
+      "race_class": "1勝",
+      "chaos": "C",
+      "rl1": 2,
+      "rl2": 1,
+      "rl3": 14,
+      "win": 2,
+      "sec": 1,
+      "thr": 14,
+      "tan_hit": 1,
+      "fuku_hit": 1,
+      "fuku_pay": 170.0,
+      "wide_hit": 1,
+      "rec": 0
+    },
+    {
+      "date": "2026-08-02",
+      "racecourse": "札幌",
+      "race_num": 9,
+      "race_class": "2勝",
+      "chaos": "C",
+      "rl1": 5,
+      "rl2": 1,
+      "rl3": 2,
+      "win": 8,
+      "sec": 5,
+      "thr": 10,
+      "tan_hit": 0,
+      "fuku_hit": 1,
+      "fuku_pay": 170.0,
+      "wide_hit": 0,
+      "rec": 0
+    },
+    {
+      "date": "2026-08-02",
+      "racecourse": "札幌",
+      "race_num": 10,
+      "race_class": "3勝",
+      "chaos": "A",
+      "rl1": 8,
+      "rl2": 5,
+      "rl3": 6,
+      "win": 8,
+      "sec": 1,
+      "thr": 9,
+      "tan_hit": 1,
+      "fuku_hit": 1,
+      "fuku_pay": 110.0,
+      "wide_hit": 0,
+      "rec": 0
+    },
+    {
+      "date": "2026-08-02",
+      "racecourse": "札幌",
+      "race_num": 11,
+      "race_class": "OP",
+      "chaos": "C",
+      "rl1": 9,
+      "rl2": 7,
+      "rl3": 11,
+      "win": 7,
+      "sec": 11,
+      "thr": 14,
+      "tan_hit": 0,
+      "fuku_hit": 0,
+      "fuku_pay": null,
+      "wide_hit": 0,
+      "rec": 0
+    },
+    {
+      "date": "2026-08-02",
+      "racecourse": "札幌",
+      "race_num": 12,
+      "race_class": "2勝",
+      "chaos": "C",
+      "rl1": 14,
+      "rl2": 5,
+      "rl3": 3,
+      "win": 5,
+      "sec": 2,
+      "thr": 11,
+      "tan_hit": 0,
+      "fuku_hit": 0,
+      "fuku_pay": null,
+      "wide_hit": 0,
       "rec": 0
     },
     {
@@ -594,449 +1026,17 @@
       "fuku_pay": 110.0,
       "wide_hit": 0,
       "rec": 0
-    },
-    {
-      "date": "2026-08-01",
-      "racecourse": "中京",
-      "race_num": 4,
-      "race_class": "未勝利",
-      "chaos": "C",
-      "rl1": 15,
-      "rl2": 12,
-      "rl3": 9,
-      "win": 9,
-      "sec": 8,
-      "thr": 13,
-      "tan_hit": 0,
-      "fuku_hit": 0,
-      "fuku_pay": null,
-      "wide_hit": 0,
-      "rec": 0
-    },
-    {
-      "date": "2026-08-01",
-      "racecourse": "中京",
-      "race_num": 5,
-      "race_class": "未勝利",
-      "chaos": "A",
-      "rl1": 9,
-      "rl2": 14,
-      "rl3": 4,
-      "win": 14,
-      "sec": 9,
-      "thr": 2,
-      "tan_hit": 0,
-      "fuku_hit": 1,
-      "fuku_pay": 130.0,
-      "wide_hit": 1,
-      "rec": 0
-    },
-    {
-      "date": "2026-08-01",
-      "racecourse": "中京",
-      "race_num": 6,
-      "race_class": "3勝",
-      "chaos": "C",
-      "rl1": 3,
-      "rl2": 8,
-      "rl3": 14,
-      "win": 3,
-      "sec": 13,
-      "thr": 8,
-      "tan_hit": 1,
-      "fuku_hit": 1,
-      "fuku_pay": 110.0,
-      "wide_hit": 1,
-      "rec": 0
-    },
-    {
-      "date": "2026-08-01",
-      "racecourse": "中京",
-      "race_num": 7,
-      "race_class": "3勝",
-      "chaos": "A",
-      "rl1": 2,
-      "rl2": 1,
-      "rl3": 9,
-      "win": 6,
-      "sec": 8,
-      "thr": 1,
-      "tan_hit": 0,
-      "fuku_hit": 0,
-      "fuku_pay": null,
-      "wide_hit": 0,
-      "rec": 0
-    },
-    {
-      "date": "2026-08-01",
-      "racecourse": "中京",
-      "race_num": 8,
-      "race_class": "2勝",
-      "chaos": "C",
-      "rl1": 10,
-      "rl2": 12,
-      "rl3": 4,
-      "win": 10,
-      "sec": 8,
-      "thr": 4,
-      "tan_hit": 1,
-      "fuku_hit": 1,
-      "fuku_pay": 100.0,
-      "wide_hit": 0,
-      "rec": 0
-    },
-    {
-      "date": "2026-08-01",
-      "racecourse": "中京",
-      "race_num": 10,
-      "race_class": "1勝",
-      "chaos": "C",
-      "rl1": 14,
-      "rl2": 2,
-      "rl3": 10,
-      "win": 14,
-      "sec": 7,
-      "thr": 10,
-      "tan_hit": 1,
-      "fuku_hit": 1,
-      "fuku_pay": 120.0,
-      "wide_hit": 0,
-      "rec": 0
-    },
-    {
-      "date": "2026-08-01",
-      "racecourse": "中京",
-      "race_num": 11,
-      "race_class": "1勝",
-      "chaos": "A",
-      "rl1": 7,
-      "rl2": 5,
-      "rl3": 3,
-      "win": 3,
-      "sec": 5,
-      "thr": 7,
-      "tan_hit": 0,
-      "fuku_hit": 1,
-      "fuku_pay": 110.0,
-      "wide_hit": 1,
-      "rec": 0
-    },
-    {
-      "date": "2026-08-01",
-      "racecourse": "中京",
-      "race_num": 12,
-      "race_class": "1勝",
-      "chaos": "C",
-      "rl1": 6,
-      "rl2": 1,
-      "rl3": 9,
-      "win": 1,
-      "sec": 6,
-      "thr": 3,
-      "tan_hit": 0,
-      "fuku_hit": 1,
-      "fuku_pay": 230.0,
-      "wide_hit": 1,
-      "rec": 0
-    },
-    {
-      "date": "2026-08-01",
-      "racecourse": "札幌",
-      "race_num": 1,
-      "race_class": "未勝利",
-      "chaos": "C",
-      "rl1": 7,
-      "rl2": 11,
-      "rl3": 1,
-      "win": 7,
-      "sec": 5,
-      "thr": 3,
-      "tan_hit": 1,
-      "fuku_hit": 1,
-      "fuku_pay": 150.0,
-      "wide_hit": 0,
-      "rec": 0
-    },
-    {
-      "date": "2026-08-01",
-      "racecourse": "札幌",
-      "race_num": 2,
-      "race_class": "未勝利",
-      "chaos": "C",
-      "rl1": 2,
-      "rl2": 6,
-      "rl3": 9,
-      "win": 6,
-      "sec": 4,
-      "thr": 2,
-      "tan_hit": 0,
-      "fuku_hit": 1,
-      "fuku_pay": 140.0,
-      "wide_hit": 1,
-      "rec": 0
-    },
-    {
-      "date": "2026-08-01",
-      "racecourse": "札幌",
-      "race_num": 3,
-      "race_class": "未勝利",
-      "chaos": "C",
-      "rl1": 5,
-      "rl2": 8,
-      "rl3": 6,
-      "win": 8,
-      "sec": 11,
-      "thr": 5,
-      "tan_hit": 0,
-      "fuku_hit": 1,
-      "fuku_pay": 130.0,
-      "wide_hit": 1,
-      "rec": 0
-    },
-    {
-      "date": "2026-08-01",
-      "racecourse": "札幌",
-      "race_num": 4,
-      "race_class": "1勝",
-      "chaos": "C",
-      "rl1": 1,
-      "rl2": 4,
-      "rl3": 11,
-      "win": 7,
-      "sec": 1,
-      "thr": 11,
-      "tan_hit": 0,
-      "fuku_hit": 1,
-      "fuku_pay": 110.0,
-      "wide_hit": 0,
-      "rec": 0
-    },
-    {
-      "date": "2026-08-01",
-      "racecourse": "札幌",
-      "race_num": 5,
-      "race_class": "新馬",
-      "chaos": "C",
-      "rl1": 4,
-      "rl2": 3,
-      "rl3": 7,
-      "win": 7,
-      "sec": 5,
-      "thr": 3,
-      "tan_hit": 0,
-      "fuku_hit": 0,
-      "fuku_pay": null,
-      "wide_hit": 0,
-      "rec": 0
-    },
-    {
-      "date": "2026-08-01",
-      "racecourse": "札幌",
-      "race_num": 6,
-      "race_class": "1勝",
-      "chaos": "A",
-      "rl1": 8,
-      "rl2": 1,
-      "rl3": 7,
-      "win": 8,
-      "sec": 7,
-      "thr": 4,
-      "tan_hit": 1,
-      "fuku_hit": 1,
-      "fuku_pay": 110.0,
-      "wide_hit": 0,
-      "rec": 0
-    },
-    {
-      "date": "2026-08-01",
-      "racecourse": "札幌",
-      "race_num": 7,
-      "race_class": "未勝利",
-      "chaos": "C",
-      "rl1": 3,
-      "rl2": 6,
-      "rl3": 12,
-      "win": 3,
-      "sec": 11,
-      "thr": 5,
-      "tan_hit": 1,
-      "fuku_hit": 1,
-      "fuku_pay": 260.0,
-      "wide_hit": 0,
-      "rec": 0
-    },
-    {
-      "date": "2026-08-01",
-      "racecourse": "札幌",
-      "race_num": 8,
-      "race_class": "1勝",
-      "chaos": "A",
-      "rl1": 4,
-      "rl2": 2,
-      "rl3": 1,
-      "win": 4,
-      "sec": 10,
-      "thr": 8,
-      "tan_hit": 1,
-      "fuku_hit": 1,
-      "fuku_pay": 110.0,
-      "wide_hit": 0,
-      "rec": 0
-    },
-    {
-      "date": "2026-08-01",
-      "racecourse": "札幌",
-      "race_num": 9,
-      "race_class": "2勝",
-      "chaos": "C",
-      "rl1": 2,
-      "rl2": 6,
-      "rl3": 7,
-      "win": 7,
-      "sec": 5,
-      "thr": 1,
-      "tan_hit": 0,
-      "fuku_hit": 0,
-      "fuku_pay": null,
-      "wide_hit": 0,
-      "rec": 0
-    },
-    {
-      "date": "2026-08-01",
-      "racecourse": "札幌",
-      "race_num": 10,
-      "race_class": "1勝",
-      "chaos": "C",
-      "rl1": 1,
-      "rl2": 8,
-      "rl3": 3,
-      "win": 1,
-      "sec": 8,
-      "thr": 5,
-      "tan_hit": 1,
-      "fuku_hit": 1,
-      "fuku_pay": 140.0,
-      "wide_hit": 1,
-      "rec": 0
-    },
-    {
-      "date": "2026-08-01",
-      "racecourse": "札幌",
-      "race_num": 11,
-      "race_class": "3勝",
-      "chaos": "C",
-      "rl1": 12,
-      "rl2": 11,
-      "rl3": 16,
-      "win": 10,
-      "sec": 12,
-      "thr": 11,
-      "tan_hit": 0,
-      "fuku_hit": 1,
-      "fuku_pay": 180.0,
-      "wide_hit": 1,
-      "rec": 0
-    },
-    {
-      "date": "2026-08-01",
-      "racecourse": "札幌",
-      "race_num": 12,
-      "race_class": "2勝",
-      "chaos": "C",
-      "rl1": 7,
-      "rl2": 3,
-      "rl3": 1,
-      "win": 1,
-      "sec": 3,
-      "thr": 6,
-      "tan_hit": 0,
-      "fuku_hit": 0,
-      "fuku_pay": null,
-      "wide_hit": 0,
-      "rec": 0
-    },
-    {
-      "date": "2026-07-26",
-      "racecourse": "新潟",
-      "race_num": 1,
-      "race_class": "未勝利",
-      "chaos": "C",
-      "rl1": 7,
-      "rl2": 4,
-      "rl3": 5,
-      "win": 7,
-      "sec": 6,
-      "thr": 4,
-      "tan_hit": 1,
-      "fuku_hit": 1,
-      "fuku_pay": 110.0,
-      "wide_hit": 1,
-      "rec": 0
-    },
-    {
-      "date": "2026-07-26",
-      "racecourse": "新潟",
-      "race_num": 2,
-      "race_class": "新馬",
-      "chaos": "C",
-      "rl1": 3,
-      "rl2": 9,
-      "rl3": 2,
-      "win": 6,
-      "sec": 3,
-      "thr": 2,
-      "tan_hit": 0,
-      "fuku_hit": 1,
-      "fuku_pay": 100.0,
-      "wide_hit": 0,
-      "rec": 0
-    },
-    {
-      "date": "2026-07-26",
-      "racecourse": "新潟",
-      "race_num": 3,
-      "race_class": "未勝利",
-      "chaos": "C",
-      "rl1": 11,
-      "rl2": 8,
-      "rl3": 7,
-      "win": 7,
-      "sec": 15,
-      "thr": 13,
-      "tan_hit": 0,
-      "fuku_hit": 0,
-      "fuku_pay": null,
-      "wide_hit": 0,
-      "rec": 0
-    },
-    {
-      "date": "2026-07-26",
-      "racecourse": "新潟",
-      "race_num": 4,
-      "race_class": "未勝利",
-      "chaos": "C",
-      "rl1": 14,
-      "rl2": 16,
-      "rl3": 8,
-      "win": 1,
-      "sec": 7,
-      "thr": 11,
-      "tan_hit": 0,
-      "fuku_hit": 0,
-      "fuku_pay": null,
-      "wide_hit": 0,
-      "rec": 0
     }
   ],
   "upset_patterns": {
-    "total_races": 340,
-    "overall_upset_rate": 95.6,
+    "total_races": 364,
+    "overall_upset_rate": 95.1,
     "by_chaos": [
       {
         "label": "A",
-        "total": 38,
-        "upset_rate": 92.1,
-        "full_miss_rate": 5.3,
+        "total": 45,
+        "upset_rate": 93.3,
+        "full_miss_rate": 4.4,
         "longshot_rate": 0.0
       },
       {
@@ -1048,8 +1048,8 @@
       },
       {
         "label": "C",
-        "total": 280,
-        "upset_rate": 96.1,
+        "total": 297,
+        "upset_rate": 95.3,
         "full_miss_rate": 12.5,
         "longshot_rate": 0.0
       }
@@ -1057,16 +1057,16 @@
     "by_heads": [
       {
         "label": "中頭数(9-13頭)",
-        "total": 146,
-        "upset_rate": 96.6,
-        "full_miss_rate": 7.5,
+        "total": 157,
+        "upset_rate": 96.2,
+        "full_miss_rate": 7.6,
         "longshot_rate": 0.0
       },
       {
         "label": "多頭数(14頭〜)",
-        "total": 162,
-        "upset_rate": 96.3,
-        "full_miss_rate": 18.5,
+        "total": 175,
+        "upset_rate": 95.4,
+        "full_miss_rate": 17.7,
         "longshot_rate": 0.0
       },
       {
@@ -1080,46 +1080,46 @@
     "by_surface": [
       {
         "label": "ダート",
-        "total": 133,
-        "upset_rate": 96.2,
-        "full_miss_rate": 11.3,
+        "total": 143,
+        "upset_rate": 95.8,
+        "full_miss_rate": 11.9,
         "longshot_rate": 0.0
       },
       {
         "label": "芝",
-        "total": 207,
-        "upset_rate": 95.2,
-        "full_miss_rate": 13.5,
+        "total": 221,
+        "upset_rate": 94.6,
+        "full_miss_rate": 12.7,
         "longshot_rate": 0.0
       }
     ],
     "by_distance": [
       {
         "label": "マイル(1401-1800)",
-        "total": 148,
-        "upset_rate": 94.6,
-        "full_miss_rate": 11.5,
+        "total": 163,
+        "upset_rate": 94.5,
+        "full_miss_rate": 11.0,
         "longshot_rate": 0.0
       },
       {
         "label": "中距離(1801-2200)",
-        "total": 45,
-        "upset_rate": 95.6,
-        "full_miss_rate": 13.3,
+        "total": 47,
+        "upset_rate": 95.7,
+        "full_miss_rate": 12.8,
         "longshot_rate": 0.0
       },
       {
         "label": "短距離(〜1400)",
-        "total": 135,
-        "upset_rate": 96.3,
-        "full_miss_rate": 14.1,
+        "total": 141,
+        "upset_rate": 95.0,
+        "full_miss_rate": 14.2,
         "longshot_rate": 0.0
       },
       {
         "label": "長距離(2201〜)",
-        "total": 12,
+        "total": 13,
         "upset_rate": 100.0,
-        "full_miss_rate": 8.3,
+        "full_miss_rate": 7.7,
         "longshot_rate": 0.0
       }
     ],
@@ -1147,16 +1147,16 @@
       },
       {
         "label": "新潟",
-        "total": 33,
-        "upset_rate": 93.9,
-        "full_miss_rate": 3.0,
+        "total": 45,
+        "upset_rate": 93.3,
+        "full_miss_rate": 4.4,
         "longshot_rate": 0.0
       },
       {
         "label": "札幌",
-        "total": 36,
-        "upset_rate": 94.4,
-        "full_miss_rate": 11.1,
+        "total": 48,
+        "upset_rate": 91.7,
+        "full_miss_rate": 10.4,
         "longshot_rate": 0.0
       },
       {
@@ -1170,44 +1170,44 @@
     "by_class": [
       {
         "label": "1勝クラス",
-        "total": 81,
-        "upset_rate": 98.8,
-        "full_miss_rate": 13.6,
+        "total": 87,
+        "upset_rate": 97.7,
+        "full_miss_rate": 14.9,
         "longshot_rate": 0.0
       },
       {
         "label": "2勝クラス",
-        "total": 38,
+        "total": 41,
         "upset_rate": 100.0,
-        "full_miss_rate": 15.8,
+        "full_miss_rate": 14.6,
         "longshot_rate": 0.0
       },
       {
         "label": "3勝クラス",
-        "total": 17,
+        "total": 18,
         "upset_rate": 100.0,
-        "full_miss_rate": 5.9,
+        "full_miss_rate": 5.6,
         "longshot_rate": 0.0
       },
       {
         "label": "OP/L",
-        "total": 16,
-        "upset_rate": 93.8,
-        "full_miss_rate": 18.8,
+        "total": 18,
+        "upset_rate": 94.4,
+        "full_miss_rate": 16.7,
         "longshot_rate": 0.0
       },
       {
         "label": "新馬",
-        "total": 44,
-        "upset_rate": 93.2,
-        "full_miss_rate": 11.4,
+        "total": 47,
+        "upset_rate": 93.6,
+        "full_miss_rate": 10.6,
         "longshot_rate": 0.0
       },
       {
         "label": "未勝利",
-        "total": 144,
-        "upset_rate": 93.1,
-        "full_miss_rate": 11.8,
+        "total": 153,
+        "upset_rate": 92.2,
+        "full_miss_rate": 11.1,
         "longshot_rate": 0.0
       }
     ],
@@ -1220,31 +1220,52 @@
         "longshot_rate": 0.0
       },
       {
-        "label": "Aグレード・多頭数(14頭〜)",
-        "total": 15,
-        "upset_rate": 100.0,
-        "full_miss_rate": 13.3,
-        "longshot_rate": 0.0
-      },
-      {
-        "label": "ダート・Aグレード・多頭数(14頭〜)",
-        "total": 7,
+        "label": "新潟・Aグレード",
+        "total": 6,
         "upset_rate": 100.0,
         "full_miss_rate": 0.0,
         "longshot_rate": 0.0
       },
       {
         "label": "ダート・Aグレード・中頭数(9-13頭)",
+        "total": 10,
+        "upset_rate": 100.0,
+        "full_miss_rate": 0.0,
+        "longshot_rate": 0.0
+      },
+      {
+        "label": "Aグレード・多頭数(14頭〜)",
+        "total": 17,
+        "upset_rate": 100.0,
+        "full_miss_rate": 11.8,
+        "longshot_rate": 0.0
+      },
+      {
+        "label": "札幌・Aグレード",
+        "total": 7,
+        "upset_rate": 100.0,
+        "full_miss_rate": 0.0,
+        "longshot_rate": 0.0
+      },
+      {
+        "label": "ダート・Aグレード・多頭数(14頭〜)",
         "total": 8,
         "upset_rate": 100.0,
         "full_miss_rate": 0.0,
         "longshot_rate": 0.0
       },
       {
-        "label": "芝・長距離(2201〜)",
-        "total": 11,
+        "label": "芝・Aグレード・多頭数(14頭〜)",
+        "total": 9,
         "upset_rate": 100.0,
-        "full_miss_rate": 9.1,
+        "full_miss_rate": 22.2,
+        "longshot_rate": 0.0
+      },
+      {
+        "label": "芝・長距離(2201〜)",
+        "total": 12,
+        "upset_rate": 100.0,
+        "full_miss_rate": 8.3,
         "longshot_rate": 0.0
       },
       {
@@ -1255,53 +1276,40 @@
         "longshot_rate": 0.0
       },
       {
-        "label": "芝・Aグレード・多頭数(14頭〜)",
-        "total": 8,
-        "upset_rate": 100.0,
-        "full_miss_rate": 25.0,
-        "longshot_rate": 0.0
-      },
-      {
         "label": "福島・Bグレード",
         "total": 5,
         "upset_rate": 100.0,
         "full_miss_rate": 60.0,
-        "longshot_rate": 0.0
-      },
-      {
-        "label": "Bグレード・中頭数(9-13頭)",
-        "total": 9,
-        "upset_rate": 100.0,
-        "full_miss_rate": 33.3,
-        "longshot_rate": 0.0
-      },
-      {
-        "label": "函館・Bグレード",
-        "total": 10,
-        "upset_rate": 100.0,
-        "full_miss_rate": 20.0,
         "longshot_rate": 0.0
       }
     ]
   },
   "results_status": {
     "last_date": "2026-08-02",
-    "races": 11,
+    "races": 35,
     "venues": [
+      {
+        "name": "札幌",
+        "races": 12
+      },
+      {
+        "name": "新潟",
+        "races": 12
+      },
       {
         "name": "中京",
         "races": 11
       }
     ],
-    "workflow_run_at": "2026-08-02T10:03:28Z",
+    "workflow_run_at": "2026-08-02T21:55:37Z",
     "workflow_result": "success"
   },
   "model_kpi": {
-    "total_races": 372,
-    "total_horses": 4574,
-    "ai_logloss": 0.256,
-    "mkt_logloss": 0.2346,
-    "delta": 0.0213,
+    "total_races": 396,
+    "total_horses": 4897,
+    "ai_logloss": 0.255,
+    "mkt_logloss": 0.2348,
+    "delta": 0.0202,
     "verdict": "市場優位",
     "weekly": [
       {
@@ -1394,89 +1402,89 @@
       },
       {
         "date": "2026-08-02",
-        "races": 11,
-        "horses": 127,
-        "ai_logloss": 0.239,
-        "mkt_logloss": 0.244,
-        "delta": -0.0051
+        "races": 35,
+        "horses": 450,
+        "ai_logloss": 0.2411,
+        "mkt_logloss": 0.2394,
+        "delta": 0.0017
       }
     ]
   },
   "divergence_analysis": {
-    "total_horses": 4556,
-    "total_races": 364,
+    "total_horses": 4879,
+    "total_races": 388,
     "bucket_stats": [
       {
         "bucket": "AI<<市場(<0.5x)",
-        "count": 667,
-        "win_rate": 13.5,
-        "top3_rate": 34.9,
-        "tansho_roi": 44.1,
+        "count": 674,
+        "win_rate": 13.4,
+        "top3_rate": 34.7,
+        "tansho_roi": 43.6,
         "avg_ai_prob": 0.0458,
-        "avg_mkt_prob": 0.1657
+        "avg_mkt_prob": 0.1651
       },
       {
         "bucket": "AI<市場(0.5-0.8x)",
-        "count": 678,
+        "count": 738,
         "win_rate": 13.0,
-        "top3_rate": 30.2,
-        "tansho_roi": 67.7,
-        "avg_ai_prob": 0.0806,
-        "avg_mkt_prob": 0.1232
+        "top3_rate": 30.6,
+        "tansho_roi": 72.0,
+        "avg_ai_prob": 0.0811,
+        "avg_mkt_prob": 0.1236
       },
       {
         "bucket": "一致(0.8-1.2x)",
-        "count": 888,
-        "win_rate": 9.0,
-        "top3_rate": 29.4,
-        "tansho_roi": 77.4,
-        "avg_ai_prob": 0.0893,
-        "avg_mkt_prob": 0.0921
+        "count": 1007,
+        "win_rate": 8.9,
+        "top3_rate": 28.9,
+        "tansho_roi": 76.1,
+        "avg_ai_prob": 0.0895,
+        "avg_mkt_prob": 0.092
       },
       {
         "bucket": "AI>市場(1.2-2.0x)",
-        "count": 1070,
+        "count": 1155,
         "win_rate": 6.2,
-        "top3_rate": 21.2,
-        "tansho_roi": 78.6,
-        "avg_ai_prob": 0.0805,
-        "avg_mkt_prob": 0.0539
+        "top3_rate": 21.1,
+        "tansho_roi": 83.5,
+        "avg_ai_prob": 0.0797,
+        "avg_mkt_prob": 0.0534
       },
       {
         "bucket": "AI>>市場(2.0-3.0x)",
-        "count": 554,
-        "win_rate": 3.2,
-        "top3_rate": 15.0,
-        "tansho_roi": 62.3,
-        "avg_ai_prob": 0.0753,
-        "avg_mkt_prob": 0.0312
+        "count": 587,
+        "win_rate": 3.1,
+        "top3_rate": 14.7,
+        "tansho_roi": 58.8,
+        "avg_ai_prob": 0.0731,
+        "avg_mkt_prob": 0.0303
       },
       {
         "bucket": "AI>>>市場(3.0x+)",
-        "count": 699,
-        "win_rate": 3.0,
-        "top3_rate": 11.2,
-        "tansho_roi": 86.4,
-        "avg_ai_prob": 0.0943,
-        "avg_mkt_prob": 0.0189
+        "count": 718,
+        "win_rate": 2.9,
+        "top3_rate": 10.9,
+        "tansho_roi": 84.1,
+        "avg_ai_prob": 0.0925,
+        "avg_mkt_prob": 0.0186
       }
     ],
     "rank_matrix": [
       {
         "pop_band": "1",
         "rl_band": "1",
-        "count": 229,
+        "count": 252,
         "win_rate": 30.6,
-        "top3_rate": 59.8,
-        "tansho_roi": 75.7
+        "top3_rate": 59.9,
+        "tansho_roi": 77.3
       },
       {
         "pop_band": "1",
         "rl_band": "2-3",
-        "count": 66,
-        "win_rate": 36.4,
-        "top3_rate": 59.1,
-        "tansho_roi": 86.2
+        "count": 67,
+        "win_rate": 35.8,
+        "top3_rate": 59.7,
+        "tansho_roi": 84.9
       },
       {
         "pop_band": "1",
@@ -1505,34 +1513,34 @@
       {
         "pop_band": "2-3",
         "rl_band": "1",
-        "count": 76,
-        "win_rate": 13.2,
-        "top3_rate": 40.8,
-        "tansho_roi": 54.6
+        "count": 77,
+        "win_rate": 13.0,
+        "top3_rate": 40.3,
+        "tansho_roi": 53.9
       },
       {
         "pop_band": "2-3",
         "rl_band": "2-3",
-        "count": 393,
-        "win_rate": 16.5,
-        "top3_rate": 42.7,
-        "tansho_roi": 91.7
+        "count": 434,
+        "win_rate": 16.1,
+        "top3_rate": 43.5,
+        "tansho_roi": 89.6
       },
       {
         "pop_band": "2-3",
         "rl_band": "4-5",
-        "count": 134,
-        "win_rate": 23.9,
-        "top3_rate": 48.5,
-        "tansho_roi": 146.7
+        "count": 139,
+        "win_rate": 23.7,
+        "top3_rate": 48.2,
+        "tansho_roi": 145.5
       },
       {
         "pop_band": "2-3",
         "rl_band": "6-9",
-        "count": 92,
+        "count": 93,
         "win_rate": 6.5,
-        "top3_rate": 33.7,
-        "tansho_roi": 37.7
+        "top3_rate": 33.3,
+        "tansho_roi": 37.3
       },
       {
         "pop_band": "2-3",
@@ -1553,26 +1561,26 @@
       {
         "pop_band": "4-5",
         "rl_band": "2-3",
-        "count": 143,
-        "win_rate": 11.9,
-        "top3_rate": 39.9,
-        "tansho_roi": 93.3
+        "count": 146,
+        "win_rate": 11.6,
+        "top3_rate": 39.7,
+        "tansho_roi": 91.4
       },
       {
         "pop_band": "4-5",
         "rl_band": "4-5",
-        "count": 328,
-        "win_rate": 7.0,
-        "top3_rate": 29.3,
-        "tansho_roi": 64.3
+        "count": 362,
+        "win_rate": 6.9,
+        "top3_rate": 28.2,
+        "tansho_roi": 62.3
       },
       {
         "pop_band": "4-5",
         "rl_band": "6-9",
-        "count": 180,
-        "win_rate": 5.6,
-        "top3_rate": 26.7,
-        "tansho_roi": 63.7
+        "count": 191,
+        "win_rate": 5.2,
+        "top3_rate": 25.7,
+        "tansho_roi": 60.0
       },
       {
         "pop_band": "4-5",
@@ -1593,34 +1601,34 @@
       {
         "pop_band": "6-9",
         "rl_band": "2-3",
-        "count": 89,
-        "win_rate": 9.0,
-        "top3_rate": 29.2,
-        "tansho_roi": 128.9
+        "count": 92,
+        "win_rate": 8.7,
+        "top3_rate": 29.3,
+        "tansho_roi": 124.7
       },
       {
         "pop_band": "6-9",
         "rl_band": "4-5",
-        "count": 182,
-        "win_rate": 9.3,
-        "top3_rate": 26.9,
-        "tansho_roi": 134.5
+        "count": 190,
+        "win_rate": 8.9,
+        "top3_rate": 27.4,
+        "tansho_roi": 128.8
       },
       {
         "pop_band": "6-9",
         "rl_band": "6-9",
-        "count": 795,
-        "win_rate": 2.6,
-        "top3_rate": 17.6,
-        "tansho_roi": 60.1
+        "count": 861,
+        "win_rate": 3.0,
+        "top3_rate": 17.5,
+        "tansho_roi": 66.9
       },
       {
         "pop_band": "6-9",
         "rl_band": "10+",
-        "count": 283,
-        "win_rate": 3.2,
-        "top3_rate": 13.1,
-        "tansho_roi": 60.2
+        "count": 300,
+        "win_rate": 3.7,
+        "top3_rate": 13.0,
+        "tansho_roi": 71.2
       },
       {
         "pop_band": "10+",
@@ -1649,24 +1657,24 @@
       {
         "pop_band": "10+",
         "rl_band": "6-9",
-        "count": 263,
-        "win_rate": 3.0,
-        "top3_rate": 12.2,
-        "tansho_roi": 92.5
+        "count": 280,
+        "win_rate": 3.6,
+        "top3_rate": 12.9,
+        "tansho_roi": 109.1
       },
       {
         "pop_band": "10+",
         "rl_band": "10+",
-        "count": 1022,
-        "win_rate": 1.0,
+        "count": 1114,
+        "win_rate": 0.9,
         "top3_rate": 5.6,
-        "tansho_roi": 46.9
+        "tansho_roi": 43.0
       }
     ],
-    "ai_fav_win_rate": 24.3,
+    "ai_fav_win_rate": 24.6,
     "mkt_fav_win_rate": 30.0,
-    "agree_count": 229,
-    "disagree_count": 133,
+    "agree_count": 252,
+    "disagree_count": 134,
     "disagree_ai_wins": 18,
     "disagree_mkt_wins": 39,
     "top_overvalued": [
@@ -1975,66 +1983,66 @@
       },
       {
         "date": "2026-08-02",
-        "n": 127,
-        "ai_wins": 5,
+        "n": 450,
+        "ai_wins": 12,
         "mkt_wins": 0,
-        "agree": 11,
+        "agree": 34,
         "disagree_ai": 0,
         "disagree_mkt": 0
       }
     ]
   },
   "odds_movement": {
-    "total_horses": 3544,
+    "total_horses": 3648,
     "bucket_stats": [
       {
         "bucket": "急騰(↓30%+)",
-        "count": 560,
-        "win_rate": 6.6,
-        "top3_rate": 23.6,
+        "count": 565,
+        "win_rate": 6.5,
+        "top3_rate": 23.5,
         "avg_change_pct": -50.1
       },
       {
         "bucket": "急騰相当(バッジ対象外)",
-        "count": 84,
-        "win_rate": 36.9,
-        "top3_rate": 64.3,
+        "count": 85,
+        "win_rate": 36.5,
+        "top3_rate": 64.7,
         "avg_change_pct": -39.0
       },
       {
         "bucket": "上昇(↓15-30%)",
-        "count": 189,
-        "win_rate": 3.2,
-        "top3_rate": 19.6,
+        "count": 193,
+        "win_rate": 3.1,
+        "top3_rate": 19.2,
         "avg_change_pct": -25.3
       },
       {
         "bucket": "上昇相当(バッジ対象外)",
-        "count": 219,
-        "win_rate": 13.7,
-        "top3_rate": 43.4,
+        "count": 229,
+        "win_rate": 13.1,
+        "top3_rate": 43.7,
         "avg_change_pct": -19.7
       },
       {
         "bucket": "横ばい(±15%)",
-        "count": 911,
+        "count": 949,
         "win_rate": 12.3,
-        "top3_rate": 30.8,
+        "top3_rate": 30.5,
         "avg_change_pct": -0.7
       },
       {
         "bucket": "下降(↑15-30%)",
-        "count": 276,
+        "count": 288,
         "win_rate": 8.3,
-        "top3_rate": 26.1,
-        "avg_change_pct": 22.4
+        "top3_rate": 25.3,
+        "avg_change_pct": 22.5
       },
       {
         "bucket": "急落(↑30%+)",
-        "count": 1305,
+        "count": 1339,
         "win_rate": 3.6,
-        "top3_rate": 13.9,
-        "avg_change_pct": 647.1
+        "top3_rate": 14.0,
+        "avg_change_pct": 632.7
       }
     ],
     "big_risers": [
@@ -2242,13 +2250,13 @@
       }
     ],
     "ai_agrees_rising": {
-      "count": 124,
-      "top3_rate": 42.7
+      "count": 126,
+      "top3_rate": 43.7
     },
     "ai_ignores_rising": {
-      "count": 523,
-      "top3_rate": 16.4
+      "count": 529,
+      "top3_rate": 16.3
     }
   },
-  "generated_at": "2026-08-02 21:55"
+  "generated_at": "2026-08-02 22:54"
 }
