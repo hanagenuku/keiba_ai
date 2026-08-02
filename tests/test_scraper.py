@@ -3,6 +3,7 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
+import pytest
 from bs4 import BeautifulSoup
 from src.scraper.parser import parse_header, get_class_from_racename, parse_hist, parse_horse
 from src.scraper.calendar import get_base_from_calendar
@@ -1030,3 +1031,76 @@ if __name__ == '__main__':
     print('✅ test_get_base_from_calendar_found passed')
     test_get_base_from_calendar_not_found()
     print('✅ test_get_base_from_calendar_not_found passed')
+
+
+class TestFindR01ResultRetry:
+    """R01結果スキャンの再試行（2026-08-02の日曜欠損への対応）。
+
+    日曜結果取得で新潟・札幌の2会場がスキャン全滅し、予想35レースに対し
+    結果が11レースしか取れなかった。同じ週の土曜は3会場とも成功していたので
+    恒久的な不在ではなく一過性の失敗。1周で諦めるとその開催が永久に失われる。
+    """
+
+    class _Resp:
+        def __init__(self, text):
+            self.text = text
+            self.encoding = None
+
+    def _sess(self, behaviour):
+        """behaviour(scan_no, suffix) -> 'param'|'ok'|'raise'|'notable'"""
+        outer = self
+        state = {'scans': 0}
+
+        class S:
+            def post(self, url, data=None, headers=None, timeout=None):
+                sx = int(data['CNAME'][-2:], 16)
+                if sx == 0:
+                    state['scans'] += 1
+                kind = behaviour(state['scans'], sx)
+                if kind == 'raise':
+                    raise ConnectionError('timeout')
+                if kind == 'ok':
+                    return outer._Resp('<table>着順 馬名 騎手 調教師</table>')
+                if kind == 'notable':
+                    return outer._Resp('なにもなし')
+                return outer._Resp('パラメータエラー')
+
+        return S(), state
+
+    @pytest.fixture(autouse=True)
+    def _no_sleep(self, monkeypatch):
+        monkeypatch.setattr(jra_scraper.time, 'sleep', lambda *a, **k: None)
+
+    def test_found_on_first_scan_does_not_retry(self):
+        sess, st = self._sess(lambda scan, sx: 'ok' if sx == 0x6C else 'param')
+        assert jra_scraper.find_r01_result('pw01sde10', '20260802', sess) == 0x6C
+        assert st['scans'] == 1
+
+    def test_all_param_error_gives_up_immediately(self):
+        """開催のない会場で無駄に5分待たないこと。"""
+        sess, st = self._sess(lambda scan, sx: 'param')
+        assert jra_scraper.find_r01_result('pw01sde10', '20260802', sess) is None
+        assert st['scans'] == 1
+
+    def test_transient_failure_is_retried_and_succeeds(self):
+        """本件の再現: 1周目が通信エラーで全滅 → 再試行で取得できる。"""
+        def flaky(scan, sx):
+            if scan == 1:
+                return 'raise'
+            return 'ok' if sx == 0x6C else 'param'
+        sess, st = self._sess(flaky)
+        assert jra_scraper.find_r01_result('pw01sde10', '20260802', sess) == 0x6C
+        assert st['scans'] == 2
+
+    def test_gives_up_after_attempts(self):
+        sess, st = self._sess(lambda scan, sx: 'raise')
+        assert jra_scraper.find_r01_result(
+            'pw01sde10', '20260802', sess, attempts=3) is None
+        assert st['scans'] == 3
+
+    def test_signature_stays_backward_compatible(self):
+        """既存の3引数呼び出し（fetch_results / rescrape_history）が壊れないこと。"""
+        import inspect
+        sig = inspect.signature(jra_scraper.find_r01_result)
+        assert list(sig.parameters)[:3] == ['base', 'date', 'sess']
+        assert sig.parameters['attempts'].default == 3

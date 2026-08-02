@@ -78,3 +78,35 @@ def test_shap_diagnosis_uses_format_agnostic_model_loader():
     assert 'model = pickle.load(f)' not in src, 'pickle.load が残っている'
     assert 'shap_error' in src and '利用できません' in src, \
         '失敗理由を区別して表示していない'
+
+
+def test_monthly_retrain_schedule_is_disabled():
+    """月次自動実行は停止していること（2026-08-03）。
+
+    GitHub側の history.db は Drive側の半分以下（5,457 vs 11,554レース）で、
+    本番より良いモデルを作れる見込みが構造的に無い。閾値0.75はリーク除去前の
+    遺物で毎月必ず失敗し、下げれば半分のデータのモデルが本番を上書きする。
+    再開するなら history.db の是正と閾値の引き直しが前提。
+    """
+    import yaml
+    p = os.path.join(os.path.dirname(__file__), '..',
+                     '.github', 'workflows', 'monthly-retrain.yml')
+    with open(p, encoding='utf-8') as f:
+        d = yaml.safe_load(f)
+    trig = d[True] if True in d else d.get('on')
+    assert 'schedule' not in (trig or {}), '自動実行が有効に戻っている'
+    assert 'workflow_dispatch' in (trig or {}), '手動実行まで消えている'
+
+
+def test_monthly_retrain_restores_model_when_rejected():
+    """AUC不足で中止したとき、残差モデルを更新前に戻すこと。
+
+    train_xgb は閾値判定より前に *_residual.pkl を新モデルで上書きするため、
+    戻さないと「中止したのにファイルは新モデル」という状態が残る。
+    """
+    src_path = os.path.join(os.path.dirname(__file__), '..',
+                            'scripts', 'monthly_retrain.py')
+    with open(src_path, encoding='utf-8') as f:
+        src = f.read()
+    assert '_restore_rejected_residual' in src
+    assert 'xgb_fukusho_model_residual_old.pkl' in src

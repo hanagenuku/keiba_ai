@@ -77,32 +77,74 @@ def find_r01_shutuba(base, date, sess):
     return None
 
 
-def find_r01_result(base, date, sess):
-    """R01結果ページのsuffixを探索する（0x00〜0xFF を順次スキャン）。
-
-    障害レースのフィルタリングは parse_result_soup 内で行う（Noneを返す）。
-    """
+def _scan_r01_result(base, date, sess):
+    """R01結果ページのsuffixを1周スキャンする。(suffix, 失敗内訳) を返す。"""
+    diag = {'param_error': 0, 'no_table': 0, 'no_content': 0, 'exc': 0,
+            'last_exc': None}
     for s in range(256):
         cn = f'{base}01{date}/{s:02X}'
         try:
             r = sess.post(f'{JRA_BASE}/JRADB/accessS.html', data={'CNAME': cn},
                           headers=HEADERS, timeout=10)
             r.encoding = 'shift_jis'
-        except Exception:
+        except Exception as e:
+            diag['exc'] += 1
+            diag['last_exc'] = f'{type(e).__name__}: {e}'
             time.sleep(0.02)
             continue
         text = r.text
         if 'パラメータエラー' in text:
+            diag['param_error'] += 1
             continue
         soup = BeautifulSoup(text, 'lxml')
         if not soup.find_all('table'):
+            diag['no_table'] += 1
             time.sleep(0.02)
             continue
         if not any(kw in text for kw in ('騎手', '馬名', '着順', '調教師')):
+            diag['no_content'] += 1
             print(f'  [scan-result] suffix {s:02X}: テーブルあるが結果コンテンツなし → {text[:80]!r}')
             time.sleep(0.02)
             continue
-        return s
+        return s, diag
+    return None, diag
+
+
+def find_r01_result(base, date, sess, attempts=3):
+    """R01結果ページのsuffixを探索する（0x00〜0xFF を順次スキャン）。
+
+    障害レースのフィルタリングは parse_result_soup 内で行う（Noneを返す）。
+
+    ⚠ 1周失敗しただけで諦めると、その開催のレースが**丸ごと永久に失われる**。
+    2026-08-02の日曜結果取得では新潟・札幌の2会場でこのスキャンが全滅し、
+    予想35レースに対し結果が11レースしか取れなかった（同じ週の土曜は3会場
+    とも成功しているので、恒久的な不在ではなく一過性の失敗）。
+
+    そこで一過性の兆候（通信例外・テーブルなし等）がある場合に限り再試行する。
+    256件すべてが綺麗に「パラメータエラー」なら、そのページは本当に存在しない
+    ので再試行しても無駄なため即座に諦める（開催のない会場で5分待たない）。
+    """
+    for attempt in range(1, attempts + 1):
+        s, diag = _scan_r01_result(base, date, sess)
+        if s is not None:
+            return s
+        transient = diag['exc'] or diag['no_table'] or diag['no_content']
+        if not transient:
+            print(f'  ⚠ R01結果 未発見: 256件すべてパラメータエラー'
+                  f'（このページは存在しない）')
+            return None
+        if attempt < attempts:
+            wait = 5 * attempt
+            print(f'  ⚠ R01結果 未発見（例外{diag["exc"]}件 / テーブルなし'
+                  f'{diag["no_table"]}件 / 内容なし{diag["no_content"]}件'
+                  + (f' / 直近の例外: {diag["last_exc"]}' if diag['last_exc'] else '')
+                  + f'）→ {wait}秒後に再試行 ({attempt}/{attempts - 1})')
+            time.sleep(wait)
+        else:
+            print(f'  ❌ R01結果 {attempts}回試行しても未発見'
+                  f'（例外{diag["exc"]}件 / テーブルなし{diag["no_table"]}件 / '
+                  f'内容なし{diag["no_content"]}件）'
+                  + (f' 直近の例外: {diag["last_exc"]}' if diag['last_exc'] else ''))
     return None
 
 
