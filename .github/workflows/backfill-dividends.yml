@@ -9,6 +9,16 @@ name: Backfill Dividends (過去の全券種配当を埋め戻す)
 #
 # 1回では終わらない（約170開催日ぶん）。**同じワークフローを何度か手動実行して
 # 少しずつ埋める**。既に配当が入っている開催日は自動でスキップされる。
+#
+# ⚠ 遅い。実測で **1開催日あたり約5分**かかる（内訳のほぼ全部が R01 の
+#    suffix 探索で、1会場ごとに 0x00〜0xFF を順に試すため約2分×3会場）。
+#    そのため max_minutes を大きく取って長時間まわすのが現実的。
+#    GitHub Actions は1ジョブ最大6時間なので、340分で約60開催日ぶん進む。
+#
+# ⚠ concurrency は予想・結果取得と同じ 'keiba-weekly' にしてある。
+#    長時間まわすとその間これらがキューで待つので、**開催日以外に実行すること**。
+#    急ぐ場合は Actions の画面からこの実行をキャンセルすれば即座に空く
+#    （保存済みぶんは push 済みなので失われない）。
 
 on:
   workflow_dispatch:
@@ -16,12 +26,12 @@ on:
       budget:
         description: '1回で処理する開催日の上限'
         required: false
-        default: '30'
+        default: '80'
         type: string
       max_minutes:
-        description: '1回の時間上限（分）。先に来たほうで打ち切る'
+        description: '1回の時間上限（分）。先に来たほうで打ち切る。1日約5分かかる'
         required: false
-        default: '25'
+        default: '330'
         type: string
       oldest_first:
         description: '古い開催日から埋める（既定は新しい順）'
@@ -44,8 +54,11 @@ permissions:
 jobs:
   backfill:
     runs-on: ubuntu-latest
-    # スクリプト側の時間上限(既定25分)より余裕を持たせる
-    timeout-minutes: 40
+    # スクリプト側の時間上限(既定330分)より余裕を持たせる。
+    # GitHub Actions のジョブ上限は6時間(360分)なのでこれが最大。
+    # スクリプトは1日ぶん保存した直後にだけ時間を見て自分で止まるので、
+    # ここで強制終了されて成果を失うことは通常ない。
+    timeout-minutes: 355
 
     steps:
       - uses: actions/checkout@v4
@@ -63,42 +76,86 @@ jobs:
 
       - run: pip install -r requirements.txt
 
-      - name: Backfill
-        run: |
-          python scripts/backfill_dividends.py \
-            --budget "${{ inputs.budget }}" \
-            --max-minutes "${{ inputs.max_minutes }}" \
-            ${{ inputs.oldest_first && '--oldest-first' || '' }} \
-            ${{ inputs.dry_run && '--dry-run' || '' }}
+      - name: Dry run
+        if: ${{ inputs.dry_run }}
+        run: python scripts/backfill_dividends.py --dry-run --budget "${{ inputs.budget }}"
 
-      - name: Commit & Push
+      # 長時間まわすので、25分ごとに区切って**その都度push**する。
+      # 一度にまとめてpushする設計だと、途中でジョブが落ちた時に
+      # それまでの数時間ぶんが丸ごと失われる（ランナーは破棄されるため）。
+      - name: Backfill (25分ごとにpushしながら繰り返す)
         if: ${{ !inputs.dry_run }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          # 書き換えるのは keiba.db だけ。他の生成物には触れない
-          if git diff --quiet -- data/keiba.db; then
-            echo "変更なし（新たに埋まった配当が無い）"
-            exit 0
-          fi
-
-          BACKUP=$(mktemp -d)
-          cp data/keiba.db "$BACKUP/keiba.db"
-
           export GIT_LFS_SKIP_SMUDGE=1
-          for i in 1 2 3 4 5; do
-            git fetch origin main
-            git reset --hard origin/main
-            cp "$BACKUP/keiba.db" data/keiba.db
-            git add data/keiba.db
-            if git diff --cached --quiet; then
-              echo "変更なし（既に反映済み）"
-              exit 0
+
+          CHUNK=25
+          TOTAL="${{ inputs.max_minutes }}"
+          BUDGET="${{ inputs.budget }}"
+          DEADLINE=$(( $(date +%s) + TOTAL * 60 ))
+
+          push_now() {
+            if git diff --quiet -- data/keiba.db; then
+              echo "  （新たに埋まった配当なし）"
+              return 0
             fi
-            git commit -m "auto: backfill dividends $(date +%Y%m%d-%H%M)"
-            git push && exit 0
-            echo "⚠ push失敗、mainの最新を取り直してリトライ ($i/5)"
-            sleep $((i * 5))
+            BACKUP=$(mktemp -d)
+            cp data/keiba.db "$BACKUP/keiba.db"
+            for i in 1 2 3 4 5; do
+              git fetch origin main
+              git reset --hard origin/main
+              cp "$BACKUP/keiba.db" data/keiba.db
+              git add data/keiba.db
+              if git diff --cached --quiet; then
+                echo "  （既に反映済み）"
+                return 0
+              fi
+              git commit -m "auto: backfill dividends $(date +%Y%m%d-%H%M)"
+              if git push; then
+                echo "  ⬆ pushしました"
+                return 0
+              fi
+              echo "  ⚠ push失敗、mainの最新を取り直してリトライ ($i/5)"
+              sleep $((i * 5))
+            done
+            echo "::error::5回リトライしてもpushできませんでした"
+            return 1
+          }
+
+          ROUND=0
+          while [ "$(date +%s)" -lt "$DEADLINE" ]; do
+            ROUND=$((ROUND + 1))
+            REMAIN_MIN=$(( (DEADLINE - $(date +%s)) / 60 ))
+            [ "$REMAIN_MIN" -lt 6 ] && break
+            [ "$REMAIN_MIN" -lt "$CHUNK" ] && CHUNK="$REMAIN_MIN"
+            echo "===== 第${ROUND}回（残り約${REMAIN_MIN}分） ====="
+
+            # tee を通すとパイプラインの終了状態が tee のものになり、python が
+            # 落ちても気づけない。PIPESTATUS で本体の終了状態を見る。
+            set +e
+            python scripts/backfill_dividends.py \
+              --budget "$BUDGET" --max-minutes "$CHUNK" \
+              ${{ inputs.oldest_first && '--oldest-first' || '' }} | tee /tmp/bf.out
+            RC=${PIPESTATUS[0]}
+            set -e
+
+            # 取得できたぶんは先にpushしてから終了判定する（成果を捨てない）
+            push_now || exit 1
+
+            if [ "$RC" -ne 0 ]; then
+              echo "::error::backfill_dividends.py が異常終了しました (exit $RC)"
+              exit "$RC"
+            fi
+
+            # 未取得が0なら終わり
+            if grep -q "すべての開催日で配当を取得済み" /tmp/bf.out; then
+              echo "✅ 全開催日ぶんの配当が埋まりました"
+              break
+            fi
+            # 1日も進まなかった場合、繰り返しても同じなので止める
+            if grep -q "完了: 0日" /tmp/bf.out; then
+              echo "⚠ このラウンドで1日も進まなかったので終了する"
+              break
+            fi
           done
-          echo "::error::5回リトライしてもpushできませんでした"
-          exit 1
