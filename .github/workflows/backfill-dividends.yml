@@ -1,0 +1,104 @@
+name: Backfill Dividends (過去の全券種配当を埋め戻す)
+
+# 過去レースの結果ページを取り直して、馬連・ワイド・三連複などの実配当を
+# race_dividends に保存する。
+#
+# なぜ要るか: parse_dividends() は昔から8券種すべて解析していたのに、DBに保存して
+# いたのは単勝・複勝だけだった。そのため「組み合わせ券種で回収率100%を超える
+# 買い方があるか」を過去データで検証できない。
+#
+# 1回では終わらない（約170開催日ぶん）。**同じワークフローを何度か手動実行して
+# 少しずつ埋める**。既に配当が入っている開催日は自動でスキップされる。
+
+on:
+  workflow_dispatch:
+    inputs:
+      budget:
+        description: '1回で処理する開催日の上限'
+        required: false
+        default: '30'
+        type: string
+      max_minutes:
+        description: '1回の時間上限（分）。先に来たほうで打ち切る'
+        required: false
+        default: '25'
+        type: string
+      oldest_first:
+        description: '古い開催日から埋める（既定は新しい順）'
+        required: false
+        default: false
+        type: boolean
+      dry_run:
+        description: '対象日を数えるだけ（取得しない）'
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: keiba-weekly
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    # スクリプト側の時間上限(既定25分)より余裕を持たせる
+    timeout-minutes: 40
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download DBs via LFS
+        run: git lfs pull --include="data/history.db,data/keiba.db"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Backfill
+        run: |
+          python scripts/backfill_dividends.py \
+            --budget "${{ inputs.budget }}" \
+            --max-minutes "${{ inputs.max_minutes }}" \
+            ${{ inputs.oldest_first && '--oldest-first' || '' }} \
+            ${{ inputs.dry_run && '--dry-run' || '' }}
+
+      - name: Commit & Push
+        if: ${{ !inputs.dry_run }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          # 書き換えるのは keiba.db だけ。他の生成物には触れない
+          if git diff --quiet -- data/keiba.db; then
+            echo "変更なし（新たに埋まった配当が無い）"
+            exit 0
+          fi
+
+          BACKUP=$(mktemp -d)
+          cp data/keiba.db "$BACKUP/keiba.db"
+
+          export GIT_LFS_SKIP_SMUDGE=1
+          for i in 1 2 3 4 5; do
+            git fetch origin main
+            git reset --hard origin/main
+            cp "$BACKUP/keiba.db" data/keiba.db
+            git add data/keiba.db
+            if git diff --cached --quiet; then
+              echo "変更なし（既に反映済み）"
+              exit 0
+            fi
+            git commit -m "auto: backfill dividends $(date +%Y%m%d-%H%M)"
+            git push && exit 0
+            echo "⚠ push失敗、mainの最新を取り直してリトライ ($i/5)"
+            sleep $((i * 5))
+          done
+          echo "::error::5回リトライしてもpushできませんでした"
+          exit 1
