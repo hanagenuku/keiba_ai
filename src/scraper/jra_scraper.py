@@ -737,10 +737,21 @@ def get_history_from_db(horse_name, hist_db_path, limit=5):
             results.append({
                 "place": place,
                 "finishers": max(finishers_count, 1),
+                # num_finishers は finishers の別名。学習側(_get_history_before)が
+                # 両キー名を提供する設計に合わせる。calc_course_aptitude_features の
+                # f_agari_rank_at_type が num_finishers/agari_rank を参照する。
+                "num_finishers": max(finishers_count, 1),
                 "distance": distance,
                 "surface": surface,
                 "class": race_class,
                 "margin": margin,
+                # agari_rank: 学習側と同じく、未記録(-1)ならNoneで欠損を明示する
+                # （2026-08-03発見: この列自体は既にSELECTされ agari3f_rank_pct の
+                # 計算に使われていたが、出力辞書には含まれておらず
+                # calc_course_aptitude_features の f_agari_rank_at_type が
+                # 推論時は常に hrec.get('agari_rank') -> None に落ち、
+                # 学習時の実データ分布と乖離していた）
+                "agari_rank": agari_rank_stored if agari_rank_stored > 0 else None,
                 "agari3f_rank_pct": round(agari3f_rank_pct, 3),
                 "condition": track_condition,
                 # track_condition は f_heavy_track_rate / speed_index が参照するキー名。
@@ -928,6 +939,33 @@ def _extract_win_odds(texts, start_idx=10):
             if 1.0 <= v <= 9999.9:
                 return v
     return None
+
+
+_RESULT_ROW_DIAG_DONE = False
+
+
+def diag_result_row_columns(texts):
+    """結果ページの馬別行が想定した列数・列位置と一致しない場合に、
+    実際の texts 配列を1回だけ診断ログに残す（2026-08-03発見）。
+
+    2026-08-03の調査で、history.db の popularity/body_weight/trainer が
+    2026-06-28まで正常に埋まっていたのに 2026-07-04以降は突然100%欠損に
+    転じていたと判明した（win_odds は元々0%充足で無関係・既知）。
+    jra_scraper.py はこの間コミットされておらず、texts[0..10]相当
+    （着順・枠番・馬番・馬名・性齢・斤量・騎手・タイム・着差・上がり）は
+    今も正常に取れているため、コード側ではなく実際のJRADB結果ページの
+    列構成が texts[11]（単勝）以降のどこかで変わった可能性が高い。
+
+    この環境からは www.jra.go.jp への到達がブロックされており実HTMLを
+    確認できないため、find_r01_odds/diag_pace_label_missing と同じ方針で
+    決め打ち修正はせず、次回のワークフロー実行（GitHub Actions、
+    ネットワーク到達可）のログに実際の列内容を残すだけに留める。
+    """
+    global _RESULT_ROW_DIAG_DONE
+    if _RESULT_ROW_DIAG_DONE:
+        return
+    _RESULT_ROW_DIAG_DONE = True
+    print(f'⚠ 結果ページ列診断: texts配列(len={len(texts)}) = {texts!r}')
 
 
 _TRAINER_AFFIL_RE = re.compile(r'^(.+?)[\(（](栗東|美浦)[\)）]$')
@@ -1197,6 +1235,8 @@ def parse_result_soup(soup, racecourse, race_num, date, place_code):
             body_weight, body_weight_diff = _extract_body_weight(texts, start_idx=13)
             # 単勝オッズ（texts[11]の小数）
             win_odds = _extract_win_odds(texts, start_idx=11)
+            if not pop_m or not trainer_raw or body_weight is None:
+                diag_result_row_columns(texts)
             finishers.append({
                 'place': place, 'num': num, 'name': name,
                 'running_style': style, 'post_position': num,
