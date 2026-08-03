@@ -158,7 +158,14 @@ def test_try_fetch_result_success_and_parameter_error():
     assert soup_none is None
 
 
-# JRA result table: 着順,枠番,馬番,馬名,性齢,斤量,騎手,タイム,着差,通過順,上がり,単勝,人気,馬体重,調教師
+# JRA result table（2026-08-03、probe-result-columns.ymlで2026-08-02の実データを
+# 取得し確定した列構成）: 着順,枠番,馬番,馬名,性齢,斤量,騎手,タイム,着差,通過順,
+# 上がり,馬体重,調教師,人気（枠番は実データでも空欄。単勝オッズ列は存在しない）
+#
+# 旧構成（〜2026-06-28）は 着順,枠番,馬番,馬名,性齢,斤量,騎手,タイム,着差,通過順,
+# 上がり,単勝,人気,馬体重,調教師 の15列だったが、2026-07-04頃にJRADB側で単勝オッズ
+# 列が消え、人気/馬体重/調教師の並びも変わっていた（history.db実データの月次充足率
+# 変化とprobe-result-columns.ymlの実HTML取得から特定。詳細はCLAUDE.md参照）。
 _RESULT_HTML = """
 <html><body>
 <table>
@@ -166,48 +173,52 @@ _RESULT_HTML = """
   <th>レース情報</th>
 </tr>
 <tr>
-  <td colspan="15">2023年1月7日 中山 1600メートル（芝・右）3歳以上1勝クラス 天候:晴 馬場:良</td>
+  <td colspan="14">2026年8月2日 新潟 1600メートル（芝・右）3歳以上1勝クラス 天候:晴 馬場:良</td>
 </tr>
 <tr>
-  <td>1</td><td>3</td><td>5</td><td>テストウマ</td>
+  <td>1</td><td></td><td>7</td><td>テストウマ</td>
   <td>牡4</td><td>57.0</td><td>テスト騎手</td>
-  <td>1:34.5</td><td></td><td>3-3-2-1</td><td>34.1</td>
-  <td>3.5</td><td>2</td><td>516(+4)</td><td>テスト調教師</td>
+  <td>1:34.5</td><td></td><td>3 3 2 1</td><td>34.1</td>
+  <td>516 (+4)</td><td>テスト調教師</td><td>2</td>
 </tr>
 <tr>
-  <td>2</td><td>1</td><td>1</td><td>ニバンウマ</td>
+  <td>2</td><td></td><td>1</td><td>ニバンウマ</td>
   <td>牝5</td><td>55.0</td><td>サブ騎手</td>
-  <td>1:34.8</td><td>3/4</td><td>1-1-1-2</td><td>35.0</td>
-  <td>1.8</td><td>1</td><td>480(-2)</td><td>サブ調教師</td>
+  <td>1:34.8</td><td>3/4</td><td>1 1 1 2</td><td>35.0</td>
+  <td>480 (-2)</td><td>サブ調教師</td><td>1</td>
 </tr>
 <tr>
-  <td>3</td><td>5</td><td>9</td><td>サンバンウマ</td>
+  <td>3</td><td></td><td>9</td><td>サンバンウマ</td>
   <td>牡6</td><td>57.0</td><td>サード騎手</td>
-  <td>1:35.0</td><td>1.1/4</td><td>5-5-4-3</td><td>33.8</td>
-  <td>12.4</td><td>5</td><td>500(0)</td><td>サード調教師</td>
+  <td>1:35.0</td><td>1.1/4</td><td>5 5 4 3</td><td>33.8</td>
+  <td>500 (0)</td><td>サード調教師</td><td>5</td>
 </tr>
 </table>
 </body></html>
 """
 
 
-def test_parse_result_soup_win_odds():
+def test_parse_result_soup_current_column_layout():
+    """2026-08-03に実データで確定した現行の列構成（馬体重(11)/調教師(12)/人気(13)、
+    単勝オッズ列なし）が正しくパースされることを確認する回帰テスト。
+    旧構成（単勝(11)/人気(12)/馬体重(13)/調教師(14)）を前提にしたテストは
+    実際のJRA側の列変更を検知できなかった（テストは通り続けたまま本番だけ
+    壊れていた、North Star #6の実例）ため、実データ形状に更新した。
+    """
     soup = BeautifulSoup(_RESULT_HTML, 'lxml')
-    result = parse_result_soup(soup, '中山', 1, '20230107', '06')
+    result = parse_result_soup(soup, '新潟', 1, '20260802', '04')
     assert result is not None
     horses = result['finishers']
     assert len(horses) == 3
-    # 単勝オッズ（texts[11]）が正しく取得されること
-    assert horses[0]['win_odds'] == 3.5
-    assert horses[1]['win_odds'] == 1.8
-    assert horses[2]['win_odds'] == 12.4
-    # 人気（texts[12]）が正しく取得されること
+    # 単勝オッズ列は現行構成に存在しないため常にNone
+    assert horses[0]['win_odds'] is None
+    # 人気（texts[13]）が正しく取得されること
     assert horses[0]['popularity'] == 2
     assert horses[1]['popularity'] == 1
     assert horses[2]['popularity'] == 5
-    # 調教師（texts[14]）が正しく取得されること
+    # 調教師（texts[12]）が正しく取得されること
     assert horses[0]['trainer'] == 'テスト調教師'
-    # 馬体重（texts[13]）が正しく取得されること
+    # 馬体重（texts[11]）が正しく取得されること
     assert horses[0]['body_weight'] == 516
     assert horses[0]['body_weight_diff'] == 4
     assert horses[1]['body_weight'] == 480
