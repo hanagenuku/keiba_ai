@@ -15,8 +15,8 @@ import os
 import shutil
 from datetime import datetime
 
-# 脚質推定は推論時（jra_scraper）と同じ関数を使い、学習/推論パリティを保つ
-from src.scraper.jra_scraper import _infer_running_style
+# 脚質推定・corner_3導出は推論時（jra_scraper）と同じ関数を使い、学習/推論パリティを保つ
+from src.scraper.jra_scraper import _infer_running_style, _derive_corner3
 
 
 def _parse_date(date_str):
@@ -130,7 +130,11 @@ def _get_history_before(conn, horse_name, before_date_str, limit=10):
             "distance":         int(row['distance'] or 1600),
             "surface":          row['surface'] or '芝',
             "racecourse":       row['racecourse'] or '',
-            "corner_3":         row['corner_3'],
+            # corner_3 列は常にNULL（docs/history_db_schema.md既知事項、
+            # 2026-06-25のcorner_all導入時に書き込み停止）。corner_allの
+            # 3番目の値から導出する（2026-08-03発見・推論側と同じ関数で統一）。
+            "corner_3":         (row['corner_3'] if row['corner_3'] is not None
+                                  else _derive_corner3(row['corner_all'] or '')),
             # calc_course_aptitude_features が3→4角の位置変動
             # (f_corner_position_change) を出すのに使う。推論側の
             # get_history_from_db は2026-07-23に追加済みだったが学習側が
