@@ -1224,16 +1224,29 @@ def parse_result_soup(soup, racecourse, race_num, date, place_code):
             corner_all = '-'.join(pos_nums[:4]) if pos_nums else ''
             agari_m = re.search(r'(\d{2}\.\d)', texts[10]) if len(texts) > 10 else None
             agari = float(agari_m.group(1)) if agari_m else 0.0
-            # 列順: ...上がり(10), 単勝(11), 人気(12), 馬体重(13), 調教師(14)
-            pop_m = re.match(r'^(\d+)$', texts[12].strip()) if len(texts) > 12 else None
+            # 列順: ...上がり(10), 馬体重(11), 調教師(12), 人気(13)。
+            # 2026-08-03発見: 2026-07-04頃にJRADB結果ページの列構成が変わり、
+            # 単勝オッズ列が消滅した上で人気/馬体重/調教師の並びが
+            # 「単勝(11)人気(12)馬体重(13)調教師(14)」→「馬体重(11)調教師(12)人気(13)」
+            # に変わっていた（旧構成はtexts末尾が15列、新構成は14列）。
+            # probe-result-columns.yml で 2026-08-02 の実データを取得し
+            # texts配列を直接確認して特定した
+            # （例: ['1','','7','ノドゥス','牡2','55.0','三浦 皇成','1:34.3','',
+            #        '4 5','33.5','482 (+4)','斎藤 誠','3']）。
+            # 調教師欄に「(栗東)」等の所属表記は付いておらず、trainer_affiliationは
+            # 別の情報源が必要（_split_trainer_affiliationは名前のみ渡されれば
+            # affiliation=Noneを返す後方互換設計なので、そのまま安全に動作する）。
+            pop_m = re.match(r'^(\d+)$', texts[13].strip()) if len(texts) > 13 else None
             jockey = texts[6].strip() if len(texts) > 6 else ''
-            trainer_raw = texts[14].strip() if len(texts) > 14 else ''
+            trainer_raw = texts[12].strip() if len(texts) > 12 else ''
             trainer, trainer_affiliation = _split_trainer_affiliation(trainer_raw)
             margin_txt = texts[8].strip() if len(texts) > 8 else ''
             finish_time = _parse_finish_time(texts[7].strip() if len(texts) > 7 else '')
-            # 馬体重（texts[13]、'516(+4)' 形式）
-            body_weight, body_weight_diff = _extract_body_weight(texts, start_idx=13)
-            # 単勝オッズ（texts[11]の小数）
+            # 馬体重（texts[11]、'482 (+4)' 形式）
+            body_weight, body_weight_diff = _extract_body_weight(texts, start_idx=11)
+            # 単勝オッズ列は新構成では存在しない（2026-08-03確認）。
+            # 呼び出しは残すが常にNoneが返る想定（popularityで代替済み、
+            # engine.py に既存の明示コメントあり）
             win_odds = _extract_win_odds(texts, start_idx=11)
             if not pop_m or not trainer_raw or body_weight is None:
                 diag_result_row_columns(texts)
