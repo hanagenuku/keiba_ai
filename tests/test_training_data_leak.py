@@ -152,3 +152,36 @@ class TestTargetRaceResultDoesNotLeak:
         assert not nige[cols].equals(oikomi[cols]), (
             '過去走の脚質が特徴量に一切反映されていない'
         )
+
+    def test_last1_pos3c_uses_corner_all_derived_value_not_style_default(self, tmp_path):
+        """f_last1_pos3c が corner_all から導出した実値を反映し、
+        running_style ベースの粗い代用値に固定されないことを確認する
+        （2026-08-03発見・修正）。
+
+        corner_3列は2026-06-25のcorner_all導入時に書き込みが停止し常にNULLに
+        なっていた（docs/history_db_schema.md既知事項）が、
+        calc_features_for_xgb() 側は移行に追従せず今もcorner_3キーを
+        読み続けており、f_pos_avg_3等8特徴量とspeed_indexが常に
+        running_styleベースの粗い代用値に落ちていた。
+
+        過去走の running_style を「差し」（代用値7.0）に固定したまま
+        corner_all だけを「1-1-1-1」（3コーナー先頭=1）にすると、
+        修正前は corner_3 が常にNoneのため代用値7.0のまま変化しなかった。
+        """
+        base = str(tmp_path / 'pos3c')
+        os.makedirs(os.path.join(base, 'data'), exist_ok=True)
+        races = []
+        for d in range(1, 6):
+            r = _race(f'2025010{d}_05_01', f'2025-01-0{d}', '差し', 35.0)
+            for f in r['finishers']:
+                f['corner_all'] = '1-1-1-1'
+            races.append(r)
+        races.append(_race('20250601_05_01', '2025-06-01', '差し', 35.0))
+        save_history_db(races, db_path=os.path.join(base, 'data', 'history.db'))
+        build_training_data(base)
+        df = pd.read_csv(os.path.join(base, 'data', 'horse_features.csv'))
+        row = df[df.race_id == '20250601_05_01'].iloc[0]
+        assert row['f_last1_pos3c'] == pytest.approx(1.0), (
+            'corner_allから導出した3コーナー先頭位置(1.0)が反映されていない。'
+            f'style既定値7.0のままなら修正前の挙動: {row["f_last1_pos3c"]}'
+        )

@@ -635,6 +635,28 @@ def _infer_running_style(horse_name, hist, post_position=None):
     return '追込'
 
 
+def _derive_corner3(corner_all):
+    """corner_all（'3-3-2-1'形式のハイフン区切り通過順）から3コーナー通過順位を導出する。
+
+    2026-08-03発見: horse_history.corner_3 列は2026-06-25のcorner_all導入時に
+    書き込みが停止し「常にNULL固定」になった（docs/history_db_schema.md に
+    明記済みの既知事項）が、calc_features_for_xgb() 側の f_pos_avg_3 等
+    8特徴量・speed_index の corner_pos 引数はこの移行に追従せず今も
+    corner_3 キーを読み続けており、corner_all移行以降ずっとフォールバック
+    値（running_styleベースの粗い代用）に落ちていた。corner_allは3コーナー
+    以降を4値持つとは限らない（2〜4値）ため、3番目の値が無ければNoneのまま。
+    """
+    if not corner_all:
+        return None
+    parts = corner_all.split('-')
+    if len(parts) < 3:
+        return None
+    try:
+        return int(parts[2])
+    except (TypeError, ValueError):
+        return None
+
+
 def get_history_from_db(horse_name, hist_db_path, limit=5):
     """history.dbから馬の直近N走を取得"""
     try:
@@ -761,7 +783,9 @@ def get_history_from_db(horse_name, hist_db_path, limit=5):
                 "date": date,
                 "last_3f": agari3f,
                 "first_3f": first_3f_val,
-                "corner_3": corner_3,
+                # corner_3 は列自体が常にNULL（docs/history_db_schema.md既知事項）。
+                # corner_all（4値までのハイフン区切り通過順）の3番目から導出する。
+                "corner_3": corner_3 if corner_3 is not None else _derive_corner3(corner_all),
                 "race_id": race_id,
                 "running_style": running_style_hist,
                 "race_name": race_name,

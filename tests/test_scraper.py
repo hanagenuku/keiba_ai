@@ -613,6 +613,51 @@ def test_calc_course_aptitude_features_uses_agari_rank_from_inference_time_histo
     assert feats['f_agari_rank_at_type'] == pytest.approx(0.1)
 
 
+# ── corner_3 が常にNULLで死んでいた問題（2026-08-03発見） ──────────────────
+
+class TestDeriveCorner3:
+    """corner_3列は2026-06-25のcorner_all導入時に書き込みが停止し常にNULLに
+    なった（docs/history_db_schema.md既知事項）。calc_features_for_xgb()の
+    f_pos_avg_3等8特徴量とspeed_indexのcorner_pos引数はこの移行に追従せず
+    今もcorner_3キーを読み続けており、corner_all移行以降ずっと
+    running_styleベースの粗いフォールバックに落ちていた。
+    """
+
+    def test_derives_third_position_from_hyphenated_string(self):
+        assert jra_scraper._derive_corner3('3-3-2-1') == 2
+
+    def test_returns_none_when_fewer_than_three_positions(self):
+        assert jra_scraper._derive_corner3('4-5') is None
+
+    def test_returns_none_for_empty_or_none(self):
+        assert jra_scraper._derive_corner3('') is None
+        assert jra_scraper._derive_corner3(None) is None
+
+
+def test_get_history_from_db_derives_corner_3_from_corner_all(tmp_path):
+    """get_history_from_db()が、常にNULLのcorner_3列の代わりにcorner_allの
+    3番目の値からcorner_3を導出して返すことを確認する回帰テスト。
+    save_history_db()はcorner_3列に無条件でNoneを書き込む
+    （finisher辞書にcorner_3を渡しても無視される）ため、修正前はここが
+    常にNoneのままだった。
+    """
+    from src.utils.db import save_history_db
+    from src.scraper.jra_scraper import get_history_from_db
+
+    hist_path = tmp_path / 'history.db'
+    save_history_db([{
+        'race_id': '20260101_05_11', 'racecourse': '中山', 'distance': 2500,
+        'surface': '芝', 'race_class': 'G1',
+        'finishers': [
+            {'num': 3, 'name': 'テスト馬', 'place': 1, 'agari3f': 34.5,
+             'corner_all': '3-3-2-1'},
+        ],
+    }], db_path=str(hist_path))
+
+    hist = get_history_from_db('テスト馬', str(hist_path))
+    assert hist[0]['corner_3'] == 2
+
+
 # ── 馬体重推移（f_weight_trend_avg / f_weight_last_diff、2026-07-24〜） ──────
 
 def test_get_history_from_db_includes_body_weight(tmp_path):

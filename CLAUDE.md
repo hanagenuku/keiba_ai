@@ -562,6 +562,57 @@ affiliation特徴量を作っても意味がない。次回の本番実行ログ
 2. 次回のColab再学習で`f_pop_last`/`f_pop_avg`/`f_beat_market_rate`（市場特徴量）の
    重要度が回復するか確認する（③で列崩れを修正したため、次回学習データ生成分から
    直近走のpopularityが正しく入るようになる）
+3. `f_pos_avg_3`系8特徴量とspeed_index（f_speed_avg等4特徴量）の重要度・分布が
+   次回Colab再学習でどう変化したか確認する（④でcorner_3導出を修正したため）
+
+---
+
+## 🚩 2026-08-03④ 追記：「システム全体の洗い直し」で corner_3 が丸ごと死んでいたバグを発見・修正
+
+### 経緯
+ユーザー依頼「システムの全体像をもう一度洗い直し、改修・回収率向上の提案をして」に対応する
+前段として、③で有効だった手法（history.db全カラムの月次充足率を時系列で見る）を
+**horse_history/race_historyの全カラムに拡張**して再監査した。
+
+### 🔴 発見：corner_3列が2026-06-25のcorner_all導入以来、常にNULLだった
+`docs/history_db_schema.md`には「corner_3は常にNULL固定。corner_allに統合され未使用」と
+**既に明記済み**だったが、実際に`calc_features_for_xgb()`のコードを確認したところ、
+以下が**今もcorner_3キーを読み続けていた**（corner_allへの移行に追従していなかった）:
+
+- `c3_list`（`f_pos_avg_3`/`f_pos_std_3`/`f_p_front`/`f_p_mid`/`f_p_back`/
+  `f_last1_pos3c`/`f_last2_pos3c`/`f_last3_pos3c`の8特徴量の元データ）
+- speed_index計算の`corner_pos`引数（`f_speed_avg`/`f_speed_max`/`f_speed_last`/
+  `f_speed_trend`の4特徴量に影響、`calc_performance_index()`内で`position_adj`を左右）
+- `estimate_horse_style()`のrunning_style欠損時フォールバック（影響は軽微）
+
+`src/utils/db.py`の`save_history_db()`を確認すると、`corner_3`列へのINSERTが
+**`h.get('corner_3')`ではなく無条件の`None`固定**になっており（UPDATE節にも
+含まれない）、finisher辞書に`corner_3`を渡しても無視される設計だった。
+つまり2026-06-25のcorner_all導入以降、**上記12特徴量が常にrunning_styleベースの
+粗い代用値に落ちたまま、学習・推論の両方で（パリティは保たれたまま）機能停止していた**。
+
+### 対応
+`corner_all`（'3-3-2-1'形式、94.5%以上充足）の3番目の値から`corner_3`を導出する
+`_derive_corner3()`をjra_scraper.pyに新設し、`get_history_from_db()`（推論側）・
+`_get_history_before()`（学習側、jra_scraperから同じ関数をimportしてパリティ確保）
+の両方でraw corner_3列がNoneの場合のフォールバックとして使用。
+
+`tests/test_scraper.py`に4テスト、`tests/test_training_data_leak.py`に統合テスト1件
+追加。統合テストは過去走のrunning_style='差し'（代用値7.0）を固定したままcorner_allだけ
+'1-1-1-1'（3コーナー先頭=1.0）にし、`f_last1_pos3c`が代用値7.0のままではなく1.0を
+反映することを確認（修正前は実際に7.0のまま失敗することを確認済み）。
+`python -m pytest tests/ -q`は532テスト通過（527+5、回帰なし）。
+
+### 🔑 教訓
+`docs/history_db_schema.md`に「corner_3は未使用」と正しく記録されていたにも
+関わらず、**それを読むはずのコード側が移行に追従していないことまでは
+文書化されていなかった**。スキーマ文書は「データがどうなっているか」は
+教えてくれるが「コードが実際に何を読んでいるか」までは保証しない。
+③までの調査は「データが本番でどう壊れたか」を追ったが、今回は
+「ドキュメント化済みの仕様変更に、消費側のコードが追従し損ねた」という
+別種の見落とし。次回以降、スキーマ変更・列の非推奨化を行う際は、
+その列を`.get('列名')`で読んでいる全箇所を`grep`で洗い出し、
+新しい列への移行漏れがないか確認すること。
 
 ---
 
