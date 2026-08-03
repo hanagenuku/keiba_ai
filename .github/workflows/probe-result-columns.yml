@@ -1,0 +1,47 @@
+name: Probe Result Columns (診断)
+
+# 結果ページの popularity/body_weight/trainer 列が2026-07-04以降0%充足に
+# 転落した件（texts[11]以降の列構成が変わった疑い）を実データで切り分けるための
+# 調査用。読み取り専用で、DB・モデル・latest.json には一切書き込まない。
+# parse_result_soup() 内の diag_result_row_columns() を発火させ、実際の
+# texts配列をログに残す。
+
+on:
+  workflow_dispatch:
+    inputs:
+      date:
+        description: '調べたい開催日 YYYYMMDD（例: 20260802）'
+        required: true
+        type: string
+      places:
+        description: '場コード カンマ区切り（01札幌 04新潟 07中京 …）'
+        required: true
+        type: string
+
+# 読み取り専用であることを権限でも担保する（誤って push できないように）
+permissions:
+  contents: read
+
+concurrency:
+  group: keiba-weekly
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Probe
+        run: python scripts/probe_result_columns.py
+        env:
+          TARGET_DATE: ${{ inputs.date }}
+          PLACES: ${{ inputs.places }}
