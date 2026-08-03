@@ -518,6 +518,90 @@ def test_calc_features_for_xgb_uses_time_diff_from_inference_time_history(tmp_pa
     assert not math.isnan(feats['f_finish_time_avg'])
 
 
+# ── get_history_from_db の agari_rank/num_finishers 欠落（2026-08-03） ──────
+
+def test_get_history_from_db_includes_agari_rank_and_num_finishers(tmp_path):
+    """get_history_from_db()が agari_rank/num_finishers を実際に返すことを
+    確認する回帰テスト。
+
+    agari_rank は元々SQLでSELECTされ agari3f_rank_pct の計算には使われていたが、
+    返り値の辞書には一度も含まれていなかった。この結果、推論時は
+    calc_agari_ability()（horse_type.py, f_agari_ability。Phase1・2026-05-25から
+    本番稼働の距離適性特徴量）と calc_course_aptitude_features()の
+    f_agari_rank_at_type の両方が hrec.get('agari_rank') -> None に落ち、
+    常にデフォルト値（0.5）になっていた。学習側(_get_history_before)は
+    agari_rank を正しく渡すため、学習/推論パリティ違反だった。
+    """
+    from src.utils.db import save_history_db
+    from src.scraper.jra_scraper import get_history_from_db
+
+    hist_path = tmp_path / 'history.db'
+    save_history_db([{
+        'race_id': '20260101_05_11', 'racecourse': '中山', 'distance': 2500,
+        'surface': '芝', 'race_class': 'G1', 'num_finishers': 10,
+        'finishers': [
+            {'num': 3, 'name': 'テスト馬', 'place': 1, 'agari3f': 34.5,
+             'agari_rank': 1},
+        ],
+    }], db_path=str(hist_path))
+
+    hist = get_history_from_db('テスト馬', str(hist_path))
+    assert len(hist) == 1
+    assert hist[0]['agari_rank'] == 1
+    assert hist[0]['num_finishers'] == 10
+
+
+def test_calc_agari_ability_uses_inference_time_history(tmp_path):
+    """get_history_from_db()の返り値をそのまま calc_agari_ability()
+    （horse_type.py, f_agari_ability の算出元）に渡した場合に、上がり3F1位
+    （10頭立て）という好走実績が反映されることを確認する統合テスト。
+    修正前は agari_rank が常にNoneだったため、このアサーションは常に失敗し
+    デフォルトの0.5に固定されていた。
+    """
+    from src.utils.db import save_history_db
+    from src.scraper.jra_scraper import get_history_from_db
+    from src.features.horse_type import calc_agari_ability
+
+    hist_path = tmp_path / 'history.db'
+    save_history_db([{
+        'race_id': '20260101_05_11', 'racecourse': '中山', 'distance': 2500,
+        'surface': '芝', 'race_class': 'G1', 'num_finishers': 10,
+        'finishers': [
+            {'num': 3, 'name': 'テスト馬', 'place': 1, 'agari3f': 34.5,
+             'agari_rank': 1},
+        ],
+    }], db_path=str(hist_path))
+
+    hist = get_history_from_db('テスト馬', str(hist_path))
+    ability = calc_agari_ability(hist)
+    assert ability == pytest.approx(1.0)
+
+
+def test_calc_course_aptitude_features_uses_agari_rank_from_inference_time_history(tmp_path):
+    """calc_course_aptitude_features()の f_agari_rank_at_type が、
+    get_history_from_db()経由のagari_rankを実際に反映することを確認する
+    統合テスト。修正前は常にデフォルト値0.5だった。
+    """
+    from src.utils.db import save_history_db
+    from src.scraper.jra_scraper import get_history_from_db
+    from src.features.engine import calc_course_aptitude_features
+
+    hist_path = tmp_path / 'history.db'
+    save_history_db([{
+        'race_id': '20260101_05_11', 'racecourse': '中山', 'distance': 2500,
+        'surface': '芝', 'race_class': 'G1', 'num_finishers': 10,
+        'finishers': [
+            {'num': 3, 'name': 'テスト馬', 'place': 1, 'agari3f': 34.5,
+             'agari_rank': 1},
+        ],
+    }], db_path=str(hist_path))
+
+    root = os.path.join(os.path.dirname(__file__), '..')
+    hist = get_history_from_db('テスト馬', str(hist_path))
+    feats = calc_course_aptitude_features('テスト馬', '中山', '芝', hist, root)
+    assert feats['f_agari_rank_at_type'] == pytest.approx(0.1)
+
+
 # ── 馬体重推移（f_weight_trend_avg / f_weight_last_diff、2026-07-24〜） ──────
 
 def test_get_history_from_db_includes_body_weight(tmp_path):
@@ -869,6 +953,64 @@ class TestPaceLabelDiagnostic:
         jra_scraper.diag_pace_label_missing('ペースあり')
         second = capsys.readouterr().out
         assert first.strip() and not second.strip()
+
+
+class TestResultRowColumnDiagnostic:
+    """結果ページの馬別行が popularity/body_weight/trainer を拾えないときの
+    診断ログ（2026-08-03発見）。history.db実データで、この3列が2026-06-28
+    までは正常に埋まっていたのに2026-07-04以降は突然0%になっていたと判明。
+    jra_scraper.pyはこの間コミットされておらず、texts[0..10]相当
+    （着順・馬番・馬名・性齢・斤量・騎手・タイム・着差・上がり）は現在も
+    正常なため、実際のJRADB結果ページの列構成がtexts[11]以降のどこかで
+    変わった可能性が高い。実HTMLを確認できないため決め打ち修正はせず、
+    次回のワークフロー実行ログに実際の列内容を残すだけに留める。
+    """
+
+    def _run(self, capsys, texts):
+        jra_scraper._RESULT_ROW_DIAG_DONE = False
+        jra_scraper.diag_result_row_columns(texts)
+        return capsys.readouterr().out
+
+    def test_reports_actual_texts_array(self, capsys):
+        texts = ['1', '2', '3', 'テスト馬', '牡3', '54.0', '騎手名',
+                  '1:23.4', '', '', '34.5']
+        out = self._run(capsys, texts)
+        assert 'テスト馬' in out
+        assert str(len(texts)) in out
+
+    def test_logs_only_once_per_run(self, capsys):
+        jra_scraper._RESULT_ROW_DIAG_DONE = False
+        jra_scraper.diag_result_row_columns(['a'])
+        first = capsys.readouterr().out
+        jra_scraper.diag_result_row_columns(['b'])
+        second = capsys.readouterr().out
+        assert first.strip() and not second.strip()
+
+    def test_parse_result_soup_fires_diagnostic_when_trailing_columns_missing(self, capsys):
+        """popularity/body_weight/trainer相当の列(texts[11]以降)が無い行を
+        parse_result_soup()に通すと診断ログが出ることを確認する統合テスト。
+        着順〜上がり(texts[0..10]相当)しか無い行を渡し、例外にはならず
+        （既存の len(texts)>N ガードで安全に空扱いに落ちる）診断だけが出ることを見る。
+        """
+        html = """
+        <html><body><table>
+        <tr><th>レース情報</th></tr>
+        <tr><td colspan="11">2023年1月7日 中山 1600メートル（芝・右）3歳以上1勝クラス 天候:晴 馬場:良</td></tr>
+        <tr>
+          <td>1</td><td>3</td><td>5</td><td>テストウマ</td>
+          <td>牡4</td><td>57.0</td><td>テスト騎手</td>
+          <td>1:34.5</td><td></td><td>3-3-2-1</td><td>34.1</td>
+        </tr>
+        </table></body></html>
+        """
+        soup = BeautifulSoup(html, 'lxml')
+        jra_scraper._RESULT_ROW_DIAG_DONE = False
+        result = parse_result_soup(soup, '中山', 1, '20230107', '06')
+        out = capsys.readouterr().out
+        assert result is not None
+        assert result['finishers'][0]['trainer'] == ''
+        assert result['finishers'][0]['popularity'] == 99
+        assert '結果ページ列診断' in out
 
 
 def test_extract_corner_passage_captures_grouping_notation():
