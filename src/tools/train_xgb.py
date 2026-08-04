@@ -168,7 +168,8 @@ def train_xgb(base_dir,
               early_stopping_rounds=50,
               use_optuna=False,
               residual=False,
-              simulate_serving_popularity=True):
+              simulate_serving_popularity=True,
+              seed=42):
     """
     Parameters
     ----------
@@ -179,6 +180,10 @@ def train_xgb(base_dir,
     residual   : True なら残差学習モード。f_popularity を特徴量から除外し、
                  人気順位から算出した logit(p_market) を base_margin として
                  XGBoost に渡す。モデルは「市場からのズレ」だけを学習する。
+    seed       : XGBoostのrandom_state。複数シードでアンサンブルを組み、
+                 予測のブレ（モデル間の不一致度）を信頼度シグナルとして
+                 使う検証に利用する（2026-08-04導入）。既定値42は従来の
+                 挙動と完全に同じ。
 
     Returns
     -------
@@ -307,7 +312,7 @@ def train_xgb(base_dir,
         eval_metric='logloss',
         early_stopping_rounds=early_stopping_rounds,
         use_label_encoder=False,
-        random_state=42,
+        random_state=seed,
         n_jobs=-1,
     )
 
