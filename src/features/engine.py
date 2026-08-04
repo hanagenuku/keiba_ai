@@ -1620,6 +1620,57 @@ def calc_course_distance_features(racecourse, surface, distance, base_dir=None):
     return out
 
 
+# コース要求プロファイルの正規化に使う実測レンジ（2026-08-04時点）。
+# course_profiles.json 全20コース・course_distance_profiles.json 全24キーの
+# 実際の値から算出（決め打ちの係数ではなく実データの最小〜最大）。
+# 将来データが更新され範囲外の値が入ってもclipして安全に扱う。
+_STRAIGHT_LENGTH_RANGE = (260.0, 659.0)  # 函館(260m)〜新潟芝(659m)
+_HILL_DIFF_RANGE = (0.0, 4.3)            # 平坦(0m)〜京都芝外回り(4.3m)
+
+
+def calc_course_demand_profile(racecourse, surface, distance, base_dir=None):
+    """①「このコースがどんな能力を要求するか」を、馬を見る前に単独で数値化する。
+
+    人間の予想家の思考プロセス（①コース要求→②馬の適性→③照合、の順で判断する）
+    を模して、②calc_distance_features の f_stamina_score/f_speed_score と
+    同じ0〜1スケールで、コース自体の要求度を先に決める（2026-08-04導入）。
+    calc_course_fit_score() と組み合わせて③の照合に使う。
+
+    Returns dict:
+        stamina_demand : 坂がきついほど1.0に近づく（スタミナを要求するコース）
+        speed_demand   : 直線が長いほど1.0に近づく（純粋なスピードを要求するコース）
+    """
+    hill_diff = calc_course_distance_features(
+        racecourse, surface, distance, base_dir)['f_course_hill_diff']
+    lo, hi = _HILL_DIFF_RANGE
+    stamina_demand = (max(lo, min(hi, hill_diff)) - lo) / (hi - lo)
+
+    profile = get_course_profile(racecourse, surface, base_dir)
+    straight = profile.get('straight_length') if profile else None
+    if straight is None:
+        speed_demand = 0.5  # コース未定義時は中立
+    else:
+        lo, hi = _STRAIGHT_LENGTH_RANGE
+        speed_demand = (max(lo, min(hi, straight)) - lo) / (hi - lo)
+
+    return {
+        'stamina_demand': round(stamina_demand, 3),
+        'speed_demand':   round(speed_demand, 3),
+    }
+
+
+def calc_course_fit_score(course_demand, horse_stamina_score, horse_speed_score):
+    """③ ①コース要求 と ②馬の能力 を照合し、1つの適合度スコアにする。
+
+    各次元（スタミナ・スピード）の重みは1:1の単純な加重和（恣意的な
+    チューニングはしない）。0〜2の範囲になるため5倍して0〜10スケールに
+    揃える（将来アプリに「コース適性: 7.2/10」のように表示する用途も想定）。
+    """
+    raw = (course_demand['stamina_demand'] * horse_stamina_score
+           + course_demand['speed_demand'] * horse_speed_score)
+    return round(raw * 5, 3)
+
+
 def _bayes_shrink(hits, n, prior=0.33, k=3):
     """(的中数, 試行数) からベイズ縮小レートを計算する共通ロジック。
 
@@ -2258,6 +2309,16 @@ def calc_features_for_xgb(h, race):
     ]
     dist_type_feats = _calc_dist_feats(h, race, _hist_for_type)
     feats.update(dist_type_feats)
+
+    # ── コース要求適合度（①コース要求→②馬の適性→③照合、2026-08-04）───────
+    # 「このコースはスタミナ/スピードのどちらを要求するか」を先に単独で決め、
+    # 馬自身のスタミナ/スピードスコアと照合する。坂がきつい短距離戦で
+    # スタミナ型の馬が浮上する、といったパターンを木モデルに直接渡す狙い。
+    _course_demand = calc_course_demand_profile(rc, surf, dist)
+    feats['f_course_stamina_demand'] = _course_demand['stamina_demand']
+    feats['f_course_speed_demand']   = _course_demand['speed_demand']
+    feats['f_course_fit_score'] = calc_course_fit_score(
+        _course_demand, dist_type_feats['f_stamina_score'], dist_type_feats['f_speed_score'])
 
     # ── 市場特徴量（人気ベース）─────────────────────────────────────────
     # 市場（オッズ）はAUC 0.83の情報源だが従来モデルは一切使っていなかった。

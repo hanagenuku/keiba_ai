@@ -11,6 +11,7 @@ from src.features.engine import (
     calc_features_for_xgb, _ensure_escape_front_count, f_blood, _bayes_rate,
     _bayes_shrink, _check_xgb_feature_coverage, _warn_xgb_inference_fallback,
     calc_course_distance_features, load_course_distance_profiles, _resolve_turf_loop,
+    calc_course_demand_profile, calc_course_fit_score,
 )
 import src.features.engine as engine
 
@@ -195,6 +196,84 @@ def test_corner_tightness_differs_by_loop_hanshin():
     inner = calc_course_distance_features('阪神', '芝', 1200, ROOT)   # 内回り
     outer = calc_course_distance_features('阪神', '芝', 1800, ROOT)   # 外回り
     assert inner['f_course_corner_tight'] < outer['f_course_corner_tight']
+
+
+def test_course_demand_profile_hilly_course_has_high_stamina_demand():
+    # 京都芝外回り(高低差4.3m、実データ中の最大)は小倉ダート(0.6m、最小付近)より
+    # スタミナ要求度が高いはず
+    hilly = calc_course_demand_profile('京都', '芝', 2400, ROOT)
+    flat = calc_course_demand_profile('小倉', 'ダート', 1700, ROOT)
+    assert hilly['stamina_demand'] > flat['stamina_demand']
+
+
+def test_course_demand_profile_long_straight_has_high_speed_demand():
+    # 新潟芝(直線659m、実データ中の最長)は函館ダート(260m、最短)より
+    # スピード要求度が高いはず
+    long_straight = calc_course_demand_profile('新潟', '芝', 1600, ROOT)
+    short_straight = calc_course_demand_profile('函館', 'ダート', 1700, ROOT)
+    assert long_straight['speed_demand'] > short_straight['speed_demand']
+
+
+def test_course_demand_profile_unknown_course_defaults():
+    # 未定義の競馬場: 坂は「不明時0.0」の既定に合わせ0、直線は中立0.5
+    demand = calc_course_demand_profile('大井', 'ダート', 1600, ROOT)
+    assert demand['stamina_demand'] == 0.0
+    assert demand['speed_demand'] == 0.5
+
+
+def test_course_fit_score_rewards_matching_ability():
+    # コースがスタミナだけを要求する場合、スタミナ型の馬は満点、
+    # スピード型の馬はゼロ点になる（重み1:1の単純な照合であることの確認）
+    demand = {'stamina_demand': 1.0, 'speed_demand': 0.0}
+    stamina_type = calc_course_fit_score(demand, horse_stamina_score=1.0, horse_speed_score=0.0)
+    speed_type = calc_course_fit_score(demand, horse_stamina_score=0.0, horse_speed_score=1.0)
+    assert stamina_type == 5.0
+    assert speed_type == 0.0
+
+
+def test_calc_features_for_xgb_includes_course_fit_features():
+    horses = [{'name': f'Horse{i}', 'num': i, 'running_style': '差し'} for i in range(1, 9)]
+    race = {'racecourse': '京都', 'surface': '芝', 'distance': 2400, 'horses': horses}
+    feats = calc_features_for_xgb(horses[0], race)
+    assert 'f_course_stamina_demand' in feats
+    assert 'f_course_speed_demand' in feats
+    assert 'f_course_fit_score' in feats
+
+
+def test_course_fit_score_prefers_stamina_horse_at_hilly_course():
+    """①→②→③の狙い通りの動き: 坂のきついコースでは、スタミナ型プロファイル
+    の馬のほうが、純粋なスピード型の馬より f_course_fit_score が高くなる
+    ことを確認する統合テスト。
+
+    馬Aは中長距離(2000m以上)で好走・短距離(1400m以下)で凡走という
+    スタミナ型の履歴、馬Bはその逆（短距離で好走・中長距離で凡走）という
+    スピード型の履歴を構築し、calc_stamina_score/calc_speed_score
+    （horse_type.py）が両者とも既定値0.5に落ちず、明確に逆方向の
+    プロファイルになるようにする。
+    """
+    def _hist(dist, place, finishers=10):
+        # calc_features_for_xgb内のデータリーク対策フィルタ
+        # （対象レース日より前の過去走のみ使用）を通すため date が必須
+        return {'distance': dist, 'place': place, 'finishers': finishers,
+                'agari_rank': None, 'num_finishers': finishers, 'date': '2025-01-01'}
+
+    stamina_horse = {
+        'name': 'スタミナ馬', 'num': 1, 'running_style': '差し',
+        'history': [_hist(2400, 1), _hist(2200, 1), _hist(2000, 2),
+                    _hist(1200, 9), _hist(1400, 8)],
+    }
+    speed_horse = {
+        'name': 'スピード馬', 'num': 2, 'running_style': '逃げ',
+        'history': [_hist(1200, 1), _hist(1400, 1), _hist(1200, 2),
+                    _hist(2400, 9), _hist(2200, 8)],
+    }
+    # 坂のきつい京都芝外回り・中距離戦（今回は両馬とも同じ距離を走る想定）
+    race = {'racecourse': '京都', 'surface': '芝', 'distance': 2400,
+            'date': '2026-01-01', 'horses': [stamina_horse, speed_horse]}
+
+    feats_stamina = calc_features_for_xgb(stamina_horse, race)
+    feats_speed = calc_features_for_xgb(speed_horse, race)
+    assert feats_stamina['f_course_fit_score'] > feats_speed['f_course_fit_score']
 
 
 def test_calc_features_for_xgb_includes_course_distance_features():
