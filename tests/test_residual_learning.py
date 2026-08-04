@@ -67,6 +67,95 @@ class TestTrainXgbResidualFlag:
         assert _EXCLUDE_COLS.isdisjoint(_MARKET_FEAT_COLS)
 
 
+def _make_synthetic_horse_features(n=400, seed=0):
+    """train_xgb() が最低限読める形の合成 horse_features.csv を作る。
+
+    アンサンブル分散実験（2026-08-04導入のseedパラメータ）の検証用。
+    特徴量に実際の意味は無いが、is_fukusho と緩く相関させることで
+    決定木が実際に分岐し、seed違いで木の構造が変わることを検出できるようにする。
+    """
+    rng = np.random.RandomState(seed)
+    dates = pd.date_range('2026-01-01', periods=40, freq='D')
+    train_dates = dates[:30]
+    val_dates = dates[30:]
+
+    rows = []
+    race_id = 0
+    for d in list(train_dates) * 1 + list(val_dates) * 1:
+        race_id += 1
+        n_horses = 10
+        f1 = rng.normal(size=n_horses)
+        f2 = rng.normal(size=n_horses)
+        f3 = rng.normal(size=n_horses)
+        popularity = rng.permutation(np.arange(1, n_horses + 1)).astype(float)
+        score = -0.5 * f1 + 0.3 * f2 - 0.2 * popularity + rng.normal(scale=1.0, size=n_horses)
+        is_fukusho = (score > np.percentile(score, 70)).astype(int)
+        for i in range(n_horses):
+            rows.append({
+                'race_id': f'r{race_id}',
+                'date': d.strftime('%Y-%m-%d'),
+                'horse_name': f'h{race_id}_{i}',
+                'horse_num': i + 1,
+                'place': i + 1,
+                'is_fukusho': int(is_fukusho[i]),
+                'f_popularity': popularity[i],
+                'f_feat1': f1[i],
+                'f_feat2': f2[i],
+                'f_feat3': f3[i],
+            })
+    return pd.DataFrame(rows)
+
+
+class TestTrainXgbSeedParameter:
+    """train_xgb(seed=...) がアンサンブル分散実験用に機能することの検証。
+
+    同一seedなら決定的に同じ結果、違うseedなら結果が変わることを、
+    実際にtrain_xgb()をエンドツーエンドで実行して確認する
+    （North Starに従い、モック無しの実データ形状CSVで検証）。
+    """
+
+    def _setup_base_dir(self, tmp_path, n=400, data_seed=0):
+        base_dir = tmp_path
+        data_dir = base_dir / 'data'
+        data_dir.mkdir(parents=True, exist_ok=True)
+        df = _make_synthetic_horse_features(n=n, seed=data_seed)
+        df.to_csv(data_dir / 'horse_features.csv', index=False)
+        return str(base_dir)
+
+    def test_seed_default_is_42(self):
+        import inspect
+        from src.tools.train_xgb import train_xgb
+        sig = inspect.signature(train_xgb)
+        assert sig.parameters['seed'].default == 42
+
+    def test_same_seed_is_deterministic(self, tmp_path):
+        from src.tools.train_xgb import train_xgb
+        base_dir = self._setup_base_dir(tmp_path)
+        common_kwargs = dict(
+            train_end='2026-01-30', val_start='2026-01-31', val_end='2026-02-09',
+            n_estimators=30, early_stopping_rounds=10,
+        )
+        result_a = train_xgb(base_dir, seed=7, **common_kwargs)
+        result_b = train_xgb(base_dir, seed=7, **common_kwargs)
+        assert result_a['auc'] == result_b['auc'], \
+            "同じseedなら決定的に同じAUCになるべき（アンサンブル分散実験の前提）"
+        assert result_a['brier'] == result_b['brier']
+
+    def test_different_seed_changes_result(self, tmp_path):
+        from src.tools.train_xgb import train_xgb
+        base_dir = self._setup_base_dir(tmp_path)
+        common_kwargs = dict(
+            train_end='2026-01-30', val_start='2026-01-31', val_end='2026-02-09',
+            n_estimators=30, early_stopping_rounds=10,
+        )
+        result_seed1 = train_xgb(base_dir, seed=1, **common_kwargs)
+        result_seed2 = train_xgb(base_dir, seed=2, **common_kwargs)
+        assert (result_seed1['auc'], result_seed1['brier'], result_seed1['logloss']) != \
+               (result_seed2['auc'], result_seed2['brier'], result_seed2['logloss']), \
+            "違うseedならsubsample/colsampleの違いで結果が変わるはず" \
+            "（変わらなければアンサンブル分散に使えない）"
+
+
 class TestEngineResidualInference:
     """engine.py の残差推論パスのユニットテスト"""
 
