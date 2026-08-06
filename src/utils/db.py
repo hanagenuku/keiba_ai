@@ -531,6 +531,19 @@ def save_history_db(all_results, base_dir=None, db_path=None):
             )
             new_horses += cur2.rowcount
             # Stage 3 rescrape 用：既存行の新フィールドを UPDATE で充填
+            #
+            # ⚠ popularity は「取得できなかった時に 99 というセンチネル値で
+            # INSERT される」列であり NULL にならない（parse_result_soup:
+            # `int(pop_m.group(1)) if pop_m else 99`）。そのため COALESCE では
+            # 直せず、2026-07-04以降の列崩れ（2026-08-03②③）で 99 が入った
+            # 4,484行は再スクレイプしても永久に復旧しなかった。
+            # popularity は残差学習モデルの base_margin（市場アンカー）の
+            # 唯一の入力であり、99 だと engine.py の
+            # `float(pop) if 0 < pop < 99 else nan` で NaN に落ちて
+            # アンカーが完全に死ぬ（実測: 健全行 AUC 0.8207 / 死亡行 0.7091）。
+            # そのため「新しい値が正当な人気(1〜98)の時だけ上書きする」形にし、
+            # 取得失敗(99)で既存の正しい値を壊さないようにする。
+            _pop_new = h.get('popularity')
             conn.execute(
                 "UPDATE horse_history SET "
                 "  finish_time      = COALESCE(?, finish_time), "
@@ -550,7 +563,10 @@ def save_history_db(all_results, base_dir=None, db_path=None):
                 "  surface          = COALESCE(NULLIF(?, ''), surface), "
                 "  sire             = COALESCE(NULLIF(?, ''), sire), "
                 "  dam_sire         = COALESCE(NULLIF(?, ''), dam_sire), "
-                "  trainer_affiliation = COALESCE(?, trainer_affiliation) "
+                "  trainer_affiliation = COALESCE(?, trainer_affiliation), "
+                "  trainer          = COALESCE(NULLIF(?, ''), trainer), "
+                "  popularity       = CASE WHEN ? BETWEEN 1 AND 98 "
+                "                          THEN ? ELSE popularity END "
                 "WHERE race_id = ? AND horse_num = ?",
                 (h.get('finish_time'), h.get('time_diff_sec'),
                  h.get('chakusa_text', ''), h.get('margin'),
@@ -562,6 +578,8 @@ def save_history_db(all_results, base_dir=None, db_path=None):
                  h.get('surface', r.get('surface', '')),
                  h.get('sire', ''), h.get('dam_sire', ''),
                  h.get('trainer_affiliation'),
+                 h.get('trainer', ''),
+                 _pop_new, _pop_new,
                  race_id, h.get('num', 0)),
             )
 
