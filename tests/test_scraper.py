@@ -1302,3 +1302,96 @@ class TestFindR01ResultRetry:
         sig = inspect.signature(jra_scraper.find_r01_result)
         assert list(sig.parameters)[:3] == ['base', 'date', 'sess']
         assert sig.parameters['attempts'].default == 3
+
+
+class TestRescrapeRepairsPopularityAndTrainer:
+    """2026-07-04以降の列崩れで壊れた popularity / trainer を、
+    再スクレイプ（save_history_db の再実行）で復旧できることの検証。
+
+    修正前は UPDATE 節に popularity / trainer が無く、かつ popularity は
+    取得失敗時に NULL ではなく 99（センチネル）で INSERT されるため
+    COALESCE でも直せず、4,484行が永久に復旧不能だった（2026-08-05調査）。
+    North Star #6 に従い、手打ちINSERTではなく本番と同じ save_history_db()
+    で書き込んでから実際の sqlite3 で読み出して検証する。
+    """
+
+    def _broken_scrape(self):
+        """列崩れ時の実際の姿: popularity=99(センチネル)・trainer空・体重なし"""
+        return {
+            'race_id': '20260704_01_01', 'racecourse': '福島',
+            'distance': 1200, 'surface': '芝',
+            'finishers': [
+                {'num': 1, 'name': 'イチバンウマ', 'place': 1,
+                 'popularity': 99, 'trainer': '', 'body_weight': None},
+                {'num': 2, 'name': 'ニバンウマ', 'place': 2,
+                 'popularity': 99, 'trainer': '', 'body_weight': None},
+            ],
+        }
+
+    def _fixed_scrape(self):
+        """列崩れ修正後(2026-08-03③)のパーサーで取り直した正しい値"""
+        return {
+            'race_id': '20260704_01_01', 'racecourse': '福島',
+            'distance': 1200, 'surface': '芝',
+            'finishers': [
+                {'num': 1, 'name': 'イチバンウマ', 'place': 1,
+                 'popularity': 3, 'trainer': '斎藤 誠', 'body_weight': 482},
+                {'num': 2, 'name': 'ニバンウマ', 'place': 2,
+                 'popularity': 1, 'trainer': '手塚 貴久', 'body_weight': 470},
+            ],
+        }
+
+    def _read(self, hist_path):
+        import sqlite3
+        conn = sqlite3.connect(str(hist_path))
+        rows = conn.execute(
+            'SELECT horse_num, popularity, trainer, body_weight '
+            'FROM horse_history ORDER BY horse_num').fetchall()
+        conn.close()
+        return rows
+
+    def test_rescrape_repairs_broken_popularity_and_trainer(self, tmp_path):
+        from src.utils.db import save_history_db
+        hist_path = tmp_path / 'history.db'
+        # ① 列崩れ状態で一度保存（本番で実際に起きた状態）
+        save_history_db([self._broken_scrape()], db_path=str(hist_path))
+        assert self._read(hist_path) == [(1, 99, '', None), (2, 99, '', None)]
+        # ② 修正後のパーサーで再スクレイプ
+        save_history_db([self._fixed_scrape()], db_path=str(hist_path))
+        # ③ 復旧していること（修正前のコードではここで失敗した）
+        assert self._read(hist_path) == [
+            (1, 3, '斎藤 誠', 482),
+            (2, 1, '手塚 貴久', 470),
+        ]
+
+    def test_rescrape_failure_does_not_destroy_good_popularity(self, tmp_path):
+        """再スクレイプが失敗(99)しても、既に入っている正しい人気を壊さない。"""
+        from src.utils.db import save_history_db
+        hist_path = tmp_path / 'history.db'
+        save_history_db([self._fixed_scrape()], db_path=str(hist_path))
+        # 取得失敗した再スクレイプを流す
+        save_history_db([self._broken_scrape()], db_path=str(hist_path))
+        rows = self._read(hist_path)
+        assert [r[1] for r in rows] == [3, 1], '99で正しい人気を上書きしてはいけない'
+        assert [r[2] for r in rows] == ['斎藤 誠', '手塚 貴久'], '空文字で調教師を消してはいけない'
+
+    def test_repaired_popularity_revives_f_popularity(self, tmp_path):
+        """復旧した人気が f_popularity として実際に使える値になること
+        （99のままだと engine 側で NaN に落ち base_margin が死ぬ）。"""
+        import math
+        from src.utils.db import save_history_db
+        from src.features.engine import calc_features_for_xgb
+        hist_path = tmp_path / 'history.db'
+        save_history_db([self._broken_scrape()], db_path=str(hist_path))
+
+        race = {'racecourse': '福島', 'distance': 1200, 'surface': '芝',
+                'date': '2026-07-04', 'race_class': '1勝', 'horses': []}
+        broken_h = {'name': 'イチバンウマ', 'horse_num': 1,
+                    'popularity': 99, 'history': []}
+        assert math.isnan(calc_features_for_xgb(broken_h, race)['f_popularity'])
+
+        save_history_db([self._fixed_scrape()], db_path=str(hist_path))
+        pop = self._read(hist_path)[0][1]
+        fixed_h = {'name': 'イチバンウマ', 'horse_num': 1,
+                   'popularity': pop, 'history': []}
+        assert calc_features_for_xgb(fixed_h, race)['f_popularity'] == 3.0
