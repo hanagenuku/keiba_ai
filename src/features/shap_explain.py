@@ -33,6 +33,9 @@ FEATURE_CATEGORY_MAP = {
     'f_corner_position_change': 'コース適性', 'f_agari_rank_at_type': 'コース適性',
     'f_dirt_turf_start': 'コース適性', 'f_course_hill_diff': 'コース適性',
     'f_course_corner_tight': 'コース適性',
+    # コース要求プロファイル（2026-08-04導入。コースが要求する能力 × 馬の能力の照合）
+    'f_course_stamina_demand': 'コース適性', 'f_course_speed_demand': 'コース適性',
+    'f_course_fit_score': 'コース適性',
     # ペース・脚質
     'f_p_front': 'ペース適性', 'f_p_mid': 'ペース適性', 'f_p_back': 'ペース適性',
     'f_pace': 'ペース適性', 'f_perf_highpace': 'ペース適性', 'f_perf_slowpace': 'ペース適性',
