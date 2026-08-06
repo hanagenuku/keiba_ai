@@ -991,10 +991,11 @@ EVフィルタとの組み合わせ検証はまだ行っていない。**次に�
 正常に動作すること、`python -m pytest tests/ -q`が532テスト通過することを確認済み。
 
 ### ⚠ 今回やっていないこと
-- **`xgb_calibrator.pkl`は更新していない**（`calibrate_xgb.py`は
-  `predict_proba()`前提の実装で残差学習モデルに非対応。monthly_retrain.py修正時
-  [2026-07-21⑤]と同じ理由で見送り。複勝確率の表示較正がやや古いまま据え置かれる
-  のみで、予測順位・ランキング自体には影響しない）
+- **`xgb_calibrator.pkl`は更新していない**（当時 `calibrate_xgb.py` は
+  `predict_proba()`前提で残差モデル非対応と判断して見送った。
+  ⚠ **この記述は古い**: 残差対応は PR #127 で既に入っており、
+  `run_xgb_calibration()` は `xgb.Booster` + base_margin に対応済み。
+  2026-08-06 に確認・訂正。以降のセッションはこの関数を使ってよい）
 - **Gumbel rating温度T=2.5の再検証は未実施**（既存の要フォローアップ項目のまま）
 - 次回のColabチューニングノート実行時、可能であれば残差モデル対応の
   キャリブレーションも合わせて検討すること
@@ -4380,11 +4381,10 @@ importエラーだけ直っていたら、**次回8/1の自動実行で残差学
 - `train_xgb(..., residual=True)`を明示指定
 - 学習後、`xgb_fukusho_model_residual.pkl`/`xgb_feature_cols_residual.json`を
   本番ファイル（サフィックス無し）へ`shutil.copy2`で反映するステップを追加
-- `xgb_calibrator.pkl`の自動更新は今回見送り。`run_xgb_calibration()`が
-  `predict_proba()`前提の実装で残差学習モデル（`xgb.Booster`、`predict()`のみ）
-  に非対応なため、誤ったキャリブレーションを自動生成するリスクを避けた。
-  次回Colabでの手動キャリブレーション実行が必要（本番の予測順位自体には
-  影響しない、複勝確率表示の較正がやや古いまま据え置かれるのみ）
+- `xgb_calibrator.pkl`の自動更新は今回見送り。当時 `run_xgb_calibration()` が
+  `predict_proba()`前提で残差モデル非対応だったため。
+  ⚠ **この制約は PR #127 で解消済み**（`_predict_fukusho_probs()` が
+  `xgb.Booster` + base_margin に対応）。2026-08-06 に確認・訂正
 
 #### 発見・修正②：日曜のshadow_betsは`was_recommended`が常に0だった
 `weekend.py`（土曜）は`bets`テーブルから当日のrace_idを引いて
