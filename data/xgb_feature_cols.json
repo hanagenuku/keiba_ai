@@ -81,6 +81,9 @@
     "f_speed_x_shortening",
     "f_stamina_x_extension",
     "f_dist_confidence",
+    "f_course_stamina_demand",
+    "f_course_speed_demand",
+    "f_course_fit_score",
     "f_pop_last",
     "f_pop_avg",
     "f_beat_market_rate",
@@ -127,11 +130,11 @@
     "f_rl_rank",
     "f_cl_rank"
   ],
-  "trained_at": "2026-08-04 01:26:14.391073",
-  "val_auc": 0.7621,
-  "val_brier": 0.1786,
-  "val_logloss": 0.5359,
-  "n_train": 67843,
-  "n_val": 7733,
+  "trained_at": "2026-08-06 03:12:20.407894",
+  "val_auc": 0.8015,
+  "val_brier": 0.1773,
+  "val_logloss": 0.5332,
+  "n_train": 151938,
+  "n_val": 7765,
   "residual": true
 }
