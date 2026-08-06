@@ -60,6 +60,16 @@ jobs:
       - name: Generate stats
         run: python scripts/generate_stats.py
 
+      # 列崩れで特定の列が静かに取れなくなる事故の早期検知。
+      # 2026-07-04の列崩れで popularity が3週間死んでいたことに気づけず、
+      # 残差学習モデルの base_margin が機能不全のまま運用されていた
+      # （実測 -0.11 AUC）。取得失敗時に NULL ではなく 99 のセンチネルが
+      # 入るため、素朴な充足率チェックでは見つけられなかった。
+      # ⚠ 結果取得そのものは止めない（|| true）。異常はログの警告で気づく。
+      - name: Check data health (列崩れ検知・非ブロッキング)
+        if: always()
+        run: python scripts/check_data_health.py --months 2 || true
+
       - name: Commit & Push
         run: |
           git config user.name "github-actions[bot]"

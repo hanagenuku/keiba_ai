@@ -718,3 +718,67 @@ if __name__ == '__main__':
     print('✅ test_course_aptitude_no_history passed')
     test_course_aptitude_unknown_course()
     print('✅ test_course_aptitude_unknown_course passed')
+
+
+class TestRankSentinelGuards:
+    """順位系センチネル(99)が範囲外の値を生まないことの検証。
+
+    save_history_db() は h.get('place', 99) / h.get('agari_rank', 99) で
+    INSERT するため、パーサーが壊れると NULL ではなく 99 が入る。
+    99 は truthy なので素朴なガードを素通りし、`1.0 - (99-1)/(fs-1)` が
+    -5.5 等を返していた（0〜1に収まるべき値）。
+
+    popularity では同じ構造で列崩れをきっかけに全行が99になり
+    base_margin が3週間死んだ（実測 -0.11 AUC、2026-08-06に修正）。
+    同型事故の再発防止として回帰テストで固定する。
+    """
+
+    def test_agari_ability_stays_in_range_with_sentinel(self):
+        from src.features.horse_type import calc_agari_ability
+        # 1走だけ99が混入
+        v = calc_agari_ability([
+            {'agari_rank': 3, 'num_finishers': 16},
+            {'agari_rank': 99, 'num_finishers': 16},
+            {'agari_rank': 2, 'num_finishers': 16},
+        ])
+        assert 0.0 <= v <= 1.0, f'0〜1に収まるべきだが {v}'
+        # 全走が99（取得失敗）→ 未経験と同じ中立値
+        assert calc_agari_ability([
+            {'agari_rank': 99, 'num_finishers': 16},
+            {'agari_rank': 99, 'num_finishers': 16},
+        ]) == 0.5
+
+    def test_agari_ability_rejects_rank_exceeding_field(self):
+        """agari_rankは全出走馬中の順位、field_sizeは完走頭数のことがあり
+        分母が食い違う。順位>頭数は不整合として弾く。"""
+        from src.features.horse_type import calc_agari_ability
+        v = calc_agari_ability([{'agari_rank': 12, 'num_finishers': 5}])
+        assert v == 0.5, f'不整合な行は無視して中立値にすべきだが {v}'
+
+    def test_stamina_speed_scores_stay_in_range_with_sentinel(self):
+        from src.features.horse_type import calc_stamina_score, calc_speed_score
+        hist = [
+            {'distance': 1600, 'place': 3, 'num_finishers': 16},
+            {'distance': 2400, 'place': 99, 'num_finishers': 16},   # 取消
+            {'distance': 1200, 'place': 2, 'num_finishers': 16},
+        ]
+        for fn in (calc_stamina_score, calc_speed_score):
+            v = fn(hist)
+            assert 0.0 <= v <= 1.0, f'{fn.__name__} が範囲外: {v}'
+
+    def test_optimal_distance_ignores_sentinel_places(self):
+        from src.features.horse_type import calc_optimal_distance
+        # 99の走だけなら「実績なし」扱い（既定1600m・信頼度0）
+        d, conf = calc_optimal_distance([
+            {'distance': 2400, 'place': 99, 'num_finishers': 16},
+        ])
+        assert (d, conf) == (1600, 0.0)
+
+    def test_normal_history_unaffected(self):
+        """正常データでの挙動が変わっていないこと（回帰防止）。"""
+        from src.features.horse_type import calc_agari_ability
+        assert calc_agari_ability([
+            {'agari_rank': 3, 'num_finishers': 16},
+            {'agari_rank': 5, 'num_finishers': 16},
+            {'agari_rank': 2, 'num_finishers': 16},
+        ]) == 0.844

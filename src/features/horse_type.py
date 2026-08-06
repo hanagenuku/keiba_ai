@@ -17,6 +17,27 @@ DIST_MILE = (1401, 1800)
 DIST_MIDDLE = (1801, 2200)
 DIST_LONG = (2201, 4000)
 
+# 着順・上がり順位が「不明」を表すセンチネル値。
+# save_history_db() は h.get('place', 99) / h.get('agari_rank', 99) で
+# INSERT するため、パーサーが値を取れないと NULL ではなく 99 が入る。
+# 99 は truthy なので `if ar and ...` のような素朴なガードを素通りし、
+# `1.0 - (99-1)/(fs-1)` のような計算が -5.5 等の範囲外の値を返してしまう。
+# 2026-08-06 の点検時点では実データ2行のみだが、popularity では
+# 同じ構造で列崩れをきっかけに全行が99になり base_margin が3週間死んだ
+# （実測 -0.11 AUC）。同型事故の再発を防ぐため明示的に弾く。
+_UNKNOWN_RANK = 99
+
+
+def _valid_rank(rank, field_size):
+    """順位(1〜field_size)として妥当なら True。センチネル99・範囲外を弾く。"""
+    if not rank or not field_size or field_size < 2:
+        return False
+    if rank <= 0 or rank >= _UNKNOWN_RANK:
+        return False
+    # 出走頭数を超える順位はデータ不整合（agari_rank は全出走馬中の順位、
+    # field_size は完走頭数のことがあり分母が食い違う場合がある）
+    return rank <= field_size
+
 
 def calc_agari_ability(history):
     """末脚の強さ（上がり順位の相対値の平均、0〜1、高いほど強い）"""
@@ -24,7 +45,7 @@ def calc_agari_ability(history):
     for h in history:
         ar = h.get('agari_rank')
         fs = h.get('finishers') or h.get('num_finishers') or h.get('field_size')
-        if ar and fs and fs > 1:
+        if _valid_rank(ar, fs):
             ranks.append(1.0 - (ar - 1) / (fs - 1))
 
     if not ranks:
@@ -42,7 +63,7 @@ def calc_stamina_score(history):
         d = h.get('distance')
         p = h.get('place')
         fs = h.get('finishers') or h.get('num_finishers') or h.get('field_size')
-        if not d or not p or p <= 0 or not fs or fs < 2:
+        if not d or not _valid_rank(p, fs):
             continue
 
         score = 1.0 - (p - 1) / (fs - 1)
@@ -74,7 +95,7 @@ def calc_speed_score(history):
         d = h.get('distance')
         p = h.get('place')
         fs = h.get('finishers') or h.get('num_finishers') or h.get('field_size')
-        if not d or not p or p <= 0 or not fs or fs < 2:
+        if not d or not _valid_rank(p, fs):
             continue
 
         score = 1.0 - (p - 1) / (fs - 1)
@@ -108,7 +129,7 @@ def calc_optimal_distance(history):
         d = h.get('distance')
         p = h.get('place')
         fs = h.get('finishers') or h.get('num_finishers') or h.get('field_size')
-        if not d or not p or p <= 0 or not fs or fs < 2:
+        if not d or not _valid_rank(p, fs):
             continue
 
         score = 1.0 - (p - 1) / (fs - 1)
