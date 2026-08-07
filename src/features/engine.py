@@ -734,13 +734,36 @@ def calc_competitiveness(history):
     return round(sum(vals) / len(vals), 4), round(min(vals), 4)
 
 
+def _hist_num(value, default):
+    """過去走レコードの数値を安全に取り出す。
+
+    ⚠ `r.get(key, default)` では防げない: 2026-08-03② 以降、学習側・推論側とも
+    「未記録は None を明示的に入れる」設計になったため、**キーは存在するが値が
+    None** という状態が生じる。`.get()` の既定値はキーが無い時にしか効かないので、
+    None がそのまま算術に流れて TypeError になる
+    （2026-08-07 の金曜予想が実際にこれで落ちた）。
+    """
+    if value is None:
+        return default
+    try:
+        return type(default)(value)
+    except (TypeError, ValueError):
+        return default
+
+
 def calc_race_content_score(r):
     """1走分の内容スコア（着順ではなく中身を評価）"""
-    place      = r.get('place', 10)
-    finishers  = max(r.get('finishers', 16), 2)
-    margin     = r.get('margin', 0.0)
-    agari_rank = r.get('agari_rank', finishers)
-    race_class = r.get('class', r.get('race_class', '1勝'))
+    place      = _hist_num(r.get('place'), 10)
+    finishers  = max(_hist_num(r.get('finishers'), 16), 2)
+    margin     = _hist_num(r.get('margin'), 0.0)
+    # 上がり順位は「不明なら最下位相当」が本来の意図。None のほか、
+    # save_history_db が入れるセンチネル99や頭数超過も不明として扱う
+    # （horse_type._valid_rank と同じ考え方。2026-08-06の点検で
+    #   99 が素通りして負の寄与になる同型バグを別途修正済み）
+    agari_rank = _hist_num(r.get('agari_rank'), finishers)
+    if not (1 <= agari_rank <= finishers):
+        agari_rank = finishers
+    race_class = r.get('class') or r.get('race_class') or '1勝'
 
     # 1. 相対着順スコア
     pos_score = max(0, 10 * (1 - (place - 1) / max(finishers - 1, 1)))
@@ -774,10 +797,13 @@ def f_rl(h, race):
     scores = []
     for i, r in enumerate(hist[:5]):
         last_3f    = r.get('last_3f') or r.get('agari3f') or 0
-        race_class = r.get('class', r.get('race_class', '1勝クラス'))
-        agari_rank = r.get('agari_rank', 9)
-        num_fin    = max(r.get('finishers', 16), 8)
-        track_cond = r.get('condition', r.get('track_condition', '良'))
+        race_class = r.get('class') or r.get('race_class') or '1勝クラス'
+        num_fin    = max(_hist_num(r.get('finishers'), 16), 8)
+        # 不明な上がり順位は最下位相当に寄せる（_hist_num の注記参照）
+        agari_rank = _hist_num(r.get('agari_rank'), 9)
+        if not (1 <= agari_rank <= num_fin):
+            agari_rank = num_fin
+        track_cond = r.get('condition') or r.get('track_condition') or '良'
 
         base = CLASS_BASE_AGARI.get(race_class, 35.0)
         base += TRACK_CONDITION_ADJUST.get(track_cond, 0)
@@ -812,10 +838,10 @@ def f_maturity(h, race):
 
     total = 0
     for r in hist:
-        rc = r.get('class', r.get('race_class', ''))
+        rc = r.get('class') or r.get('race_class') or ''
         pt = class_points.get(rc, 0)
         if pt > 0:
-            p     = r.get('place', 9)
+            p     = _hist_num(r.get('place'), 9)
             total += pt * place_mult.get(p, 1.0 if p <= 5 else 0.5)
 
     return min(10, total / 1.5)
@@ -2032,7 +2058,7 @@ def calc_features_for_xgb(h, race):
     feats['f_early_speed'] = float(race.get('first_3f', 0) or 36.0)
 
     if hist:
-        places = [r.get('place', 10) for r in hist[-5:]]
+        places = [_hist_num(r.get('place'), 10) for r in hist[-5:]]
         ws_ = [.75 ** i for i in range(len(places) - 1, -1, -1)]
         tw_ = sum(ws_)
         ps_ = [max(0, 10 - (p - 1) * 10 / 15) for p in places]
@@ -2059,9 +2085,9 @@ def calc_features_for_xgb(h, race):
     same_course = ([r for r in hist if r.get('racecourse', '') == rc and r.get('surface', '') == surf]
                     if hist else [])
     feats['f_dist_fukusho']   = _bayes_rate(
-        [1 if r.get('place', 10) <= 3 else 0 for r in same_zone], prior=0.33, k=3)
+        [1 if _hist_num(r.get('place'), 10) <= 3 else 0 for r in same_zone], prior=0.33, k=3)
     feats['f_course_fukusho'] = _bayes_rate(
-        [1 if r.get('place', 10) <= 3 else 0 for r in same_course], prior=0.33, k=3)
+        [1 if _hist_num(r.get('place'), 10) <= 3 else 0 for r in same_course], prior=0.33, k=3)
 
     if c3_arr and len(c3_arr) >= 2:
         high_front = [r for r, c in zip(hist[-len(c3_arr):], c3_arr) if c <= 4]
@@ -2069,9 +2095,9 @@ def calc_features_for_xgb(h, race):
     else:
         high_front, slow_back = [], []
     feats['f_perf_highpace'] = _bayes_rate(
-        [1 if r.get('place', 10) <= 3 else 0 for r in high_front], prior=0.3, k=3)
+        [1 if _hist_num(r.get('place'), 10) <= 3 else 0 for r in high_front], prior=0.3, k=3)
     feats['f_perf_slowpace'] = _bayes_rate(
-        [1 if r.get('place', 10) <= 3 else 0 for r in slow_back], prior=0.3, k=3)
+        [1 if _hist_num(r.get('place'), 10) <= 3 else 0 for r in slow_back], prior=0.3, k=3)
 
     feats['f_jockey']      = min(10, max(0, h.get('jockey_rate', 0.15) / 0.30 * 10))
     feats['f_jockey_rate'] = float(h.get('jockey_rate', 0.15))
@@ -2151,7 +2177,7 @@ def calc_features_for_xgb(h, race):
     # 重馬場適性（過去走で稍重以上での複勝率）
     heavy_runs = [r for r in hist if r.get('track_condition', '良') in ('稍重', '重', '不良')]
     feats['f_heavy_track_rate'] = (
-        float(sum(1 for r in heavy_runs if r.get('place', 10) <= 3) / len(heavy_runs))
+        float(sum(1 for r in heavy_runs if _hist_num(r.get('place'), 10) <= 3) / len(heavy_runs))
         if heavy_runs else 0.33
     )
 

@@ -432,7 +432,59 @@ AIが市場と異なる本命を出した25Rで市場が6倍正確だったた�
 
 ## 現在の作業状況（セッション引き継ぎ用）
 
-### 最終更新: 2026-08-07③（リーク修正＋6月データを含めて再学習・本番投入。キャリブレーターも更新）
+### 最終更新: 2026-08-07④（🔴金曜予想が本番で停止。`agari_rank=None` で `calc_all()` が TypeError）
+
+#### 何が起きたか
+金曜予想ボタンで **35レース・443頭のオッズまで正常に取得できていたのに**、
+`calc_all()` の途中で落ちて**その回の予想が丸ごと失われた**（2回連続失敗）。
+
+```
+File "src/features/engine.py", line 753, in calc_race_content_score
+    agari_pct = (finishers - agari_rank) / max(finishers - 1, 1)
+TypeError: unsupported operand type(s) for -: 'int' and 'NoneType'
+```
+
+#### 🔴 原因：`.get(key, default)` は「キーはあるが値が None」を救えない
+2026-08-03② で `agari_rank` の欠落バグを直した際、**「未記録なら None を明示する」**
+設計にした（学習側 `_get_history_before` / 推論側 `get_history_from_db` の両方）。
+ところが消費側は前から `r.get('agari_rank', finishers)` と書かれており、
+**`.get()` の既定値はキーが存在しない時にしか効かない**。
+キーが存在して値が None、という**新しい状態**が素通りして算術に流れた。
+
+⚠ **これは「片方だけ直して消費側が追従していない」型の事故**で、
+2026-08-03④の `corner_3`（スキーマ文書は正しかったが読む側が移行に追従していない）と
+同じ構造。**「欠損の表し方を変えたら、その値を読む全箇所を洗う」**必要がある。
+
+⚠ **モデル再学習（③）は無関係**。同じコミット上で動いたので疑ったが、
+落ちたのはルールベース側の `f_recent`→`calc_race_content_score` で、
+XGB推論には到達すらしていない。**08-03②以降これが初めての `calc_all()` 実行だった**
+（08-01/02の週末は修正前、以降レース開催なし）ため、4日間潜伏していた。
+
+#### 修正
+`_hist_num(value, default)` を新設し、**None を既定値に落とす**（`.get()` と違い
+値が None でも効く）。適用箇所:
+
+| 関数 | フィールド |
+|---|---|
+| `calc_race_content_score` | place / finishers / margin / agari_rank |
+| `f_rl` | finishers / agari_rank |
+| `f_maturity` | place |
+| `calc_features_for_xgb` | place（6箇所の `<= 3` 比較・`places` リスト） |
+
+`agari_rank` は **None・センチネル99・頭数超過**をすべて「不明＝最下位相当」に寄せる
+（`horse_type._valid_rank` と同じ考え方。2026-08-06に同型バグを別途修正済み）。
+`place` は推論側SQLで **COALESCE されておらず None になりうる**ことも確認した。
+
+#### テスト
+`tests/test_history_none_fields.py` 新規6テスト。North Star #6 に従い
+**本番と同じ経路**（`save_history_db()` で書き込み→`get_history_from_db()` で読み出し）
+のレコードで検証。**修正前は6件すべて本番と同じ TypeError で失敗**することを確認済み。
+「不明が最下位相当になる」という方向性も固定した（None が最速扱いになると
+データの無い馬ほど高評価という逆転が起きるため）。
+
+---
+
+### 2026-08-07③（リーク修正＋6月データを含めて再学習・本番投入。キャリブレーターも更新）
 
 金曜予想ボタンを押す前に再学習したい、という依頼で実施。
 
