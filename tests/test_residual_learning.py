@@ -475,38 +475,3 @@ class TestRawMarginTrueLogOdds:
             f"fav={fav_prob} dog={dog_prob} diff={fav_prob - dog_prob}"
         )
 
-
-class TestRankingObjectivePredictHasNoHiddenTransform:
-    """rating_calibration.py/dual_model.py/compare_models.pyがB2_ndcg/pairwise
-    モデル（rank:ndcg, rank:pairwise）に対して `model.predict(dmat)` を
-    output_margin無しで呼んでいる箇所の前提を検証する回帰テスト
-    — 2026-07-27セッション、raw_margin2重sigmoidバグ発覚を受けた横展開監査。
-
-    binary:logisticとは異なり、ランキング目的関数は`predict()`にsigmoid等の
-    逆リンク変換を適用しない（生スコアがそのまま返る）。この前提が崩れると
-    上記3ファイルの`model.predict(dmat)`呼び出しが同種の2重変換バグになる。
-    xgboostのバージョンアップでこの既定動作が変わった場合に検知できるよう、
-    実際にBoosterを学習させてoutput_margin有無で結果が一致することを固定する。
-    """
-
-    @pytest.mark.parametrize('objective', ['rank:ndcg', 'rank:pairwise'])
-    def test_predict_matches_output_margin(self, objective):
-        import xgboost as xgb
-
-        rng = np.random.RandomState(0)
-        n = 30
-        X = rng.rand(n, 4)
-        y = rng.randint(0, 5, size=n)
-        dtrain = xgb.DMatrix(X, label=y, feature_names=['f0', 'f1', 'f2', 'f3'])
-        dtrain.set_group([10, 10, 10])
-        booster = xgb.train({'objective': objective, 'max_depth': 2}, dtrain, num_boost_round=5)
-
-        Xtest = rng.rand(3, 4)
-        dtest = xgb.DMatrix(Xtest, feature_names=['f0', 'f1', 'f2', 'f3'])
-        default_pred = booster.predict(dtest)
-        margin_pred = booster.predict(dtest, output_margin=True)
-        assert np.allclose(default_pred, margin_pred), (
-            f"{objective}のpredict()がoutput_margin=Trueと異なる値を返した"
-            f"（隠れた変換が追加された可能性。rating_calibration.py/dual_model.py/"
-            f"compare_models.pyのmodel.predict(dmat)呼び出しを要修正）"
-        )

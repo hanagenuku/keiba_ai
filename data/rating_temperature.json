@@ -1,16 +1,4 @@
 {
-  "calibration": {
-    "fukusho": {
-      "T": 0.7,
-      "ece": 0.0127
-    },
-    "ranking_ndcg": {
-      "T": 5.0,
-      "ece": 0.0068
-    }
-  },
-  "val_period": {
-    "start": "2026-04-08",
-    "end": "2026-06-06"
-  }
+  "_note": "bet_optimizer.py が calibration.gumbel_rating.T のみを読む（無ければ DEFAULT_GUMBEL_RATING_T=2.5）。旧 fukusho / ranking_ndcg のエントリは dual_model.py 経由でしか使われず、2026-08-07 に同モジュールごと削除した。",
+  "calibration": {}
 }
