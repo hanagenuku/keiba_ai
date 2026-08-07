@@ -30,7 +30,7 @@ from src.utils.db import save_history_db
 from src.tools.build_training_data import build_training_data
 
 
-def _race(rid, date, style, first_3f, corner_3=None, racecourse='東京'):
+def _race(rid, date, style, first_3f, corner_3=None, racecourse='東京', agari3f=35.0):
     """1レース分の結果を本番と同じ形で作る。
 
     style / first_3f が「そのレースの実際の結果」に相当する。
@@ -42,7 +42,7 @@ def _race(rid, date, style, first_3f, corner_3=None, racecourse='東京'):
         'track_condition': '良', 'race_class': '1勝クラス', 'weather': '晴',
         'finishers': [
             {'place': i, 'num': i, 'name': f'H{i}', 'popularity': i,
-             'running_style': style, 'agari3f': 35.0,
+             'running_style': style, 'agari3f': agari3f,
              'corner_3': corner_3 if corner_3 is not None else i,
              'tansho_payout': 300 if i == 1 else 0,
              'fukusho_payout': 150 if i <= 3 else 0,
@@ -185,3 +185,67 @@ class TestTargetRaceResultDoesNotLeak:
             'corner_allから導出した3コーナー先頭位置(1.0)が反映されていない。'
             f'style既定値7.0のままなら修正前の挙動: {row["f_last1_pos3c"]}'
         )
+
+
+class TestPaceFeaturesDoNotLeakTargetAgari:
+    """当該レースの agari3f（上がり3F）がペース特徴量に混入しないこと。
+
+    2026-08-06発見。race['first_3f'] は「レース後にしか分からない値」として
+    学習側で 0.0 に潰されていた（同ファイル冒頭の既存テスト参照）が、
+    **馬単位の agari3f は潰されないまま残っていた**。
+
+    _build_pace_features_for_inference() は出走各馬の agari3f から
+    avg_agari3f / std_agari3f を作りペースモデルに渡すため、学習時だけ
+    「そのレースの実際の上がり」を見ていた。実測（本番モデル使用時）:
+        学習 avg=35.54 std=0.98  →  推論 avg=36.0 std=1.5（既定値）
+        ペース確率 high 0.317→0.311 / mid 0.532→0.576
+
+    ⚠ pace_model.pkl が無い環境では calc_pace_distribution() が
+    ルールベース経路に落ちて agari3f を一切見ないため、CSVの出力だけを
+    見るテストでは検知できない（最初にそう書いて実際に素通りした）。
+    そのため「学習側が当該レースの馬に agari3f を持たせていないこと」を
+    直接検証する。
+    """
+
+    def test_pace_feature_builder_is_sensitive_to_agari(self):
+        """前提の確認: agari3f の有無でペースモデル入力が変わること。
+
+        これが変わらないなら、そもそもリーク経路が存在しないことになる。
+        """
+        from src.features.engine import _build_pace_features_for_inference
+        base = {'racecourse': '東京', 'distance': 1600, 'surface': '芝',
+                'track_condition': '良', 'escape_count': 1, 'front_count': 3}
+        with_ag = dict(base, horses=[
+            {'horse_num': i, 'running_style': '先行', 'agari3f': 33.0}
+            for i in range(1, 9)])
+        without = dict(base, horses=[
+            {'horse_num': i, 'running_style': '先行'} for i in range(1, 9)])
+        a = _build_pace_features_for_inference(with_ag)
+        b = _build_pace_features_for_inference(without)
+        assert a['avg_agari3f'] != b['avg_agari3f'], (
+            'agari3f がペースモデル入力に影響しないなら前提が崩れている')
+        assert b['avg_agari3f'] == 36.0 and b['std_agari3f'] == 1.5, (
+            '推論時（agari3fなし）は既定値になるはず')
+
+    def test_training_does_not_attach_target_race_agari(self, tmp_path, monkeypatch):
+        """学習データ生成時、当該レースの馬に agari3f を持たせないこと。
+
+        推論時（出馬表）には存在しない値なので、持たせると
+        ペースモデル入力が学習時だけ実結果を見ることになる。
+        """
+        import src.features.engine as _eng
+        seen = {}
+        orig = _eng.calc_features_for_xgb
+
+        def spy(h, race):
+            if race.get('race_id') == '20250601_05_01':
+                seen.setdefault('agari', []).append(h.get('agari3f'))
+            return orig(h, race)
+
+        monkeypatch.setattr(_eng, 'calc_features_for_xgb', spy)
+        _build(str(tmp_path), '先行', 35.0)
+
+        assert seen.get('agari'), '対象レースの特徴量計算が走っていない'
+        assert all(v is None for v in seen['agari']), (
+            f'当該レースの agari3f が学習時の馬データに入っている（リーク）: '
+            f'{seen["agari"][:5]}')
