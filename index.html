@@ -437,52 +437,108 @@ async function _getWorkflowStatus(startTime) {
   } catch(_) { return null; }
 }
 
+let _pollWakeHandler = null;
+
 function _stopPolling(btn, origText) {
   clearInterval(_pollingTimer);
   _pollingTimer = null;
+  if (_pollWakeHandler) {
+    document.removeEventListener('visibilitychange', _pollWakeHandler);
+    window.removeEventListener('focus', _pollWakeHandler);
+    window.removeEventListener('online', _pollWakeHandler);
+    _pollWakeHandler = null;
+  }
   localStorage.removeItem(_POLL_KEY);
   if (btn) { btn.textContent = origText; }
   document.querySelectorAll('.action-btn').forEach(b => b.disabled = false);
   _triggerGuard = false;
 }
 
+function _showWorkflowError() {
+  document.getElementById('race-list').innerHTML =
+    '<div class="error-box">❌ <strong>実行中にエラーが発生しました</strong><br><br>' +
+    'GitHub Actions でエラーが起きました。<br>' +
+    '<a href="https://github.com/hanagenuku/keiba_ai/actions" target="_blank" style="color:#e74c3c">→ エラーログを確認する</a><br><br>' +
+    '<button class="reload-btn" onclick="loadData()" style="margin:8px 0 0">再読み込み</button></div>';
+}
+
 function _startPolling(btn, origText, baselineTs, startTime = Date.now()) {
   const MAX_WAIT = 35 * 60;
-  const CHECK_INTERVAL = 30;
+  const CHECK_INTERVAL_MS = 30 * 1000;
+  let lastCheck = 0;
+  let inflight = null;   // 同時に何本も投げないための共有Promise
 
   // localStorage に保存（ページ再読み込み後も復元できるように）
   localStorage.setItem(_POLL_KEY, JSON.stringify({ baselineTs, startTime, origText }));
 
-  _pollingTimer = setInterval(async () => {
-    const elapsed = Math.floor((Date.now() - startTime) / 1000);
-    const mins = Math.floor(elapsed / 60);
-    const secs = elapsed % 60;
-    btn.textContent = `実行中... ${mins}:${String(secs).padStart(2,'0')}`;
-
-    if (elapsed % CHECK_INTERVAL < 2) { // 30秒ごとにチェック（±1秒の誤差許容）
+  // 完了を検出できたら true。検出できなければ false。
+  function checkOnce() {
+    if (inflight) return inflight;   // 実行中なら同じ結果を待つ（重複fetch防止）
+    inflight = (async () => {
       const [ts, wfStatus] = await Promise.all([
         _getLatestTimestamp(),
         _getWorkflowStatus(startTime),
       ]);
-
-      if (wfStatus === 'failure') {
-        _stopPolling(btn, origText);
-        document.getElementById('race-list').innerHTML =
-          '<div class="error-box">❌ <strong>実行中にエラーが発生しました</strong><br><br>' +
-          'GitHub Actions でエラーが起きました。<br>' +
-          '<a href="https://github.com/hanagenuku/keiba_ai/actions" target="_blank" style="color:#e74c3c">→ エラーログを確認する</a><br><br>' +
-          '<button class="reload-btn" onclick="loadData()" style="margin:8px 0 0">再読み込み</button></div>';
-        return;
-      }
-
-      if (wfStatus === 'success' || (ts && ts !== baselineTs)) {
+      lastCheck = Date.now();
+      // ⚠ データが実際に更新されたことを最優先で見る。
+      // 同じボタンで2本走って片方だけ失敗する場合があり、
+      // status だけ見ていると成功したのにエラー表示になる。
+      if (ts && ts !== baselineTs) {
         _stopPolling(btn, origText);
         await loadData(true);
-        return;
+        return true;
       }
+      if (wfStatus === 'success') {
+        _stopPolling(btn, origText);
+        await loadData(true);
+        return true;
+      }
+      if (wfStatus === 'failure') {
+        _stopPolling(btn, origText);
+        _showWorkflowError();
+        return true;
+      }
+      return false;
+    })();
+    return inflight.finally(() => { inflight = null; });
+  }
+
+  // アプリに戻ってきた・回線が復帰した瞬間に即確認する。
+  // スマホはバックグラウンドでタイマーを止めるので、これが無いと
+  // 画面を消している間に完了しても復帰時まで気づけない。
+  _pollWakeHandler = () => {
+    if (!_pollingTimer) return;
+    if (document.visibilityState === 'hidden') return;
+    checkOnce();
+  };
+  document.addEventListener('visibilitychange', _pollWakeHandler);
+  window.addEventListener('focus', _pollWakeHandler);
+  window.addEventListener('online', _pollWakeHandler);
+
+  _pollingTimer = setInterval(async () => {
+    const now = Date.now();
+    const elapsed = Math.floor((now - startTime) / 1000);
+    const mins = Math.floor(elapsed / 60);
+    const secs = elapsed % 60;
+    if (btn) btn.textContent = `実行中... ${mins}:${String(secs).padStart(2,'0')}`;
+
+    // ⚠ elapsed % 30 のような剰余判定にしないこと。
+    // スマホがタイマーを間引くと elapsed が飛び、判定窓を丸ごと跨いで
+    // 一度もチェックされないまま35分経つ（2026-08-07に実際に発生）。
+    if (now - lastCheck >= CHECK_INTERVAL_MS) {
+      lastCheck = now;                       // 応答待ちの間に再突入させない
+      if (await checkOnce()) return;
     }
 
     if (elapsed >= MAX_WAIT) {
+      clearInterval(_pollingTimer);          // 以降ティックさせない
+      _pollingTimer = null;
+      // ⚠ 諦める前に必ずもう一度確認する。
+      // バックグラウンドで止まっていたページが35分後に復帰すると、
+      // 最初のティックがいきなりここへ来る。確認せずに諦めると
+      // 「取得できません」と出たのに実際は成功している、という
+      // 一番わかりにくい失敗になる（2026-08-07にユーザー報告）。
+      if (await checkOnce()) return;
       _stopPolling(btn, origText);
       alert('⚠️ 35分経過しましたが完了を確認できませんでした。\nページを手動で更新してください。');
     }
@@ -496,15 +552,25 @@ async function _restorePolling() {
   try {
     const { baselineTs, startTime, origText } = JSON.parse(saved);
     const elapsed = Math.floor((Date.now() - startTime) / 1000);
-    if (elapsed >= 35 * 60) { localStorage.removeItem(_POLL_KEY); return; }
 
-    // 既に完了しているか確認
-    const ts = await _getLatestTimestamp();
-    if (ts && ts !== baselineTs) {
+    // ⚠ 時間切れでも「まず結果を確認してから」捨てること。
+    // 先に localStorage を消して return すると、実際は成功していても
+    // 何も知らせないまま実行中の表示だけが消える。
+    const [ts, wfStatus] = await Promise.all([
+      _getLatestTimestamp(),
+      _getWorkflowStatus(startTime),
+    ]);
+    if ((ts && ts !== baselineTs) || wfStatus === 'success') {
       localStorage.removeItem(_POLL_KEY);
-      await loadData();
+      await loadData(true);
       return;
     }
+    if (wfStatus === 'failure') {
+      localStorage.removeItem(_POLL_KEY);
+      _showWorkflowError();
+      return;
+    }
+    if (elapsed >= 35 * 60) { localStorage.removeItem(_POLL_KEY); return; }
 
     // まだ実行中 → 押されたボタンを探して復元
     const btn = [...document.querySelectorAll('.action-btn')].find(b => b.textContent === origText)
@@ -2111,6 +2177,21 @@ function renderStats(S) {
 function _rlCell(label, val) {
   return `<div class="rl-cell"><div class="rl-cell-label">${label}</div><div class="rl-cell-val">${val}</div></div>`;
 }
+
+// アプリに戻ってきた時、裏で予想が更新されていたら自動で読み直す。
+// ボタンを押していなくても土日朝8時の自動refreshで latest.json は
+// 更新されるので、開きっぱなしのアプリが古い予想を映し続けるのを防ぐ。
+let _hiddenAt = 0;
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState === 'hidden') { _hiddenAt = Date.now(); return; }
+  if (_pollingTimer) return;                       // ボタン実行中は上の経路が見る
+  if (!_hiddenAt || Date.now() - _hiddenAt < 60 * 1000) return;  // 一瞬の切替は無視
+  _hiddenAt = 0;
+  const ts = await _getLatestTimestamp();
+  // 読み込み済みの生成時刻と違う時だけ再描画する（見ている最中に
+  // 画面が勝手に作り直されるのを避けるため、変化が無ければ何もしない）
+  if (ts && D && D.generated_at && ts !== D.generated_at) await loadData(true);
+});
 
 loadData().then(() => _restorePolling());
 </script>
