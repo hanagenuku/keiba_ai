@@ -279,7 +279,17 @@ def build_training_data(base_dir, output_csv='data/horse_features.csv',
                 # _infer_running_style() が過去走から推定するため、
                 # ここでは仮置きし、過去走取得後に同じ関数で埋め直す。
                 'running_style': '差し',
-                'agari3f':      hdb['agari3f'],
+                # ⚠ 当該レースの agari3f（上がり3F）も「レースが終わって初めて
+                # 分かる値」。同じ理由で潰した race['first_3f'] と全く同じ構造で、
+                # こちらだけ残っていた（2026-08-06発見）。
+                # _build_pace_features_for_inference() が出走各馬の agari3f から
+                # avg_agari3f / std_agari3f を作りペースモデルに渡すため、
+                # 学習時だけ「そのレースの実際の上がり」を見ていた。
+                #   実測: 学習 avg=35.54 / std=0.98 → 推論 avg=36.0 / std=1.5(既定)
+                #   ペース確率も high 0.317→0.311, mid 0.532→0.576 とズレる
+                # f_pace / f_pace_prob_* / f_pace_x_style / f_pace_fit 等に波及する
+                # リーク兼パリティ違反なので、推論時と同じく持たせない。
+                'agari3f':      None,
                 'jockey':       hdb['jockey'] or '',
                 'trainer':      hdb['trainer'] or '',
                 'corner_3':     hdb['corner_3'],
