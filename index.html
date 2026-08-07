@@ -244,7 +244,7 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
 <div class="btm">
   <div class="btm-item"><div class="btm-lbl">推定投資</div><div class="btm-val" id="b-inv">-</div></div>
   <div class="btm-item"><div class="btm-lbl">推奨レース</div><div class="btm-val" id="b-rec">-</div></div>
-  <div class="btm-item"><div class="btm-lbl">ROI予測</div><div class="btm-val" id="b-roi">-</div></div>
+  <div class="btm-item" title="実際に記録した買い目の確定回収率（予測ではありません）"><div class="btm-lbl" id="b-roi-lbl">実績ROI</div><div class="btm-val" id="b-roi">-</div></div>
 </div>
 <script>
 const DATA_URL  = 'https://hanagenuku.github.io/keiba_ai/data/latest.json';
@@ -290,7 +290,10 @@ function initApp() {
   document.getElementById('bias-tag').textContent = D.bias?.tag || '-';
   document.getElementById('b-inv').textContent = '¥'+(D.stats?.invest||0).toLocaleString();
   document.getElementById('b-rec').textContent = (D.stats?.rec||0)+'R';
-  document.getElementById('b-roi').textContent = '~'+(D.stats?.roi||0)+'%';
+  // ⚠ D.stats.roi は使わないこと。以前ここに固定値150が入っており
+  // 「ROI予測 ~150%」と表示され続けていた（実測は通算47.4%）。
+  // 実際に決済済みの買い目から集計した確定値を stats.json から読む。
+  _fillActualRoi();
   const dq = D.data_quality || {};
   const dqParts = [];
   if (dq.odds_coverage != null && dq.odds_coverage < 0.5) {
@@ -1933,16 +1936,48 @@ function switchPage(page) {
 // ── 成績ページ ───────────────────────────────────────────────────────────
 let _statsCache = null;
 
+// stats.json を1回だけ取りに行く（成績ページと下部バーで共用）
+async function _fetchStats() {
+  if (_statsCache) return _statsCache;
+  let res = await fetch(STATS_URL + '?t=' + Date.now(), {cache:'no-store'});
+  if (!res.ok) res = await fetch(STATS_URL_FALLBACK + '?t=' + Date.now(), {cache:'no-store'});
+  if (!res.ok) throw new Error('stats.json が見つかりません（まだ生成されていません）');
+  _statsCache = await res.json();
+  return _statsCache;
+}
+
+// 下部バーに「実績ROI」を入れる。
+// 決済済みの実ベットを通算した確定値で、予測ではない。
+// 月単位だと直近月がN=7点などになりブレるため通算を出す。
+async function _fillActualRoi() {
+  const el = document.getElementById('b-roi');
+  const lbl = document.getElementById('b-roi-lbl');
+  try {
+    const S = await _fetchStats();
+    const rows = S.weekly_roi || [];
+    const inv = rows.reduce((a, r) => a + (r.invested || 0), 0);
+    const rec = rows.reduce((a, r) => a + (r.recovered || 0), 0);
+    if (!inv) { el.textContent = '-'; return; }
+    const roi = rec / inv * 100;
+    el.textContent = roi.toFixed(0) + '%';
+    // 損益分岐点(100%)を割っているうちは色で誤解させない
+    el.style.color = roi >= 100 ? '' : 'var(--sub)';
+    const months = rows.map(r => r.month).filter(Boolean);
+    if (lbl && months.length) lbl.textContent = `実績ROI(${months[0]}〜)`;
+    el.parentElement.title =
+      `実際に記録した買い目の確定回収率（予測ではありません）\n`
+      + `投資 ¥${inv.toLocaleString()} / 回収 ¥${rec.toLocaleString()}`;
+  } catch (_) {
+    el.textContent = '-';   // 結果未取得なら黙って空欄（作り話をしない）
+  }
+}
+
 async function loadStats() {
   const el = document.getElementById('page-stats');
   if (_statsCache) { renderStats(_statsCache); return; }
   el.innerHTML = '<div class="loading"><div class="loading-spin">📊</div><div>成績データ読み込み中...</div></div>';
   try {
-    let res = await fetch(STATS_URL + '?t=' + Date.now(), {cache:'no-store'});
-    if (!res.ok) res = await fetch(STATS_URL_FALLBACK + '?t=' + Date.now(), {cache:'no-store'});
-    if (!res.ok) throw new Error('stats.json が見つかりません（まだ生成されていません）');
-    _statsCache = await res.json();
-    renderStats(_statsCache);
+    renderStats(await _fetchStats());
   } catch(e) {
     el.innerHTML = '<div class="error-box">⚠️ ' + e.message + '<br><br>土曜/日曜結果を取得すると自動生成されます。</div>';
   }

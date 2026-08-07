@@ -623,7 +623,12 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
         'recommended_count': rec_count,
         'message':           ('本日の推奨レースはありません。閾値を満たすレースがありませんでした。'
                               if rec_count == 0 else None),
-        'stats':             {'invest': total_inv, 'rec': rec_count, 'roi': 150},
+        # ⚠ ここに回収率を入れないこと。
+        # 以前は 'roi': 150 という**べた書きの固定値**が入っており、アプリ下部に
+        # 「ROI予測 ~150%」と表示され続けていた（計算も予測もしていない数字）。
+        # 実測は stats.json の weekly_roi で通算47.4%（2026-08-02時点）であり、
+        # 見た人に真逆の印象を与える。実績はアプリ側が stats.json から読む。
+        'stats':             {'invest': total_inv, 'rec': rec_count},
         'races':             races_by_venue,
         'data_quality':      data_quality,
     }
