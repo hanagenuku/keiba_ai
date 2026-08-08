@@ -170,3 +170,51 @@ class TestSimulatorProvidesWide:
         assert po['wide'], 'wide の推定配当が空'
         for k, v in po['wide'].items():
             assert v >= 1.0, f'{k} の推定配当が1.0倍未満: {v}'
+
+
+class TestRaceSelectionByAxisConfidence:
+    """軸の確度が低いレースを見送るフィルタ（select_quality_races）。
+
+    実測（303レース）で、軸の3着内確率が中央値未満のレースは
+    ワイド53.4% / 三連複44.1% と一貫して悪かった（前後半とも安定）。
+    """
+
+    def _race(self, axis_fuku):
+        """calc_all をモックせず、フィルタの判定だけを検証するための材料。"""
+        return [
+            {'num': 1, 'name': '軸', 'rl_rank': 1, 'win_odds': 3.0,
+             'pn': 0.30, 'top3_prob': axis_fuku, 'total': 8.0},
+            {'num': 2, 'name': '二番手', 'rl_rank': 2, 'win_odds': 6.0,
+             'pn': 0.18, 'top3_prob': 0.42, 'total': 6.0},
+            {'num': 3, 'name': '三番手', 'rl_rank': 3, 'win_odds': 9.0,
+             'pn': 0.12, 'top3_prob': 0.33, 'total': 5.0},
+        ]
+
+    def _run(self, monkeypatch, axis_fuku, **kw):
+        # select_quality_races は関数内で engine から import するため、
+        # ev_filter ではなく engine 側を差し替える必要がある
+        import src.features.engine as eng
+        import src.betting.ev_filter as ef
+        scored = self._race(axis_fuku)
+        monkeypatch.setattr(eng, 'calc_all', lambda race, bias=None: scored)
+        monkeypatch.setattr(eng, 'calc_chaos_score', lambda race, s: 5.0)
+        race = {'id': 'r1', 'race_num': 1, 'race_name': 'テスト',
+                'distance': 1600, 'surface': '芝', 'race_class': '1勝クラス',
+                'racecourse': '中京', 'horses': scored}
+        return ef.select_quality_races([race], min_ev=0.0, **kw)
+
+    def test_low_confidence_race_is_skipped(self, monkeypatch):
+        assert self._run(monkeypatch, 0.40) == []
+
+    def test_high_confidence_race_is_kept(self, monkeypatch):
+        assert len(self._run(monkeypatch, 0.70)) == 1
+
+    def test_threshold_is_the_measured_median(self):
+        from src.betting.ev_filter import MIN_AXIS_FUKU_PROB
+        # 実測の4分位で切れ目が Q2/Q3 の境＝中央値0.553 にあった。
+        # 閾値をいじって良い数字を探すとNorth Star #7の失敗を繰り返すため固定する。
+        assert MIN_AXIS_FUKU_PROB == 0.55
+
+    def test_can_be_disabled(self, monkeypatch):
+        """Noneで従来挙動に戻せること（切り戻し手段を必ず残す）。"""
+        assert len(self._run(monkeypatch, 0.40, min_axis_fuku_prob=None)) == 1

@@ -76,7 +76,11 @@ def estimate_payouts_from_win_odds(win_odds_map, n_sims=20000):
         payouts[bet_type] = {}
         for key, prob in probs.get(bet_type, {}).items():
             if prob > 1e-6:
-                payouts[bet_type][key] = round((1.0 - takeout) / prob, 1)
+                # JRAの払戻は元本(100円)を下回らない。的中確率が控除後の
+                # 1.0を超えると式は1.0未満を返すが、それは現実に存在しない
+                # （少頭数の複勝・ワイドで起きる）。1.0で床を張る。
+                payouts[bet_type][key] = max(
+                    1.0, round((1.0 - takeout) / prob, 1))
 
     return payouts
 

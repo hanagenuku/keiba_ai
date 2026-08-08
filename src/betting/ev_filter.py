@@ -314,13 +314,37 @@ def ability_first_with_value(races, bias_data=None, top_n=6):
 #  select_quality_races: 品質閾値ベースのレース厳選
 # ══════════════════════════════════════════════════════════════════════════════
 
+# 軸(RL1)の3着内確率がこれ未満のレースは買わない。
+#
+# 2026-08-08に本番の実予想303レース × race_dividends の実配当で測定した
+# （買い目は軸1頭ベース構成: ワイド3点 / 三連複）。4分位で単調だった:
+#
+#   軸の複勝確率    R数   ワイド回収   三連複回収
+#   Q1(低)         76      50.0%      45.0%
+#   Q2             76      56.1%      42.6%
+#   Q3             76     132.8%     181.4%
+#   Q4(高)         75     143.4%     234.2%
+#
+# 切れ目が Q2/Q3 の境＝中央値(0.553)にあったため、閾値を調整せず中央値を使う。
+#
+# ⚠ この閾値の価値は「下位半分が一貫して悪い」ことにある（ワイド53.4% /
+#   三連複44.1%、前後半とも 54/52・51/37 で安定）。
+#   上位半分が100%を超えるという主張はしていない（下記参照）。
+#
+# ⚠ **人気馬フィルタではない**ことを確認済み: 軸の単勝オッズ(log)との相関は
+#   +0.194 と弱く、上位半分・下位半分とも軸オッズの中央値は 3.4倍で同じ。
+#   市場の値付けではなく AI 自身の確信度を見ている。
+MIN_AXIS_FUKU_PROB = 0.55
+
+
 def select_quality_races(races, bias_data=None,
                          min_ev=1.30,
                          min_gap=0.03,
                          min_win_prob=0.10,
                          odds_range=(1.5, 20.0),
                          max_races=6,
-                         min_races=0):
+                         min_races=0,
+                         min_axis_fuku_prob=MIN_AXIS_FUKU_PROB):
     """品質閾値を満たすレースだけを推奨する。
 
     gap は pn[0] - pn[1]（AI勝率差）で計算する（②）。
@@ -335,6 +359,8 @@ def select_quality_races(races, bias_data=None,
     odds_range   : 本命オッズの許容範囲（デフォルト 1.5〜20.0）
     max_races    : 最大推奨レース数（デフォルト6）
     min_races    : 最小推奨レース数（デフォルト0 → 0件も許容）
+    min_axis_fuku_prob : 軸(RL1)の3着内確率の下限（既定 0.55、Noneで無効）。
+                   詳細は MIN_AXIS_FUKU_PROB のコメント参照
     """
     from src.features.engine import calc_all, calc_chaos_score
     odds_min, odds_max = odds_range
@@ -367,6 +393,15 @@ def select_quality_races(races, bias_data=None,
         win_prob = pn1
         if win_prob < min_win_prob:
             continue
+
+        # 軸の確度が低いレースは買わない（実測: 下位半分はワイド53.4% /
+        # 三連複44.1%で、前後半とも一貫して悪い）。
+        # 軸は RL1。scored の先頭とは限らないので明示的に探す。
+        if min_axis_fuku_prob is not None:
+            _axis = next((h for h in scored if h.get('rl_rank') == 1), top1)
+            _axis_fuku = _axis.get('top3_prob')
+            if _axis_fuku is not None and _axis_fuku < min_axis_fuku_prob:
+                continue
 
         # ── EVはフィールド全馬から最良を選択 ─────────────────────────────
         market_probs = calc_market_probs(scored)
