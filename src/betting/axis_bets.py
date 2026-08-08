@@ -242,7 +242,14 @@ def build_axis_bets(scored, probs, odds_map,
                                           round(p, 5), round(o, 1)))
         if out['trio']:
             odds_l = [b['odds'] for b in out['trio']]
+            # 実際に採用された点だけから列を復元する。
+            # 点数上限で切ると 2列目/3列目に一度も使われない馬が残るため、
+            # 宣言した g2/g3 をそのまま出すと画面と買い目が食い違う。
+            used = [set(b['key']) - {a} for b in out['trio']]
+            leg2 = sorted(x for x in g2 if any(x in u for u in used))
+            leg3 = sorted({n for u in used for n in u})
             out['summary'].update({
+                'trio_legs':     [[a], leg2, leg3],
                 'trio_points':   len(out['trio']),
                 'trio_syn_odds': round(synthetic_odds(odds_l), 1),
                 'payout_min':    int(min(odds_l) * UNIT),
