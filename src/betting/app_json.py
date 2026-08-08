@@ -214,35 +214,53 @@ def _format_axis_bets(ab, scored):
 
     result = []
     s = ab.get('summary', {})
+    axis = s.get('axis')
 
     for b in ab.get('win', []):
         n = b['key']
         result.append({
             'tag': 'tan', 'label': '単勝（軸）',
             'horse': f'#{n} {name_map.get(n, "")}',
-            'est': f'{b["odds"]:.1f}倍', 'ev': b['ev'],
-            'prob': b['prob'], 'amt': f'¥{b["amount"]}',
+            'est': f'{b["odds"]:.1f}倍',
+            # ⚠ EVは出さない。表示EVはGumbelシミュレーション(T=2.5で平坦化)の
+            # 確率から出しており、画面の勝率とも実際の回収率とも一致しない。
+            # 実測（389レース・軸の単勝）:
+            #   〜2.0倍  EV0.28 → 回収79.1%     5〜8倍 EV1.45 → 回収34.5%
+            # EVが高い帯ほど回収率が低いという逆行が起きており、誤解を招く。
+            'amt': f'¥{b["amount"]}',
         })
 
-    for b in ab.get('wide', []):
-        x, y = b['key']
-        result.append({
-            'tag': 'wide', 'label': 'ワイド',
-            'horse': f'#{x}-#{y}',
-            'est': f'{b["odds"]:.1f}倍', 'ev': b['ev'],
-            'prob': b['prob'], 'amt': f'¥{b["amount"]}',
-        })
+    # ── 馬連・ワイドは「軸 - 相手」でまとめる ────────────────────────────
+    # 1点ずつ並べると全部に軸が入っていることが読み取れないため。
+    def _grouped(items, tag, label, syn=None):
+        if not items:
+            return None
+        mates, legs = [], []
+        for b in items:
+            x, y = b['key']
+            m = y if x == axis else x
+            mates.append(m)
+            legs.append({'n': m, 'name': name_map.get(m, ''),
+                         'odds': b['odds'], 'prob': b['prob']})
+        lo = min(b['odds'] for b in items)
+        hi = max(b['odds'] for b in items)
+        e = {
+            'tag': tag, 'label': f'{label}({len(items)}点)',
+            'axis': axis,
+            'horse': f'#{axis} - ' + '・'.join(f'#{m}' for m in mates),
+            'mates': legs,
+            'est': (f'{lo:.1f}倍' if lo == hi else f'{lo:.1f}〜{hi:.1f}倍'),
+            'amt': f'¥{len(items) * 100}',
+        }
+        if syn:
+            e['syn_odds'] = syn
+        return e
 
-    qs = ab.get('quinella', [])
-    for b in qs:
-        x, y = b['key']
-        result.append({
-            'tag': 'umaren', 'label': '馬連',
-            'horse': f'#{x}-#{y}',
-            'est': f'{b["odds"]:.1f}倍', 'ev': b['ev'],
-            'prob': b['prob'], 'amt': f'¥{b["amount"]}',
-            'syn_odds': s.get('quinella_syn_odds'),
-        })
+    for e in (_grouped(ab.get('wide', []), 'wide', 'ワイド'),
+              _grouped(ab.get('quinella', []), 'umaren', '馬連',
+                       s.get('quinella_syn_odds'))):
+        if e:
+            result.append(e)
 
     trio = ab.get('trio', [])
     if trio:
@@ -250,9 +268,12 @@ def _format_axis_bets(ab, scored):
         nums = sorted({n for b in trio for n in b['key']})
         result.append({
             'tag': 'sanfuku', 'label': f'三連複({len(trio)}点)',
-            'trio_type': 'formation', 'nums': nums, 'combos': combos,
+            # legs を渡すと index.html がフォーメーション表示に切り替わる。
+            # 渡さないと13点がバラバラに並び、A-BC-... の構造が読み取れない。
+            'trio_type': 'formation',
+            'legs': s.get('trio_legs'),
+            'nums': nums, 'combos': combos,
             'est': f'¥{s.get("payout_min", 0):,}〜¥{s.get("payout_max", 0):,}',
-            'ev': round(sum(b['ev'] for b in trio) / len(trio), 2),
             'syn_odds': s.get('trio_syn_odds'),
             'amt': f'¥{len(trio) * 100}',
         })

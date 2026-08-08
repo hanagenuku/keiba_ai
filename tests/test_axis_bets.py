@@ -218,3 +218,66 @@ class TestRaceSelectionByAxisConfidence:
     def test_can_be_disabled(self, monkeypatch):
         """Noneで従来挙動に戻せること（切り戻し手段を必ず残す）。"""
         assert len(self._run(monkeypatch, 0.40, min_axis_fuku_prob=None)) == 1
+
+
+class TestDisplayGrouping:
+    """表示が「軸1頭＋相手」の構造を保つこと。
+
+    2026-08-09 にユーザーから「三連複がバラバラの買い目に見える」という
+    指摘を受けた。実際には A - 中穴2 - (RL2..9＋中穴) の正しい
+    フォーメーションだったが、`legs` を渡していなかったため index.html が
+    13点を平坦に並べ、構造が読み取れなかった。
+    """
+
+    def _formatted(self, field):
+        from src.betting.app_json import _format_axis_bets
+        p, o = _probs_odds(field)
+        return _format_axis_bets(build_axis_bets(field, p, o), field), \
+            build_axis_bets(field, p, o)
+
+    def test_trio_exposes_three_legs(self, field):
+        disp, ab = self._formatted(field)
+        trio = next(x for x in disp if x['tag'] == 'sanfuku')
+        legs = trio['legs']
+        assert legs and len(legs) == 3, 'legs が3列で出ていない（平坦表示に戻る）'
+        assert legs[0] == [1], f'1列目が軸1頭でない: {legs[0]}'
+        assert len(legs[1]) == 2, f'2列目は中穴2頭のはず: {legs[1]}'
+        # 表示した列だけで、実際の買い目が過不足なく再現できること
+        rebuilt = {tuple(sorted((legs[0][0], x, y)))
+                   for x in legs[1] for y in legs[2] if x != y}
+        actual = {tuple(int(n) for n in c.split('-')) for c in trio['combos']}
+        assert actual == rebuilt, (
+            '表示した列から買い目が再現できない（画面と実際の買い目が食い違う）\n'
+            f'  表示から: {sorted(rebuilt)}\n  実際:     {sorted(actual)}')
+
+    def test_legs_only_contain_horses_actually_used(self, field):
+        """点数上限で切られた馬を列に残さないこと。"""
+        from src.betting.app_json import _format_axis_bets
+        p, o = _probs_odds(field)
+        ab = build_axis_bets(field, p, o, trio_max_points=4)
+        trio = next(x for x in _format_axis_bets(ab, field) if x['tag'] == 'sanfuku')
+        used = {n for c in trio['combos'] for n in map(int, c.split('-'))}
+        for leg in trio['legs']:
+            for n in leg:
+                assert n in used, f'#{n} は列に出ているが買い目に無い'
+
+    def test_quinella_and_wide_are_grouped_by_axis(self, field):
+        disp, _ = self._formatted(field)
+        for tag in ('wide', 'umaren'):
+            e = next(x for x in disp if x['tag'] == tag)
+            assert e['axis'] == 1, f'{tag} の軸が出ていない'
+            assert e['mates'], f'{tag} の相手がまとまっていない'
+            assert '点)' in e['label'], f'{tag} に点数が出ていない: {e["label"]}'
+            # 相手に軸自身が混ざらないこと
+            assert all(m['n'] != 1 for m in e['mates'])
+
+    def test_win_bet_has_no_ev(self, field):
+        """単勝のEV表示を出さないこと。
+
+        表示EVはGumbelシミュレーション(T=2.5で平坦化)の確率から出しており、
+        実測の回収率と逆行する（軸オッズ〜2.0倍: EV0.28→回収79.1%、
+        5〜8倍: EV1.45→回収34.5%）。誤解を招くので出さない。
+        """
+        disp, _ = self._formatted(field)
+        win = next(x for x in disp if x['tag'] == 'tan')
+        assert 'ev' not in win, '単勝にEVが出ている（実測と逆行するため出さない）'

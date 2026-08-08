@@ -1709,7 +1709,7 @@ function render() {
             } else if (ttype === 'formation' && legs.length === 3) {
               for (let i = 0; i < 3; i++) {
                 html += '<div style="margin-top:'+(i===0?'5':'2')+'px;display:flex;align-items:center;gap:4px;flex-wrap:wrap">';
-                html += '<span style="'+legLabel+'">'+(i+1)+'列目</span>';
+                html += '<span style="'+legLabel+'">'+(i===0?'軸':(i+1)+'列目')+'</span>';
                 for (const n of legs[i]) { html += '<span style="'+chipStyle+'">'+n+'</span>'; }
                 html += '</div>';
               }
@@ -1723,6 +1723,26 @@ function render() {
 
             html += '<div style="margin-top:4px;display:flex;align-items:center;gap:8px;font-size:11px;color:#666">';
             html += '<span>'+b.est+synStr+'</span>';
+            html += '<span class="bamt" style="margin-left:auto">'+b.amt+'</span>';
+            html += '</div>';
+            html += '</div>';
+          } else if (b.mates && b.axis != null) {
+            // 馬連・ワイドを「軸 - 相手」の1ブロックにまとめる。
+            // 1点ずつ並べると全部に軸が入っていることが読み取れないため。
+            const chip = 'display:inline-block;min-width:22px;text-align:center;background:#117a65;color:#fff;border-radius:50%;padding:2px 5px;font-size:11px;font-weight:700';
+            const mchip = 'display:inline-block;min-width:22px;text-align:center;background:#fff;border:1px solid #117a65;color:#117a65;border-radius:50%;padding:2px 5px;font-size:11px;font-weight:700';
+            html += '<div style="margin:6px 0;padding:8px 10px;background:rgba(17,122,101,0.06);border-radius:6px;font-size:12px;'+rowOpacity+'">';
+            html += '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">';
+            html += '<span class="btype '+tc+'">'+b.label+'</span>';
+            html += changeBadge;
+            html += '</div>';
+            html += '<div style="margin-top:5px;display:flex;align-items:center;gap:4px;flex-wrap:wrap">';
+            html += '<span style="'+chip+'">'+b.axis+'</span>';
+            html += '<span style="color:#888;font-weight:700">-</span>';
+            for (const m of b.mates) { html += '<span style="'+mchip+'">'+m.n+'</span>'; }
+            html += '</div>';
+            html += '<div style="margin-top:4px;display:flex;align-items:center;gap:8px;font-size:11px;color:#666">';
+            html += '<span>'+b.est+(b.syn_odds ? ' 合成'+b.syn_odds.toFixed(1)+'倍' : '')+'</span>';
             html += '<span class="bamt" style="margin-left:auto">'+b.amt+'</span>';
             html += '</div>';
             html += '</div>';
