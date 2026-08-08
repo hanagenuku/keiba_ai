@@ -222,12 +222,28 @@ def build_training_data(base_dir, output_csv='data/horse_features.csv',
     rows_out = []
     skipped  = 0
 
+    # ── Plackett-Luce レーティングを日付順に再現する ────────────────────
+    # ⚠ リーク防止の要。**その日の全レースの特徴量を作り終えてから**
+    #   その日の結果で θ を更新する（本番は朝に全レースを予想するため）。
+    #   engine._PL_RATINGS を差し替えることで、読み取りコードは推論と同一。
+    #   races は ORDER BY r.date, r.race_id で日付順に並んでいる前提。
+    from src.features.pl_rating import PLRatings as _PLR
+    _pl = _PLR()
+    _eng._PL_RATINGS = _pl
+    _pl_day = None
+
     for idx, race_row in enumerate(races):
         if idx % 500 == 0:
             print(f'  処理中: {idx}/{len(races)} レース...', flush=True)
 
         race_id  = race_row['race_id']
         date_str = str(race_row['date'] or '')
+
+        # 日付が変わったら、前日ぶんの結果でθを更新してから先へ進む
+        _d = date_str[:10]
+        if _pl_day is not None and _d != _pl_day:
+            _pl.advance_day(_pl_day)
+        _pl_day = _d
         rc       = race_row['racecourse'] or ''
         surf     = race_row['surface'] or '芝'
 
@@ -335,6 +351,11 @@ def build_training_data(base_dir, output_csv='data/horse_features.csv',
 
         # 相対特徴量を一括計算（引き継ぎ書 真因2・3 の修正）
         add_relative_features(all_xfeats)
+
+        # このレースの着順をθ更新キューへ。実際の反映は日付が変わった時。
+        _fin = sorted(((int(h.get('place', 99)), h['name']) for h in horse_objs
+                       if 0 < int(h.get('place', 99)) < 99), key=lambda x: x[0])
+        _pl.queue_result([nm for _, nm in _fin])
 
         # 出力行を構築
         date_obj = _parse_date(date_str)

@@ -57,6 +57,13 @@ jobs:
         env:
           GAS_URL: ${{ secrets.GAS_URL }}
 
+      # Plackett-Luce レーティングを最新の結果まで更新する。
+      # 推論時は init_engine がこの pkl を読む。学習データ生成は
+      # build_training_data が日付順に自前で再現するため、両者は必ず一致する。
+      # ⚠ 失敗しても結果取得は止めない（|| true）。無ければ θ=0 の既定値で動く。
+      - name: Update Plackett-Luce ratings
+        run: python scripts/build_pl_ratings.py || true
+
       - name: Generate stats
         run: python scripts/generate_stats.py
 

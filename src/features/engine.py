@@ -17,6 +17,11 @@ _XGB_RESIDUAL       = False   # True なら残差学習モデル（base_margin �
 _CALIBRATOR         = None
 _XGB_CALIBRATOR     = None
 _PACE_MODEL         = None
+# Plackett-Luce レーティング。学習も推論も **この1本を読む**ことで
+# パリティを担保する（書き込み側だけが違う。詳細は pl_rating.py の冒頭）。
+#   推論: init_engine が data/pl_rating.pkl をロード
+#   学習: build_training_data が日付順に走りながら advance_day() で再現
+_PL_RATINGS         = None
 _JOCKEY_PACE_STATS  = {}    # jockey_name → {median_first3f_norm, escape_rate}
 _SPEED_INDEX_CALC   = None  # SpeedIndexCalculator
 _MEMBER_LEVEL_CACHE = {}    # race_id → float (前走メンバーレベルキャッシュ)
@@ -155,7 +160,7 @@ def init_engine(base_dir,
                 horse_venue_dist_dict=None):
     """エンジンのグローバル変数を設定する。ノートブックのセル4で呼ぶ"""
     global _XGB_FUKUSHO_MODEL, _XGB_FEATURE_COLS, _XGB_RESIDUAL, _CALIBRATOR, _XGB_CALIBRATOR, _PACE_MODEL
-    global _JOCKEY_PACE_STATS
+    global _JOCKEY_PACE_STATS, _PL_RATINGS
     global _W, _horse_dist_dict, _horse_course_dict, _horse_venue_dist_dict, _post_zone_bias
     global _jockey_dict, _trainer_dict, _hist_db_path, _SPEED_INDEX_CALC, _MEMBER_LEVEL_CACHE
     global _KEIBA_DB_PATH, _BASE_DIR, _XGB_MISSING_FEATS_WARNED, _XGB_INFERENCE_ERRORS_WARNED
@@ -253,6 +258,20 @@ def init_engine(base_dir,
         import json as _json_jps
         with open(jps_path, encoding='utf-8') as f:
             _JOCKEY_PACE_STATS = _json_jps.load(f)
+
+    # Plackett-Luce レーティング（相手の強さを考慮した潜在能力）。
+    # 学習側は build_training_data が同じ PLRatings を日付順に再現するため、
+    # ここでロードするのは推論経路のみ。無ければ既定値(θ=0)で動く。
+    try:
+        from src.features.pl_rating import load_ratings as _load_pl
+        from datetime import datetime as _dt
+        _PL_RATINGS = _load_pl(base_dir, today=_dt.now().strftime('%Y-%m-%d'))
+        if _PL_RATINGS is not None:
+            print(f'  PLレーティング: {len(_PL_RATINGS.theta):,}頭 '
+                  f'(最終更新 {_PL_RATINGS.last_date})')
+    except Exception as _e:
+        print(f'  ⚠ PLレーティング読み込み失敗（既定値で継続）: {_e}')
+        _PL_RATINGS = None
 
     if weights is not None:
         _W = weights
@@ -2368,6 +2387,20 @@ def calc_features_for_xgb(h, race):
     feats['f_beat_market_rate'] = (sum(beats) / len(beats)
                                    if beats else float('nan'))
 
+    # ── Plackett-Luce レーティング（相手の強さを考慮した潜在能力）─────
+    # 既存の f_rl / f_speed_fig_avg は過去走スコアの重み付き平均で、
+    # 「強い相手への2着」と「弱い相手への2着」を区別できない。
+    # 相対値(rl_f_pl_rating*)は add_relative_features 側で付ける。
+    if _PL_RATINGS is not None:
+        _th, _n = _PL_RATINGS.get(h.get('name', ''))
+        feats['f_pl_rating']   = _th
+        feats['f_pl_rating_n'] = _n
+    else:
+        # レーティング未生成の環境では初出走と同じ既定値に倒す。
+        # 学習時も同じ値になるので分布はズレない。
+        feats['f_pl_rating']   = 0.0
+        feats['f_pl_rating_n'] = 0
+
     return feats
 
 
@@ -2448,6 +2481,23 @@ def add_relative_features(all_xfeats):
             xf.get('f_blood',           5.0) * 0.10 +
             xf.get('f_trainer',         5.0) * 0.20
         )
+
+    # PLレーティングの相対化。f_pl_rating は calc_features_for_xgb が
+    # 付けている（学習・推論とも同じ経路）。
+    _pl = [xf.get('f_pl_rating', 0.0) or 0.0 for xf in all_xfeats]
+    if _pl:
+        _m = sum(_pl) / len(_pl)
+        _v = sum((v - _m) ** 2 for v in _pl) / len(_pl)
+        _sd = _v ** 0.5
+        _ord = sorted(range(len(_pl)), key=lambda i: -_pl[i])
+        _rk = [0] * len(_pl)
+        for _r, _i in enumerate(_ord, 1):
+            _rk[_i] = _r
+        for _i, xf in enumerate(all_xfeats):
+            _d = _pl[_i] - _m
+            xf['rl_f_pl_rating']      = round(_d, 5)
+            xf['rl_f_pl_rating_z']    = round(_d / _sd, 5) if _sd > 1e-6 else 0.0
+            xf['rl_f_pl_rating_rank'] = _rk[_i]
 
     rl_s = sorted(enumerate([x['_rl_c'] for x in all_xfeats]), key=lambda kv: kv[1], reverse=True)
     cl_s = sorted(enumerate([x['_cl_c'] for x in all_xfeats]), key=lambda kv: kv[1], reverse=True)
