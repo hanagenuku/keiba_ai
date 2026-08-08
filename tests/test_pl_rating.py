@@ -243,3 +243,54 @@ class TestTieBreakDoesNotLeakFinishOrder:
         f = r.field_features(['経験馬', '新馬1', '新馬2', '新馬3'])
         zeros = [x for x in f if x['f_pl_rating'] == 0.0]
         assert len(zeros) == 3, '初出走馬は全員θ=0で必ずタイになる'
+
+
+class TestPLFeaturesReachTheModel:
+    """PL特徴量が「計算されているのにモデルに繋がっていない」状態にならないこと。
+
+    このプロジェクトは同型の事故を何度も踏んでいる:
+      f_bias    週次で算出し保存しているのに calc_features_for_xgb に渡っていない
+      corner_3  corner_all に移行したのに読む側が追従せず12特徴量が死んでいた
+      f_post    3段フォールバックがあるのにXGB経路は最も粗い値しか見ていなかった
+
+    train_xgb は除外リスト以外の数値列を全部拾うので、build_training_data を
+    先に走らせれば PL 特徴量は**自動的に**モデルに入る（実測: 129→134特徴量）。
+    その前提が壊れる唯一の経路は「誰かが除外リストに足す」ことなので、そこを固定する。
+
+    ⚠ 効果の実測（本番CSV・5窓 walk-forward・3シード平均）:
+        本番構成（市場アンカーあり）  平均 +0.0020  悪化した窓 0/5
+        市場ゼロAI                  平均 +0.0046  悪化した窓 0/5
+      小さいが10窓すべてでプラスで、符号が一度も反転しない。
+    """
+
+    def test_not_in_any_exclude_list(self):
+        from src.tools.train_xgb import _EXCLUDE_COLS, _MARKET_FEAT_COLS
+        from src.features.pl_rating import FEATURE_COLS
+        for c in FEATURE_COLS:
+            assert c not in _EXCLUDE_COLS, f'{c} が _EXCLUDE_COLS に入っている'
+            assert c not in _MARKET_FEAT_COLS, (
+                f'{c} が _MARKET_FEAT_COLS に入っている。'
+                'PLは市場情報ではないので残差学習でも除外してはいけない')
+
+    def test_all_columns_are_produced_by_the_feature_pipeline(self):
+        """calc_features_for_xgb → add_relative_features で5列すべて揃うこと。
+
+        学習データ生成も推論もこの2関数を通るので、ここが揃っていれば
+        CSVにも列が載り、train_xgb が自動で拾う。
+        """
+        import src.features.engine as eng
+        from src.features.engine import calc_features_for_xgb, add_relative_features
+        from src.features.pl_rating import FEATURE_COLS
+        prev = eng._PL_RATINGS
+        try:
+            eng._PL_RATINGS = PLRatings({'A': 0.4, 'B': -0.2}, {'A': 8, 'B': 3})
+            race = {'distance': 1600, 'surface': '芝', 'racecourse': '東京',
+                    'race_class': '1勝クラス', 'horses': []}
+            xf = [calc_features_for_xgb({'name': n, 'num': i, 'history': []}, race)
+                  for i, n in enumerate(['A', 'B', 'C'], 1)]
+            add_relative_features(xf)
+            for x in xf:
+                for c in FEATURE_COLS:
+                    assert c in x, f'{c} が特徴量に出ていない'
+        finally:
+            eng._PL_RATINGS = prev
