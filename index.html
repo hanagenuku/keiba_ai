@@ -1653,11 +1653,17 @@ function render() {
         }
       }
       if (hasGumbel) {
-        html += '<div class="sec" style="margin-top:12px;font-size:11px;color:#117a65">📊 EV買い目';
+        html += '<div class="sec" style="margin-top:12px;font-size:11px;color:#117a65">🎯 軸1頭ベース買い目';
         if (race._gumbel_updated && race._update_time) {
           html += ' <span style="font-size:10px;color:#888;font-weight:400">更新: '+race._update_time+'</span>';
         }
         html += '</div>';
+        // ⚠ 実配当401レースの検証で回収率は控除率を超えていない
+        //    （高配当1〜2本を除くと61〜87%）。期待値を盛った表示をしない。
+        html += '<div style="margin:0 0 6px;font-size:10px;color:#8a6d3b;background:rgba(240,173,78,0.12);'
+              + 'border-radius:4px;padding:4px 8px;line-height:1.4" '
+              + 'title="401レースの実配当で検証: 的中率は従来方式の2.7%から改善しましたが、回収率は控除率(20〜22.5%)を超えていません。高配当1〜2本を除くと61〜87%です。">'
+              + '🧪 検証中 — 的中率は改善しましたが、回収率はまだ控除率を超えていません</div>';
         for (const b of race.gumbel_bets) {
           const tc = b.tag || 'fuku';
           const isRemoved = b._ev_change === 'removed';
