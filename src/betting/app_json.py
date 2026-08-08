@@ -198,6 +198,67 @@ def _build_ai_pair_bets(scored):
         return None
 
 
+def _format_axis_bets(ab, scored):
+    """build_axis_bets の出力をアプリ表示リストに変換する。
+
+    ⚠ 回収率は控除率を超えていない（詳細は axis_bets.py の冒頭）。
+    表示側で「検証中」と明記すること。
+    """
+    if not ab:
+        return []
+    name_map = {}
+    for h in scored:
+        k = h.get('horse_num') or h.get('num')
+        if k is not None:
+            name_map[int(k)] = h.get('name', '')
+
+    result = []
+    s = ab.get('summary', {})
+
+    for b in ab.get('win', []):
+        n = b['key']
+        result.append({
+            'tag': 'tan', 'label': '単勝（軸）',
+            'horse': f'#{n} {name_map.get(n, "")}',
+            'est': f'{b["odds"]:.1f}倍', 'ev': b['ev'],
+            'prob': b['prob'], 'amt': f'¥{b["amount"]}',
+        })
+
+    for b in ab.get('wide', []):
+        x, y = b['key']
+        result.append({
+            'tag': 'wide', 'label': 'ワイド',
+            'horse': f'#{x}-#{y}',
+            'est': f'{b["odds"]:.1f}倍', 'ev': b['ev'],
+            'prob': b['prob'], 'amt': f'¥{b["amount"]}',
+        })
+
+    qs = ab.get('quinella', [])
+    for b in qs:
+        x, y = b['key']
+        result.append({
+            'tag': 'umaren', 'label': '馬連',
+            'horse': f'#{x}-#{y}',
+            'est': f'{b["odds"]:.1f}倍', 'ev': b['ev'],
+            'prob': b['prob'], 'amt': f'¥{b["amount"]}',
+            'syn_odds': s.get('quinella_syn_odds'),
+        })
+
+    trio = ab.get('trio', [])
+    if trio:
+        combos = ['-'.join(str(n) for n in b['key']) for b in trio]
+        nums = sorted({n for b in trio for n in b['key']})
+        result.append({
+            'tag': 'sanfuku', 'label': f'三連複({len(trio)}点)',
+            'trio_type': 'formation', 'nums': nums, 'combos': combos,
+            'est': f'¥{s.get("payout_min", 0):,}〜¥{s.get("payout_max", 0):,}',
+            'ev': round(sum(b['ev'] for b in trio) / len(trio), 2),
+            'syn_odds': s.get('trio_syn_odds'),
+            'amt': f'¥{len(trio) * 100}',
+        })
+    return result
+
+
 def _format_gumbel_bets(gb, scored):
     """build_optimal_bets の出力をアプリ表示リストに変換する。"""
     if not gb:
@@ -431,10 +492,13 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
         _bet_reason = f'★期待値あり: {_types_str}'
 
         try:
-            from src.betting.bet_optimizer import make_bets_v2 as _mbv2
-            _gb, _, _, _ = _mbv2(scored, race, base_dir,
-                                  market_odds_map=market_odds_map, n_sims=3000)
-            _gumbel_bets = _format_gumbel_bets(_gb, scored)
+            # 軸1頭ベース（2026-08-08〜）。従来のEV方式は「AIと市場が最も
+            # 食い違う組み合わせ」を選ぶ設計で、実測の的中率が2.7%と最下位
+            # だったため置き換えた。詳細は src/betting/axis_bets.py 冒頭。
+            from src.betting.axis_bets import make_axis_bets as _mab
+            _ab, _, _ = _mab(scored, race, base_dir,
+                             market_odds_map=market_odds_map, n_sims=3000)
+            _gumbel_bets = _format_axis_bets(_ab, scored)
         except Exception:
             _gumbel_bets = []
 
@@ -554,10 +618,10 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
         _bet_reason2 = f'参考: {_types_str2}'
 
         try:
-            from src.betting.bet_optimizer import make_bets_v2 as _mbv2
-            _gb2, _, _, _ = _mbv2(scored, race, base_dir,
-                                   market_odds_map=market_odds_map, n_sims=3000)
-            _gumbel_bets2 = _format_gumbel_bets(_gb2, scored)
+            from src.betting.axis_bets import make_axis_bets as _mab
+            _ab2, _, _ = _mab(scored, race, base_dir,
+                              market_odds_map=market_odds_map, n_sims=3000)
+            _gumbel_bets2 = _format_axis_bets(_ab2, scored)
         except Exception:
             _gumbel_bets2 = []
 

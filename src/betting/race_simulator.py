@@ -71,7 +71,7 @@ def calc_ticket_probabilities(orders, horse_nums):
     top3   = order_nums[:, :3]
 
     result = {
-        'win': {}, 'place': {}, 'quinella': {},
+        'win': {}, 'place': {}, 'quinella': {}, 'wide': {},
         'exacta': {}, 'trio': {}, 'trifecta': {},
     }
 
@@ -90,6 +90,15 @@ def calc_ticket_probabilities(orders, horse_nums):
         p = float(mask.mean())
         if p > 0:
             result['quinella'][(a, b)] = p
+
+    # ワイド（2頭とも3着以内、順不同）— 軸×中穴の買い目で使う
+    top3_sorted_w = np.sort(top3, axis=1)
+    for a, b in combinations(sorted(horse_nums), 2):
+        mask = (((top3_sorted_w == a).any(axis=1)) &
+                ((top3_sorted_w == b).any(axis=1)))
+        p = float(mask.mean())
+        if p > 0:
+            result['wide'][(a, b)] = p
 
     # 馬単（1-2着、順序あり）— ベクトル化
     for a in horse_nums:
