@@ -185,3 +185,61 @@ class TestBuildFromHistory:
         assert n == 5
         assert r.get('一位馬')[0] > r.get('二位馬')[0] > r.get('三位馬')[0]
         assert r.get('一位馬')[1] == 5
+
+
+class TestTieBreakDoesNotLeakFinishOrder:
+    """🔴 2026-08-08 に実際にやらかしたリークの回帰テスト。
+
+    検証用スクリプトが θ を作る際、SQLが `ORDER BY date, race_id, place`
+    （place=着順）で、順位を `(-th).argsort().argsort()` で付けていた。
+    θが同値の馬（初出走馬など）ではタイの並び順がそのまま着順になり、
+    `rl_f_pl_rating_rank` が実際の着順を漏らしていた。
+
+        θが同値の行での「順位 vs 実着順」の相関
+          検証スクリプト版        +0.8678  ← 着順そのもの
+          本番パイプライン版       +0.1694  （正常）
+
+    これで AUC が 0.8037 → 0.8404、回収率が 115% と偽の結果が出た。
+    プラセボ対照は「馬固有の情報」を壊す操作なので、本物のシグナルも
+    リークも同じように消し、**リーク検出には使えなかった**。
+    """
+
+    def test_rank_follows_input_order_not_any_result(self):
+        """θが全部同値なら、順位は渡された順序だけで決まること。
+
+        呼び出し側（build_training_data）は ORDER BY horse_num で渡すので、
+        着順とは無関係になる。ここが結果由来の順序に依存し始めたらリーク。
+        """
+        r = PLRatings()
+        names = ['A', 'B', 'C', 'D']
+        f1 = r.field_features(names)
+        assert [x['rl_f_pl_rating_rank'] for x in f1] == [1, 2, 3, 4]
+        # 同じ馬集合を別の順で渡すと、順位も同じ「渡された順」になる
+        f2 = r.field_features(['D', 'C', 'B', 'A'])
+        assert [x['rl_f_pl_rating_rank'] for x in f2] == [1, 2, 3, 4]
+
+    def test_training_data_passes_horses_in_horse_num_order(self):
+        """学習データ生成が馬番順で渡していること（着順順だとリークする）。
+
+        build_training_data の SQL が ORDER BY place に変わったら、
+        タイブレークが着順を漏らす。ソースを直接固定する。
+        """
+        import inspect
+        import src.tools.build_training_data as btd
+        src = inspect.getsource(btd)
+        i = src.index('SELECT horse_name, horse_num, place')
+        stmt = src[i:i + 900]
+        assert 'ORDER BY horse_num' in stmt, (
+            '当該レースの出走馬取得が馬番順でなくなっている。'
+            'ORDER BY place にするとθ同値時のタイブレークが着順を漏らす')
+
+    def test_theta_ties_are_common_enough_to_matter(self):
+        """タイは稀な例外ではない（初出走馬は全員θ=0）。
+
+        「タイなんて滅多に起きない」と判断してガードを外さないための記録。
+        本番データでは全159,703行のうち22,207行(14%)がθ同値だった。
+        """
+        r = PLRatings({'経験馬': 0.5}, {'経験馬': 10})
+        f = r.field_features(['経験馬', '新馬1', '新馬2', '新馬3'])
+        zeros = [x for x in f if x['f_pl_rating'] == 0.0]
+        assert len(zeros) == 3, '初出走馬は全員θ=0で必ずタイになる'
