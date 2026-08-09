@@ -44,8 +44,8 @@ def _jradb_post(sess, page, cname, timeout=15):
     return resp
 
 
-def find_r01_shutuba(base, date, sess):
-    """R01出走表のsuffixを探索する（0x00〜0xFF を順次スキャン）。
+def _scan_r01_shutuba(base, date, sess):
+    """R01出走表のsuffixを1周スキャンする。(suffix, 失敗内訳) を返す。
 
     JRADBの出走表はsuffix=BFのような高い値にある場合があるため、
     3連続エラーで打ち切らず256全体をスキャンする。
@@ -53,27 +53,74 @@ def find_r01_shutuba(base, date, sess):
     テーブル+競馬固有コンテンツ（騎手/馬名/馬体重）を確認して偽陽性を除外。
     障害レースのフィルタリングは呼び出し側（_parse_shutuba）で行う。
     """
+    diag = {'param_error': 0, 'no_table': 0, 'no_content': 0, 'exc': 0,
+            'last_exc': None}
     for s in range(256):
         cn = f'{base}01{date}/{s:02X}'
         try:
             r = _jradb_post(sess, 'accessD.html', cn, timeout=10)
-        except Exception:
+        except Exception as e:
+            diag['exc'] += 1
+            diag['last_exc'] = f'{type(e).__name__}: {e}'
             time.sleep(0.02)
             continue
         if r is None:
+            diag['param_error'] += 1
             continue  # パラメータエラー：sleepなしで高速スキップ
         text = r.text
         soup = BeautifulSoup(text, 'lxml')
         if not soup.find_all('table'):
+            diag['no_table'] += 1
             time.sleep(0.02)
             continue
         # 出走表固有コンテンツを確認（偽陽性排除）
         if not any(kw in text for kw in ('騎手', '馬名', '馬体重', '調教師')):
+            diag['no_content'] += 1
             print(f'  [scan] suffix {s:02X}: テーブルあるが競馬コンテンツなし → {text[:80]!r}')
             time.sleep(0.02)
             continue
         print(f'  [scan] suffix {s:02X}: ✓ 競馬コンテンツ確認 → {text[:60]!r}')
-        return s
+        return s, diag
+    return None, diag
+
+
+def find_r01_shutuba(base, date, sess, attempts=3):
+    """R01出走表のsuffixを探索する（0x00〜0xFF を順次スキャン）。
+
+    ⚠ 1周失敗しただけで諦めると、その開催の**予想が丸ごと消える**。
+    2026-08-09の日曜朝refreshでは新潟だけこのスキャンが全滅し、
+    前夜は同じ新潟がsuffix=04で取れていたにもかかわらず、アプリの予想が
+    中京・札幌の23レースだけになった（新潟11レースが消滅）。
+    同じ失敗モードは結果ページ側で2026-08-02に起きており、そちらは
+    find_r01_result に再試行を入れて解決済みだったが、出走表側は
+    未対応のまま残っていた。
+
+    そこで結果ページ側と同じ方針を適用する。一過性の兆候（通信例外・
+    テーブルなし等）がある場合に限り再試行し、256件すべてが綺麗に
+    「パラメータエラー」なら、そのページは本当に存在しないので即座に
+    諦める（開催のない会場で待たされない）。
+    """
+    for attempt in range(1, attempts + 1):
+        s, diag = _scan_r01_shutuba(base, date, sess)
+        if s is not None:
+            return s
+        transient = diag['exc'] or diag['no_table'] or diag['no_content']
+        if not transient:
+            print(f'  ⚠ R01出走表 未発見: 256件すべてパラメータエラー'
+                  f'（このページは存在しない）')
+            return None
+        if attempt < attempts:
+            wait = 5 * attempt
+            print(f'  ⚠ R01出走表 未発見（例外{diag["exc"]}件 / テーブルなし'
+                  f'{diag["no_table"]}件 / 内容なし{diag["no_content"]}件'
+                  + (f' / 直近の例外: {diag["last_exc"]}' if diag['last_exc'] else '')
+                  + f'）→ {wait}秒後に再試行 ({attempt}/{attempts - 1})')
+            time.sleep(wait)
+        else:
+            print(f'  ❌ R01出走表 {attempts}回試行しても未発見'
+                  f'（例外{diag["exc"]}件 / テーブルなし{diag["no_table"]}件 / '
+                  f'内容なし{diag["no_content"]}件）'
+                  + (f' 直近の例外: {diag["last_exc"]}' if diag['last_exc'] else ''))
     return None
 
 
