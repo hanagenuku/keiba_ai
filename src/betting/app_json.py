@@ -82,6 +82,33 @@ def _assign_marks(scored, by_odds):
     return marks
 
 
+def _build_solo_ranks(scored):
+    """市場ゼロAI順位（ability_margin 降順）を {horse_num: rank} で返す。
+
+    `ability_margin` は残差学習モデルの `raw_margin - base_margin`、つまり
+    市場アンカーを差し引いた「AI自身の評価」。表示専用の**併記**であり、
+    買い目・軸・レース厳選・成績集計はすべて従来の `rl_rank` のままである。
+
+    ⚠ この順位は当てる力では `rl_rank` に劣ることが実測済み。
+    単勝AUCは市場ゼロAI 0.7778 / 市場ありAI 0.8252（2026-08-03）。
+    「AIが市場より強気」の度合いで並べると回収率の傾きが**逆**になり、
+    +6以上の帯は41.4%（過去人気の寄与も抜くと21.8%）。
+    したがって馬券判断には使わず、「AI自身が何を見ているか」を
+    人間が読むためだけの列とする。
+
+    1頭でも `ability_margin` を持たない場合はレース全体で None を返す
+    （非残差モデル運用時・SHAP/推論フォールバック時に、一部の馬だけ
+    別基準の順位が混ざるのを防ぐ。index.html の再同期と同じ方針）。
+    """
+    if not scored or any(h.get('ability_margin') is None for h in scored):
+        return {}
+    # タイブレークは馬番昇順（意味を持たない中立な順序）。
+    # ⚠ 着順や既存順位でタイブレークすると、そこから情報が漏れる
+    #    （2026-08-08のPLレーティングのリークがこの形だった）。
+    order = sorted(scored, key=lambda h: (-h['ability_margin'], h['num']))
+    return {h['num']: i + 1 for i, h in enumerate(order)}
+
+
 def _build_horses_list(scored, top1, by_odds, odds_lookup=None, base_dir=None):
     """アプリ表示用の馬リストを生成する（馬番順）。
 
@@ -92,6 +119,7 @@ def _build_horses_list(scored, top1, by_odds, odds_lookup=None, base_dir=None):
     """
     marks = _assign_marks(scored, by_odds)
     odds_lookup = odds_lookup or {}
+    solo_ranks = _build_solo_ranks(scored)
 
     _mx_classify = None
     if base_dir is not None:
@@ -120,6 +148,11 @@ def _build_horses_list(scored, top1, by_odds, odds_lookup=None, base_dir=None):
             'ren_pct':  round(min(80,  pn * 2.0 * 100), 1),
             'fuku_pct': round((h.get('top3_prob') or pn) * 100, 1),
             'rl_rank':  h.get('rl_rank', 99),
+            # 市場ゼロAI順位（ability_margin降順）。表示専用の併記で、
+            # 買い目・軸・集計は従来どおり rl_rank を使う。詳細は
+            # _build_solo_ranks のdocstring（当てる力では rl_rank に劣る）。
+            # 非残差モデル時はNone → アプリ側で列ごと非表示にする。
+            'solo_rank': solo_ranks.get(h['num']),
             'cl_rank':  h.get('cl_rank', 99),
             'ev':       ev_val,
             'prob_gap': round(h.get('prob_gap', 0.0), 4),

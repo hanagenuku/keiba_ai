@@ -1477,7 +1477,13 @@ function render() {
         }
       }
       const _umRid = umarkRaceKey(race);
-      html += '<table class="htbl"><tr><th class="col-um" title="タップで ◎○▲△✕ を切り替え。端末内だけに保存されます">印</th><th style="width:20px">番</th><th class="col-name">馬名</th><th class="col-pop" style="width:22px">人</th><th class="col-odds" style="width:34px">ｵｯｽﾞ</th><th class="col-mk">特記</th><th class="col-rl" style="width:24px">RL</th><th style="width:32px">勝率</th><th style="width:32px">複勝</th><th class="col-val" style="width:32px" title="勝率×オッズの参考値。単体では買い目の根拠になりません（下のEV買い目欄を参照）">EV</th></tr>';
+      // 「AI単」＝市場（オッズ）を土台から外したAI単独の順位（solo_rank）。
+      // 残差学習モデル運用時のみ付与されるため、無いレースでは列ごと出さない。
+      const _hasSolo = (race.horses||[]).some(h => h.solo_rank != null);
+      const _soloTh = _hasSolo
+        ? '<th class="col-rl" style="width:26px" title="市場（オッズ）を土台から外した、AI単独の評価順位。RLは市場を土台にAIが補正した順位で、買い目・軸はRLを使います。AI単は参考表示です（実測では当てる力はRLに劣ります）">AI単</th>'
+        : '';
+      html += '<table class="htbl"><tr><th class="col-um" title="タップで ◎○▲△✕ を切り替え。端末内だけに保存されます">印</th><th style="width:20px">番</th><th class="col-name">馬名</th><th class="col-pop" style="width:22px">人</th><th class="col-odds" style="width:34px">ｵｯｽﾞ</th><th class="col-mk">特記</th><th class="col-rl" style="width:24px">RL</th>'+_soloTh+'<th style="width:32px">勝率</th><th style="width:32px">複勝</th><th class="col-val" style="width:32px" title="勝率×オッズの参考値。単体では買い目の根拠になりません（下のEV買い目欄を参照）">EV</th></tr>';
       for (const h of (race.horses||[])) {
         const isH = race.honmei && h.n === race.honmei.n;
         const rl = (!h.rl_rank || h.rl_rank >= 99) ? '-' : h.rl_rank;
@@ -1564,11 +1570,28 @@ function render() {
           }
         }
 
+        // AI単セル（市場を土台から外したAI単独順位）。RLと大きくズレる馬は
+        // 「市場の評価に引っ張られてRLが動いた馬」なので、差だけ小さく添える。
+        let _soloTd = '';
+        if (_hasSolo) {
+          const s = h.solo_rank;
+          let cell = '-';
+          if (s != null) {
+            cell = String(s);
+            if (rlNum != null) {
+              const d = rlNum - s;   // 正 = 市場を外すとAIはもっと高く買う
+              if (d >= 3)      cell += '<span style="color:#8e44ad;font-size:9px" title="市場を外すとAIはこの馬をさらに上位に見る">↑'+d+'</span>';
+              else if (d <= -3) cell += '<span style="color:#95a5a6;font-size:9px" title="RLの評価は市場に支えられている（AI単独ではもっと下）">↓'+Math.abs(d)+'</span>';
+            }
+          }
+          _soloTd = '<td class="col-rl" style="color:#666">'+cell+'</td>';
+        }
+
         const _um = getUserMark(_umRid, h.n);
         const _umCell = '<td class="col-um"><span class="umark'+(_um?' umark-on':'')
           + '" data-rid="'+_umRid+'" onclick="cycleUserMark(\''+_umRid+'\','+h.n+',this)">'
           + _um + '</span></td>';
-        html += '<tr'+(isH?' class="hl"':'')+'>'+_umCell+'<td>'+(isH?'◎':'')+h.n+'</td><td class="col-name">'+h.name+surgeBadge+'</td><td class="col-pop">'+pop+'</td><td class="col-odds">'+odds+'</td><td>'+mkBadge(h.mark)+'</td><td class="col-rl">'+rl+gapBadge+mxBadge+breakdownBadge+'</td><td>'+tan+'</td><td class="'+(hi?'phi':'plo')+'">'+fuku+'</td><td class="'+valClass+'">'+valCell+'</td></tr>';
+        html += '<tr'+(isH?' class="hl"':'')+'>'+_umCell+'<td>'+(isH?'◎':'')+h.n+'</td><td class="col-name">'+h.name+surgeBadge+'</td><td class="col-pop">'+pop+'</td><td class="col-odds">'+odds+'</td><td>'+mkBadge(h.mark)+'</td><td class="col-rl">'+rl+gapBadge+mxBadge+breakdownBadge+'</td>'+_soloTd+'<td>'+tan+'</td><td class="'+(hi?'phi':'plo')+'">'+fuku+'</td><td class="'+valClass+'">'+valCell+'</td></tr>';
       }
       html += '</table>';
       if (race.race_id) {
