@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-08-09 20:20",
+  "updated_at": "2026-08-09 21:16",
   "entries": [
     {
       "race_id": "20260725_04_01",
@@ -5649,6 +5649,79 @@
           "horse_num": 5,
           "new_jockey": "舟山 瑠泉",
           "prev_jockey": "鮫島 克駿"
+        }
+      }
+    },
+    {
+      "race_id": "20260809_04_03",
+      "date": "2026-08-09",
+      "venue": "新潟",
+      "surface": "ダート",
+      "distance": 1200,
+      "track_condition": "良",
+      "condition_key": "新潟_ダート_short_良",
+      "tags": [
+        "position_bias",
+        "mare_upset",
+        "jockey_switch_win",
+        "style_miss",
+        "dist_short_win"
+      ],
+      "details": {
+        "position_bias": {
+          "bias": "inner",
+          "inner_count": 2
+        },
+        "style_miss": {
+          "horse_num": 3,
+          "style": "先行",
+          "rl_rank": 7
+        },
+        "dist_short_win": {
+          "horse_num": 3,
+          "prev": 1400,
+          "current": 1200,
+          "diff": -200
+        },
+        "mare_upset": {
+          "horse_num": 3,
+          "rl_rank": 7
+        },
+        "jockey_switch_win": {
+          "horse_num": 7,
+          "new_jockey": "戸崎 圭太",
+          "prev_jockey": "斎藤 新"
+        }
+      }
+    },
+    {
+      "race_id": "20260809_01_11",
+      "date": "2026-08-09",
+      "venue": "札幌",
+      "surface": "芝",
+      "distance": 1200,
+      "track_condition": "良",
+      "condition_key": "札幌_芝_short_良",
+      "tags": [
+        "mare_upset",
+        "style_miss",
+        "class_miss"
+      ],
+      "details": {
+        "style_miss": {
+          "horse_num": 2,
+          "style": "先行",
+          "rl_rank": 10
+        },
+        "mare_upset": {
+          "horse_num": 2,
+          "rl_rank": 10
+        },
+        "class_miss": {
+          "horse_num": 2,
+          "prev_class": "3勝",
+          "current_class": "OP",
+          "type": "promotion"
         }
       }
     }
