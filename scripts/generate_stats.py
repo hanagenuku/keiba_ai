@@ -839,6 +839,13 @@ def generate_stats(base_dir=None):
         except Exception:
             pass
 
+    # ⚠ ここで読む workflow_status.json は **1回前の実行結果**である。
+    # ワークフローの「Write status」ステップは generate_stats より後に走るため、
+    # 今まさに実行中の回のステータスはまだ書かれていない。
+    # 2026-08-09に「20:10に結果取得したのに成績ページの最終実行が09:49のまま」
+    # という混乱を招いた。アプリ側(index.html)は workflow_status.json を
+    # その場で取り直して表示するので、以下はその取得に失敗した時の
+    # フォールバック用に残しているだけ。**この値を根拠に判断しないこと。**
     wf_path = os.path.join(base_dir, 'data', 'workflow_status.json')
     if os.path.exists(wf_path):
         try:
