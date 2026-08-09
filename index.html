@@ -1701,6 +1701,24 @@ async function _fetchStats() {
   return _statsCache;
 }
 
+// ⚠ stats.json の results_status.workflow_run_at は **必ず1回前の実行時刻**になる。
+// generate_stats.py が workflow_status.json を読む時点では、その回の
+// 「Write status」ステップがまだ走っていないため。
+// 2026-08-09に「20:10に結果取得したのに成績ページの最終実行が09:49（今朝の
+// refresh）のまま」となり、実行されていないように見えた。
+// そこで最終実行の表示だけは workflow_status.json を**その場で取り直す**。
+let _wfStatusCache = null;
+async function _fetchLiveWorkflowStatus() {
+  if (_wfStatusCache) return _wfStatusCache;
+  try {
+    let res = await fetch(STATUS_URL_FALLBACK + '?t=' + Date.now(), {cache:'no-store'});
+    if (!res.ok) res = await fetch(STATUS_URL + '?t=' + Date.now(), {cache:'no-store'});
+    if (!res.ok) return null;
+    _wfStatusCache = await res.json();
+    return _wfStatusCache;
+  } catch (_) { return null; }
+}
+
 // 下部バーに「実績ROI」を入れる。
 // 決済済みの実ベットを通算した確定値で、予測ではない。
 // 月単位だと直近月がN=7点などになりブレるため通算を出す。
@@ -1732,7 +1750,9 @@ async function loadStats() {
   if (_statsCache) { renderStats(_statsCache); return; }
   el.innerHTML = '<div class="loading"><div class="loading-spin">📊</div><div>成績データ読み込み中...</div></div>';
   try {
-    renderStats(await _fetchStats());
+    const S = await _fetchStats();
+    S._live_status = await _fetchLiveWorkflowStatus();
+    renderStats(S);
   } catch(e) {
     el.innerHTML = '<div class="error-box">⚠️ ' + e.message + '<br><br>土曜/日曜結果を取得すると自動生成されます。</div>';
   }
@@ -1747,8 +1767,11 @@ function renderStats(S) {
   const rsDate  = rs.last_date || null;
   const rsRaces = rs.races || 0;
   const rsVenues = rs.venues || [];
-  const rsRunAt  = rs.workflow_run_at || null;
-  const rsResult = rs.workflow_result || null;
+  // 最終実行はライブの workflow_status.json を優先する。
+  // stats.json 側の値は1回前のものなので、取得に失敗した時のフォールバック止まり。
+  const live = S._live_status || {};
+  const rsRunAt  = live.updated_at || rs.workflow_run_at || null;
+  const rsResult = live.status     || rs.workflow_result || null;
 
   h += '<div class="stat-card"><div class="stat-title">📡 最終結果取得状況</div>';
   if (rsDate) {
