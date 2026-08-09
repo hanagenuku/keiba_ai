@@ -117,6 +117,47 @@ def test_find_r01_shutuba_returns_none_when_absent(monkeypatch):
     assert find_r01_shutuba('pw01dde010320260201', '20260627', sess) is None
 
 
+class _FlakyFirstPassSession(_FakeSession):
+    """1周目だけ通信例外を出し、2周目からは正常に応答する擬似JRADB。
+
+    2026-08-09の日曜朝refreshで実際に起きた形（前夜は同じ会場が取れていたのに、
+    その回のスキャンだけ全滅して会場ごと予想が消えた）を再現する。
+    """
+    def __init__(self, target_suffix):
+        super().__init__(target_suffix)
+        self.pass_no = 0
+        self.seen = 0
+
+    def post(self, url, data=None, headers=None, timeout=None):
+        self.seen += 1
+        if self.seen % 256 == 1:
+            self.pass_no += 1
+        if self.pass_no == 1:
+            raise ConnectionError('一過性の通信断')
+        return super().post(url, data=data, headers=headers, timeout=timeout)
+
+
+def test_find_r01_shutuba_retries_after_transient_failure(monkeypatch):
+    # 回帰防止: 1周失敗しただけで諦めると、その会場の予想が丸ごと消える
+    # （2026-08-09に新潟11レースが消滅した事故）。
+    monkeypatch.setattr(jra_scraper.time, 'sleep', lambda *_: None)
+    sess = _FlakyFirstPassSession(target_suffix=0x04)
+    assert find_r01_shutuba('pw01dde010320260201', '20260627', sess) == 0x04
+    assert sess.pass_no >= 2, '1周目の失敗後に再試行していない'
+
+
+def test_find_r01_shutuba_does_not_retry_when_page_truly_absent(monkeypatch):
+    # 256件すべて綺麗なパラメータエラー＝そのページは本当に存在しない。
+    # 開催のない会場で再試行を繰り返して時間を溶かさないこと。
+    monkeypatch.setattr(jra_scraper.time, 'sleep', lambda *_: None)
+    sess = _FakeSession(target_suffix=999)
+    calls = []
+    orig = sess.post
+    sess.post = lambda *a, **k: (calls.append(1), orig(*a, **k))[1]
+    assert find_r01_shutuba('pw01dde010320260201', '20260627', sess) is None
+    assert len(calls) == 256, f'1周だけで諦めるべき（実際 {len(calls)} 件）'
+
+
 # ── _jradb_post 共通ラッパー（2026-07-20〜、重複コード削減のためのリファクタ） ──
 
 def test_jradb_post_returns_response_on_success():
