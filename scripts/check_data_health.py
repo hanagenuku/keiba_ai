@@ -51,6 +51,21 @@ COLUMN_CHECKS = [
      'f_weight_trend_avg の入力（2025-01〜2026-02は元々0%・復旧不可）'),
     ('sex',         "sex IS NULL OR sex = ''", 'f_sex'),
     ('age',         "age IS NULL OR age <= 0", 'f_age'),
+    # ⚠ 配当2列は回収率（このプロジェクトの唯一のKPI）の**分子そのもの**なのに、
+    #   2026-08-09の監査まで一度も点検対象に入っていなかった。壊れても
+    #   「回収率が下がった」としか見えず、データ破損だと気づけない。
+    #
+    #   4要素目で分母を絞るのが必須。1着馬しか単勝配当を持たず、3着内馬しか
+    #   複勝配当を持たないため、全行を分母にすると**健全なDBでも
+    #   単勝90%・複勝70%が「欠損」**と出て毎回「⚠ 半分以上が欠損」が鳴る
+    #   （実測値。この検知器は普段黙っていることに価値があるので、
+    #   常時誤報すると本物の異常が埋もれる）。
+    ('tansho_payout',
+     "tansho_payout IS NULL OR tansho_payout <= 0",
+     '単勝回収率の分子', 'place = 1'),
+    ('fukusho_payout',
+     "fukusho_payout IS NULL OR fukusho_payout <= 0",
+     '複勝回収率の分子', 'place BETWEEN 1 AND 3'),
 ]
 
 # 元々ほぼ入っていないと分かっている列（警告しても意味がないので除外）
@@ -82,14 +97,20 @@ def check(db_path, months=3, strict=False):
     problems = []
     print(f'{"列":<14}{"直近欠損率":>10}{"過去中央値":>11}   判定')
     print('-' * 62)
-    for col, cond, desc in COLUMN_CHECKS:
+    for entry in COLUMN_CHECKS:
+        # 4要素目は「その列が入っているべき行」の絞り込み（省略時は全行）。
+        # ⚠ 配当のように一部の着順にしか入らない列は、分母を全行にすると
+        #   健全な状態でも大半が「欠損」と数えられ、毎回誤報になる。
+        col, cond, desc = entry[0], entry[1], entry[2]
+        scope = entry[3] if len(entry) > 3 else '1=1'
         if col in KNOWN_EMPTY:
             continue
         rates = {}
         for ym in all_months:
             cur.execute(
                 f"SELECT COUNT(*), SUM(CASE WHEN {cond} THEN 1 ELSE 0 END) "
-                f"FROM horse_history WHERE SUBSTR(date,1,7) = ?", (ym,))
+                f"FROM horse_history WHERE SUBSTR(date,1,7) = ? AND ({scope})",
+                (ym,))
             n, bad = cur.fetchone()
             if n:
                 rates[ym] = (bad or 0) / n

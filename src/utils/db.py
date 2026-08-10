@@ -544,6 +544,10 @@ def save_history_db(all_results, base_dir=None, db_path=None):
             # そのため「新しい値が正当な人気(1〜98)の時だけ上書きする」形にし、
             # 取得失敗(99)で既存の正しい値を壊さないようにする。
             _pop_new = h.get('popularity')
+            _place_new = h.get('place')
+            _a3f = h.get('agari3f') or 0.0
+            _tan = h.get('tansho_payout') or 0
+            _fuku = h.get('fukusho_payout') or 0
             conn.execute(
                 "UPDATE horse_history SET "
                 "  finish_time      = COALESCE(?, finish_time), "
@@ -565,6 +569,21 @@ def save_history_db(all_results, base_dir=None, db_path=None):
                 "  dam_sire         = COALESCE(NULLIF(?, ''), dam_sire), "
                 "  trainer_affiliation = COALESCE(?, trainer_affiliation), "
                 "  trainer          = COALESCE(NULLIF(?, ''), trainer), "
+                # ⚠ 以下は2026-08-09の「対になっている処理」監査で追加した列。
+                #   trainer は 2026-08-06 の popularity 事故のときに追加されたが、
+                #   結果ページの**同じ行から取る** jockey は追従していなかった。
+                #   payout 2列は回収率の分子そのもので、壊れても直す手段が
+                #   無い状態だった。place / agari3f / running_style も同様に
+                #   「再スクレイプしても既存行は直らない」列だった。
+                "  jockey           = COALESCE(NULLIF(?, ''), jockey), "
+                "  running_style    = COALESCE(NULLIF(?, ''), running_style), "
+                "  agari3f          = CASE WHEN ? > 0 THEN ? ELSE agari3f END, "
+                "  tansho_payout    = CASE WHEN ? > 0 THEN ? ELSE tansho_payout END, "
+                "  fukusho_payout   = CASE WHEN ? > 0 THEN ? ELSE fukusho_payout END, "
+                # place は取得失敗時に 99 で INSERT されるセンチネル列。
+                # popularity と同じ理由で COALESCE では直せない。
+                "  place            = CASE WHEN ? BETWEEN 1 AND 98 "
+                "                          THEN ? ELSE place END, "
                 "  popularity       = CASE WHEN ? BETWEEN 1 AND 98 "
                 "                          THEN ? ELSE popularity END "
                 "WHERE race_id = ? AND horse_num = ?",
@@ -579,6 +598,12 @@ def save_history_db(all_results, base_dir=None, db_path=None):
                  h.get('sire', ''), h.get('dam_sire', ''),
                  h.get('trainer_affiliation'),
                  h.get('trainer', ''),
+                 h.get('jockey', ''),
+                 h.get('running_style', ''),
+                 _a3f, _a3f,
+                 _tan, _tan,
+                 _fuku, _fuku,
+                 _place_new, _place_new,
                  _pop_new, _pop_new,
                  race_id, h.get('num', 0)),
             )

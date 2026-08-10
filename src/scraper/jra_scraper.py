@@ -196,9 +196,18 @@ def find_r01_result(base, date, sess, attempts=3):
 
 
 def _try_fetch_shutuba(sess, base, r, date_str, sx):
-    """指定suffixで出走表ページを取得。(resp, soup) を返す。パラメータエラーの場合はNone, None。"""
+    """指定suffixで出走表ページを取得。(resp, soup) を返す。パラメータエラーの場合はNone, None。
+
+    ⚠ 対になる `_try_fetch_result` は通信例外を握って None を返すのに、
+    こちらは素通ししていた（2026-08-09の監査で発覚）。近傍±60スキャンで
+    1回でも通信が切れると、そのvenueの残りレースが丸ごと失われる。
+    結果側と同じく「取れなければ None」に揃える。
+    """
     cn = f'{base}{r:02d}{date_str}/{sx}'
-    resp = _jradb_post(sess, 'accessD.html', cn, timeout=15)
+    try:
+        resp = _jradb_post(sess, 'accessD.html', cn, timeout=15)
+    except Exception:
+        return None, None
     if resp is None:
         return None, None
     soup = BeautifulSoup(resp.text, 'lxml')
@@ -1464,10 +1473,27 @@ def fetch_results(sess, target_date, calendar=None, hist_db_path=None):
                 if found_delta is not None:
                     print(f'  R{r:02d}: 結果suffix補正 {found_delta:+d} → {sx}')
 
+            # ⚠ 出走表側(fetch_races_on_date)は同じ分岐で必ず理由をログに出すが、
+            #   結果側はここが無言の continue だった。2026-08-09の日曜結果で
+            #   札幌R10(富良野特別)・R11(UHB賞)が**何のログも残さず消えた**
+            #   （再実行したら取れたので一過性の失敗）。片側だけ対策されていた
+            #   典型例なので、結果側にも同じ粒度のログを入れる。
             if soup is None:
+                print(f'  R{r:02d}: suffix={sx} → パラメータエラー/ページなし')
                 continue
             result = parse_result_soup(soup, rc, r, target_date, pc)
             if not result:
+                # 障害レースは parse_result_soup が意図的に None を返す（正常）。
+                # それ以外は取りこぼしなので区別できるようにする。
+                try:
+                    tbls = soup.find_all('table')
+                    head = tbls[0].get_text(' ', strip=True) if tbls else ''
+                    if '障害' in head:
+                        print(f'  R{r:02d}: 障害レース → スキップ')
+                    else:
+                        print(f'  R{r:02d}: 結果parse失敗 (着順なし or 例外) suffix={sx}')
+                except Exception:
+                    print(f'  R{r:02d}: 結果parse失敗（ログ取得中に例外） suffix={sx}')
                 continue
             if hist_db_path:
                 _fill_pedigree(sess, result['finishers'], hist_db_path, budget=pedigree_budget)
