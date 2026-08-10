@@ -33,7 +33,11 @@ def calc_ev_all_tickets(probabilities, odds_map):
     dict: 券種 → [{key, prob, odds, ev}] (EV降順)
     """
     ev_results = {}
-    bet_types = ['win', 'place', 'quinella', 'exacta', 'trio', 'trifecta']
+    # ⚠ race_simulator / payout_estimator が返す券種と**同じ集合**にすること。
+    #   2026-08-08にワイドを両方へ追加したとき、ここだけ追従し忘れていた
+    #   （確率も推定配当も出ているのにEVだけ計算されない状態が残った）。
+    #   tests/test_bet_type_coverage.py で3者の一致を固定している。
+    bet_types = ['win', 'place', 'wide', 'quinella', 'exacta', 'trio', 'trifecta']
 
     for bet_type in bet_types:
         probs = probabilities.get(bet_type, {})
