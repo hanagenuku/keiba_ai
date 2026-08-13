@@ -23,10 +23,26 @@
    - 出典表記（「競馬ブック提供」等）
 4. 過去の開催分に遡れるか（学習データが作れるかの分かれ目）
 
+2026-08-13の1回目で確定したこと
+--------------------------------
+- robots.txt は `User-agent: * / Disallow:`（空）。禁止パスは1つも無い
+- `thisweek/.../training.html` は**動画ページ**。table 0個・タイム文字列0件で
+  調教タイムのテキストは存在しない → この経路は死んだ
+
+2回目で調べること
+-----------------
+A. JRA公式内に調教タイムのテキストが本当に無いか、機械的に棚卸しする
+   - sitemap.xml の有無
+   - 実際の出馬表ページから全 access*.html エンドポイントを抽出
+     （血統ページ accessU.html はまさにこの方法で見つかった）
+   - サイト内リンクに「調教」を含むものがあるか
+B. netkeiba の robots.txt と利用規約（**読むだけ**。取得はしない）
+   スクレイピング禁止なら、そこで検討終了になる
+
 使い方
 ------
-    python scripts/probe_training_data.py                # 今週分を調べる
-    python scripts/probe_training_data.py 2025/1228_1    # 特定ページを直接
+    python scripts/probe_training_data.py                # 全部
+    python scripts/probe_training_data.py 2025/1228_1    # training.htmlを直接
 """
 import re
 import sys
@@ -42,6 +58,7 @@ BASE = 'https://www.jra.go.jp'
 HEADERS = {'User-Agent': 'Mozilla/5.0'}
 SLEEP = 1.0          # JRA側に負荷をかけない
 MAX_PAGES = 8        # ⚠ North Star #4: 新規リクエスト元には必ず上限を設ける
+PROBE_DATE = '20260815'   # 出馬表を1レースだけ見るための開催日（次の土曜）
 
 
 def _get(sess, url):
@@ -148,6 +165,131 @@ def probe_training_page(sess, path):
     print(f'\n  本文の先頭400字:\n  {text[:400]}')
 
 
+def probe_jra_endpoints(sess, date_str):
+    """実際の出馬表ページから、リンクされている全エンドポイントを棚卸しする。
+
+    血統ページ(accessU.html)は「馬名リンクのhrefにCNAMEが埋まっていた」ことで
+    見つかった（2026-07-17②）。同じやり方で調教ページが在るかを確かめる。
+    """
+    print()
+    print('=' * 70)
+    print(f'④ 実際の出馬表ページのリンク棚卸し（{date_str}）')
+    print('=' * 70)
+    from src.scraper.calendar import get_kaisai_on_date
+    from src.scraper.jra_scraper import _try_fetch_shutuba, find_r01_shutuba
+
+    links = get_kaisai_on_date(date_str, sess)
+    if not links:
+        print('  ❌ 開催情報が取れなかった（開催日を変えて再実行）')
+        return
+    base = list(links.values())[0] if isinstance(links, dict) else links[0]
+    print(f'  base = {base}')
+    r01 = find_r01_shutuba(base, date_str, sess)
+    if r01 is None:
+        print('  ❌ R01のsuffixが見つからない')
+        return
+    _, soup = _try_fetch_shutuba(sess, base, 1, date_str, f'{r01:02X}')
+    if soup is None:
+        print('  ❌ 出馬表ページが取れない')
+        return
+
+    hrefs = [a.get('href', '') for a in soup.find_all('a', href=True)]
+    eps = sorted({m for h in hrefs for m in re.findall(r'(access[A-Z]+\.html)', h)})
+    print(f'  リンク総数: {len(hrefs)}')
+    print(f'  access*.html エンドポイント: {eps}')
+
+    forms = [f.get('action', '') for f in soup.find_all('form')]
+    fe = sorted({m for f in forms for m in re.findall(r'(access[A-Z]+\.html)', f)})
+    print(f'  <form action> のエンドポイント: {fe or "(なし)"}')
+
+    known = {'accessD.html', 'accessS.html', 'accessO.html', 'accessU.html'}
+    unknown = [e for e in set(eps) | set(fe) if e not in known]
+    print(f'  🔎 未知のエンドポイント: {unknown or "(なし＝新しい入口は無い)"}')
+
+    text = soup.get_text(' ', strip=True)
+    print(f'  ページ本文の「調教」出現: {text.count("調教")}回 '
+          f'（調教師名で出るので、これだけでは判断できない）')
+    chokyo_links = [(a.get_text(strip=True)[:20], a["href"])
+                    for a in soup.find_all('a', href=True)
+                    if '調教' in a.get_text() and '調教師' not in a.get_text()]
+    print(f'  「調教」を含むリンク（調教師を除く）: {chokyo_links or "(なし)"}')
+
+
+def probe_jra_sitemap(sess):
+    print()
+    print('=' * 70)
+    print('⑤ sitemap.xml と サイト内の調教ページ')
+    print('=' * 70)
+    for path in ['/sitemap.xml', '/keiba/']:
+        body = _get(sess, f'{BASE}{path}')
+        if body is None:
+            print(f'  {path}: 取得できず')
+            continue
+        if path.endswith('.xml'):
+            urls = re.findall(r'<loc>([^<]+)</loc>', body)
+            print(f'  {path}: URL {len(urls)}件')
+            hit = [u for u in urls if 'chokyo' in u or 'training' in u or '調教' in u]
+            print(f'    調教らしきURL: {hit[:10] or "(なし)"}')
+        else:
+            soup = BeautifulSoup(body, 'lxml')
+            hit = [(a.get_text(strip=True)[:24], a['href'])
+                   for a in soup.find_all('a', href=True)
+                   if ('調教' in a.get_text() and '調教師' not in a.get_text())
+                   or 'training' in a['href'] or 'chokyo' in a['href']]
+            print(f'  {path}: 調教らしきリンク {len(hit)}件')
+            for t, h in hit[:12]:
+                print(f'    {t:<26} {h}')
+
+
+def probe_netkeiba_terms(sess):
+    """netkeiba の robots.txt と利用規約を**読むだけ**。データ取得はしない。
+
+    ⚠ 規約でスクレイピングが禁じられていれば、そこで検討終了。
+    先に規約を読むのが順序（North Star: 決め打ちで実装しない）。
+    """
+    print()
+    print('=' * 70)
+    print('⑥ netkeiba の robots.txt と利用規約（読むだけ・データは取らない）')
+    print('=' * 70)
+    import requests
+    ua = {'User-Agent': 'Mozilla/5.0'}
+
+    try:
+        r = requests.get('https://www.netkeiba.com/robots.txt', headers=ua, timeout=20)
+        r.encoding = r.apparent_encoding
+        print('  --- robots.txt 全文 ---')
+        for line in r.text.splitlines()[:60]:
+            print(f'  | {line}')
+        print('  --- ここまで ---')
+    except Exception as e:
+        print(f'  ❌ robots.txt 取得失敗: {type(e).__name__}: {e}')
+    time.sleep(SLEEP)
+
+    for url in ['https://regist.netkeiba.com/account/?pid=agreement',
+                'https://www.netkeiba.com/?pid=agreement']:
+        try:
+            r = requests.get(url, headers=ua, timeout=20)
+            r.encoding = r.apparent_encoding
+            if r.status_code != 200:
+                print(f'  ❌ HTTP {r.status_code} {url}')
+                continue
+            txt = BeautifulSoup(r.text, 'lxml').get_text(' ', strip=True)
+            print(f'\n  --- {url} 本文長 {len(txt)}字 ---')
+            for kw in ['スクレイピング', 'クローラ', 'ロボット', '自動', '収集',
+                       '複製', '転載', '二次利用', '禁止', 'プログラム']:
+                n = txt.count(kw)
+                print(f'    「{kw}」: {n}回')
+            # 該当条項の前後を抜き出す
+            for kw in ['スクレイピング', 'クローラ', '自動', '収集', '複製', '転載']:
+                for m in re.finditer(kw, txt):
+                    s0, e0 = max(0, m.start() - 90), min(len(txt), m.end() + 90)
+                    print(f'    [{kw}] …{txt[s0:e0]}…')
+                    break
+        except Exception as e:
+            print(f'  ❌ {url} 取得失敗: {type(e).__name__}: {e}')
+        time.sleep(SLEEP)
+
+
 def main():
     sess = create_session()
     probe_robots(sess)
@@ -172,6 +314,10 @@ def main():
     print('  ・「重賞の一部の馬だけ」ならカバレッジが薄すぎて学習に使えない')
     print('  ・タイムが画像なら自動取得は不可能')
     print('  ・出典が外部（競馬ブック等）なら二次利用の可否を要確認')
+
+    probe_jra_sitemap(sess)
+    probe_jra_endpoints(sess, PROBE_DATE)
+    probe_netkeiba_terms(sess)
 
 
 if __name__ == '__main__':
