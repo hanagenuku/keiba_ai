@@ -182,7 +182,10 @@ def probe_jra_endpoints(sess, date_str):
     if not links:
         print('  ❌ 開催情報が取れなかった（開催日を変えて再実行）')
         return
-    base = list(links.values())[0] if isinstance(links, dict) else links[0]
+    # ⚠ get_kaisai_on_date は {base: 日付} を返す。**キーがbase**。
+    #   2026-08-13の1回目は values() を取って base='20260815' になり、
+    #   スキャンが空振りして「入口が無い」と誤読しかけた。
+    base = list(links.keys())[0]
     print(f'  base = {base}')
     r01 = find_r01_shutuba(base, date_str, sess)
     if r01 is None:
@@ -275,6 +278,9 @@ def probe_netkeiba_terms(sess):
                 continue
             txt = BeautifulSoup(r.text, 'lxml').get_text(' ', strip=True)
             print(f'\n  --- {url} 本文長 {len(txt)}字 ---')
+            # ⚠ 短い本文はエラーページやJS描画の可能性。中身を必ず目視する。
+            #   キーワード0回を「禁止条項が無い」と読むのは誤り。
+            print(f'    本文の先頭600字: {txt[:600]!r}')
             for kw in ['スクレイピング', 'クローラ', 'ロボット', '自動', '収集',
                        '複製', '転載', '二次利用', '禁止', 'プログラム']:
                 n = txt.count(kw)
@@ -288,6 +294,46 @@ def probe_netkeiba_terms(sess):
         except Exception as e:
             print(f'  ❌ {url} 取得失敗: {type(e).__name__}: {e}')
         time.sleep(SLEEP)
+
+    # 規約ページの正しいURLを、トップページのリンクから探す
+    try:
+        r = requests.get('https://www.netkeiba.com/', headers=ua, timeout=20)
+        r.encoding = r.apparent_encoding
+        soup = BeautifulSoup(r.text, 'lxml')
+        cand = [(a.get_text(strip=True)[:20], a['href'])
+                for a in soup.find_all('a', href=True)
+                if any(k in a.get_text() for k in ['規約', '約款', '免責', 'ご利用'])
+                or any(k in a['href'] for k in ['agreement', 'terms', 'kiyaku', 'rule'])]
+        print(f'\n  トップページの規約らしきリンク {len(cand)}件:')
+        for t, h in cand[:15]:
+            print(f'    {t:<22} {h}')
+    except Exception as e:
+        print(f'  ❌ トップページ取得失敗: {type(e).__name__}: {e}')
+
+
+def probe_koukai_chokyo(sess):
+    """/keiba/ にあった唯一の「調教」リンク /event/index5.html の正体を確認する。
+
+    名前から「公開調教（見学イベント）の告知」と推測できるが、推測で切り捨てない。
+    """
+    print()
+    print('=' * 70)
+    print('⑦ /keiba/ にあった「公開調教」リンクの正体')
+    print('=' * 70)
+    body = _get(sess, f'{BASE}/event/index5.html')
+    if body is None:
+        print('  取得できず')
+        return
+    soup = BeautifulSoup(body, 'lxml')
+    t = soup.find('title')
+    txt = soup.get_text(' ', strip=True)
+    print(f'  <title>: {t.get_text(strip=True) if t else "(なし)"}')
+    print(f'  <table>: {len(soup.find_all("table"))}個')
+    times = re.findall(r'\d{1,2}[-\.]\d{1,2}(?:[-\.]\d{1,2})+', txt)
+    print(f'  タイムらしき文字列: {len(times)}件')
+    for kw in ['坂路', 'ウッド', '併走', '一杯', '馬なり', '見学', 'イベント', '入場']:
+        print(f'    「{kw}」: {txt.count(kw)}回')
+    print(f'  本文の先頭300字: {txt[:300]}')
 
 
 def main():
@@ -316,6 +362,7 @@ def main():
     print('  ・出典が外部（競馬ブック等）なら二次利用の可否を要確認')
 
     probe_jra_sitemap(sess)
+    probe_koukai_chokyo(sess)
     probe_jra_endpoints(sess, PROBE_DATE)
     probe_netkeiba_terms(sess)
 
