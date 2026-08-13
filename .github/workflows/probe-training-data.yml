@@ -1,0 +1,42 @@
+name: Probe Training Data (調査)
+
+# 調教（追い切り）データが JRA公式から無料で自動取得できるかを実データで確認する。
+# この環境（Claude Code）からは www.jra.go.jp へ到達できない（プロキシが403）ため、
+# ネットワークが通る GitHub Actions 側で実HTMLを見て、その構造をログに残す。
+# 2026-08-03③で結果ページの列崩れを実データで確定させたのと同じやり方。
+#
+# ⚠ 完全な読み取り専用。DB・モデル・latest.json には一切書き込まない。
+#    合わせて robots.txt も出力する（長く「要ユーザー確認」だった宿題）。
+
+on:
+  workflow_dispatch:
+    inputs:
+      page:
+        description: '直接見たいページ（例: 2025/1228_1）。空なら今週分を自動で辿る'
+        required: false
+        type: string
+
+# 読み取り専用であることを権限でも担保する（誤って push できないように）
+permissions:
+  contents: read
+
+concurrency:
+  group: keiba-weekly
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Probe
+        run: python scripts/probe_training_data.py ${{ inputs.page }}
