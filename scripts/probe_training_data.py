@@ -58,7 +58,10 @@ BASE = 'https://www.jra.go.jp'
 HEADERS = {'User-Agent': 'Mozilla/5.0'}
 SLEEP = 1.0          # JRA側に負荷をかけない
 MAX_PAGES = 8        # ⚠ North Star #4: 新規リクエスト元には必ず上限を設ける
-PROBE_DATE = '20260815'   # 出馬表を1レースだけ見るための開催日（次の土曜）
+# ⚠ 出馬表ページは開催が終わると消える。日付をハードコードすると
+#   「開催情報が見つかりません」で空振りする（2026-08-15を固定していて実際に空振りした）。
+#   当日から数日ぶん試して、実在する開催日を自動で拾う。
+PROBE_DAYS_BACK = 9      # 当日→過去9日ぶん試す（土日開催を必ず1つは踏む）
 
 
 def _get(sess, url):
@@ -165,7 +168,21 @@ def probe_training_page(sess, path):
     print(f'\n  本文の先頭400字:\n  {text[:400]}')
 
 
-def probe_jra_endpoints(sess, date_str):
+def _find_live_kaisai(sess):
+    """実在する開催日と base を自動で探す。当日から遡って最初に見つかったもの。"""
+    from datetime import datetime, timedelta, timezone
+    from src.scraper.calendar import get_kaisai_on_date
+    jst = timezone(timedelta(hours=9))
+    today = datetime.now(jst)
+    for d in range(PROBE_DAYS_BACK):
+        ds = (today - timedelta(days=d)).strftime('%Y%m%d')
+        links = get_kaisai_on_date(ds, sess)
+        if links:
+            return ds, list(links.keys())[0]
+    return None, None
+
+
+def probe_jra_endpoints(sess, date_str=None):
     """実際の出馬表ページから、リンクされている全エンドポイントを棚卸しする。
 
     血統ページ(accessU.html)は「馬名リンクのhrefにCNAMEが埋まっていた」ことで
@@ -173,19 +190,19 @@ def probe_jra_endpoints(sess, date_str):
     """
     print()
     print('=' * 70)
-    print(f'④ 実際の出馬表ページのリンク棚卸し（{date_str}）')
+    print('④ 実際の出馬表ページのリンク棚卸し')
     print('=' * 70)
     from src.scraper.calendar import get_kaisai_on_date
     from src.scraper.jra_scraper import _try_fetch_shutuba, find_r01_shutuba
 
-    links = get_kaisai_on_date(date_str, sess)
-    if not links:
-        print('  ❌ 開催情報が取れなかった（開催日を変えて再実行）')
-        return
     # ⚠ get_kaisai_on_date は {base: 日付} を返す。**キーがbase**。
     #   2026-08-13の1回目は values() を取って base='20260815' になり、
     #   スキャンが空振りして「入口が無い」と誤読しかけた。
-    base = list(links.keys())[0]
+    date_str, base = _find_live_kaisai(sess)
+    if base is None:
+        print(f'  ❌ 直近{PROBE_DAYS_BACK}日で実在する開催日が見つからない')
+        return
+    print(f'  開催日 = {date_str}')
     print(f'  base = {base}')
     r01 = find_r01_shutuba(base, date_str, sess)
     if r01 is None:
@@ -268,8 +285,10 @@ def probe_netkeiba_terms(sess):
         print(f'  ❌ robots.txt 取得失敗: {type(e).__name__}: {e}')
     time.sleep(SLEEP)
 
-    for url in ['https://regist.netkeiba.com/account/?pid=agreement',
-                'https://www.netkeiba.com/?pid=agreement']:
+    # ⚠ ?pid=agreement は404ページだった（本文に「ページが見つかりません」）。
+    #   トップのフッターから正しい規約URLが判明したので、それを最優先で読む。
+    for url in ['https://www.netkeiba.com/info/kiyaku.html',
+                'https://regist.netkeiba.com/account/?pid=agreement']:
         try:
             r = requests.get(url, headers=ua, timeout=20)
             r.encoding = r.apparent_encoding
@@ -363,7 +382,7 @@ def main():
 
     probe_jra_sitemap(sess)
     probe_koukai_chokyo(sess)
-    probe_jra_endpoints(sess, PROBE_DATE)
+    probe_jra_endpoints(sess)
     probe_netkeiba_terms(sess)
 
 
