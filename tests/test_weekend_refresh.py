@@ -21,9 +21,12 @@ import scripts.weekend as weekend
 JST = timezone(timedelta(hours=9))
 
 
-def _race(rid='r1'):
+def _race(rid='r1', start_time='10:10'):
+    # start_time は parse_header が実際に返すキー（2026-08-16 追加）。
+    # 本番の出馬表には必ず発走時刻が載るので、フィクスチャにも持たせる。
     return {'id': rid, 'racecourse': '東京', 'race_num': 1, 'race_name': 'テストR',
             'distance': 1600, 'surface': '芝', 'num_horses': 2,
+            'start_time': start_time,
             'date': '2026-07-26', 'horses': [{'num': 1, 'name': 'テストウマ'}]}
 
 
