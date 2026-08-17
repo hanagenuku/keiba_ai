@@ -97,6 +97,14 @@ def parse_header(text):
             info['surface'] = '不明'
             info['direction'] = ''
             print(f'  ⚠ surface判定失敗: {text[:80]}')
+    # 発走時刻（例: 「発走時刻： 18時00分」）。当日refreshで
+    # 「もう始まったレース」を触らないための唯一の判断材料になる。
+    # 取れなければ None（呼び出し側は安全側＝更新しない、に倒すこと）。
+    tm = re.search(r'発走時刻[：:\s]*(\d{1,2})\s*時\s*(\d{1,2})\s*分', text)
+    if tm:
+        hh, mm = int(tm.group(1)), int(tm.group(2))
+        if 0 <= hh <= 23 and 0 <= mm <= 59:
+            info['start_time'] = f'{hh:02d}:{mm:02d}'
     for kw, cls in [
         ('G1', 'G1'), ('G2', 'G2'), ('G3', 'G3'),
         ('3勝クラス', '3勝クラス'), ('2勝クラス', '2勝クラス'),

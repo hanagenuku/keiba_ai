@@ -253,14 +253,35 @@ def refresh_today(sess, hist_path, avg_bias, jst_now):
     n_odds = apply_odds_to_races(races, market_odds_map)
     print(f'   オッズ反映: {n_odds}頭 / {len(races)}R')
 
-    print('💾 全レース予測を race_predictions に更新保存中...')
+    # 🔴 発走済みのレースには絶対に触らない。
+    # 発走後のオッズページは「確定オッズ」を返すため、そのまま保存すると
+    # race_predictions に結果確定後の市場情報が混入する（＝リーク）。
+    # 2026-07-06 の shadow_bets と同じ事故を繰り返さないためのガード。
+    # 発走時刻が読めなかったレースは安全側に倒して更新しない。
+    upcoming, started, unknown = [], [], []
     for race in races:
+        st = race.get('start_time')
+        if not st:
+            unknown.append(race)
+        elif st > jst_now.strftime('%H:%M'):
+            upcoming.append(race)
+        else:
+            started.append(race)
+    if started or unknown:
+        print(f'⏭ 発走済み {len(started)}R / 発走時刻不明 {len(unknown)}R は'
+              f'予想を更新しません（確定オッズの混入を防ぐため）')
+
+    print('💾 発走前レースの予測を race_predictions に更新保存中...')
+    # snapshot: 08時台の従来runは 'refresh'（既存の比較コードとの互換）。
+    # それ以降の追加runは 'refresh_HH' で別枠に残し、どの時点が一番当たるかを
+    # 後から compare_prediction_snapshots で測れるようにする。
+    hour = jst_now.hour
+    snap = 'refresh' if hour < 10 else f'refresh_{hour:02d}'
+    for race in upcoming:
         scored_all = calc_all(race, avg_bias)
         if scored_all:
-            # snapshot='refresh': 前夜の予想(initial)を prediction_snapshots 側で
-            # 消さずに併存させる。race_predictions 側は従来通り最新で上書き
-            save_race_predictions(race, scored_all, ROOT, snapshot='refresh')
-    print(f'   {len(races)}レース完了')
+            save_race_predictions(race, scored_all, ROOT, snapshot=snap)
+    print(f'   {len(upcoming)}レース完了（snapshot={snap}）')
 
     selected = select_quality_races(races, avg_bias)
     print(f'⭐ 厳選: {len(selected)}レース'
@@ -275,10 +296,46 @@ def refresh_today(sess, hist_path, avg_bias, jst_now):
                            day_type=day_type, market_odds_map=market_odds_map,
                            odds_updated_count=n_odds, parse_failures=parse_failures,
                            same_day=True)
+
+    # 発走済みレースは「その時に何を推奨したか」の記録なので、当日の後続runで
+    # 書き換えない（latest.json のgit履歴が実際の推奨と食い違うのを防ぐ）。
+    started_ids = {r['id'] for r in started} | {r['id'] for r in unknown}
+    if started_ids:
+        app_data = _keep_started_races(app_data, APP_PATH, started_ids)
+
     os.makedirs(os.path.dirname(APP_PATH), exist_ok=True)
     with open(APP_PATH, 'w', encoding='utf-8') as f:
         json.dump(app_data, f, ensure_ascii=False, indent=2)
     print(f'✅ アプリJSON更新: {APP_PATH}')
+
+
+def _keep_started_races(app_data, path, started_ids):
+    """発走済みレースの表示内容を、既存 latest.json のものに差し戻す。
+
+    当日の追加refreshは「まだ走っていないレース」だけを新しくする。
+    終わったレースの買い目を後から書き換えると、latest.json のgit履歴が
+    「実際に発走前に出していた推奨」と食い違ってしまう。
+    既存ファイルが読めない場合は何もしない（新しい方をそのまま使う）。
+    """
+    try:
+        with open(path, encoding='utf-8') as f:
+            old = json.load(f)
+    except Exception as e:
+        print(f'⚠ 既存 latest.json を読めず発走済みレースを維持できません: {e}')
+        return app_data
+
+    old_by_id = {r.get('race_id'): r
+                 for v in (old.get('races') or {}).values() for r in v}
+    kept = 0
+    for venue, lst in (app_data.get('races') or {}).items():
+        for i, r in enumerate(lst):
+            rid = r.get('race_id')
+            if rid in started_ids and rid in old_by_id:
+                lst[i] = old_by_id[rid]
+                kept += 1
+    if kept:
+        print(f'   発走済み {kept}R は前回の表示内容を維持しました')
+    return app_data
 
 
 def main():
