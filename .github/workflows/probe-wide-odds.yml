@@ -1,0 +1,41 @@
+name: Probe Wide Odds (調査)
+
+# ワイドのオッズ盤が JRA公式から取得できるかを実データで確認する。
+# この環境（Claude Code）からは www.jra.go.jp へ到達できない（プロキシが403）ため、
+# ネットワークが通る GitHub Actions 側で実HTMLを見て、その構造をログに残す。
+# 2026-08-03③（結果ページの列崩れ）・2026-08-16（調教データ）と同じやり方。
+#
+# 目的:
+#   1レースで3着内に入るのは必ず3頭 → Σ_B P(A,Bともに3着内) = 2×P(Aが3着内)
+#   という厳密な恒等式で、ワイドのオッズ盤と複勝のオッズ盤を突き合わせたい。
+#   正規化定数が既知なので控除率の推定が要らず、予測モデルも使わない。
+#
+# ⚠ 完全な読み取り専用。DB・モデル・latest.json には一切書き込まない。
+# ⚠ 1レースぶんだけ・1秒待機で叩く（総リクエストは50件未満）。
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: keiba-weekly
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Probe
+        run: python scripts/probe_wide_odds.py
