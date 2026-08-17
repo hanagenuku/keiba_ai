@@ -36,8 +36,9 @@ from bs4 import BeautifulSoup
 
 sys.path.insert(0, '.')
 from scripts._session import create_session            # noqa: E402
-from src.scraper.jra_scraper import (              # noqa: E402
-    JRA_BASE, HEADERS, get_kaisai_on_date, find_r01_odds, calc_suffix,
+from src.scraper.calendar import get_kaisai_on_date    # noqa: E402
+from src.scraper.jra_scraper import (                  # noqa: E402
+    JRA_BASE, HEADERS, find_r01_odds, calc_suffix,
 )
 
 SLEEP = 1.0
@@ -81,7 +82,7 @@ def main():
     for back in range(PROBE_DAYS_BACK):
         d = (today - dt.timedelta(days=back)).strftime('%Y%m%d')
         try:
-            links = get_kaisai_on_date(sess, d)
+            links = get_kaisai_on_date(d, sess)
         except Exception as e:
             print(f'  {d}: 取得失敗 {e}')
             continue
