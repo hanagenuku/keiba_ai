@@ -271,10 +271,13 @@ def make_axis_bets(scored, race, base_dir=None, market_odds_map=None,
     """
     from src.betting.race_simulator import simulate_race, calc_ticket_probabilities
     from src.betting.payout_estimator import estimate_payouts_from_win_odds
-    from src.betting.bet_optimizer import _load_gumbel_rating_temperature
+    from src.betting.bet_optimizer import (_load_gumbel_rating_temperature,
+                                           DEFAULT_GUMBEL_RATING_T)
 
     horse_nums = [_num(h) for h in scored]
-    T = _load_gumbel_rating_temperature(base_dir) if base_dir else 2.5
+    # 既定値をここに直書きしない（bet_optimizer と2箇所に分かれると片方だけ古くなる）
+    T = (_load_gumbel_rating_temperature(base_dir) if base_dir
+         else DEFAULT_GUMBEL_RATING_T)
     ratings = [float(h.get('rating', 0.0) or 0.0) / T for h in scored]
     orders = simulate_race(ratings, n_sims=n_sims)
     probs = calc_ticket_probabilities(orders, horse_nums)
