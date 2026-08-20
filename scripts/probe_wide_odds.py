@@ -25,7 +25,23 @@ A〜Z を総当たりし、返ってきたページの構造（table数・見出
 組番らしき文字列の有無）をログに出す。
 
 ⚠ 完全な読み取り専用。DB・モデル・latest.json には一切書き込まない。
-⚠ 1レースぶんだけ・待機を入れて叩く（総リクエストは50件未満）。
+⚠ 1レースぶんだけ叩く。ただし `find_r01_odds` は R01 の suffix を
+   0x00〜0xFF で総当たりするため、リクエストは1開催日あたり最大256件になる
+   （本番の週次ワークフローと同じ探索。当初「50件未満」と書いていたのは誤り）。
+
+## ⚠ 実行できるタイミングが限られる（2026-08-20に判明）
+
+このプローブは 2026-08-17 に2回走らせて**2回とも1件も盤を見ずに終了していた**。
+1回目は `get_kaisai_on_date` の引数順の取り違え、2回目は**探索の向き**が原因。
+
+`get_kaisai_on_date` が読む `pw01dli00` は「**今週これからの開催**」しか載せない。
+過去に遡って探すと、月曜に走らせた時点で必ず空振りになる（8/15・8/16 は実際に
+開催があり結果も取れているのに、この経路では見えない）。よって:
+
+  1. 開催日は**前方（これからの開催）**へ探す
+  2. オッズ盤は**発売中しか存在しない**ので、実行は**金曜夜〜日曜**に限る
+     （前日発売の開始後。それより前に走らせると開催日は見つかっても
+       `find_r01_odds` が空振りする）
 """
 import re
 import sys
@@ -42,7 +58,10 @@ from src.scraper.jra_scraper import (                  # noqa: E402
 )
 
 SLEEP = 1.0
-PROBE_DAYS_BACK = 9
+# 前方に何日ぶん探すか（今日を含む）。次の開催まで最大でも1週間なので8日あれば届く。
+PROBE_DAYS_AHEAD = 8
+# オッズ探索(256件)を何開催日ぶんまで試すか。無制限だとリクエストが膨らむ。
+MAX_ODDS_TRIES = 2
 RACE_NUM = 1
 
 
@@ -72,37 +91,57 @@ def _describe(html):
                 head=txt[:120])
 
 
-def main():
-    sess = create_session()
+def find_kaisai_forward(sess, today=None, days_ahead=PROBE_DAYS_AHEAD):
+    """今日から**前方**へ開催日を探し、[(date_str, base), ...] を返す。
 
-    # 開催日を自動で探す（日付ハードコードで空振りした前科があるため）
+    ⚠ 過去へ遡ってはいけない。`get_kaisai_on_date` が読む出走表一覧は
+    「今週これからの開催」しか載せないため、過去日は必ず空振りする。
+    """
     import datetime as dt
-    base = date = None
-    today = dt.date.today()
-    for back in range(PROBE_DAYS_BACK):
-        d = (today - dt.timedelta(days=back)).strftime('%Y%m%d')
+    today = today or dt.date.today()
+    found = []
+    for ahead in range(days_ahead):
+        d = (today + dt.timedelta(days=ahead)).strftime('%Y%m%d')
         try:
             links = get_kaisai_on_date(d, sess)
         except Exception as e:
             print(f'  {d}: 取得失敗 {e}')
             continue
         if links:
-            # ⚠ 戻り値は {base: 日付}。キーが base（2026-08-15に取り違えた）
-            base, date = list(links.keys())[0], d
-            print(f'📅 開催日 {d} / base={base}')
+            # 戻り値は {base: 日付}。キーが base（2026-08-15に取り違えた）
+            for base in links:
+                found.append((d, base))
+            print(f'📅 開催日 {d} / 会場 {len(links)}件')
+        else:
+            time.sleep(SLEEP)
+    return found
+
+
+def main():
+    sess = create_session()
+
+    cands = find_kaisai_forward(sess)
+    if not cands:
+        print(f'❌ 今日から{PROBE_DAYS_AHEAD}日先までに開催が見つからない。中止。')
+        return
+
+    # オッズ盤は発売中しか存在しないので、開催日ごとに順に試す
+    base = date = r01 = None
+    for date_, base_ in cands[:MAX_ODDS_TRIES]:
+        odds_base_ = base_.replace('pw01dde', 'pw151ous')
+        print(f'\n🔎 {date_} / odds_base={odds_base_} でオッズR01を探す')
+        r01_ = find_r01_odds(odds_base_, date_, sess)
+        if r01_ is not None:
+            base, date, r01 = base_, date_, r01_
             break
-        time.sleep(SLEEP)
-    if not base:
-        print(f'❌ 直近{PROBE_DAYS_BACK}日に開催が見つからない。中止。')
+        print('   → 未発見（まだ発売前の可能性）')
+    if r01 is None:
+        print('\n❌ オッズR01のsuffixが見つからない。中止。')
+        print('   オッズ盤は発売中しか存在しない。**金曜夜〜日曜**に実行し直すこと')
+        print(f'   （試した開催日: {[d for d, _ in cands[:MAX_ODDS_TRIES]]}）')
         return
 
     odds_base = base.replace('pw01dde', 'pw151ous')
-    print(f'   odds_base={odds_base}')
-
-    r01 = find_r01_odds(odds_base, date, sess)
-    if r01 is None:
-        print('❌ オッズR01のsuffixが見つからない。中止。')
-        return
     sx = calc_suffix(r01, RACE_NUM)
     print(f'   R01 suffix={r01:02X} → R{RACE_NUM:02d} suffix={sx}\n')
 
