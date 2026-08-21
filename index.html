@@ -47,6 +47,7 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
 .rc-name{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rc-meta{font-size:11px;color:var(--sub);margin-top:2px}
 .rc-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0}
+.conf{background:var(--gold);color:#fff;font-size:11px;font-weight:800;padding:3px 9px;border-radius:8px}
 .rec-lbl{font-size:10px;color:var(--gold);font-weight:700}
 .new-rec-alert{font-size:10px;color:#fff;font-weight:800;background:#e74c3c;padding:2px 8px;border-radius:4px;animation:rec-pulse 1.2s ease-in-out infinite;display:inline-block}
 @keyframes rec-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(1.08)}}
@@ -1131,19 +1132,29 @@ function render() {
   let html = '';
   for (const race of races) {
     const k = venue+race.r;
+  // 自信度バッジ。数字の意味は「軸(RL1)が3着内に入る確率」。
+  // ⚠ 当てやすさであって儲けやすさではない（最上位帯でも複勝回収89.3%）。
+  //    高いから買う、ではなく低いから見送る、という使い方をする。
+  function _confBadge(race) {
+    if (race.conf == null) return '';
+    const t = '軸が3着内に入る確率 ' + race.conf + '%（当てやすさの目安。'
+            + '高くても回収率は控除率を超えません）';
+    return '<span class="conf" title="' + t + '">軸3着内 ' + race.conf + '%</span>';
+  }
+
     const isOpen = opened[k];
     const isRec = race.rec;
     // 推奨フラグ変更の表示
     let recLabel = '';
     let nameAlert = '';
     if (isRec) {
-      recLabel = '<span class="rec-lbl">★推奨</span>';
+      recLabel = _confBadge(race)+'<span class="rec-lbl">★推奨</span>';
     }
     if (race._morning_rec != null && race._morning_rec !== race.rec) {
       if (!race.rec && race._morning_rec) {
         recLabel = '<span style="font-size:9px;color:#c0392b;font-weight:700;background:rgba(192,57,43,0.1);padding:1px 6px;border-radius:3px">推奨取消</span>';
       } else if (race.rec && !race._morning_rec) {
-        recLabel = '<span class="rec-lbl">★推奨</span>';
+        recLabel = _confBadge(race);
         nameAlert = ' <span class="new-rec-alert">NEW推奨</span>';
       }
     }

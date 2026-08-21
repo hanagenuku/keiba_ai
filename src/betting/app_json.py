@@ -446,6 +446,51 @@ def _build_bet_list(bets):
     return result
 
 
+def race_confidence(scored):
+    """レースの「当てやすさ」を返す（0〜99の整数％）。
+
+    定義は **軸(RL1)がそのレースで3着内に入る確率**。
+    `select_quality_races` の見送り判定が読むのと同じ `top3_prob` を使うので、
+    画面の数字と見送り判断が必ず一致する。
+
+    🔴 2026-08-18に旧実装を差し替えた。旧実装は
+
+        conf = 60 + (AI本命の市場人気順位 - 2) * 4 + score_gap * 20
+
+    という手書きの式で、**主項の符号が逆**だった（AI本命が不人気なほど
+    自信度が上がる）。実データ（2025-07以降・32,240頭）はその逆:
+
+        人気  複勝率   旧式のconf寄与
+         1   66.1%      56
+         3   41.1%      64
+         5   25.6%      72
+         9    9.6%      88     ← 当たらないほど高く出ていた
+
+    的中(軸の複勝)を予測するAUC（3,560レースで実測）:
+        旧式そのまま            0.5289   ≒ ほぼコイン投げ
+        軸の3着内確率（本実装）  0.6041
+
+    ⚠ **これは「当てやすさ」であって「儲けやすさ」ではない**（North Star #9）。
+      自信度が上がるほど複勝回収も上がるが、最上位帯でも89.3%で
+      控除率20%を超えない（79.0 → 76.4 → 86.0 → 87.7 → 89.3%）。
+      **高自信＝買い、ではない。低自信＝見送り、として使う。**
+
+    ⚠ 市場オッズの言い換えではない（実測）。市場だけで作った自信度
+      （1番人気の市場確率）との相関は +0.507 で、市場の自信度で4分割した
+      **どの層の中でもAIの自信度は効く**（AUC 0.577〜0.592）。
+
+    Returns:
+        int: 0〜99。軸が見つからない・確率が無い場合は None。
+    """
+    if not scored:
+        return None
+    axis = next((h for h in scored if h.get('rl_rank') == 1), scored[0])
+    p = axis.get('top3_prob')
+    if p is None:
+        return None
+    return min(99, max(0, int(round(float(p) * 100))))
+
+
 def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', market_odds_map=None, base_dir=None,
                 odds_updated_count=None, parse_failures=None, same_day=False):
     """厳選レース＋全レース情報をアプリ用 JSON 形式で返す。
@@ -538,6 +583,8 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
 
         total_inv += sum(b['amount'] for b in bets)
 
+        conf = race_confidence(scored)
+
         _types_str  = '+'.join(dict.fromkeys(b['type'] for b in bets))
         _bet_reason = f'★期待値あり: {_types_str}'
 
@@ -559,6 +606,7 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
             'name': race['race_name'],
             'dist': f'{race["distance"]}m{race["surface"]}',
             'rec':  True,
+            'conf': conf,
             'honmei': {
                 'n':     top1['num'],
                 'name':  top1['name'],
@@ -599,6 +647,9 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
         _num_horses2 = race.get('num_horses', len(scored))
 
         by_odds  = sorted(scored, key=lambda h: h.get('win_odds') or 99)
+        pop_rank = next((i + 1 for i, h in enumerate(by_odds)
+                         if h['name'] == top1['name']), 99)   # c_ref で使う
+        conf = race_confidence(scored)
 
         # popularity を win_odds 順位で補完
         for _rank, _h in enumerate(by_odds, 1):
@@ -678,6 +729,7 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
             'name':        race['race_name'],
             'dist':        f'{race["distance"]}m{race["surface"]}',
             'rec':         False,
+            'conf':        conf,
             'chaos_level': _grade2,
             'chaos_grade': _grade2,
             'num_horses':  _num_horses2,

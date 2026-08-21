@@ -1178,9 +1178,8 @@ def _extract_corner_passage(soup):
     実機（sp.jra.jp）で確認した表記例:
         3コーナー: (1,*5)6,10(2,9)-(3,4)8=7
         4コーナー: 1(5,6)-(9,10)-(2,3,4)=8=7
-    括弧は同着・並走、"-"は差、"="は同タイムを表す（推定）。現時点ではこの
-    構造を解釈せず生テキストのまま保存するに留める（特徴量化は将来の課題。
-    データを貯めてから設計する、血統・調教師所属と同じ段階的導入方針）。
+    括弧は併走（横に並んでいる）、"-"は差、"="は大きく離れていることを表す。
+    ここでは生テキストのまま保存し、構造の展開は parse_corner_passage() が行う。
 
     Returns:
         dict: {'corner_pass_3': str|None, 'corner_pass_4': str|None}
@@ -1195,16 +1194,61 @@ def _extract_corner_passage(soup):
     if end_candidates:
         segment = segment[:min(end_candidates)]
 
+    # 🔴 先にラベルで区切ってから中身を取る。
+    #    ラベルの後ろを貪欲に拾うと、次の見出し '4コーナー' の '4' まで
+    #    通過順に混ざる。また soup.get_text(' ') は要素間に空白を入れるため、
+    #    文字クラスに空白を含めないと最初の区切りで切れる
+    #    （実データで '(1,*5)6,10(2,9)-(3,4)8=7' が '(*7,' になっていた）。
+    LABELS = [('1コーナー', None), ('2コーナー', None),
+              ('3コーナー', 'corner_pass_3'), ('4コーナー', 'corner_pass_4'),
+              ('最終コーナー', 'corner_pass_4')]
+    marks = sorted(
+        ((m.start(), m.end(), key)
+         for label, key in LABELS
+         for m in re.finditer(re.escape(label), segment)),
+        key=lambda t: t[0])
+
     result = {}
-    for label, key in (('3コーナー', 'corner_pass_3'),
-                        ('4コーナー', 'corner_pass_4'),
-                        ('最終コーナー', 'corner_pass_4')):
-        if key in result:
+    for i, (_s, e, key) in enumerate(marks):
+        if key is None or key in result:
             continue
-        m = re.search(re.escape(label) + r'\s*([0-9,()（）*=-]+)', segment)
-        if m:
-            result[key] = m.group(1).strip()
+        body = segment[e: marks[i + 1][0] if i + 1 < len(marks) else len(segment)]
+        raw = re.sub(r'[^0-9,()（）*=\-]', '', body).strip(',-=')
+        # 通過順の表記なら馬番が3つ以上並ぶ。満たさないものは採用しない
+        # （見出しだけ拾って中身が空、という壊れ方を防ぐ）
+        if len(re.findall(r'\d+', raw)) >= 3:
+            result[key] = raw
     return result
+
+
+def parse_corner_passage(text):
+    """コーナー通過順の表記を、馬番→隊列内の位置に展開する。
+
+    表記例: '(1,*5)6,10(2,9)-(3,4)8=7'
+      括弧 = 併走（横に並んでいる）、'-' = 差がある、'=' = 大きく離れている
+      '*' = 先頭表示
+
+    Returns:
+        dict: {馬番: {'rank': 先頭からの順位(1始まり),
+                      'group_size': 同じ括弧内の頭数（1なら単独）}}
+        解釈できなければ空dict。
+
+    「同じ3番手でも単独か馬群の中か」を区別するための最小限の展開に留める。
+    走行ルート（内・外）は表記に含まれないため、ここでは分からない。
+    """
+    if not text:
+        return {}
+    out, rank = {}, 0
+    for m in re.finditer(r'\(([^)]*)\)|(\d+)', text):
+        nums = re.findall(r'\d+', m.group(1) if m.group(1) else m.group(2))
+        if not nums:
+            continue
+        rank += 1
+        for n in nums:
+            v = int(n)
+            if 1 <= v <= 18 and v not in out:
+                out[v] = {'rank': rank, 'group_size': len(nums)}
+    return out
 
 
 def parse_result_soup(soup, racecourse, race_num, date, place_code):
