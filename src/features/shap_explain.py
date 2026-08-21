@@ -46,6 +46,13 @@ FEATURE_CATEGORY_MAP = {
     'cl_f_pace_fit_rank': 'ペース適性', 'cl_f_pace_fit_vs_field': 'ペース適性',
     'cl_f_style_total_fit_rank': 'ペース適性', 'cl_f_style_total_fit_vs_field': 'ペース適性',
     # スピード能力
+    # Plackett-Luceレーティング（2026-08-08導入・2026-08-21に本番モデルへ搭載）。
+    # 着順全体から推定する潜在能力θで、直接対戦していない馬同士も比較できる。
+    # 「速さ」ではなく「どんな相手にどう勝ったか」なので独立したカテゴリにする。
+    'f_pl_rating': '実力レーティング', 'f_pl_rating_n': '実力レーティング',
+    'rl_f_pl_rating': '実力レーティング', 'rl_f_pl_rating_z': '実力レーティング',
+    'rl_f_pl_rating_rank': '実力レーティング',
+
     'f_speed_avg': 'スピード能力', 'f_speed_max': 'スピード能力', 'f_speed_last': 'スピード能力',
     'f_speed_trend': 'スピード能力', 'f_speed_fig_last': 'スピード能力',
     'f_speed_fig_avg': 'スピード能力', 'f_speed_fig_max': 'スピード能力',
