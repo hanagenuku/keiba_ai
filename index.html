@@ -47,7 +47,6 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
 .rc-name{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rc-meta{font-size:11px;color:var(--sub);margin-top:2px}
 .rc-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0}
-.conf{background:var(--gold);color:#fff;font-size:11px;font-weight:800;padding:3px 9px;border-radius:8px}
 .rec-lbl{font-size:10px;color:var(--gold);font-weight:700}
 .new-rec-alert{font-size:10px;color:#fff;font-weight:800;background:#e74c3c;padding:2px 8px;border-radius:4px;animation:rec-pulse 1.2s ease-in-out infinite;display:inline-block}
 @keyframes rec-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(1.08)}}
@@ -1138,13 +1137,13 @@ function render() {
     let recLabel = '';
     let nameAlert = '';
     if (isRec) {
-      recLabel = '<span class="conf">AI '+race.conf+'%</span><span class="rec-lbl">★推奨</span>';
+      recLabel = '<span class="rec-lbl">★推奨</span>';
     }
     if (race._morning_rec != null && race._morning_rec !== race.rec) {
       if (!race.rec && race._morning_rec) {
         recLabel = '<span style="font-size:9px;color:#c0392b;font-weight:700;background:rgba(192,57,43,0.1);padding:1px 6px;border-radius:3px">推奨取消</span>';
       } else if (race.rec && !race._morning_rec) {
-        recLabel = '<span class="conf">AI '+race.conf+'%</span>';
+        recLabel = '<span class="rec-lbl">★推奨</span>';
         nameAlert = ' <span class="new-rec-alert">NEW推奨</span>';
       }
     }

@@ -538,10 +538,6 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
 
         total_inv += sum(b['amount'] for b in bets)
 
-        pop_rank = next((i + 1 for i, h in enumerate(by_odds)
-                         if h['name'] == top1['name']), 99)
-        conf = min(99, max(50, int(60 + (pop_rank - 2) * 4 + c['score_gap'] * 20)))
-
         _types_str  = '+'.join(dict.fromkeys(b['type'] for b in bets))
         _bet_reason = f'★期待値あり: {_types_str}'
 
@@ -563,7 +559,6 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
             'name': race['race_name'],
             'dist': f'{race["distance"]}m{race["surface"]}',
             'rec':  True,
-            'conf': conf,
             'honmei': {
                 'n':     top1['num'],
                 'name':  top1['name'],
@@ -604,9 +599,6 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
         _num_horses2 = race.get('num_horses', len(scored))
 
         by_odds  = sorted(scored, key=lambda h: h.get('win_odds') or 99)
-        pop_rank = next((i + 1 for i, h in enumerate(by_odds)
-                         if h['name'] == top1['name']), 99)
-        conf = min(99, max(1, int(60 + (pop_rank - 2) * 4 + gap * 20)))
 
         # popularity を win_odds 順位で補完
         for _rank, _h in enumerate(by_odds, 1):
@@ -686,7 +678,6 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
             'name':        race['race_name'],
             'dist':        f'{race["distance"]}m{race["surface"]}',
             'rec':         False,
-            'conf':        conf,
             'chaos_level': _grade2,
             'chaos_grade': _grade2,
             'num_horses':  _num_horses2,
