@@ -22,6 +22,18 @@ name: Probe Wide Odds (調査)
 
 on:
   workflow_dispatch:
+  schedule:
+    # 土曜 09:00 JST（= 土曜 00:00 UTC）。cronはUTC評価。
+    #
+    # このプローブはオッズ盤が**発売中しか存在しない**ため、走らせられる時間帯が
+    # 限られる（金曜夜〜日曜。JRADBは20:30 JSTに閉鎖）。手動起動のみだと押し忘れて
+    # 調査が進まないので、土曜の朝に自動で1回だけ走らせる。
+    # 08:00ではなく09:00にしているのは、weekend.yml の refresh(08:00 JST)と
+    # 重ならないようにするため（concurrency group が同じなので待たされる）。
+    #
+    # ⚠ これは**調査が終わったら削除する** cron。ワイドの盤が取れるか／取れないかが
+    #    判明した時点で、この schedule ごと消すこと（プローブ自体も役目を終える）。
+    - cron: '0 0 * * 6'
 
 permissions:
   contents: read
