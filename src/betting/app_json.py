@@ -491,6 +491,35 @@ def race_confidence(scored):
     return min(99, max(0, int(round(float(p) * 100))))
 
 
+def _display_date_from_races(races_all):
+    """レース自身の日付から表示日を決める（`date` または `id` の先頭8桁）。
+
+    🔴 2026-08-22 に追加。従来は `jst_now` に day_type を見て +1日する推測式
+    だったが、これは「前夜に実行して翌日ぶんを生成する」という前提に依存していた。
+    実際には金曜予想のボタンが**土曜の未明**に押されることがあり、その場合
+    jst_now が既に土曜なので +1 されて**日曜と表示された**
+    （2026-08-22 04:10 の生成: レースは 20260822 なのに表示は「8月23日(日)」）。
+
+    2026-07-26① で refresh 用に `same_day` を足したのも同じ症状への対処だったが、
+    あれは呼び出し側が正しい真偽値を渡すことに依存する。日付はレース自身が
+    持っているので、そちらを一次情報として使うほうが確実。
+
+    Returns: datetime.date または None（レースが無い・日付が読めない場合）
+    """
+    from datetime import date as _date
+    for r in races_all or []:
+        raw = r.get('date') or ''
+        digits = raw.replace('-', '')
+        if not (len(digits) == 8 and digits.isdigit()):
+            digits = (r.get('id') or r.get('race_id') or '')[:8]
+        if len(digits) == 8 and digits.isdigit():
+            try:
+                return _date(int(digits[:4]), int(digits[4:6]), int(digits[6:8]))
+            except ValueError:
+                continue
+    return None
+
+
 def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', market_odds_map=None, base_dir=None,
                 odds_updated_count=None, parse_failures=None, same_day=False):
     """厳選レース＋全レース情報をアプリ用 JSON 形式で返す。
@@ -761,9 +790,12 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
     from datetime import timedelta
     # friday→saturday, sunday は翌日の日付を表示（前夜に実行するため）。
     # same_day=Trueの場合（refresh_today、当日実行）はjst_nowをそのまま使う。
-    display_dt = (jst_now if same_day
-                  else jst_now + timedelta(days=1) if day_type in ('saturday', 'sunday')
-                  else jst_now)
+    # レース自身の日付を最優先で使う（jst_now±1の推測は実行時刻に依存して外れる）。
+    # 取れなかった場合のみ従来の推測にフォールバックする。
+    display_dt = _display_date_from_races(races_all) or (
+        jst_now if same_day
+        else jst_now + timedelta(days=1) if day_type in ('saturday', 'sunday')
+        else jst_now)
     jday = ['月', '火', '水', '木', '金', '土', '日'][display_dt.weekday()]
     rec_count = len(selected)
 
