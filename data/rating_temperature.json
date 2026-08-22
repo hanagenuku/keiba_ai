@@ -1,4 +1,4 @@
 {
-  "_note": "bet_optimizer.py が calibration.gumbel_rating.T のみを読む（無ければ DEFAULT_GUMBEL_RATING_T=2.5）。旧 fukusho / ranking_ndcg のエントリは dual_model.py 経由でしか使われず、2026-08-07 に同モジュールごと削除した。",
+  "_note": "bet_optimizer.py が calibration.gumbel_rating.T のみを読む（無ければ DEFAULT_GUMBEL_RATING_T=1.0）。2026-08-20 に 2.5→1.0 へ変更。理由と実測は bet_optimizer.py のコメント参照。旧 fukusho / ranking_ndcg のエントリは dual_model.py 経由でしか使われず、2026-08-07 に同モジュールごと削除した。",
   "calibration": {}
 }

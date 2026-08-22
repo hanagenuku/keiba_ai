@@ -73,6 +73,28 @@ MIN_VALID_WIN_ODDS = 1.0
 _INVALID_ODDS_WARNED = set()  # 一度警告した(race_id, 頭数)の組み合わせは再度出さない
 
 
+# 単勝オッズ盤として成立する Σ(1/オッズ) の上限。
+#
+# 正しい単勝オッズ盤は控除率20%のため Σ(1/オッズ) ≈ 1/(1-0.20) = 1.25 になる。
+# 実測（latest.json の全76世代・2,041レース分）:
+#   正常な盤: 中央値 1.259 / 5〜95%点 1.223〜1.279 / 最大 1.577
+#   壊れた盤: 中央値 8.742 / 最小 1.714 / 最大 62.50
+# 二峰に完全に分かれ、1.577〜1.714 が空白帯なのでその中間を閾値に採る。
+#
+# ⚠ 一部の馬しかオッズを持たない「部分的な盤」では Σ は必ず**小さく**なるため、
+#   この検査は上限のみを見る（下限で弾くと部分取得を誤検知する）。
+#
+# 🔴 なぜ必要か（2026-08-20 に判明）:
+#   土曜夜の日曜予想では、専用オッズページが毎回全滅し（odds_coverage=0.0）、
+#   出馬表側のオッズで補完していた。ところがその値は**単勝オッズではなかった**。
+#   2026-08-16の日曜予想を翌朝の確定オッズと突合すると、1番人気が一致したのは
+#   17レース中4レースだけ、log相関 +0.24、比の中央値 0.145。
+#   例: 大垣特別は全16頭が2.0〜2.2倍で Σ=7.16（正しければ約1.25）。
+#   この値が popularity → base_margin を汚し、残差学習モデルの土台を壊していた。
+MAX_VALID_ODDS_BOOK_SUM = 1.65
+MIN_HORSES_FOR_BOOK_CHECK = 3
+
+
 def _sanitize_win_odds(horses, race_id=''):
     """単勝オッズとして成立しない値（1.0倍未満）を None に落とす。
 
@@ -103,6 +125,41 @@ def _sanitize_win_odds(horses, race_id=''):
         print(f'⚠ [オッズ異常] {race_id or "?"}: 単勝1.0倍未満の値が{len(bad)}頭に'
               f'混入していたため無効化（オッズ取得の部分失敗の可能性）')
     return len(bad)
+
+
+def _sanitize_odds_book(horses, race_id=''):
+    """単勝オッズ盤として成立しない「盤ごと」の異常を検出して無効化する。
+
+    1頭ずつ見る `_sanitize_win_odds` では捕まえられない型の壊れ方がある。
+    2026-08-15の日曜予想では全16頭が2.0〜2.2倍という値が入っており、
+    どの1頭を見ても「単勝オッズとしてありえない値」ではないのに、
+    盤全体では Σ(1/オッズ)=7.16（正しければ約1.25）と明らかに単勝ではなかった。
+
+    Σ(1/オッズ) は控除率で決まるので、盤が本物かどうかを**モデルを使わずに**
+    判定できる。詳細と実測は MAX_VALID_ODDS_BOOK_SUM のコメント参照。
+
+    壊れていた場合はそのレースのオッズを丸ごと None にする。
+    半端に残すと popularity（＝base_margin）が誤った順位で確定してしまい、
+    「オッズ不明」より悪い状態になるため。
+
+    Returns:
+        int: 無効化した頭数（正常なら0）
+    """
+    have = [h for h in horses if (h.get('win_odds') or 0) > 0]
+    if len(have) < MIN_HORSES_FOR_BOOK_CHECK:
+        return 0
+    book = sum(1.0 / h['win_odds'] for h in have)
+    if book <= MAX_VALID_ODDS_BOOK_SUM:
+        return 0
+    for h in have:
+        h['win_odds'] = None
+    key = (race_id, 'book')
+    if key not in _INVALID_ODDS_WARNED:
+        _INVALID_ODDS_WARNED.add(key)
+        print(f'⚠ [オッズ異常] {race_id or "?"}: Σ(1/単勝オッズ)={book:.2f} は'
+              f'単勝オッズ盤として成立しない（正常は約1.25）。{len(have)}頭ぶんを'
+              f'無効化（単勝以外の値を拾っている可能性）')
+    return len(have)
 
 
 _SHAP_BREAKDOWN_ERRORS_WARNED = set()  # 一度警告した例外の組み合わせは再度出さない
@@ -2778,6 +2835,8 @@ def calc_all(race, bias_data=None):
         # 人気順位を導出する前に、単勝として成立しないオッズ(1.0倍未満)を
         # 無効化する。1頭でも残るとレース全体の人気順位＝base_marginが壊れる
         _sanitize_win_odds(_horses_in, race.get('id', ''))
+        # 1頭ずつでは異常に見えない「盤ごと壊れている」ケースも弾く
+        _sanitize_odds_book(_horses_in, race.get('id', ''))
         for _rank, _h in enumerate(
                 sorted(_horses_in, key=lambda x: x.get('win_odds') or 999), 1):
             if not _h.get('popularity') or _h.get('popularity') == 99:
