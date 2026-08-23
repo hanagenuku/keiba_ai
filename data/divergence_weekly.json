@@ -11110,80 +11110,80 @@
   {
     "date": "2026-08-23",
     "divergence": {
-      "total_horses": 7166,
-      "total_races": 559,
+      "total_horses": 7579,
+      "total_races": 591,
       "bucket_stats": [
         {
           "bucket": "AI<<市場(<0.5x)",
-          "count": 706,
-          "win_rate": 14.6,
+          "count": 709,
+          "win_rate": 14.7,
           "top3_rate": 35.8,
           "tansho_roi": 45.8,
-          "avg_ai_prob": 0.0492,
-          "avg_mkt_prob": 0.1704
+          "avg_ai_prob": 0.0495,
+          "avg_mkt_prob": 0.1708
         },
         {
           "bucket": "AI<市場(0.5-0.8x)",
-          "count": 1131,
-          "win_rate": 14.0,
-          "top3_rate": 32.5,
-          "tansho_roi": 74.7,
-          "avg_ai_prob": 0.0846,
-          "avg_mkt_prob": 0.1274
+          "count": 1203,
+          "win_rate": 13.7,
+          "top3_rate": 32.1,
+          "tansho_roi": 73.3,
+          "avg_ai_prob": 0.0849,
+          "avg_mkt_prob": 0.1279
         },
         {
           "bucket": "一致(0.8-1.2x)",
-          "count": 1820,
-          "win_rate": 8.5,
-          "top3_rate": 28.2,
-          "tansho_roi": 72.1,
-          "avg_ai_prob": 0.089,
-          "avg_mkt_prob": 0.0915
+          "count": 1974,
+          "win_rate": 8.7,
+          "top3_rate": 28.5,
+          "tansho_roi": 73.3,
+          "avg_ai_prob": 0.0891,
+          "avg_mkt_prob": 0.0916
         },
         {
           "bucket": "AI>市場(1.2-2.0x)",
-          "count": 1813,
-          "win_rate": 5.6,
-          "top3_rate": 19.1,
-          "tansho_roi": 76.8,
-          "avg_ai_prob": 0.0743,
-          "avg_mkt_prob": 0.0503
+          "count": 1933,
+          "win_rate": 5.7,
+          "top3_rate": 19.3,
+          "tansho_roi": 78.4,
+          "avg_ai_prob": 0.0744,
+          "avg_mkt_prob": 0.0505
         },
         {
           "bucket": "AI>>市場(2.0-3.0x)",
-          "count": 817,
-          "win_rate": 2.3,
-          "top3_rate": 13.0,
-          "tansho_roi": 42.8,
-          "avg_ai_prob": 0.0651,
-          "avg_mkt_prob": 0.0271
+          "count": 861,
+          "win_rate": 2.2,
+          "top3_rate": 12.4,
+          "tansho_roi": 40.7,
+          "avg_ai_prob": 0.0634,
+          "avg_mkt_prob": 0.0264
         },
         {
           "bucket": "AI>>>市場(3.0x+)",
-          "count": 879,
-          "win_rate": 2.5,
-          "top3_rate": 9.6,
-          "tansho_roi": 81.7,
-          "avg_ai_prob": 0.0813,
-          "avg_mkt_prob": 0.0167
+          "count": 899,
+          "win_rate": 2.4,
+          "top3_rate": 9.5,
+          "tansho_roi": 79.9,
+          "avg_ai_prob": 0.0802,
+          "avg_mkt_prob": 0.0165
         }
       ],
       "rank_matrix": [
         {
           "pop_band": "1",
           "rl_band": "1",
-          "count": 418,
-          "win_rate": 33.0,
-          "top3_rate": 60.3,
-          "tansho_roi": 85.4
+          "count": 448,
+          "win_rate": 33.3,
+          "top3_rate": 60.5,
+          "tansho_roi": 85.8
         },
         {
           "pop_band": "1",
           "rl_band": "2-3",
-          "count": 71,
-          "win_rate": 38.0,
-          "top3_rate": 60.6,
-          "tansho_roi": 90.1
+          "count": 73,
+          "win_rate": 37.0,
+          "top3_rate": 60.3,
+          "tansho_roi": 87.7
         },
         {
           "pop_band": "1",
@@ -11212,26 +11212,26 @@
         {
           "pop_band": "2-3",
           "rl_band": "1",
-          "count": 81,
-          "win_rate": 13.6,
-          "top3_rate": 40.7,
-          "tansho_roi": 57.2
+          "count": 83,
+          "win_rate": 13.3,
+          "top3_rate": 42.2,
+          "tansho_roi": 55.8
         },
         {
           "pop_band": "2-3",
           "rl_band": "2-3",
-          "count": 735,
-          "win_rate": 15.5,
-          "top3_rate": 43.7,
-          "tansho_roi": 85.6
+          "count": 788,
+          "win_rate": 15.4,
+          "top3_rate": 44.3,
+          "tansho_roi": 85.0
         },
         {
           "pop_band": "2-3",
           "rl_band": "4-5",
-          "count": 171,
-          "win_rate": 22.8,
-          "top3_rate": 46.2,
-          "tansho_roi": 137.3
+          "count": 180,
+          "win_rate": 22.2,
+          "top3_rate": 45.0,
+          "tansho_roi": 133.9
         },
         {
           "pop_band": "2-3",
@@ -11260,26 +11260,26 @@
         {
           "pop_band": "4-5",
           "rl_band": "2-3",
-          "count": 178,
-          "win_rate": 10.7,
+          "count": 186,
+          "win_rate": 11.3,
           "top3_rate": 38.2,
-          "tansho_roi": 83.8
+          "tansho_roi": 89.7
         },
         {
           "pop_band": "4-5",
           "rl_band": "4-5",
-          "count": 600,
+          "count": 642,
           "win_rate": 7.0,
-          "top3_rate": 30.0,
-          "tansho_roi": 61.8
+          "top3_rate": 29.6,
+          "tansho_roi": 61.5
         },
         {
           "pop_band": "4-5",
           "rl_band": "6-9",
-          "count": 255,
-          "win_rate": 6.7,
-          "top3_rate": 25.5,
-          "tansho_roi": 70.7
+          "count": 269,
+          "win_rate": 6.3,
+          "top3_rate": 26.0,
+          "tansho_roi": 67.0
         },
         {
           "pop_band": "4-5",
@@ -11300,34 +11300,34 @@
         {
           "pop_band": "6-9",
           "rl_band": "2-3",
-          "count": 95,
-          "win_rate": 8.4,
-          "top3_rate": 28.4,
-          "tansho_roi": 120.7
+          "count": 96,
+          "win_rate": 8.3,
+          "top3_rate": 28.1,
+          "tansho_roi": 119.5
         },
         {
           "pop_band": "6-9",
           "rl_band": "4-5",
-          "count": 255,
-          "win_rate": 7.5,
-          "top3_rate": 26.3,
-          "tansho_roi": 107.7
+          "count": 268,
+          "win_rate": 7.1,
+          "top3_rate": 25.4,
+          "tansho_roi": 102.5
         },
         {
           "pop_band": "6-9",
           "rl_band": "6-9",
-          "count": 1343,
-          "win_rate": 2.9,
-          "top3_rate": 17.7,
-          "tansho_roi": 59.3
+          "count": 1431,
+          "win_rate": 3.1,
+          "top3_rate": 17.5,
+          "tansho_roi": 61.1
         },
         {
           "pop_band": "6-9",
           "rl_band": "10+",
-          "count": 403,
-          "win_rate": 3.0,
-          "top3_rate": 12.4,
-          "tansho_roi": 57.9
+          "count": 423,
+          "win_rate": 2.8,
+          "top3_rate": 12.3,
+          "tansho_roi": 55.2
         },
         {
           "pop_band": "10+",
@@ -11356,24 +11356,24 @@
         {
           "pop_band": "10+",
           "rl_band": "6-9",
-          "count": 383,
+          "count": 403,
           "win_rate": 3.7,
-          "top3_rate": 12.5,
-          "tansho_roi": 110.3
+          "top3_rate": 12.7,
+          "tansho_roi": 110.0
         },
         {
           "pop_band": "10+",
           "rl_band": "10+",
-          "count": 1795,
+          "count": 1906,
           "win_rate": 1.1,
-          "top3_rate": 5.2,
-          "tansho_roi": 46.5
+          "top3_rate": 5.3,
+          "tansho_roi": 48.0
         }
       ],
-      "ai_fav_win_rate": 28.2,
-      "mkt_fav_win_rate": 32.3,
-      "agree_count": 418,
-      "disagree_count": 138,
+      "ai_fav_win_rate": 28.6,
+      "mkt_fav_win_rate": 32.4,
+      "agree_count": 448,
+      "disagree_count": 140,
       "disagree_ai_wins": 19,
       "disagree_mkt_wins": 42,
       "top_overvalued": [
@@ -11733,60 +11733,69 @@
           "agree": 33,
           "disagree_ai": 0,
           "disagree_mkt": 1
+        },
+        {
+          "date": "2026-08-23",
+          "n": 413,
+          "ai_wins": 11,
+          "mkt_wins": 0,
+          "agree": 30,
+          "disagree_ai": 0,
+          "disagree_mkt": 0
         }
       ]
     },
     "odds_movement": {
-      "total_horses": 4938,
+      "total_horses": 5005,
       "bucket_stats": [
         {
           "bucket": "急騰(↓30%+)",
-          "count": 614,
-          "win_rate": 6.4,
-          "top3_rate": 23.3,
+          "count": 616,
+          "win_rate": 6.3,
+          "top3_rate": 23.2,
           "avg_change_pct": -49.4
         },
         {
           "bucket": "急騰相当(バッジ対象外)",
-          "count": 114,
-          "win_rate": 35.1,
-          "top3_rate": 64.9,
-          "avg_change_pct": -38.6
+          "count": 116,
+          "win_rate": 35.3,
+          "top3_rate": 65.5,
+          "avg_change_pct": -38.5
         },
         {
           "bucket": "上昇(↓15-30%)",
-          "count": 243,
+          "count": 244,
           "win_rate": 2.5,
           "top3_rate": 18.9,
           "avg_change_pct": -25.2
         },
         {
           "bucket": "上昇相当(バッジ対象外)",
-          "count": 311,
-          "win_rate": 13.8,
-          "top3_rate": 42.4,
+          "count": 315,
+          "win_rate": 14.0,
+          "top3_rate": 42.5,
           "avg_change_pct": -19.9
         },
         {
           "bucket": "横ばい(±15%)",
-          "count": 1430,
+          "count": 1450,
           "win_rate": 11.7,
           "top3_rate": 30.1,
           "avg_change_pct": -0.3
         },
         {
           "bucket": "下降(↑15-30%)",
-          "count": 468,
-          "win_rate": 8.1,
-          "top3_rate": 24.1,
+          "count": 480,
+          "win_rate": 7.9,
+          "top3_rate": 24.0,
           "avg_change_pct": 22.5
         },
         {
           "bucket": "急落(↑30%+)",
-          "count": 1758,
-          "win_rate": 3.2,
+          "count": 1784,
+          "win_rate": 3.3,
           "top3_rate": 12.7,
-          "avg_change_pct": 503.4
+          "avg_change_pct": 497.3
         }
       ],
       "big_risers": [
@@ -11994,8 +12003,8 @@
         }
       ],
       "ai_agrees_rising": {
-        "count": 146,
-        "top3_rate": 43.8
+        "count": 148,
+        "top3_rate": 43.9
       },
       "ai_ignores_rising": {
         "count": 590,
