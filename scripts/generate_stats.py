@@ -43,21 +43,49 @@ def _class_cat(c):
     return 'その他'
 
 
-def _calc_upset_patterns(shadows):
-    """AIの盲点パターンを shadow_bets から集計する。
+_BLIND_SPOT_MIN_N = 30
 
-    「upset」= AI上位3頭(rl1/rl2/rl3)に入っていない馬が実際の複勝内(1-3着)に来たケース。
+
+def _binom_sf(k, n, p):
+    """P(X >= k) for X ~ Binomial(n, p)。小さいnしか来ないので素直に足す。"""
+    if n <= 0:
+        return 1.0
+    p = min(max(p, 1e-9), 1 - 1e-9)
+    return sum(math.comb(n, i) * p ** i * (1 - p) ** (n - i)
+               for i in range(int(k), n + 1))
+
+
+def _calc_upset_patterns(shadows):
+    """AI上位3頭がレース結果をどれだけ捉えたかを shadow_bets から集計する。
+
+    ⚠ 指標の定義（2026-08-24に見直し。それ以前は誤解を招く出し方だった）
+
+    「upset」= AI上位3頭(rl1/rl2/rl3)以外の馬が1頭でも複勝内(1-3着)に来たケース。
+    これは裏返すと「AI上位3頭 == 実際の3着内が完全一致」でなければ全部 upset
+    ということで、**三連複をAI上位3頭ボックス1点で買った時に外れた率**と同義。
+    実測で 94.4%（= 的中 5.6%）だが、無作為に3頭選ぶと 0.6% 程度なので
+    これは悪い数字ではなく約9倍良い数字。「AI外れ率94%」として出すと
+    実力を著しく悪く見せるため、`hit3_rate`（的中側）も併せて返す。
+
     「full_miss」= AIの上位3頭が1頭も複勝内に入らなかったケース。
-    様々な軸で集計し、盲点の大きい組み合わせをランキング表示する。
+    こちらは素直に「読み違えた」を意味するので盲点指標として有効。
+
+    ⚠ 旧 `longshot_rate`（10倍超の勝ち馬がAI外だった率）は削除した。
+    判定に使う shadow_bets.winner_odds が全件 NULL で、**永久に 0% を返す**
+    測っていない数字だったため（2026-08-24 に570件すべてNULLと実測）。
+    復活させるなら winner_odds を実際に埋めてから。
+
+    blind_spots は「偶然そうなる確率」が低い順に並べる。upset_rate の降順だと
+    N=5 のセルが 75% の確率で 100% になるため、小さいNの偶然が上位を占める。
     """
     groups = {}
+    rand_hits = []
 
-    def add(dim, key, upset, full_miss, longshot):
-        g = groups.setdefault((dim, key), {'total': 0, 'upset': 0, 'full_miss': 0, 'longshot': 0})
+    def add(dim, key, upset, full_miss):
+        g = groups.setdefault((dim, key), {'total': 0, 'upset': 0, 'full_miss': 0})
         g['total']    += 1
         g['upset']    += int(upset)
         g['full_miss']+= int(full_miss)
-        g['longshot'] += int(longshot)
 
     for s in shadows:
         ai3  = {s['rl1_num'], s['rl2_num'], s['rl3_num']} - {None}
@@ -67,9 +95,10 @@ def _calc_upset_patterns(shadows):
 
         upset     = bool(act3 - ai3)           # AI外が複勝内に1頭以上
         full_miss = len(ai3 & act3) == 0       # AI上位3頭が全滅
-        longshot  = bool(                       # 10倍超の馬が複勝内
-            (s['winner_odds'] or 0) >= 10.0 and s['winner_num'] not in ai3
-        )
+
+        n_horses = s['num_horses'] or 0
+        if n_horses >= 3:
+            rand_hits.append(1.0 / math.comb(n_horses, 3))
 
         chaos = s['chaos_grade'] or 'B'
         heads = _head_cat(s['num_horses'])
@@ -78,26 +107,26 @@ def _calc_upset_patterns(shadows):
         rc    = s['racecourse'] or '不明'
         cls   = _class_cat(s['race_class'])
 
-        add('chaos',     chaos, upset, full_miss, longshot)
-        add('heads',     heads, upset, full_miss, longshot)
-        add('surface',   surf,  upset, full_miss, longshot)
-        add('distance',  dist,  upset, full_miss, longshot)
-        add('racecourse', rc,   upset, full_miss, longshot)
-        add('class',     cls,   upset, full_miss, longshot)
+        add('chaos',     chaos, upset, full_miss)
+        add('heads',     heads, upset, full_miss)
+        add('surface',   surf,  upset, full_miss)
+        add('distance',  dist,  upset, full_miss)
+        add('racecourse', rc,   upset, full_miss)
+        add('class',     cls,   upset, full_miss)
 
         # 複合軸（盲点ランキング用）
-        add('combo', f'{surf}・{dist}',                 upset, full_miss, longshot)
-        add('combo', f'{chaos}グレード・{heads}',        upset, full_miss, longshot)
-        add('combo', f'{rc}・{chaos}グレード',           upset, full_miss, longshot)
-        add('combo', f'{surf}・{chaos}グレード・{heads}', upset, full_miss, longshot)
+        add('combo', f'{surf}・{dist}',                 upset, full_miss)
+        add('combo', f'{chaos}グレード・{heads}',        upset, full_miss)
+        add('combo', f'{rc}・{chaos}グレード',           upset, full_miss)
+        add('combo', f'{surf}・{chaos}グレード・{heads}', upset, full_miss)
 
     def to_stat(v):
         n = v['total']
         return {
             'total':          n,
             'upset_rate':     round(v['upset']     / n * 100, 1) if n else 0,
+            'hit3_rate':      round((n - v['upset']) / n * 100, 1) if n else 0,
             'full_miss_rate': round(v['full_miss'] / n * 100, 1) if n else 0,
-            'longshot_rate':  round(v['longshot']  / n * 100, 1) if n else 0,
         }
 
     def dim_list(dim):
@@ -107,21 +136,32 @@ def _calc_upset_patterns(shadows):
             key=lambda x: x['label']
         )
 
-    # 盲点ランキング: 複合軸でデータ5件以上、upset_rate降順
-    blind_spots = sorted(
-        [{'label': k[1], **to_stat(v)}
-         for k, v in groups.items()
-         if k[0] == 'combo' and v['total'] >= 5],
-        key=lambda x: -x['upset_rate']
-    )[:10]
-
     total_g = {k: v for k, v in groups.items() if k[0] == 'chaos'}
     total   = sum(v['total']  for v in total_g.values())
     upset_t = sum(v['upset']  for v in total_g.values())
+    fmiss_t = sum(v['full_miss'] for v in total_g.values())
+    base_upset = (upset_t / total) if total else 0.94
+    base_fmiss = (fmiss_t / total) if total else 0.12
+
+    # 盲点ランキング: 全滅率が「偶然そうなる確率」で見て低い順（＝本当に珍しい順）。
+    # N>=30 に絞る。それ未満は全体率だけで100%が普通に出てしまう。
+    blind = []
+    for k, v in groups.items():
+        if k[0] != 'combo' or v['total'] < _BLIND_SPOT_MIN_N:
+            continue
+        st = to_stat(v)
+        st['label'] = k[1]
+        st['p_chance'] = round(_binom_sf(v['full_miss'], v['total'], base_fmiss), 4)
+        blind.append(st)
+    blind_spots = sorted(blind, key=lambda x: (x['p_chance'], -x['full_miss_rate']))[:10]
 
     return {
         'total_races':        total,
         'overall_upset_rate': round(upset_t / total * 100, 1) if total else 0,
+        'overall_hit3_rate':  round((total - upset_t) / total * 100, 1) if total else 0,
+        'random_hit3_rate':   round(sum(rand_hits) / len(rand_hits) * 100, 2) if rand_hits else 0,
+        'overall_full_miss_rate': round(fmiss_t / total * 100, 1) if total else 0,
+        'blind_spot_min_n':   _BLIND_SPOT_MIN_N,
         'by_chaos':     dim_list('chaos'),
         'by_heads':     dim_list('heads'),
         'by_surface':   dim_list('surface'),
