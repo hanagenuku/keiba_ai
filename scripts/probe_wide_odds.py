@@ -42,6 +42,21 @@ A〜Z を総当たりし、返ってきたページの構造（table数・見出
   2. オッズ盤は**発売中しか存在しない**ので、実行は**金曜夜〜日曜**に限る
      （前日発売の開始後。それより前に走らせると開催日は見つかっても
        `find_r01_odds` が空振りする）
+
+## 🔴 3つ目のバグ（2026-08-24に判明・修正済み）
+
+2026-08-23 08:30 JST の自動実行で、前方探索は成功して開催日3会場を見つけたのに
+`find_r01_odds` が **256件すべてパラメータエラー**で終わった。
+同じ時刻(08:20 JST)の本番 refresh は同じレースのオッズを**100%取得**しており、
+盤は存在していた。原因は CNAME の組み立てを**本番と別に書いていた**こと:
+
+    本番 `_to_odds_base()` : pw151ouS3 0420260302
+    プローブ（自前の置換） : pw151ous  010420260302   ← 別物
+
+`ODDS_PREFIX = 'pw151ouS3'` で先頭の `pw01dde01`（末尾の01を含む）を置き換える
+のが正しい。**同じ導出を2箇所に書いたための取り違え**で、このプロジェクトで
+繰り返している型（2026-08-09③「対になっている処理は片方だけ直される」）。
+本番の `_to_odds_base()` をそのまま使う形に直した。
 """
 import re
 import sys
@@ -54,7 +69,7 @@ sys.path.insert(0, '.')
 from scripts._session import create_session            # noqa: E402
 from src.scraper.calendar import get_kaisai_on_date    # noqa: E402
 from src.scraper.jra_scraper import (                  # noqa: E402
-    JRA_BASE, HEADERS, find_r01_odds, calc_suffix,
+    JRA_BASE, HEADERS, find_r01_odds, calc_suffix, _to_odds_base,
 )
 
 SLEEP = 1.0
@@ -128,7 +143,7 @@ def main():
     # オッズ盤は発売中しか存在しないので、開催日ごとに順に試す
     base = date = r01 = None
     for date_, base_ in cands[:MAX_ODDS_TRIES]:
-        odds_base_ = base_.replace('pw01dde', 'pw151ous')
+        odds_base_ = _to_odds_base(base_)
         print(f'\n🔎 {date_} / odds_base={odds_base_} でオッズR01を探す')
         r01_ = find_r01_odds(odds_base_, date_, sess)
         if r01_ is not None:
@@ -141,7 +156,7 @@ def main():
         print(f'   （試した開催日: {[d for d, _ in cands[:MAX_ODDS_TRIES]]}）')
         return
 
-    odds_base = base.replace('pw01dde', 'pw151ous')
+    odds_base = _to_odds_base(base)
     sx = calc_suffix(r01, RACE_NUM)
     print(f'   R01 suffix={r01:02X} → R{RACE_NUM:02d} suffix={sx}\n')
 
