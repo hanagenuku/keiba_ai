@@ -137,10 +137,10 @@
   },
   {
     "date": "2026-08-23",
-    "races": 32,
-    "horses": 413,
-    "ai_logloss": 0.2332,
-    "mkt_logloss": 0.2252,
-    "delta": 0.008
+    "races": 35,
+    "horses": 454,
+    "ai_logloss": 0.234,
+    "mkt_logloss": 0.2273,
+    "delta": 0.0067
   }
 ]

@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-08-23 20:01",
+  "updated_at": "2026-08-23 20:18",
   "entries": [
     {
       "race_id": "20260725_04_01",
@@ -9548,11 +9548,78 @@
           "prev_jockey": "J.コレット"
         }
       }
+    },
+    {
+      "race_id": "20260823_07_03",
+      "date": "2026-08-23",
+      "venue": "中京",
+      "surface": "芝",
+      "distance": 1400,
+      "track_condition": "良",
+      "condition_key": "中京_芝_short_良",
+      "tags": [
+        "style_miss",
+        "mare_upset"
+      ],
+      "details": {
+        "style_miss": {
+          "horse_num": 5,
+          "style": "差し",
+          "rl_rank": 9
+        },
+        "mare_upset": {
+          "horse_num": 5,
+          "rl_rank": 9
+        }
+      }
+    },
+    {
+      "race_id": "20260823_07_08",
+      "date": "2026-08-23",
+      "venue": "中京",
+      "surface": "ダート",
+      "distance": 1200,
+      "track_condition": "良",
+      "condition_key": "中京_ダート_short_良",
+      "tags": [
+        "style_miss",
+        "position_bias"
+      ],
+      "details": {
+        "position_bias": {
+          "bias": "outer",
+          "outer_count": 2
+        },
+        "style_miss": {
+          "horse_num": 12,
+          "style": "先行",
+          "rl_rank": 7
+        }
+      }
+    },
+    {
+      "race_id": "20260823_01_11",
+      "date": "2026-08-23",
+      "venue": "札幌",
+      "surface": "芝",
+      "distance": 1200,
+      "track_condition": "良",
+      "condition_key": "札幌_芝_short_良",
+      "tags": [
+        "jockey_switch_win"
+      ],
+      "details": {
+        "jockey_switch_win": {
+          "horse_num": 14,
+          "new_jockey": "武 豊",
+          "prev_jockey": "吉村 誠之助"
+        }
+      }
     }
   ],
   "corrections": {
     "新潟_芝_mile_良": {
-      "factor": 1.0323,
+      "factor": 1.0335,
       "n": 27,
       "top_tags": [
         {
@@ -9581,17 +9648,17 @@
           "tag": "dist_ext_win",
           "count": 8,
           "local_rate": 0.296,
-          "base_rate": 0.224
+          "base_rate": 0.222
         }
       ]
     },
     "中京_ダート_short_良": {
       "factor": 1.0,
-      "n": 21,
+      "n": 22,
       "top_tags": [
         {
           "tag": "style_miss",
-          "count": 18
+          "count": 19
         },
         {
           "tag": "jockey_switch_win",
@@ -9603,7 +9670,7 @@
         },
         {
           "tag": "position_bias",
-          "count": 7
+          "count": 8
         },
         {
           "tag": "dist_short_win",
@@ -9613,7 +9680,7 @@
       "active_adjustments": []
     },
     "中京_芝_middle_良": {
-      "factor": 1.0562,
+      "factor": 1.0578,
       "n": 20,
       "top_tags": [
         {
@@ -9642,12 +9709,12 @@
           "tag": "dist_ext_win",
           "count": 7,
           "local_rate": 0.35,
-          "base_rate": 0.224
+          "base_rate": 0.222
         }
       ]
     },
     "中京_ダート_mile_良": {
-      "factor": 1.088,
+      "factor": 1.0899,
       "n": 21,
       "top_tags": [
         {
@@ -9676,12 +9743,12 @@
           "tag": "young_upset",
           "count": 5,
           "local_rate": 0.238,
-          "base_rate": 0.127
+          "base_rate": 0.125
         }
       ]
     },
     "札幌_芝_mile_良": {
-      "factor": 1.0324,
+      "factor": 1.0328,
       "n": 21,
       "top_tags": [
         {
@@ -9710,7 +9777,7 @@
           "tag": "position_bias",
           "count": 13,
           "local_rate": 0.619,
-          "base_rate": 0.468
+          "base_rate": 0.466
         }
       ]
     },
