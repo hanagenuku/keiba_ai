@@ -10,6 +10,7 @@ import datetime as dt
 import pytest
 
 from scripts import probe_wide_odds as P
+from src.scraper.jra_scraper import _to_odds_base
 
 
 @pytest.fixture(autouse=True)
@@ -91,3 +92,26 @@ def test_calendar_exception_does_not_abort_the_scan(monkeypatch):
     monkeypatch.setattr(P, 'get_kaisai_on_date', fake)
     found = P.find_kaisai_forward(sess=object(), today=dt.date(2026, 8, 17))
     assert found == [('20260822', 'base_z')]
+
+
+def test_uses_production_odds_base_builder():
+    """オッズ用CNAMEの組み立てを本番と別に書かない。
+
+    2026-08-23 の自動実行では、前方探索は成功したのに find_r01_odds が
+    256件すべてパラメータエラーになった。同時刻の本番refreshは同じレースの
+    オッズを100%取得しており、盤は存在していた。原因は組み立ての取り違え:
+
+        本番 _to_odds_base() : pw151ouS3 0420260302
+        プローブの自前置換    : pw151ous  010420260302   ← 別物
+
+    同じ導出を2箇所に書くとこうなる（2026-08-09③の「対になっている処理」と同型）。
+    """
+    src = open(P.__file__, encoding='utf-8').read()
+    body = src.split('"""', 2)[-1]          # ヘッダのdocstringは説明のため除外
+    assert "replace('pw01dde'" not in body, '自前の文字列置換が残っている'
+    assert '_to_odds_base(' in body
+
+
+def test_production_odds_base_shape():
+    """本番の変換が期待どおりの形であること（プローブが依存する前提の固定）。"""
+    assert _to_odds_base('pw01dde010420260302') == 'pw151ouS30420260302'
