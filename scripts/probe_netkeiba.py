@@ -105,16 +105,53 @@ def probe_oikiri(sess, race_id):
         print('  ❌ テキストのタイムが見当たらない（画像/動画の可能性）')
 
 
+def _dump(html, label, n=1200):
+    """中身を実際に目で見る。
+
+    🔑 2026-08-16の教訓: キーワードが0件のときは、まず「本当にその文書を
+       読めているか」を疑う（`?pid=agreement` が878字・キーワード全0で
+       返ってきて、正体は404ページだった）。「0件」を「該当なし」と読まない。
+    """
+    soup = BeautifulSoup(html, 'html.parser')
+    text = soup.get_text(' ', strip=True)
+    print(f'  --- {label} の中身 ---')
+    print(f'    <title>  : {(soup.title.get_text(strip=True) if soup.title else "?")[:70]}')
+    print(f'    本文の長さ : {len(text):,}字   script: {len(soup.find_all("script"))}個   '
+          f'table: {len(soup.find_all("table"))}個   a: {len(soup.find_all("a"))}個')
+    print(f'    本文の冒頭 : {text[:200]}')
+    # JSで描画される作りかどうかの手掛かり
+    for kw in ['race_id', 'kaisai', 'RaceList', 'ajax', 'json']:
+        print(f'      「{kw}」 : {html.count(kw)}回')
+    print(f'    生HTMLの冒頭 {n}字:')
+    print('      ' + html[:n].replace('\n', ' ')[:n])
+
+
 def find_race_id(sess, date_str):
-    """開催日のレース一覧から race_id を1つ拾う。"""
-    url = f'https://race.netkeiba.com/top/race_list.html?kaisai_date={date_str}'
+    """開催日のレース一覧から race_id を1つ拾う。
+
+    netkeiba の `race_list.html` はJSで描画される作りなので、実データを持つ
+    フラグメント `race_list_sub.html` も試す。
+    """
     print(f'\n■ レース一覧から race_id を探す  {date_str}')
-    html = _get(sess, url, 'race_list.html')
-    if html is None:
-        return None
-    ids = re.findall(r'race_id=(\d{12})', html)
-    print(f'  見つかった race_id: {len(ids)}件  例: {sorted(set(ids))[:3]}')
-    return sorted(set(ids))[0] if ids else None
+    for name, url in [
+        ('race_list_sub.html',
+         f'https://race.netkeiba.com/top/race_list_sub.html?kaisai_date={date_str}'),
+        ('race_list.html',
+         f'https://race.netkeiba.com/top/race_list.html?kaisai_date={date_str}'),
+        ('db.netkeiba race_list',
+         f'https://db.netkeiba.com/race/list/{date_str}/'),
+    ]:
+        html = _get(sess, url, name)
+        if html is None:
+            continue
+        ids = re.findall(r'race_id=(\d{12})', html)
+        ids += re.findall(r'/race/(\d{12})', html)      # db.netkeiba 形式
+        ids = sorted(set(ids))
+        print(f'  {name}: race_id {len(ids)}件  例: {ids[:3]}')
+        if ids:
+            return ids[0]
+        _dump(html, name)
+    return None
 
 
 def main():
