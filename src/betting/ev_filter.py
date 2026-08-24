@@ -337,33 +337,69 @@ def ability_first_with_value(races, bias_data=None, top_n=6):
 MIN_AXIS_FUKU_PROB = 0.55
 
 
+def _axis_win_prob(scored, fallback):
+    """軸(RL1)のAI勝率。推奨レースの並べ替えに使う。
+
+    軸は `rl_rank == 1`。`scored[0]`（total降順の先頭）とは限らないので
+    ev_filter の他の箇所と同じ規約で明示的に探す。
+    """
+    axis = next((h for h in scored if h.get('rl_rank') == 1), fallback)
+    return axis.get('pn', 0) or 0
+
+
 def select_quality_races(races, bias_data=None,
-                         min_ev=1.30,
-                         min_gap=0.03,
-                         min_win_prob=0.10,
-                         odds_range=(1.5, 20.0),
+                         min_ev=None,
+                         min_gap=None,
+                         min_win_prob=None,
+                         odds_range=None,
                          max_races=6,
                          min_races=0,
-                         min_axis_fuku_prob=MIN_AXIS_FUKU_PROB):
+                         min_axis_fuku_prob=MIN_AXIS_FUKU_PROB,
+                         skip_classes=False):
     """品質閾値を満たすレースだけを推奨する。
 
-    gap は pn[0] - pn[1]（AI勝率差）で計算する（②）。
-    波乱度は classify_race_chaos（pnベース）で判定（③）。
-    EV は本命だけでなくフィールド内の最良馬から算出する。
+    ⚠ 2026-08-24に**6本あったゲートのうち5本を既定でOFFにした**。
+    3,969レース（2025-07-05〜2026-08-23・完全out-of-sample）で1本ずつ外して
+    測ったところ、働いていたのは軸の3着内確率だけだった:
+
+        ゲート                外した時の複勝回収の差   判定
+        gap>=0.03                    -0.4pt        外す
+        win_prob>=0.10               ±0.0pt        外す（完全なno-op）
+        軸のtop3_prob>=0.55          -4.0pt        ★残す
+        未勝利・新馬を除外             +0.4pt        外す
+        ev_max>=1.30(代理)           -0.5pt        外す
+        軸オッズ1.5-20倍(代理)         +0.4pt        外す
+
+    事前登録した基準「外して的中率も回収率も±1pt以内なら外す」に5本とも該当。
+    特に未勝利・新馬は**除外していたのが逆効果**で、この2クラスだけで
+    複勝回収82.7%（それ以外79.2%、前後半・3本抜きとも一貫）と最も予測しやすい。
+    2026-08-18の「クラスが上がるほど市場AUCが落ちる（未勝利0.8367→OP0.7634）」と整合。
+
+    ⚠ `min_ev` の既定を外したのは、`ev = pn × odds`（＝`ev_direct`）が
+    2026-07-05「識別力なし」・07-30「有害(回収31.9%)」・08-06「利益は生まない」と
+    3回否定されている指標だから。引数は互換のため残す（値を渡せば従来通り効く）。
+
+    並べ替えも `ev_max*(1+gap*10)` から**軸のAI勝率**に変更した。
+    回収率は統計的に区別できない（差 +3.3pt・95%CI [-3.7, +10.0]）が、
+    軸の複勝率が 56.5%→68.9%、日ブロックbootstrapのCI幅が 12.3pt→9.9pt と
+    高配当依存が減る。
+    ⚠ **回収率が上がるとは主張しない**（提案構成でも86.7%で控除率20%を超えない）。
 
     Parameters
     ----------
-    min_ev       : フィールド最良馬のEV下限（デフォルト1.30）
-    min_gap      : RL1位〜2位の pn 差下限（デフォルト0.03）
-    min_win_prob : RL1位馬の AI勝率下限（デフォルト0.10）
-    odds_range   : 本命オッズの許容範囲（デフォルト 1.5〜20.0）
+    min_ev       : フィールド最良馬のEV下限（既定 None＝無効。旧既定 1.30）
+    min_gap      : RL1位〜2位の pn 差下限（既定 None＝無効。旧既定 0.03）
+    min_win_prob : RL1位馬の AI勝率下限（既定 None＝無効。旧既定 0.10）
+    odds_range   : 本命オッズの許容範囲（既定 None＝無効。旧既定 (1.5, 20.0)）
     max_races    : 最大推奨レース数（デフォルト6）
     min_races    : 最小推奨レース数（デフォルト0 → 0件も許容）
     min_axis_fuku_prob : 軸(RL1)の3着内確率の下限（既定 0.55、Noneで無効）。
-                   詳細は MIN_AXIS_FUKU_PROB のコメント参照
+                   **唯一実測で効果が確認されているゲート**
+    skip_classes : True なら未勝利・新馬を除外する（既定 False。上記の通り
+                   除外は逆効果と実測されたため）
     """
     from src.features.engine import calc_all, calc_chaos_score
-    odds_min, odds_max = odds_range
+    odds_min, odds_max = odds_range if odds_range else (None, None)
     cands = []
 
     for race in races:
@@ -372,7 +408,7 @@ def select_quality_races(races, bias_data=None,
             continue
 
         rc = race.get('race_class', race.get('class', '')) or ''
-        if any(s in rc for s in SKIP_CLASSES) or is_maiden_race(race):
+        if skip_classes and (any(s in rc for s in SKIP_CLASSES) or is_maiden_race(race)):
             continue
 
         top1 = scored[0]
@@ -383,15 +419,15 @@ def select_quality_races(races, bias_data=None,
         pn2 = top2.get('pn', 0) or 0
         gap = pn1 - pn2
 
-        if gap < min_gap:
+        if min_gap is not None and gap < min_gap:
             continue
 
         odds = top1.get('win_odds') or 99
-        if odds < odds_min or odds > odds_max:
+        if odds_min is not None and (odds < odds_min or odds > odds_max):
             continue
 
         win_prob = pn1
-        if win_prob < min_win_prob:
+        if min_win_prob is not None and win_prob < min_win_prob:
             continue
 
         # 軸の確度が低いレースは買わない（実測: 下位半分はワイド53.4% /
@@ -424,7 +460,7 @@ def select_quality_races(races, bias_data=None,
         ev_tan    = calc_ev(win_prob, odds)
         ev_max    = max(best_ev, ev_fuku, ev_tan)
 
-        if ev_max < min_ev:
+        if min_ev is not None and ev_max < min_ev:
             continue
 
         by_odds  = sorted(scored, key=lambda h: h.get('win_odds') or 99)
@@ -445,7 +481,10 @@ def select_quality_races(races, bias_data=None,
             'odds':            odds,
             'popularity_rank': pop_rank,
             'score_gap':       gap,          # pn差（②変更後）
-            'priority':        ev_max * (1 + gap * 10),
+            # 並べ替えは軸のAI勝率。旧 `ev_max * (1 + gap*10)` は否定済みの
+            # ev_direct と no-op の gap で出来ており、実測でも高配当依存
+            # （日ブロックbootstrapのCI幅が1.24倍）だった。
+            'priority':        _axis_win_prob(scored, top1),
             'ev_fuku':         ev_fuku,
             'ev_tan':          ev_tan,
             'ev_max':          ev_max,
