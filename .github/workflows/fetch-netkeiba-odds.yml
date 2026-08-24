@@ -1,0 +1,92 @@
+name: Fetch netkeiba 実オッズ (D-2)
+
+# 過去レースの全馬の単勝オッズを netkeiba から取得して data/private に貯める。
+#
+# なぜ: D-2（base_margin を人気順位のZipf近似→実オッズ）は 2026-08-06 に
+# +0.008〜0.020 AUC と実測された、残っている中で桁が一つ大きい唯一の案。
+# history.db の win_odds は全年0%充足で、JRA公式の結果ページからは単勝オッズ列が
+# 消滅している（2026-08-03③）ため再取得できず、朝オッズが N=2,000 に達するまで
+# 約5ヶ月待ちだった。netkeiba には無料で載っている（2026-08-24 プローブで確認）。
+#
+# ⚠ 取得したデータは data/private/（gitignore済み）にのみ書く。
+#    hanagenuku/keiba_ai は公開リポジトリで、netkeiba の規約は入手データの用途を
+#    私的利用に限定しているため、公開リポジトリには push しない。
+#    成果物は **artifact** として持ち出し、Colab/Drive で使う。
+#
+# ⚠ North Star #4: 件数と時間の二重上限。中断しても次回そこから再開する。
+
+on:
+  workflow_dispatch:
+    inputs:
+      start:
+        description: '対象期間の開始 YYYY-MM-DD（既定は検定窓の頭）'
+        required: false
+        default: '2025-07-01'
+        type: string
+      end:
+        description: '対象期間の終了 YYYY-MM-DD'
+        required: false
+        default: '2026-12-31'
+        type: string
+      max_requests:
+        description: '1回あたりの最大リクエスト数'
+        required: false
+        default: '600'
+        type: string
+
+# 公開リポジトリへ push しないことを権限でも担保する
+permissions:
+  contents: read
+
+concurrency:
+  group: keiba-fetch-netkeiba
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - run: pip install requests beautifulsoup4
+
+      # 前回の続きから再開する（artifact を引き継ぐ）
+      - name: 前回の成果物を復元（あれば）
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: netkeiba-odds
+          path: data/private
+
+      - name: Fetch
+        run: |
+          python scripts/fetch_netkeiba_odds.py \
+            --start "${{ inputs.start }}" \
+            --end "${{ inputs.end }}" \
+            --max-requests "${{ inputs.max_requests }}" \
+            --max-minutes 25
+
+      - name: 公開リポジトリを汚していないことを確認
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "🔴 追跡対象のファイルが変更された（data/private のみに書くはず）:"
+            git status --porcelain
+            exit 1
+          fi
+          echo "✅ 追跡対象に変更なし"
+
+      - name: 成果物を artifact として持ち出す
+        uses: actions/upload-artifact@v4
+        with:
+          name: netkeiba-odds
+          path: data/private/netkeiba.db
+          retention-days: 90
+          overwrite: true
