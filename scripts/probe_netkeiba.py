@@ -103,6 +103,17 @@ def probe_oikiri(sess, race_id):
                     print(f'      {cells[:12]}')
     else:
         print(f'  ⚠ 初期HTMLにタイムが無い（HTML {len(html):,}B に対し本文 {len(text):,}字）')
+        # 🔑 本文が短いときは全文を出す。「無料では見出しだけ」なのか
+        #    「JSで後から入る」のかは、実際の文面を読まないと区別できない。
+        #    有料会員限定なら、購読せずに取りに行くのは規約の曖昧さの話ではなく
+        #    課金の回避になる。ユーザーの判断の範囲を超えるので必ず確認する。
+        print('  --- 表示されている本文（全文） ---')
+        for line in [text[i:i + 110] for i in range(0, min(len(text), 3300), 110)]:
+            print(f'    {line}')
+        for kw in ['会員', '有料', 'プレミアム', 'ログイン', '登録', '無料', 'ウマい馬券']:
+            c = text.count(kw)
+            if c:
+                print(f'    🔎 「{kw}」が本文に {c}回')
         if len(html) > len(text) * 5:
             print('    → JSで描画される作りとみられる。'
                   'race_list.html が race_list_sub.html で解決したのと同じ形。')
