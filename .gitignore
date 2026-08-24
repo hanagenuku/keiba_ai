@@ -12,3 +12,9 @@ build/
 *.db-shm
 *.bak
 data/logs/
+
+# netkeiba 等、公開リポジトリに出せない外部データ（data/private/README.md 参照）。
+# ⚠ weekend.yml / sunday-results.yml は `git add data/` で data/ 配下を丸ごと
+#    自動commitするため、除外しないと毎週公開される。
+data/private/*
+!data/private/README.md

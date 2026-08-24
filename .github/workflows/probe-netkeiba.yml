@@ -1,0 +1,64 @@
+name: Probe netkeiba 追い切り (調査)
+
+# netkeiba に「追い切り（調教）タイム」が機械で読める形で存在するかを実データで確認する。
+# 調教タイムは JRA公式には機械で読める形で存在しないと 2026-08-16 に確定しており
+# （training.html は table 0個・img 48個の動画ページ）、AIが持っていない唯一の次元。
+#
+# ⚠ 完全な読み取り専用。permissions で push できないよう担保する。
+#    DB・モデル・latest.json・リポジトリに一切書き込まない。結果はログのみ。
+#
+# ⚠ このコンテナ（Claude Code）からは netkeiba へ到達できない（プロキシが403）。
+#    2026-08-03③・2026-08-16 と同じく、ネットワークの通る Actions 側で実HTMLを見る。
+#
+# 規約について: netkeiba の規約は取得行為を名指しで禁じていないが、入手データの
+# 用途を私的利用に限定している。ユーザーの明示的な判断（2026-08-24）に基づく調査。
+# robots.txt は毎回取得し、Disallow に該当したらスクリプト側で中止する。
+
+on:
+  workflow_dispatch:
+    inputs:
+      race_id:
+        description: '直接見たい race_id（12桁）。空なら date から探す'
+        required: false
+        type: string
+      date:
+        description: 'race_id を探す開催日 YYYYMMDD。空なら実行日'
+        required: false
+        type: string
+
+# 読み取り専用であることを権限でも担保する（誤って push できないように）
+permissions:
+  contents: read
+
+concurrency:
+  group: keiba-probe-netkeiba
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - run: pip install requests beautifulsoup4
+
+      - name: Probe netkeiba
+        run: |
+          python scripts/probe_netkeiba.py \
+            --race-id "${{ inputs.race_id }}" \
+            --date "${{ inputs.date }}"
+
+      - name: 書き込みが無いことを確認
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "🔴 プローブが作業ツリーを変更した（読み取り専用のはず）:"
+            git status --porcelain
+            exit 1
+          fi
+          echo "✅ 作業ツリーに変更なし（読み取り専用を確認）"
