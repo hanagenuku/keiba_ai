@@ -25,6 +25,12 @@ on:
         description: 'race_id を探す開催日 YYYYMMDD。空なら実行日'
         required: false
         type: string
+      mode:
+        description: 'oikiri=追い切り（有料と確定済み） / odds=過去の実オッズ'
+        required: false
+        default: 'odds'
+        type: choice
+        options: ['odds', 'oikiri']
 
 # 読み取り専用であることを権限でも担保する（誤って push できないように）
 permissions:
@@ -52,7 +58,8 @@ jobs:
         run: |
           python scripts/probe_netkeiba.py \
             --race-id "${{ inputs.race_id }}" \
-            --date "${{ inputs.date }}"
+            --date "${{ inputs.date }}" \
+            --mode "${{ inputs.mode || 'odds' }}"
 
       - name: 書き込みが無いことを確認
         run: |

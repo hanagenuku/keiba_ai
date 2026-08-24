@@ -211,10 +211,61 @@ def find_race_id(sess, date_str):
     return None
 
 
+def probe_odds(sess, race_id):
+    """過去のレース結果ページに**全馬の単勝オッズ**があるかを見る。
+
+    なぜこれを見るか
+    ----------------
+    D-2（base_margin を人気順位→実オッズに置き換える）は 2026-08-06 に
+    **+0.008〜0.020 AUC** と実測された、残っている中で桁が一つ大きい唯一の案。
+    ブロッカーは history.db の `win_odds` が全年0%充足で、JRA公式の結果ページ
+    からは単勝オッズ列が消滅している（2026-08-03③）ため再取得もできないこと。
+    `race_predictions` の朝オッズは603レースしかなく N=2,000 まで約5ヶ月待ち。
+
+    過去に遡って全馬の単勝オッズが取れれば、その5ヶ月が消える。
+    ⚠ 追い切りと違い、単勝オッズは結果ページの基本情報（有料機能ではない）。
+    """
+    url = f'https://db.netkeiba.com/race/{race_id}/'
+    print(f'\n■ 過去のレース結果ページ（単勝オッズ狙い）  race_id={race_id}')
+    html = _get(sess, url, 'db.netkeiba race')
+    if html is None:
+        return
+    soup = BeautifulSoup(html, 'html.parser')
+    text = soup.get_text(' ', strip=True)
+    tables = soup.find_all('table')
+    print(f'  <title>  : {(soup.title.get_text(strip=True) if soup.title else "?")[:70]}')
+    print(f'  table {len(tables)}個 / 本文 {len(text):,}字')
+    if len(html) > len(text) * 5:
+        print(f'  ⚠ HTML {len(html):,}B に対し本文が短い。JS描画の可能性')
+    for kw in ['単勝', 'オッズ', '人気', '調教', 'プレミアム', '会員']:
+        print(f'    「{kw}」 : {text.count(kw)}回')
+    # 結果テーブルの列見出しと先頭数行を出す（オッズ列があるか目で見る）
+    for i, t in enumerate(tables[:3]):
+        rows = t.find_all('tr')
+        if len(rows) < 5:
+            continue
+        head = [c.get_text(strip=True) for c in rows[0].find_all(['th', 'td'])]
+        if not any('馬名' in h or '着' in h for h in head):
+            continue
+        print(f'  --- table[{i}]  {len(rows)}行 ---')
+        print(f'    見出し: {head}')
+        for r in rows[1:4]:
+            cells = [c.get_text(strip=True) for c in r.find_all(['th', 'td'])]
+            if cells:
+                print(f'    {cells}')
+        has_odds = any('オッズ' in h or '単勝' in h for h in head)
+        print(f'  {"✅ オッズ列がある" if has_odds else "❌ オッズ列が見当たらない"}')
+        return has_odds
+    print('  ❌ 結果テーブルらしきものが見つからない')
+    return False
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--race-id', default='', help='直接見たい race_id（12桁）')
     ap.add_argument('--date', default='', help='race_id を探す開催日 YYYYMMDD')
+    ap.add_argument('--mode', default='oikiri', choices=['oikiri', 'odds'],
+                    help='oikiri=追い切り（有料と確定済み） / odds=過去の実オッズ')
     a = ap.parse_args()
 
     print('=' * 66)
@@ -242,7 +293,10 @@ def main():
         print('   ⚠ 「空振り」であって「該当なし」ではない（2026-08-16の教訓）。')
         return 0
 
-    probe_oikiri(sess, rid)
+    if a.mode == 'odds':
+        probe_odds(sess, rid)
+    else:
+        probe_oikiri(sess, rid)
     print(f'\n総リクエスト数: {_count}件')
     return 0
 
