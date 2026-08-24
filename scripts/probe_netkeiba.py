@@ -83,7 +83,7 @@ def probe_oikiri(sess, race_id):
     text = soup.get_text(' ', strip=True)
     tables = soup.find_all('table')
     times = TIME_RE.findall(text)
-    print(f'  <title>       : {(soup.title.get_text(strip=True) if soup.title else "?")[:60]}')
+    print(f'  <title>       : {(soup.title.get_text(strip=True) if soup.title else "?")[:70]}')
     print(f'  table         : {len(tables)}個')
     print(f'  img           : {len(soup.find_all("img"))}個')
     print(f'  本文の長さ      : {len(text):,}字')
@@ -102,7 +102,53 @@ def probe_oikiri(sess, race_id):
                 if cells:
                     print(f'      {cells[:12]}')
     else:
-        print('  ❌ テキストのタイムが見当たらない（画像/動画の可能性）')
+        print(f'  ⚠ 初期HTMLにタイムが無い（HTML {len(html):,}B に対し本文 {len(text):,}字）')
+        if len(html) > len(text) * 5:
+            print('    → JSで描画される作りとみられる。'
+                  'race_list.html が race_list_sub.html で解決したのと同じ形。')
+            _hunt_data_url(sess, html, race_id)
+        else:
+            print('    → JRA公式 training.html と同じ「そもそも無い」型の可能性')
+
+
+def _hunt_data_url(sess, shell_html, race_id):
+    """シェルHTMLから実データの取得先を**抽出**して追う（推測で当てない）。"""
+    cands = []
+    for pat in (r'["\'](/[^"\'\s]*?_sub\.html[^"\'\s]*)["\']',
+                r'["\'](https?://[^"\'\s]*?_sub\.html[^"\'\s]*)["\']',
+                r'url\s*:\s*["\']([^"\'\s]+)["\']'):
+        cands += re.findall(pat, shell_html)
+    cands = [c for c in dict.fromkeys(cands) if 'sub' in c or 'ajax' in c.lower()]
+    print(f'    シェルHTMLから抽出した取得先候補: {len(cands)}件')
+    for c in cands[:6]:
+        print(f'      {c}')
+    # 抽出できたものを優先。無ければ race_list で実証済みの命名規則を1つだけ試す。
+    urls = []
+    for c in cands[:3]:
+        u = c if c.startswith('http') else f'https://race.netkeiba.com{c}'
+        if 'race_id' not in u:
+            u += ('&' if '?' in u else '?') + f'race_id={race_id}'
+        urls.append(u)
+    urls.append(f'https://race.netkeiba.com/race/oikiri_sub.html?race_id={race_id}')
+    for u in dict.fromkeys(urls):
+        html = _get(sess, u, u.split('/')[-1][:40])
+        if html is None:
+            continue
+        soup = BeautifulSoup(html, 'html.parser')
+        text = soup.get_text(' ', strip=True)
+        times = TIME_RE.findall(text)
+        print(f'      → table {len(soup.find_all("table"))}個 / 本文 {len(text):,}字 / '
+              f'タイム {len(times)}件  例: {times[:8]}')
+        if len(times) >= 20:
+            print('      ✅ ここに追い切りタイムがある')
+            for t in soup.find_all('table')[:1]:
+                for r in t.find_all('tr')[:4]:
+                    cells = [c.get_text(strip=True) for c in r.find_all(['th', 'td'])]
+                    if cells:
+                        print(f'        {cells[:12]}')
+            return u
+    print('    ❌ 抽出した候補のどれにもタイムが無かった')
+    return None
 
 
 def _dump(html, label, n=1200):
