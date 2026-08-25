@@ -148,7 +148,8 @@ class TestEndToEnd:
     """
 
     @staticmethod
-    def _fixture(tmp, n_races=60, horses=10, with_odds=True, break_one_book=False):
+    def _fixture(tmp, n_races=60, horses=10, with_odds=True, break_one_book=False,
+                 missing_pop=False):
         import json
         import shutil
         import sqlite3
@@ -178,8 +179,10 @@ class TestEndToEnd:
             # 人気1..N と、それに整合する実オッズ（Σ(1/odds)≒1.25）
             inv = np.sort(rng.dirichlet(np.ones(horses)))[::-1] * 1.25
             for i in range(horses):
+                # 本番CSVでは popularity=99 のセンチネル等で約15%が NaN になる
+                p = np.nan if (missing_pop and i == 0) else i + 1
                 rows.append({'race_id': rid, 'date': day, 'horse_num': i + 1,
-                             'f_popularity': i + 1,
+                             'f_popularity': p,
                              'is_fukusho': int(rng.random() < 0.3),
                              '_odds': 1.0 / inv[i],
                              **{c: rng.normal(5, 2) for c in cols}})
@@ -312,3 +315,53 @@ class TestEvalWorkflowGuard:
                    encoding='utf-8').read()
         assert "'member_level_cache.pkl'" in src
         assert 'member_level_cache.pkl' in self._guard()
+
+
+class TestMissingPopularity:
+    """🔴 2026-08-25 の実行で落ちた件の回帰テスト。
+
+    検定窓の約15%は f_popularity が NaN（popularity=99 のセンチネル等）。
+    `_apply_popularity_drift` が `int(nan)` で ValueError を投げて評価が止まった。
+
+    🔑 落とすのではなく**本番の学習と同じフィールド中央値で埋める**
+       （train_xgb.py:268）。落とすと母集団が変わり、アンカーの比較が
+       apples-to-apples でなくなる。
+    """
+
+    def test_fills_the_same_way_production_training_does(self):
+        """補完方法が train_xgb と一致していること（片方だけ変わるのを防ぐ）。"""
+        base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        train = open(os.path.join(base, 'src', 'tools', 'train_xgb.py'),
+                     encoding='utf-8').read()
+        ev = open(os.path.join(base, 'scripts', 'eval_odds_anchor.py'),
+                  encoding='utf-8').read()
+        assert "fillna(train_df['_n_horses'] / 2)" in train
+        assert "fillna(df['_n'] / 2)" in ev, '本番と違う埋め方をしている'
+
+    def test_runs_with_missing_popularity(self, tmp_path, monkeypatch, capsys):
+        csv = TestEndToEnd._fixture(tmp_path, n_races=300, missing_pop=True)
+        out = TestEndToEnd()._run(tmp_path, csv, monkeypatch, capsys)
+        assert '人気の欠損' in out
+        assert '① 全窓でプラス' in out, '欠損があると評価が止まってしまう'
+
+
+class TestVerificationCatchesNaN:
+    """🔴 検算が NaN を素通りしていた（2026-08-25）。
+
+    `|(raw-bm)-ability| 最大 nan` と表示されたのに検算は通っていた。
+    `nan > 1e-4` は False なので、素の不等号では NaN を捕まえられない。
+    「前提が壊れたら止める」ための検査が、壊れ方によっては止まらなかった。
+    """
+
+    def test_plain_comparison_would_let_nan_through(self):
+        """なぜ書き方を変えたのかを固定する。"""
+        r = np.array([np.nan, 1e-9])
+        assert (r.max() > 1e-4) is np.False_ or not (r.max() > 1e-4)
+        assert not (r.max() <= 1e-4)          # こちらは捕まえる
+
+    def test_source_uses_the_nan_safe_form(self):
+        base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        src = open(os.path.join(base, 'scripts', 'eval_odds_anchor.py'),
+                   encoding='utf-8').read()
+        assert 'not (resid.max() <= 1e-4)' in src, \
+            'NaN を素通りさせる書き方に戻っている'

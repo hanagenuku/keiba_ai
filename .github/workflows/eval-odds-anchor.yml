@@ -105,8 +105,8 @@ jobs:
           unexpected=""
           while read -r _ f; do
             case "$f" in
-              data/horse_features.csv|data/member_level_cache.pkl| \
-              data/speed_index_cache.pkl) ;;
+              data/horse_features.csv|data/horse_features_old.csv| \
+              data/member_level_cache.pkl|data/speed_index_cache.pkl) ;;
               "") ;;
               *) unexpected="$unexpected $f" ;;
             esac

@@ -209,6 +209,15 @@ def main():
     df['_n'] = df.groupby('race_id')['horse_num'].transform('count')
     y = df['is_fukusho'].values
 
+    # 🔑 人気の欠損は **本番の学習と同じ**「フィールド中央値」で埋める
+    #    （train_xgb.py:268 `fillna(_n_horses / 2)`）。
+    #    落とすと母集団が変わってアンカーの比較が apples-to-apples でなくなる。
+    #    実測: 検定窓の約15%が欠損（popularity=99 のセンチネル等）。
+    n_missing = int(df['f_popularity'].isna().sum())
+    pop = df['f_popularity'].fillna(df['_n'] / 2)
+    print(f'  人気の欠損 {n_missing:,}頭 ({n_missing / len(df) * 100:.1f}%) を'
+          f'フィールド中央値で補完（本番の学習と同じ扱い）')
+
     # ── ability_margin（アンカーに依存しない部分）を取り出す ────────────
     import xgboost as xgb
     booster = _load_xgb_model_any(
@@ -219,7 +228,7 @@ def main():
     d0.set_base_margin(np.zeros(len(df)))
     ability = booster.predict(d0, output_margin=True)
 
-    bm_rank = _popularity_to_base_margin(df['f_popularity'], df['_n'])
+    bm_rank = _popularity_to_base_margin(pop, df['_n'])
     d1 = xgb.DMatrix(X, feature_names=cols)
     d1.set_base_margin(bm_rank)
     raw = booster.predict(d1, output_margin=True)
@@ -228,8 +237,12 @@ def main():
     resid = np.abs((raw - bm_rank) - ability)
     print(f'\n■ 検算: ability_margin が base_margin に依存しないこと')
     print(f'  |(raw - bm) - ability| 最大 {resid.max():.3e} / 平均 {resid.mean():.3e}')
-    if resid.max() > 1e-4:
-        raise SystemExit('🔴 ability_margin がアンカーに依存している。'
+    # 🔴 `nan > 1e-4` は False。素の不等号だと NaN が素通りして、
+    #    「前提が壊れているのに検算は通った」ことになる（2026-08-25に実際に発生）。
+    #    `not (x <= t)` なら NaN でも True になる。
+    if not (resid.max() <= 1e-4):
+        raise SystemExit(f'🔴 検算に失敗（ズレ {resid.max()}）。ability_margin が'
+                         'アンカーに依存しているか NaN が混じっている。'
                          'アンカーの差し替えでは測れない')
 
     # ── 3つのアンカー ────────────────────────────────────────────────────
@@ -240,8 +253,8 @@ def main():
           f'オッズ {len(odds_drift["_all"]):,}')
 
     rid = df['race_id'].values
-    pop_d = _apply_popularity_drift(df['f_popularity'], rid, pop_drift, seed=12)
-    odds_d = _apply_odds_drift(df['win_odds'].values, df['f_popularity'].values,
+    pop_d = _apply_popularity_drift(pop, rid, pop_drift, seed=12)
+    odds_d = _apply_odds_drift(df['win_odds'].values, pop.values,
                                odds_drift, seed=12)
 
     anchors = {
