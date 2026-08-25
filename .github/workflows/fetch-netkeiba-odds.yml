@@ -33,6 +33,11 @@ on:
         required: false
         default: '600'
         type: string
+      max_minutes:
+        description: '1回あたりの最大分数（ジョブのtimeoutはこれ+10分）'
+        required: false
+        default: '25'
+        type: string
 
 # 公開リポジトリへ push しないことを権限でも担保する
 # actions: read は「前回のrunの artifact を読む」ためだけに要る（書き込みはしない）
@@ -47,7 +52,10 @@ concurrency:
 jobs:
   fetch:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    # スクリプト側の上限より必ず長くする。checkout/復元/artifactのupload に要る分。
+    # ⚠ ジョブがtimeoutで殺されると upload に到達せず**その回の取得が丸ごと消える**
+    #    （2026-07-18 に血統スクレイピングで実際に起きた）。余裕を10分取る。
+    timeout-minutes: ${{ fromJSON(inputs.max_minutes || '25') + 10 }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -106,7 +114,7 @@ jobs:
             --start "${{ inputs.start }}" \
             --end "${{ inputs.end }}" \
             --max-requests "${{ inputs.max_requests }}" \
-            --max-minutes 25
+            --max-minutes "${{ inputs.max_minutes }}"
 
       - name: 公開リポジトリを汚していないことを確認
         run: |
