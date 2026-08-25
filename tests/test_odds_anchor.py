@@ -277,3 +277,38 @@ class TestEndToEnd:
         assert '判定不能' not in out
         # 上限(B)を根拠にしないという注意が必ず出ること
         assert 'Bを根拠にしないこと' in out
+
+
+class TestEvalWorkflowGuard:
+    """評価ジョブの「リポジトリを汚していない」検査が誤爆しないこと。
+
+    build_training_data は特徴量CSVだけでなく member_level_cache.pkl も毎回
+    書き直す。単純に「git status が空」を求めると、特徴量の再生成に20分かけた
+    あとで必ず落ちる。再生成される物だけを許す形になっていることを固定する。
+    """
+
+    @staticmethod
+    def _guard():
+        import yaml
+        p = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         '.github', 'workflows', 'eval-odds-anchor.yml')
+        with open(p, encoding='utf-8') as f:
+            steps = yaml.safe_load(f)['jobs']['eval']['steps']
+        return next(s['run'] for s in steps if '想定外' in s.get('name', ''))
+
+    def test_allows_what_build_training_data_regenerates(self):
+        body = self._guard()
+        for f in ('data/horse_features.csv', 'data/member_level_cache.pkl'):
+            assert f in body, f'{f} は毎回書き直されるので許可が要る'
+
+    def test_still_fails_on_anything_else(self):
+        body = self._guard()
+        assert 'exit 1' in body and '想定外のファイルが変更された' in body
+
+    def test_build_training_data_writes_the_cache_we_allow(self):
+        """許可リストの根拠が実装と一致していること（片方だけ変わるのを防ぐ）。"""
+        base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        src = open(os.path.join(base, 'src', 'tools', 'build_training_data.py'),
+                   encoding='utf-8').read()
+        assert "'member_level_cache.pkl'" in src
+        assert 'member_level_cache.pkl' in self._guard()
