@@ -35,8 +35,10 @@ on:
         type: string
 
 # 公開リポジトリへ push しないことを権限でも担保する
+# actions: read は「前回のrunの artifact を読む」ためだけに要る（書き込みはしない）
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: keiba-fetch-netkeiba
@@ -58,13 +60,45 @@ jobs:
 
       - run: pip install requests beautifulsoup4
 
-      # 前回の続きから再開する（artifact を引き継ぐ）
+      # 前回の続きから再開する（直近の成功runの artifact を引き継ぐ）
+      #
+      # 🔴 actions/download-artifact@v4 は **同じrunの中で** upload されたものしか
+      #    見ない。前回のrunのものを取るには run-id の指定が要る。
+      #    それを知らずに素で使っていたため、2026-08-25 の run#2 が
+      #    「取得済み 0 / 残り 3,969」から再開し、run#1 の分を捨てて取り直していた。
+      #    continue-on-error: true で警告も埋もれていた。
+      #    直近の成功runを自分で引いて取りに行く形にする。
       - name: 前回の成果物を復元（あれば）
-        uses: actions/download-artifact@v4
-        continue-on-error: true
-        with:
-          name: netkeiba-odds
-          path: data/private
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p data/private
+          # 実行中の自分は status=success に出てこないので前回が取れる
+          prev=$(gh api \
+            "repos/${{ github.repository }}/actions/workflows/fetch-netkeiba-odds.yml/runs?status=success&per_page=1" \
+            --jq '.workflow_runs[0].id // empty' || true)
+          if [ -z "${prev:-}" ]; then
+            echo "ℹ 前回の成功run なし。最初から取得する"
+            exit 0
+          fi
+          url=$(gh api "repos/${{ github.repository }}/actions/runs/$prev/artifacts" \
+            --jq '.artifacts[] | select(.name=="netkeiba-odds" and .expired==false) | .archive_download_url' \
+            | head -1 || true)
+          if [ -z "${url:-}" ]; then
+            echo "ℹ run $prev に netkeiba-odds の artifact なし。最初から取得する"
+            exit 0
+          fi
+          curl -sSL -H "Authorization: Bearer $GH_TOKEN" -o /tmp/prev.zip "$url"
+          unzip -o /tmp/prev.zip -d data/private
+          # 復元できたかを必ずログに出す（黙って0から始まるのを二度とやらない）
+          if [ ! -f data/private/netkeiba.db ]; then
+            echo "🔴 artifact は取れたのに netkeiba.db が無い"
+            exit 1
+          fi
+          echo "✅ 復元: $(sqlite3 data/private/netkeiba.db 'SELECT COUNT(*) FROM fetch_log')レース /" \
+               "$(sqlite3 data/private/netkeiba.db 'SELECT COUNT(*) FROM netkeiba_odds')頭 /" \
+               "$(stat -c%s data/private/netkeiba.db) bytes"
 
       - name: Fetch
         run: |

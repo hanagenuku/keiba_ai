@@ -130,3 +130,57 @@ class TestOutputDbIsPrivate:
         conn.commit()
         assert conn.execute('SELECT COUNT(*) FROM netkeiba_odds').fetchone()[0] == 1
         conn.close()
+
+
+class TestResumeAcrossRuns:
+    """🔴 2026-08-25 の事故の回帰テスト。
+
+    ワークフローは `actions/download-artifact@v4` を素で使って「前回の続き」を
+    復元しているつもりだったが、このアクションは **同じrunの中で upload された
+    artifact しか見ない**。前回のrunのものを取るには run-id の指定が要る。
+    そのため run#2 が「取得済み 0 / 残り 3,969」から再開し、run#1 の分を捨てて
+    取り直していた（何度走らせても同じ556レースを取り続ける状態だった）。
+    `continue-on-error: true` を付けていたので警告も埋もれていた。
+
+    再開が壊れると「進んでいるように見えて1件も進まない」ので、静かに壊れる型。
+    """
+
+    @staticmethod
+    def _wf():
+        import yaml
+        p = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         '.github', 'workflows', 'fetch-netkeiba-odds.yml')
+        with open(p, encoding='utf-8') as f:
+            return yaml.safe_load(f)
+
+    def _restore_step(self):
+        for st in self._wf()['jobs']['fetch']['steps']:
+            if '復元' in st.get('name', ''):
+                return st
+        pytest.fail('前回の成果物を復元するステップが無い（再開できない）')
+
+    def test_restore_does_not_use_bare_download_artifact(self):
+        """download-artifact を使うなら run-id 必須。素で使うと前回分を見ない。"""
+        st = self._restore_step()
+        uses = st.get('uses', '')
+        if 'download-artifact' in uses:
+            assert 'run-id' in (st.get('with') or {}), (
+                'download-artifact は同じrunの artifact しか見ない。'
+                '前回のrunから復元するには run-id が要る')
+
+    def test_restore_targets_a_previous_successful_run(self):
+        """直近の**成功run**の artifact を明示的に引きに行っていること。"""
+        body = self._restore_step().get('run', '')
+        assert 'status=success' in body
+        assert 'archive_download_url' in body
+
+    def test_restore_is_verified_out_loud(self):
+        """復元できたかをログに出すこと（黙って0から始まるのを繰り返さない）。"""
+        body = self._restore_step().get('run', '')
+        assert 'fetch_log' in body, '復元後に取得済みレース数を表示していない'
+
+    def test_reading_other_runs_artifacts_is_permitted(self):
+        """actions: read が無いと前回runの artifact を引けない。書き込みは無いこと。"""
+        perms = self._wf()['permissions']
+        assert perms.get('actions') == 'read'
+        assert 'write' not in str(perms.values()), '公開リポジトリへの書き込み権限を持たせない'
