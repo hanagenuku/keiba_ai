@@ -93,11 +93,27 @@ jobs:
             --start "${{ inputs.start }}" \
             --end "${{ inputs.end }}"
 
-      - name: リポジトリを汚していないことを確認
+      - name: 想定外のファイルを触っていないことを確認
+        if: always()
         run: |
-          if [ -n "$(git status --porcelain -- ':!data/horse_features.csv')" ]; then
-            echo "🔴 追跡対象のファイルが変更された:"
+          set -uo pipefail
+          # build_training_data は特徴量CSVだけでなく **キャッシュも作り直す**
+          # （member_level_cache.pkl は毎回書かれる）。単純に「変更ゼロ」を
+          # 求めると必ず落ちるので、再生成される物だけを許す形にする。
+          # netkeiba のデータは data/private（gitignore済み）にしか無いので、
+          # ここに現れること自体が無い＝漏れの検査は別途 permissions で担保。
+          unexpected=""
+          while read -r _ f; do
+            case "$f" in
+              data/horse_features.csv|data/member_level_cache.pkl| \
+              data/speed_index_cache.pkl) ;;
+              "") ;;
+              *) unexpected="$unexpected $f" ;;
+            esac
+          done < <(git status --porcelain)
+          if [ -n "$unexpected" ]; then
+            echo "🔴 想定外のファイルが変更された:$unexpected"
             git status --porcelain
             exit 1
           fi
-          echo "✅ 追跡対象に変更なし（特徴量CSVの再生成を除く）"
+          echo "✅ 変更は再生成されるキャッシュのみ"
