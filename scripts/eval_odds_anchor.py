@@ -258,30 +258,43 @@ def main():
                                odds_drift, seed=12)
 
     anchors = {
-        'A 人気順位 + ドリフト（本番の現状）': _popularity_to_base_margin(
+        'A  人気順位 + ドリフト（朝の予想生成時点）': _popularity_to_base_margin(
             pd.Series(pop_d), df['_n']),
-        'B 実オッズ（確定・到達不能な上限）': _odds_to_base_margin(df['win_odds'], rid),
-        'C 実オッズ + ドリフト（本番相当・判定はこれ）': _odds_to_base_margin(odds_d, rid),
+        'A2 人気順位（確定・直前オッズを押した時点）': _popularity_to_base_margin(pop, df['_n']),
+        'B  実オッズ（確定）': _odds_to_base_margin(df['win_odds'], rid),
+        'C  実オッズ + ドリフト（朝の予想生成時点）': _odds_to_base_margin(odds_d, rid),
     }
+    # 🔑 2つの別の問いを混ぜないこと（2026-08-25 にユーザーの指摘で分離した）
+    #   Q1「朝に生成する予想」    : C − A  … 本番の予想生成が使うアンカー
+    #   Q2「直前オッズを押した後」: B − A2 … アプリの再同期が使うアンカー
+    #      ユーザーは締め切り直前まで待って直前オッズを何度も押すので、
+    #      実際の購入判断は Q2 の側で行われている。
+    #      B − A（前回の +0.0254）は「順位→オッズ」と「朝→直前」が混ざった値で、
+    #      どちらの問いの答えでもない。
 
     print(f'\n■ 全期間 N={len(df):,}頭')
-    print(f'{"アンカー":<40} {"AUC":>8} {"Brier":>8} {"LogLoss":>9}')
-    base_auc = None
+    print(f'{"アンカー":<44} {"AUC":>8} {"Brier":>8} {"LogLoss":>9}')
+    res = {}
     for name, bm in anchors.items():
-        auc, br, ll = _metrics(bm + ability, y)
-        if base_auc is None:
-            base_auc = auc
-            print(f'{name:<40} {auc:>8.4f} {br:>8.4f} {ll:>9.4f}')
-        else:
-            print(f'{name:<40} {auc:>8.4f} {br:>8.4f} {ll:>9.4f}   '
-                  f'(A比 {auc - base_auc:+.4f})')
+        res[name[:2].strip()] = _metrics(bm + ability, y)
+        auc, br, ll = res[name[:2].strip()]
+        print(f'{name:<44} {auc:>8.4f} {br:>8.4f} {ll:>9.4f}')
+
+    print(f'\n■ 2つの問いを分けて読む')
+    print(f'  Q1 朝に生成する予想        C − A  = {res["C"][0] - res["A"][0]:+.4f}'
+          f'   (AUC {res["A"][0]:.4f} → {res["C"][0]:.4f})')
+    print(f'  Q2 直前オッズを押した後    B − A2 = {res["B"][0] - res["A2"][0]:+.4f}'
+          f'   (AUC {res["A2"][0]:.4f} → {res["B"][0]:.4f})')
+    print(f'  ⚠ B − A ({res["B"][0] - res["A"][0]:+.4f}) は「順位→オッズ」と'
+          f'「朝→直前」が混ざった値。どちらの問いの答えでもない')
 
     # ── 窓ごと（事前登録の基準①: 全窓でプラス）──────────────────────────
     dates = np.sort(df['date'].unique())
     edges = np.array_split(dates, args.windows)
     print(f'\n■ 窓ごと（全窓でプラスが基準①）')
-    print(f'{"窓":<26} {"N":>7} {"A":>8} {"B":>8} {"C":>8} {"C-A":>9}')
-    deltas = []
+    print(f'{"窓":<26} {"N":>7} {"A":>8} {"A2":>8} {"B":>8} {"C":>8} '
+          f'{"C-A(Q1)":>9} {"B-A2(Q2)":>10}')
+    deltas, deltas_q2 = [], []
     skipped = 0
     for w in edges:
         m = df['date'].isin(w).values
@@ -290,11 +303,13 @@ def main():
             print(f'{w[0]}〜{w[-1]:<12} {m.sum():>7,}  ← {MIN_ROWS_PER_WINDOW}行未満のため除外')
             skipped += 1
             continue
-        a = _metrics(anchors['A 人気順位 + ドリフト（本番の現状）'][m] + ability[m], y[m])[0]
-        b = _metrics(anchors['B 実オッズ（確定・到達不能な上限）'][m] + ability[m], y[m])[0]
-        c = _metrics(anchors['C 実オッズ + ドリフト（本番相当・判定はこれ）'][m] + ability[m], y[m])[0]
-        deltas.append(c - a)
-        print(f'{w[0]}〜{w[-1]:<12} {m.sum():>7,} {a:>8.4f} {b:>8.4f} {c:>8.4f} {c - a:>+9.4f}')
+        g = {k[:2].strip(): _metrics(v[m] + ability[m], y[m])[0]
+             for k, v in anchors.items()}
+        deltas.append(g['C'] - g['A'])
+        deltas_q2.append(g['B'] - g['A2'])
+        print(f'{w[0]}〜{w[-1]:<12} {m.sum():>7,} {g["A"]:>8.4f} {g["A2"]:>8.4f} '
+              f'{g["B"]:>8.4f} {g["C"]:>8.4f} {g["C"] - g["A"]:>+9.4f} '
+              f'{g["B"] - g["A2"]:>+10.4f}')
 
     print(f'\n■ 判定（CRITERIA_netkeiba.md の事前登録）')
     if not deltas:
@@ -302,14 +317,18 @@ def main():
         print(f'  🔴 判定不能: 有効な窓が0個（{skipped}個が{MIN_ROWS_PER_WINDOW}行未満）。')
         print('     データが足りないか --windows が多すぎる。数字を採用しないこと')
         return
-    print(f'  ① 全窓でプラス      : {"✅" if all(d > 0 for d in deltas) else "❌"} '
-          f'({sum(d > 0 for d in deltas)}/{len(deltas)}窓)')
-    print(f'  ② 平均 +0.01 以上   : '
-          f'{"✅" if np.mean(deltas) >= 0.01 else "❌"} ({np.mean(deltas):+.4f})')
+    for label, ds in (('Q1 朝に生成する予想 (C-A)', deltas),
+                      ('Q2 直前オッズを押した後 (B-A2)', deltas_q2)):
+        print(f'  {label}')
+        print(f'    ① 全窓でプラス      : {"✅" if all(d > 0 for d in ds) else "❌"} '
+              f'({sum(d > 0 for d in ds)}/{len(ds)}窓)')
+        print(f'    ② 平均 +0.01 以上   : '
+              f'{"✅" if np.mean(ds) >= 0.01 else "❌"} ({np.mean(ds):+.4f})')
     if skipped:
         print(f'  ⚠ {skipped}窓が行数不足で除外されている')
-    print('  ⚠ AUCが上がっても回収率が上がるとは限らない（North Star #9）')
-    print('  ⚠ Bは本番では手に入らない情報を使った上限。Bを根拠にしないこと')
+    print('  ⚠ AUCが上がっても回収率が上がるとは限らない（North Star #9）。')
+    print('     2026-08-03の実測: 最終オッズを完全に知っていても最良の帯で回収94.5%')
+    print('  ⚠ Q1では B は本番で手に入らない情報。Q1の根拠にしないこと')
 
 
 if __name__ == '__main__':

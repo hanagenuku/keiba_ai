@@ -234,7 +234,10 @@ class TestEndToEnd:
     def test_runs_and_reports_all_three_anchors(self, tmp_path, monkeypatch, capsys):
         csv = self._fixture(tmp_path)
         out = self._run(tmp_path, csv, monkeypatch, capsys)
-        assert 'A 人気順位' in out and 'B 実オッズ' in out and 'C 実オッズ + ドリフト' in out
+        for a in ('A  人気順位', 'A2 人気順位', 'B  実オッズ', 'C  実オッズ'):
+            assert a in out, f'{a} が出ていない'
+        # 2つの問いを混ぜずに出すこと（B-A は どちらの答えでもない）
+        assert 'Q1 朝に生成する予想' in out and 'Q2 直前オッズを押した後' in out
         # 検算（前提が崩れていないこと）が必ず出ること
         assert 'ability_margin が base_margin に依存しない' in out
 
@@ -279,7 +282,7 @@ class TestEndToEnd:
         assert '① 全窓でプラス' in out and '② 平均 +0.01 以上' in out
         assert '判定不能' not in out
         # 上限(B)を根拠にしないという注意が必ず出ること
-        assert 'Bを根拠にしないこと' in out
+        assert 'Q1の根拠にしないこと' in out
 
 
 class TestEvalWorkflowGuard:
