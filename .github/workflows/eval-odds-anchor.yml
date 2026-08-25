@@ -1,0 +1,103 @@
+name: Eval 実オッズアンカー (D-2)
+
+# 残差学習の base_margin を「人気順位のZipf近似」→「実オッズ」に差し替えたら
+# 効くかを測る。再学習は不要（ability_margin はアンカーに依存しないため）。
+#
+# ⚠ ここで走らせる理由: netkeiba のオッズは data/private の artifact にしか無く、
+#    公開リポジトリには置けない。ランナー上で評価して**要約だけログに出す**。
+#    2026-08-03③ の probe-result-columns.yml と同じ形。
+#
+# ⚠ 判定は「確定オッズをそのまま」ではなく**ドリフト注入した方**で行う。
+#    確定オッズは本番では手に入らないので、そのまま測ると必ず良く出る。
+
+on:
+  workflow_dispatch:
+    inputs:
+      start:
+        description: '検定窓の開始 YYYY-MM-DD'
+        required: false
+        default: '2025-07-01'
+        type: string
+      end:
+        description: '検定窓の終了 YYYY-MM-DD'
+        required: false
+        default: '2026-08-23'
+        type: string
+      rebuild_features:
+        description: '特徴量を作り直す（リポジトリのCSVは古いので通常 true）'
+        required: false
+        default: true
+        type: boolean
+
+# 読み取りのみ。結果はログに出すだけで、リポジトリには何も書かない
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: keiba-eval-odds-anchor
+  cancel-in-progress: false
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - run: pip install -r requirements.txt || pip install pandas numpy scikit-learn xgboost beautifulsoup4 requests
+
+      # fetch-netkeiba-odds の成果物を引き継ぐ（素の download-artifact は
+      # 同じrunのものしか見ないので、run-id を自分で引く。#198 参照）
+      - name: netkeiba の実オッズを復元
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p data/private
+          prev=$(gh api \
+            "repos/${{ github.repository }}/actions/workflows/fetch-netkeiba-odds.yml/runs?status=success&per_page=1" \
+            --jq '.workflow_runs[0].id // empty')
+          url=$(gh api "repos/${{ github.repository }}/actions/runs/$prev/artifacts" \
+            --jq '.artifacts[] | select(.name=="netkeiba-odds" and .expired==false) | .archive_download_url' \
+            | head -1)
+          if [ -z "${url:-}" ]; then
+            echo "🔴 netkeiba-odds の artifact が無い。先に fetch-netkeiba-odds を流すこと"
+            exit 1
+          fi
+          curl -sSL -H "Authorization: Bearer $GH_TOKEN" -o /tmp/prev.zip "$url"
+          unzip -o /tmp/prev.zip -d data/private
+          echo "✅ 復元: $(sqlite3 data/private/netkeiba.db 'SELECT COUNT(*) FROM fetch_log')レース /" \
+               "$(sqlite3 data/private/netkeiba.db 'SELECT COUNT(*) FROM netkeiba_odds')頭"
+
+      - name: 特徴量を作り直す
+        if: ${{ inputs.rebuild_features }}
+        run: |
+          # リポジトリの horse_features.csv は 100MB 上限を超えるため古いまま
+          # （2026-08-07③・08-21）。PL特徴量5列とコース3列が入っていない。
+          python -c "
+          from src.tools.build_training_data import build_training_data
+          build_training_data('.')
+          "
+
+      - name: Eval
+        run: |
+          python scripts/eval_odds_anchor.py \
+            --start "${{ inputs.start }}" \
+            --end "${{ inputs.end }}"
+
+      - name: リポジトリを汚していないことを確認
+        run: |
+          if [ -n "$(git status --porcelain -- ':!data/horse_features.csv')" ]; then
+            echo "🔴 追跡対象のファイルが変更された:"
+            git status --porcelain
+            exit 1
+          fi
+          echo "✅ 追跡対象に変更なし（特徴量CSVの再生成を除く）"
