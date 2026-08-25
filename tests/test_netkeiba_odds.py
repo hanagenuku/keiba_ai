@@ -130,3 +130,114 @@ class TestOutputDbIsPrivate:
         conn.commit()
         assert conn.execute('SELECT COUNT(*) FROM netkeiba_odds').fetchone()[0] == 1
         conn.close()
+
+
+class TestResumeAcrossRuns:
+    """🔴 2026-08-25 の事故の回帰テスト。
+
+    ワークフローは `actions/download-artifact@v4` を素で使って「前回の続き」を
+    復元しているつもりだったが、このアクションは **同じrunの中で upload された
+    artifact しか見ない**。前回のrunのものを取るには run-id の指定が要る。
+    そのため run#2 が「取得済み 0 / 残り 3,969」から再開し、run#1 の分を捨てて
+    取り直していた（何度走らせても同じ556レースを取り続ける状態だった）。
+    `continue-on-error: true` を付けていたので警告も埋もれていた。
+
+    再開が壊れると「進んでいるように見えて1件も進まない」ので、静かに壊れる型。
+    """
+
+    @staticmethod
+    def _wf():
+        import yaml
+        p = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         '.github', 'workflows', 'fetch-netkeiba-odds.yml')
+        with open(p, encoding='utf-8') as f:
+            return yaml.safe_load(f)
+
+    def _restore_step(self):
+        for st in self._wf()['jobs']['fetch']['steps']:
+            if '復元' in st.get('name', ''):
+                return st
+        pytest.fail('前回の成果物を復元するステップが無い（再開できない）')
+
+    def test_restore_does_not_use_bare_download_artifact(self):
+        """download-artifact を使うなら run-id 必須。素で使うと前回分を見ない。"""
+        st = self._restore_step()
+        uses = st.get('uses', '')
+        if 'download-artifact' in uses:
+            assert 'run-id' in (st.get('with') or {}), (
+                'download-artifact は同じrunの artifact しか見ない。'
+                '前回のrunから復元するには run-id が要る')
+
+    def test_restore_targets_a_previous_successful_run(self):
+        """直近の**成功run**の artifact を明示的に引きに行っていること。"""
+        body = self._restore_step().get('run', '')
+        assert 'status=success' in body
+        assert 'archive_download_url' in body
+
+    def test_restore_is_verified_out_loud(self):
+        """復元できたかをログに出すこと（黙って0から始まるのを繰り返さない）。"""
+        body = self._restore_step().get('run', '')
+        assert 'fetch_log' in body, '復元後に取得済みレース数を表示していない'
+
+    def test_reading_other_runs_artifacts_is_permitted(self):
+        """actions: read が無いと前回runの artifact を引けない。書き込みは無いこと。"""
+        perms = self._wf()['permissions']
+        assert perms.get('actions') == 'read'
+        assert 'write' not in str(perms.values()), '公開リポジトリへの書き込み権限を持たせない'
+
+
+class TestBudgetSurvivesTheJobTimeout:
+    """スクリプトの自主停止より先にジョブが殺されると、その回の取得が丸ごと消える。
+
+    artifact の upload は Fetch ステップの**後**にあるので、ジョブが
+    timeout-minutes で殺されると upload に到達しない。
+    2026-07-18 に血統スクレイピングで実際に起きた事故と同じ形（North Star #4）。
+
+    max_minutes を可変にしたので、ジョブ側が必ず長いことを保証する必要がある。
+    ⚠ timeout-minutes を `${{ ... inputs ... }}` の式で連動させようとしたが
+       ワークフローの検証に落ちた（2026-08-25）。式に頼らず、Fetch ステップ側で
+       max_minutes を丸める形にし、**その丸め上限とYAMLのtimeoutをここで突合する**。
+       片方だけ変えたらこのテストが落ちる。
+    """
+
+    @staticmethod
+    def _job():
+        import yaml
+        p = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         '.github', 'workflows', 'fetch-netkeiba-odds.yml')
+        with open(p, encoding='utf-8') as f:
+            return yaml.safe_load(f)['jobs']['fetch']
+
+    @staticmethod
+    def _num(body, name):
+        import re
+        m = re.search(rf'^\s*{name}=(\d+)', body, re.M)
+        assert m, f'{name} が Fetch ステップに無い'
+        return int(m.group(1))
+
+    def _fetch_step(self):
+        return next(s for s in self._job()['steps'] if s.get('name') == 'Fetch')
+
+    def test_script_limit_is_clamped_below_the_job_timeout(self):
+        """丸め上限 + 10分 <= ジョブのtimeout。upload に到達する余裕を残す。"""
+        body = self._fetch_step()['run']
+        job_timeout = self._job()['timeout-minutes']
+        assert isinstance(job_timeout, int)
+        assert self._num(body, 'MAX_SCRIPT_MINUTES') + 10 <= job_timeout
+
+    def test_clamp_knows_the_real_job_timeout(self):
+        """Fetch ステップが持つ控えが、YAMLの timeout-minutes と一致していること。"""
+        body = self._fetch_step()['run']
+        assert self._num(body, 'JOB_TIMEOUT_MINUTES') == self._job()['timeout-minutes']
+
+    def test_max_minutes_is_actually_clamped(self):
+        """入力をそのまま渡すと、大きい値を打たれた時にジョブに殺される。"""
+        body = self._fetch_step()['run']
+        assert '--max-minutes "$mins"' in body, 'inputs をそのまま渡している'
+        assert '-gt "$MAX_SCRIPT_MINUTES"' in body, '丸めていない'
+
+    def test_upload_runs_after_fetch(self):
+        """upload が Fetch より前だと、そもそも積み上がらない。"""
+        names = [s.get('name', s.get('uses', '')) or '' for s in self._job()['steps']]
+        up = next(i for i, n in enumerate(names) if 'artifact' in n)
+        assert up > names.index('Fetch')
