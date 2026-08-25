@@ -192,7 +192,12 @@ class TestBudgetSurvivesTheJobTimeout:
     artifact の upload は Fetch ステップの**後**にあるので、ジョブが
     timeout-minutes で殺されると upload に到達しない。
     2026-07-18 に血統スクレイピングで実際に起きた事故と同じ形（North Star #4）。
-    max_minutes を可変にしたので、ジョブ側が必ず長いことを固定する。
+
+    max_minutes を可変にしたので、ジョブ側が必ず長いことを保証する必要がある。
+    ⚠ timeout-minutes を `${{ ... inputs ... }}` の式で連動させようとしたが
+       ワークフローの検証に落ちた（2026-08-25）。式に頼らず、Fetch ステップ側で
+       max_minutes を丸める形にし、**その丸め上限とYAMLのtimeoutをここで突合する**。
+       片方だけ変えたらこのテストが落ちる。
     """
 
     @staticmethod
@@ -203,21 +208,36 @@ class TestBudgetSurvivesTheJobTimeout:
         with open(p, encoding='utf-8') as f:
             return yaml.safe_load(f)['jobs']['fetch']
 
-    def test_job_timeout_is_derived_from_max_minutes(self):
-        """timeout を固定値で置くと max_minutes を伸ばした時に追い越される。"""
-        t = str(self._job()['timeout-minutes'])
-        assert 'max_minutes' in t, (
-            f'timeout-minutes={t} が max_minutes に連動していない。'
-            'スクリプトの上限を伸ばすとジョブに殺されて成果が消える')
-        assert '+ 10' in t or '+10' in t
+    @staticmethod
+    def _num(body, name):
+        import re
+        m = re.search(rf'^\s*{name}=(\d+)', body, re.M)
+        assert m, f'{name} が Fetch ステップに無い'
+        return int(m.group(1))
 
-    def test_script_limit_and_job_limit_come_from_the_same_input(self):
-        """--max-minutes に渡す値と timeout の元が同じであること。"""
-        fetch = next(s for s in self._job()['steps'] if s.get('name') == 'Fetch')
-        assert 'inputs.max_minutes' in fetch['run']
+    def _fetch_step(self):
+        return next(s for s in self._job()['steps'] if s.get('name') == 'Fetch')
+
+    def test_script_limit_is_clamped_below_the_job_timeout(self):
+        """丸め上限 + 10分 <= ジョブのtimeout。upload に到達する余裕を残す。"""
+        body = self._fetch_step()['run']
+        job_timeout = self._job()['timeout-minutes']
+        assert isinstance(job_timeout, int)
+        assert self._num(body, 'MAX_SCRIPT_MINUTES') + 10 <= job_timeout
+
+    def test_clamp_knows_the_real_job_timeout(self):
+        """Fetch ステップが持つ控えが、YAMLの timeout-minutes と一致していること。"""
+        body = self._fetch_step()['run']
+        assert self._num(body, 'JOB_TIMEOUT_MINUTES') == self._job()['timeout-minutes']
+
+    def test_max_minutes_is_actually_clamped(self):
+        """入力をそのまま渡すと、大きい値を打たれた時にジョブに殺される。"""
+        body = self._fetch_step()['run']
+        assert '--max-minutes "$mins"' in body, 'inputs をそのまま渡している'
+        assert '-gt "$MAX_SCRIPT_MINUTES"' in body, '丸めていない'
 
     def test_upload_runs_after_fetch(self):
         """upload が Fetch より前だと、そもそも積み上がらない。"""
-        names = [s.get('name', s.get('uses', '')) for s in self._job()['steps']]
+        names = [s.get('name', s.get('uses', '')) or '' for s in self._job()['steps']]
         up = next(i for i, n in enumerate(names) if 'artifact' in n)
         assert up > names.index('Fetch')

@@ -52,10 +52,11 @@ concurrency:
 jobs:
   fetch:
     runs-on: ubuntu-latest
-    # スクリプト側の上限より必ず長くする。checkout/復元/artifactのupload に要る分。
-    # ⚠ ジョブがtimeoutで殺されると upload に到達せず**その回の取得が丸ごと消える**
-    #    （2026-07-18 に血統スクレイピングで実際に起きた）。余裕を10分取る。
-    timeout-minutes: ${{ fromJSON(inputs.max_minutes || '25') + 10 }}
+    # 🔴 ジョブがtimeoutで殺されると artifact の upload に到達せず、
+    #    **その回の取得が丸ごと消える**（2026-07-18 に血統スクレイピングで実際に発生）。
+    #    そのため Fetch ステップ側で max_minutes を JOB_TIMEOUT-10 に丸める。
+    #    ここを変えたら下の JOB_TIMEOUT_MINUTES も変えること（テストで突合している）。
+    timeout-minutes: 70
     steps:
       - uses: actions/checkout@v4
         with:
@@ -110,11 +111,22 @@ jobs:
 
       - name: Fetch
         run: |
+          set -euo pipefail
+          # ジョブの timeout-minutes（上の値と一致させる）
+          JOB_TIMEOUT_MINUTES=70
+          # upload に必ず到達させるため、スクリプトはこれ以上走らせない
+          MAX_SCRIPT_MINUTES=60
+          mins="${{ inputs.max_minutes }}"
+          mins="${mins:-25}"
+          if [ "$mins" -gt "$MAX_SCRIPT_MINUTES" ]; then
+            echo "⚠ max_minutes=$mins は上限を超えるので $MAX_SCRIPT_MINUTES に丸める"
+            mins=$MAX_SCRIPT_MINUTES
+          fi
           python scripts/fetch_netkeiba_odds.py \
             --start "${{ inputs.start }}" \
             --end "${{ inputs.end }}" \
             --max-requests "${{ inputs.max_requests }}" \
-            --max-minutes "${{ inputs.max_minutes }}"
+            --max-minutes "$mins"
 
       - name: 公開リポジトリを汚していないことを確認
         run: |
