@@ -1127,36 +1127,6 @@ def backfill_bet_simulation(base_dir=None, db_path=None, hist_db_path=None):
     return out
 
 
-def update_bet_results(race_id, results, base_dir=None, db_path=None):
-    """レース結果でbetsテーブルのis_hit/payoutを更新"""
-    path = db_path or get_db_path(base_dir)
-    conn = _connect(path)
-    rows = conn.execute(
-        'SELECT id, bet_type, horse_num, horse_num2 FROM bets WHERE race_id=? AND is_hit=-1',
-        (race_id,),
-    ).fetchall()
-    placed = {r['place']: r for r in results} if results and isinstance(results[0], dict) else {}
-    top3_nums = {r.get('horse_num') for r in results[:3]} if results else set()
-    for row_id, bet_type, h1, h2 in rows:
-        is_hit = 0
-        payout = 0
-        if bet_type == '複勝' and h1 in top3_nums:
-            is_hit = 1
-            r = next((r for r in results if r.get('horse_num') == h1), None)
-            payout = (r.get('fukusho_payout', 0) or 0) if r else 0
-        elif bet_type == '単勝':
-            winner = next((r for r in results if r.get('place') == 1), None)
-            if winner and winner.get('horse_num') == h1:
-                is_hit = 1
-                payout = winner.get('tansho_payout', 0) or 0
-        conn.execute(
-            'UPDATE bets SET is_hit=?, payout=? WHERE id=?',
-            (is_hit, payout, row_id),
-        )
-    conn.commit()
-    conn.close()
-
-
 def save_race_predictions(race, scored_horses, base_dir=None, db_path=None,
                           snapshot='initial'):
     """全レース・全馬の予測スナップショットを保存する。

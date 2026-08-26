@@ -13,6 +13,7 @@ from scripts.weekend import fetch_and_save_results
 from src.betting.shadow import record_all_shadow_bets
 from src.features.engine import init_engine
 from src.features.error_tags import process_weekly_error_tags
+from src.utils.db import compare_prediction_snapshots
 from src.tools.shap_diagnosis import generate_shap_report
 from src.utils.db import (init_db, get_db_path, get_history_db_path,
                            backup_db, checkpoint_db)
@@ -95,6 +96,28 @@ def main():
         process_weekly_error_tags(ROOT, db_path, target_date=jst_date)
     except Exception as e:
         print(f'⚠ エラータグ処理失敗（予想には影響なし）: {e}')
+
+    # ④ 前夜の予想 vs 当日refresh の突合
+    # 🔑 prediction_snapshots は 2026-07-27⑩ から溜め続けていたが、
+    #    compare_prediction_snapshots() を呼ぶコードが無く **一度も測られて
+    #    いなかった**（2026-08-26 の棚卸しで発覚。8,464行が眠っていた）。
+    #    溜めるだけで見ない、を繰り返さないよう週次で必ずログに出す。
+    # ⚠ 2026-08-26 の初回実測（276レース）では的中率 22.8%→34.4% と上がる一方、
+    #    単勝回収率は 92.4%→88.0% と下がった。当てやすさと儲けやすさは別
+    #    （North Star #9）。この数字を「refreshで儲かる」と読まないこと。
+    try:
+        cmp_ = compare_prediction_snapshots(db_path=db_path)
+        if cmp_:
+            print(f'\n📸 前夜 vs 当日refresh  {cmp_["n_races"]}レース {cmp_["n_horses"]}頭')
+            print(f'  RL順位が変わった馬: {cmp_["rank_changed"]}頭')
+            print(f'  AI本命が入れ替わったレース: {cmp_["fav_changed"]}')
+            print(f'  1着になったのは  前夜のRL1 {cmp_["initial_rl1_win"]} / '
+                  f'朝のRL1 {cmp_["refresh_rl1_win"]}')
+            print('  ⚠ 的中率の話。回収率は別（2026-08-26実測: 92.4%→88.0%）')
+        else:
+            print('📸 前夜 vs 当日refresh: 両時点が揃ったデータなし')
+    except Exception as e:
+        print(f'⚠ スナップショット突合に失敗（結果取得には影響なし）: {e}')
 
     since_date = (jst_now - timedelta(days=7)).strftime('%Y-%m-%d')
     print_roi_breakdown(db_path, since_date)

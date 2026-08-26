@@ -416,13 +416,16 @@ def calc_odds_movement_analysis(conn):
                        ORDER BY captured_at DESC
                    ) AS rn
             FROM odds_snapshots
-            WHERE tansho IS NOT NULL AND tansho > 0
+            WHERE tansho IS NOT NULL AND tansho >= 1.0
         ) os ON os.race_id = rp.race_id
               AND os.horse_num = rp.horse_num
               AND os.rn = 1
         WHERE rp.actual_place IS NOT NULL
-          AND rp.tansho_odds IS NOT NULL AND rp.tansho_odds > 0
+          AND rp.tansho_odds IS NOT NULL AND rp.tansho_odds >= 1.0
     ''').fetchall()
+    # 🔴 単勝オッズは最低1.0倍。> 0 だと 2026-06〜07 に混入した 0.1倍のゴミ値
+    #    （_sanitize_win_odds 導入前）を拾い、「変動 +76000%」のような
+    #    無意味な行が集計と表示に流れる。engine.MIN_VALID_WIN_ODDS と同じ 1.0 で弾く。
 
     if len(rows) < 10:
         return None

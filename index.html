@@ -1906,6 +1906,71 @@ function renderStats(S) {
   }
   h += '</div>';
 
+  // ── 直前オッズの変動 ──────────────────────────────────────────────────
+  // 2026-07-13 から週次で集計していたが **画面に一度も出ていなかった**（2026-08-26発覚）。
+  // 🔴 ただし「買われた馬を買う」根拠にしてはいけない。2026-08-03 の実測では
+  //    最も買われた帯の回収率は 58.2% で、無作為(80%)より悪い。
+  //    勝率は上がるが配当が縮むため（North Star #9）。結論を併記して出す。
+  const om = S.odds_movement || {};
+  h += '<div class="stat-card"><div class="stat-title">📈 直前オッズの変動と結果</div>';
+  if ((om.bucket_stats || []).length) {
+    h += `<div style="font-size:11px;color:var(--sub);margin-bottom:8px">朝→直前の変動別 ${om.total_horses}頭。↓は買われた（オッズが下がった）方向</div>`;
+    for (const b of om.bucket_stats) {
+      if (!b.count) continue;
+      h += '<div class="stat-row">';
+      h += `<span>${b.bucket}<span style="font-size:10px;color:var(--sub)"> ${b.count}頭</span></span>`;
+      h += `<span class="stat-val">勝率${b.win_rate}% / 3着内${b.top3_rate}%</span>`;
+      h += '</div>';
+    }
+    const ag = om.ai_agrees_rising || {}, ig = om.ai_ignores_rising || {};
+    if (ag.count && ig.count) {
+      h += '<div style="font-size:11px;color:var(--sub);margin:10px 0 4px">買われた馬をAIも評価していたか</div>';
+      h += `<div class="stat-row"><span>AIも高評価<span style="font-size:10px;color:var(--sub)"> ${ag.count}頭</span></span><span class="stat-val">3着内 ${ag.top3_rate}%</span></div>`;
+      h += `<div class="stat-row"><span>AIは低評価<span style="font-size:10px;color:var(--sub)"> ${ig.count}頭</span></span><span class="stat-val">3着内 ${ig.top3_rate}%</span></div>`;
+    }
+    h += '<div style="font-size:10px;color:#c0392b;margin-top:8px">🔴 買われた馬を追ってはいけません。2026-08-03の実測で最も買われた帯の回収率は58.2%と、無作為(80%)より悪い。勝率は上がりますが配当が縮みます</div>';
+  } else {
+    h += '<div style="color:var(--sub);font-size:12px">データなし（直前オッズ取得が必要）</div>';
+  }
+  h += '</div>';
+
+  // ── 市場ベースラインKPI ───────────────────────────────────────────────
+  // このプロジェクト唯一のKPI（CLAUDE.md）。AIと市場の log-loss を比べ、
+  // delta = AI − 市場 が負ならAI優位。**画面に無いと誰も見ないので出す。**
+  // ⚠ これは「当てる精度」であって回収率ではない（North Star #9）。
+  const kpi = S.model_kpi || {};
+  h += '<div class="stat-card"><div class="stat-title">📉 市場ベースラインKPI（AI vs 市場）</div>';
+  if (kpi.total_races) {
+    const d = kpi.delta;
+    // 負ならAI優位。0.001未満の差は「同等」とみなす（generate_stats.py と同じ判定）
+    const col = d < -0.001 ? '#27ae60' : d > 0.001 ? '#c0392b' : '#e67e22';
+    h += `<div style="font-size:11px;color:var(--sub);margin-bottom:8px">累計 ${kpi.total_races}レース ${kpi.total_horses}頭　log-lossは小さいほど正確</div>`;
+    h += '<div class="stat-row"><span>AI</span>'
+      + `<span class="stat-val">${kpi.ai_logloss}</span></div>`;
+    h += '<div class="stat-row"><span>市場（オッズ）</span>'
+      + `<span class="stat-val">${kpi.mkt_logloss}</span></div>`;
+    h += '<div class="stat-row"><span>差 (AI − 市場)</span>'
+      + `<span class="stat-val" style="color:${col}">${d > 0 ? '+' : ''}${d}　${kpi.verdict}</span></div>`;
+    const wk = (kpi.weekly || []).slice(-8);
+    if (wk.length >= 2) {
+      const mx = Math.max(...wk.map(w => Math.abs(w.delta)), 0.01);
+      h += '<div style="font-size:11px;color:var(--sub);margin:10px 0 4px">直近の推移（左が古い・短いほど市場に近い）</div>';
+      h += '<div style="display:flex;align-items:flex-end;gap:3px;height:46px">';
+      for (const w of wk) {
+        const hp = Math.max(2, Math.abs(w.delta) / mx * 40);
+        const c = w.delta < 0 ? '#27ae60' : '#c0392b';
+        h += `<div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%" title="${w.date} delta ${w.delta > 0 ? '+' : ''}${w.delta}（${w.races}R）">`;
+        h += `<div style="background:${c};height:${hp}px;border-radius:2px 2px 0 0"></div></div>`;
+      }
+      h += '</div>';
+      h += `<div style="font-size:10px;color:var(--sub);margin-top:4px">${wk[0].date} 〜 ${wk[wk.length-1].date}　赤=市場優位 / 緑=AI優位</div>`;
+    }
+    h += '<div style="font-size:10px;color:var(--sub);margin-top:8px">⚠ 当てる精度の指標です。これが改善しても回収率が上がるとは限りません</div>';
+  } else {
+    h += '<div style="color:var(--sub);font-size:12px">データなし</div>';
+  }
+  h += '</div>';
+
   // ── AIの盲点パターン ─────────────────────────────────────────────────
   const up = S.upset_patterns || {};
   h += '<div class="stat-card"><div class="stat-title">🔍 AI上位3頭の当たり方</div>';
