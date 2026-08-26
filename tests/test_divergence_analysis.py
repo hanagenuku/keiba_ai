@@ -264,18 +264,20 @@ class TestOddsMovementAnalysis:
         （2026-07-22、集計側の閾値がアプリのバッジ条件とズレていた是正の回帰テスト）。
         """
         rows = _make_race('R001', '2026-07-06', '東京', winner=1)
+        # ⚠ 単勝オッズは最低1.0倍。1.0未満を置くと本番ではあり得ない値になり、
+        #    集計側のガード(>= 1.0)に弾かれる（North Star #6: 本番と同じ値域で書く）
         odds = [
             # 馬1 morning=2.5(mkt_fav補正) → 1.6: -36%だがabs差0.9(<3.0) → 急騰相当
             ('R001', 1, 1.6, 0.8, '2026-07-06 15:00'),
-            # 馬2 morning=4.0 → 0.9: -77.5%・abs差3.1(>=3.0) → 急騰(バッジ有)
-            ('R001', 2, 0.9, 0.45, '2026-07-06 15:00'),
+            # 馬6 morning=12.0 → 6.0: -50%・abs差6.0(>=3.0) → 急騰(バッジ有)
+            ('R001', 6, 6.0, 3.0, '2026-07-06 15:00'),
             # 馬3 morning=6.0 → 4.5: -25%だがabs差1.5(<2.0) → 上昇相当
             ('R001', 3, 4.5, 2.25, '2026-07-06 15:00'),
             # 馬4 morning=8.0 → 6.0: -25%・abs差2.0(>=2.0) → 上昇(バッジ有)
             ('R001', 4, 6.0, 3.0, '2026-07-06 15:00'),
-            # 馬5,6 変化なし → 横ばい
+            # 馬2,5 変化なし → 横ばい
+            ('R001', 2, 4.0, 2.0, '2026-07-06 15:00'),
             ('R001', 5, 10.0, 5.0, '2026-07-06 15:00'),
-            ('R001', 6, 12.0, 6.0, '2026-07-06 15:00'),
         ]
         rows += _make_race('R002', '2026-07-06', '東京', winner=1)
         for i, m in {1: 2.5, 2: 4.0, 3: 6.0, 4: 8.0, 5: 10.0, 6: 12.0}.items():
@@ -289,6 +291,34 @@ class TestOddsMovementAnalysis:
         assert buckets.get('急騰相当(バッジ対象外)') == 1
         assert buckets.get('上昇(↓15-30%)') == 1
         assert buckets.get('上昇相当(バッジ対象外)') == 1
+
+    def test_impossible_odds_below_1x_are_excluded(self):
+        """🔴 1.0倍未満は単勝としてあり得ない。集計に入れてはいけない。
+
+        2026-06〜07（`_sanitize_win_odds` 導入前）に 0.1倍のゴミ値が
+        race_predictions に43行混入しており、そのまま集計すると
+        「変動 +76000%」のような行が big_fallers に出ていた（2026-08-26発覚）。
+        """
+        rows = _make_race('R001', '2026-07-06', '東京', winner=1)
+        # 馬2 の朝オッズを 0.1倍のゴミ値に差し替える
+        rows = [list(r) for r in rows]
+        for r in rows:
+            if r[4] == 2:
+                r[7] = 0.1
+        rows = [tuple(r) for r in rows]
+        odds = [('R001', i, 5.0, 2.5, '2026-07-06 15:00') for i in range(1, 7)]
+        rows += _make_race('R002', '2026-07-06', '東京', winner=1)
+        odds += [('R002', i, 5.0, 2.5, '2026-07-06 15:00') for i in range(1, 7)]
+
+        conn = _setup_predictions_db(rows, odds_rows=odds)
+        result = calc_odds_movement_analysis(conn)
+        assert result is not None
+        # 12頭中、0.1倍の1頭が除外されて11頭
+        assert result['total_horses'] == 11, (
+            f"1.0倍未満が除外されていない: {result['total_horses']}")
+        # 変動率が非現実的な行が出ていないこと
+        for r in result.get('big_fallers', []) + result.get('big_risers', []):
+            assert abs(r['change']) < 10000, f'非現実的な変動が残っている: {r}'
 
 
 class TestSaveDivergenceWeekly:
