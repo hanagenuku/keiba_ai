@@ -91,9 +91,10 @@ def main():
     if len(surf_counts) == 1 and 'ダート' in surf_counts and len(races) > 6:
         print('⚠ 警告: 全レースがダート判定されています。surfaceパーサーにバグの可能性あり')
 
-    # 全レース・全馬のRL予測を先にまとめて保存（結果との乖離学習用）。
-    # 厳選レースだけでなく全レースを残すことで、土曜分も race_predictions に蓄積され、
-    # 補正テーブル（correction_table.json）が土日フルのデータで更新される。
+    # 全レース・全馬のRL予測を先にまとめて保存（結果との乖離分析用）。
+    # 厳選レースだけでなく全レースを残すことで、土曜分も race_predictions に蓄積される。
+    # ⚠ 旧「補正テーブル(correction_table.json)」は 2026-07-21 に呼び出しを削除済み。
+    #   現在の条件別補正はエラータグ（error_tags_weekly.json）が担っている。
     print('💾 全レース予測を race_predictions に保存中...')
     for race in races:
         scored_all = calc_all(race, avg_bias)

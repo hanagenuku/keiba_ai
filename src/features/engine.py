@@ -772,7 +772,6 @@ CLASS_BASE_AGARI = {
 TRACK_CONDITION_ADJUST = {'良': 0.0, '稍重': +0.3, '重': +0.6, '不良': +1.0}
 
 
-
 def calc_competitiveness(history):
     """
     過去走の着差÷着順の平均。値が小さいほど「着順の割に接戦」。
@@ -921,7 +920,6 @@ def f_maturity(h, race):
             total += pt * place_mult.get(p, 1.0 if p <= 5 else 0.5)
 
     return min(10, total / 1.5)
-
 
 
 # ── Phase 3: ローテーション・メンバーレベル ───────────────────────────
@@ -1101,7 +1099,6 @@ def f_recent(h, race):
     for i, r in enumerate(hist):
         sc += (ws[i] / tw) * calc_race_content_score(r)
     return max(0, min(10, sc))
-
 
 
 # 距離帯別ペース×脚質スコア（短距離は逃げ優位が小さく、長距離は大きい）
@@ -1423,51 +1420,6 @@ def f_jockey(h, race):
 
 def f_trainer(h):
     return min(10, max(0, h.get('trainer_rate', 0.12) / 0.20 * 10))
-
-
-def calc_unlucky_features(horse_name, race_date, db_path=None):
-    """手動入力した不利メモ（race_notes）を特徴量化する。
-
-    過去走の total_handicap（不利・出遅れ・展開ロスの補正値合計）を集計する。
-    補正値はスキーマ駆動で保存時にキャッシュ済みなので、ここでは集計するだけ。
-    データが無い馬・未入力の馬はすべて 0 を返すため、メモが空でも安全に動作する。
-
-    Returns
-    -------
-    dict:
-        f_unlucky_recent : 直近3走の補正値合計の平均
-        f_unlucky_last   : 前走の補正値
-        f_unlucky_max    : 過去5走で最大の補正値
-        f_note_coverage  : メモが入力されている走数（信頼度の目安）
-    """
-    default = {'f_unlucky_recent': 0.0, 'f_unlucky_last': 0.0,
-               'f_unlucky_max': 0.0, 'f_note_coverage': 0}
-    path = db_path or _KEIBA_DB_PATH
-    if not horse_name or not path or not os.path.exists(path):
-        return default
-    import sqlite3 as _sq
-    try:
-        conn = _sq.connect(path)
-        rows = conn.execute(
-            "SELECT total_handicap FROM race_notes "
-            "WHERE horse_name = ? AND date < ? "
-            "ORDER BY date DESC LIMIT 5",
-            (horse_name, race_date),
-        ).fetchall()
-        conn.close()
-    except _sq.OperationalError:
-        return default
-
-    handicaps = [r[0] for r in rows if r[0] is not None]
-    if not handicaps:
-        return default
-    recent3 = handicaps[:3]
-    return {
-        'f_unlucky_recent': round(sum(recent3) / len(recent3), 2),
-        'f_unlucky_last': handicaps[0],
-        'f_unlucky_max': max(handicaps),
-        'f_note_coverage': len(handicaps),
-    }
 
 
 def f_weight(h):
@@ -2570,12 +2522,6 @@ def add_relative_features(all_xfeats):
         xf.pop('_cl_c', None)
 
 
-def calc_fukusho_prob(win_prob, num_horses):
-    """後方互換用。calc_harville_probs 移行後はこちらは使わない。"""
-    p = max(0.0, min(1.0, win_prob))
-    return round(min(0.80, p * 3.0), 4)
-
-
 def calc_harville_probs(win_probs):
     """Harville公式でtop2/top3確率を計算する。
 
@@ -2756,7 +2702,6 @@ def diagnose_race(race, bias_data=None):
     return '\n'.join(lines)
 
 
-
 def calc_rl_cl_ranks(scored_horses):
     """RL/CL の生スコアを計算し、ランクを付与する"""
     RL_FEATURES = ['rl', 'recent', 'pace', 'maturity', 'rotation']
@@ -2778,39 +2723,6 @@ def calc_rl_cl_ranks(scored_horses):
     for i, h in enumerate(sorted_cl):
         h['cl_rank'] = i + 1
     return scored_horses
-
-
-def get_xgb_rating(xfeats_list, model=None, feature_cols=None):
-    """XGBの生マージン（log-odds, output_margin=True）を能力値として返す。
-
-    Parameters
-    ----------
-    xfeats_list : list of dict
-        各馬の特徴量辞書（calc_features_for_xgb の出力）
-    model       : XGBClassifier（省略時は init_engine でロード済みのモデルを使用）
-    feature_cols: 特徴量名リスト（省略時は _XGB_FEATURE_COLS を使用）
-
-    Returns
-    -------
-    list of float — 各馬の能力値（インデックスは xfeats_list と対応）
-    """
-    import pandas as _pd
-    import xgboost as _xgb
-    m  = model or _XGB_FUKUSHO_MODEL
-    fc = feature_cols or _XGB_FEATURE_COLS
-    if m is None or not fc:
-        return [0.0] * len(xfeats_list)
-    for xf in xfeats_list:
-        _check_xgb_feature_coverage(xf, fc)
-    rows = [{c: xf.get(c, 5.0) for c in fc} for xf in xfeats_list]
-    X    = _pd.DataFrame(rows)[fc].fillna(5.0)
-    dmat = _xgb.DMatrix(X, feature_names=list(fc))
-    if _XGB_RESIDUAL:
-        # ⚠ この関数はrace/popularityを受け取らないためbase_marginを設定しない。
-        # 残差学習モデルで市場込みの完全なマージンが必要な場合はcalc_all()を使うこと。
-        # output_margin=True必須（無指定だとsigmoid適用済み確率が返り2重sigmoidになる）
-        return [float(v) for v in m.predict(dmat, output_margin=True)]
-    return [float(v) for v in m.get_booster().predict(dmat, output_margin=True)]
 
 
 def calc_all(race, bias_data=None):
