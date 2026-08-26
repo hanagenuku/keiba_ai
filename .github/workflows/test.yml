@@ -18,3 +18,16 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
       - name: Run tests
         run: pytest tests/ -v --tb=short
+
+      # index.html の JS を検証するテスト。pytest の対象外なので node で動かす。
+      # ⚠ 5本あるのに CI では一度も走っていなかった（2026-08-25 に気づいて追加）。
+      #   本番の買い目・表示確率を固定しているテストなので、落ちたら止める。
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Run JS tests
+        run: |
+          for f in tests/*.mjs; do
+            echo "=== $f ==="
+            node "$f"
+          done

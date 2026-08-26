@@ -368,3 +368,38 @@ class TestVerificationCatchesNaN:
                    encoding='utf-8').read()
         assert 'not (resid.max() <= 1e-4)' in src, \
             'NaN を素通りさせる書き方に戻っている'
+
+
+class TestJsMatchesPython:
+    """本番はJSで動き、評価はPythonで測る。片方だけ直る事故を防ぐ。
+
+    `index.html` の `_baseMarginFromOdds` と、ここで測っている
+    `_odds_to_base_margin` は同じ計算でなければ「評価した物と動く物が違う」
+    ことになる。同じ数字を両方のテストに置いて突き合わせる。
+    """
+
+    # tests/test_odds_anchor_resync.mjs の PY_ODDS / PY_BM と同一
+    ODDS = [2.6, 4.2, 7.5, 14.0, 30.0, 1.4, 88.8]
+    BM = [-1.1392798311068162, -1.7338976161530684, -2.388546827627736,
+          -3.054422777178042, -3.841398484036717, -0.19958335343326103,
+          -4.940700063500772]
+
+    def test_python_side_matches_the_shared_literals(self):
+        got = _odds_to_base_margin(self.ODDS, ['r'] * len(self.ODDS))
+        assert np.allclose(got, self.BM, atol=1e-12)
+
+    def test_js_side_carries_the_same_literals(self):
+        base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        mjs = open(os.path.join(base, 'tests', 'test_odds_anchor_resync.mjs'),
+                   encoding='utf-8').read()
+        for v in self.BM:
+            assert repr(v) in mjs, f'JS側のテストに {v} が無い（実装がずれた可能性）'
+
+    def test_index_html_uses_the_odds_anchor(self):
+        """本番が実際に実オッズアンカーを使っていること。"""
+        base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        html = open(os.path.join(base, 'index.html'), encoding='utf-8').read()
+        assert '_baseMarginFromOdds' in html
+        # 壊れた盤で「大きさ」を使わないための検査が入っていること
+        assert '_oddsBookIsUsable' in html
+        assert 'MAX_VALID_ODDS_BOOK_SUM = 1.65' in html
