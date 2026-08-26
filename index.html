@@ -704,6 +704,37 @@ function _baseMarginFromPopularity(pop, nHorses) {
   return Math.log(pMkt / (1 - pMkt));
 }
 
+// 実オッズの大きさからアンカーを作る。レース内で Σ(1/オッズ)=1 に正規化するので
+// 控除率は自動的に落ちる。scripts/eval_odds_anchor.py の _odds_to_base_margin と
+// 同じ計算（Python側とJS側で値が一致することをテストで固定している）。
+//
+// なぜ順位(Zipf近似)ではなくこれを使うか:
+//   2026-08-25 に3,940レース・53,715頭で測ると、直前オッズを押した時点で
+//   人気順位アンカー AUC 0.8226 → 実オッズアンカー 0.8292（+0.0066・3窓とも同符号）。
+//   ⚠ 事前登録の基準②（平均+0.01以上）は未達。ユーザーの判断で採用した。
+//   ⚠ これは「当たりやすさ」であって回収率ではない（North Star #9）。
+function _baseMarginFromOdds(oddsList) {
+  const inv = oddsList.map(o => 1.0 / o);
+  const s = inv.reduce((a, b) => a + b, 0);
+  return inv.map(v => {
+    const p = Math.max(Math.min(v / s, 0.999), 0.001);
+    return Math.log(p / (1 - p));
+  });
+}
+
+// 単勝オッズ盤として成立しているか。engine.py の _sanitize_odds_book と同じ判定。
+// 控除率20%なら Σ(1/オッズ)≈1.25。2026-08-15 には全16頭が2.1倍という盤が来て
+// おり、1頭ずつ見ても異常に見えないが Σ では一発で分かる。
+// 🔴 壊れた盤で「大きさ」を使うと順位を使うより悪くなるので、必ず先に検査する。
+const MAX_VALID_ODDS_BOOK_SUM = 1.65;
+const MIN_HORSES_FOR_BOOK_CHECK = 3;
+function _oddsBookIsUsable(oddsList) {
+  if (oddsList.length < MIN_HORSES_FOR_BOOK_CHECK) return false;
+  if (!oddsList.every(o => typeof o === 'number' && o >= 1.0)) return false;
+  const book = oddsList.reduce((a, o) => a + 1.0 / o, 0);
+  return book <= MAX_VALID_ODDS_BOOK_SUM;
+}
+
 function _softmaxTotals(totals, temperature) {
   const maxT = Math.max(...totals);
   const exps = totals.map(t => Math.exp((t - maxT) / temperature));
@@ -777,10 +808,17 @@ function updateOddsAndEV(race, freshOdds) {
   const hasAbility = allHorses.length > 0 && allHorses.every(h => h.ability_margin != null);
   if (hasAbility) {
     const n = allHorses.length;
-    const totals = allHorses.map(h => {
-      const pop = h.pop || n;  // オッズ欠損馬は最下位人気扱い
-      const bm = _baseMarginFromPopularity(pop, n);
-      const rawProb = 1 / (1 + Math.exp(-(h.ability_margin + bm)));
+    // 全馬にまともなオッズが揃い、盤としても成立しているときだけ「大きさ」を使う。
+    // 欠損があると正規化が狂い、壊れた盤だと順位より悪くなるので、
+    // どちらの場合も従来どおり人気順位(Zipf近似)へ落とす。
+    const oddsList = allHorses.map(h => h.odds);
+    const useOdds = _oddsBookIsUsable(oddsList);
+    const bms = useOdds
+      ? _baseMarginFromOdds(oddsList)
+      : allHorses.map(h => _baseMarginFromPopularity(h.pop || n, n));
+    race._anchor = useOdds ? 'odds' : 'rank';
+    const totals = allHorses.map((h, i) => {
+      const rawProb = 1 / (1 + Math.exp(-(h.ability_margin + bms[i])));
       return rawProb * 10;
     });
     const winProbs = _softmaxTotals(totals, 3.5);
