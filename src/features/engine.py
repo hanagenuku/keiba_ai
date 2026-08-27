@@ -2086,16 +2086,20 @@ def calc_features_for_xgb(h, race):
     feats['f_early_speed'] = float(race.get('first_3f', 0) or 36.0)
 
     if hist:
-        places = [_hist_num(r.get('place'), 10) for r in hist[-5:]]
-        ws_ = [.75 ** i for i in range(len(places) - 1, -1, -1)]
+        # 🔴 hist は新しい順(DESC)。かつて hist[-5:] で切っており、
+        #    拾っていたのは「一番古い5走」だった（2026-08-27発見）。
+        #    直近1着の馬で f_last1_rank=16 が返っていた（正しくは1）。
+        #    重み .75**i も逆順で最古走に最大重み1.0が乗っていた。
+        places = [_hist_num(r.get('place'), 10) for r in hist[:5]]
+        ws_ = [.75 ** i for i in range(len(places))]      # 直近ほど重い
         tw_ = sum(ws_)
         ps_ = [max(0, 10 - (p - 1) * 10 / 15) for p in places]
         feats['f_recent']         = float(sum(s * w for s, w in zip(ps_, ws_)) / tw_) if tw_ > 0 else 5.0
         feats['f_recent_fukusho'] = _bayes_rate([1 if p <= 3 else 0 for p in places], prior=0.33, k=3)
         feats['f_career_runs']    = min(20, len(hist))
-        feats['f_last1_rank']     = float(places[-1]) if len(places) >= 1 else 8.0
-        feats['f_last2_rank']     = float(places[-2]) if len(places) >= 2 else 8.0
-        feats['f_last3_rank']     = float(places[-3]) if len(places) >= 3 else 8.0
+        feats['f_last1_rank']     = float(places[0]) if len(places) >= 1 else 8.0
+        feats['f_last2_rank']     = float(places[1]) if len(places) >= 2 else 8.0
+        feats['f_last3_rank']     = float(places[2]) if len(places) >= 3 else 8.0
     else:
         feats.update({
             'f_recent': 5.0, 'f_recent_fukusho': 0.33, 'f_career_runs': 0,
