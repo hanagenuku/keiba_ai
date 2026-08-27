@@ -16,7 +16,12 @@ import shutil
 from datetime import datetime
 
 # 脚質推定・corner_3導出は推論時（jra_scraper）と同じ関数を使い、学習/推論パリティを保つ
-from src.scraper.jra_scraper import _infer_running_style, _derive_corner3
+from src.scraper.jra_scraper import (
+    _infer_running_style, _derive_corner3,
+    # 学習と推論で過去走の深さを揃えるための共有定数。
+    # 片方だけ変えると 78/134 特徴量が別の値になる（2026-08-27）。
+    HISTORY_LIMIT as _HISTORY_LIMIT,
+)
 
 
 def _parse_date(date_str):
@@ -28,7 +33,7 @@ def _parse_date(date_str):
         return None
 
 
-def _get_history_before(conn, horse_name, before_date_str, limit=10):
+def _get_history_before(conn, horse_name, before_date_str, limit=_HISTORY_LIMIT):
     """
     before_date_str より前の過去走を取得し、engine が期待するキー名で返す。
 
@@ -331,7 +336,7 @@ def build_training_data(base_dir, output_csv='data/horse_features.csv',
 
         # 各馬の過去走を「このレースの日付より前」で取得
         for h in horse_objs:
-            h['history'] = _get_history_before(conn, h['name'], date_str, limit=10)
+            h['history'] = _get_history_before(conn, h['name'], date_str, limit=_HISTORY_LIMIT)
 
         # 脚質は過去走から推定する（推論時と同一の関数・同一の入力）。
         # 当該レースの実測脚質を使うと結果由来の情報が学習に混入し、
