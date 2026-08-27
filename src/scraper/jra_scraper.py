@@ -713,7 +713,17 @@ def _derive_corner3(corner_all):
         return None
 
 
-def get_history_from_db(horse_name, hist_db_path, limit=5):
+# 過去走を何走ぶん見るか。学習(build_training_data._get_history_before)と
+# 推論(get_history_from_db)は必ず同じ値でなければならない。
+# 🔴 2026-08-27まで 学習=10 / 推論=5 と食い違っており、134特徴量のうち78個が
+#    別の値になっていた（6走以上ある馬＝直近窓の約52%が該当）。
+#    実測すると AUC への影響は +0.0002 と小さかったが、Brier/LogLoss は
+#    3窓とも10走側が良く、cal_prob の較正がわずかに悪化していた。
+#    片方だけ変えられないよう、両側がこの定数を参照する形にしてある。
+HISTORY_LIMIT = 10
+
+
+def get_history_from_db(horse_name, hist_db_path, limit=HISTORY_LIMIT):
     """history.dbから馬の直近N走を取得"""
     try:
         conn = sqlite3.connect(hist_db_path)
