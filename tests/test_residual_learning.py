@@ -405,9 +405,18 @@ class TestRawMarginTrueLogOdds:
                 pickle.dump({}, f)
 
     def _race(self, n_horses):
+        # 🔴 単勝オッズ盤として成立する値にすること（North Star #6）。
+        #    以前は 1.5*(i+1) で作っていたが Σ(1/オッズ)=2.07 と本物(約1.25)から
+        #    外れており、_sanitize_odds_book に盤ごと無効化されていた。
+        #    修正前の calc_all はそこで「馬番順を人気とみなす」捏造をしていたため
+        #    テストは通り続けていたが、市場アンカーの経路を検証できていなかった。
+        #    控除率20%の実物に合わせて Σ(1/オッズ)=1.25 になる盤を作る。
+        w = [1.0 / (i + 1) for i in range(n_horses)]
+        tot = sum(w)
         horses = [
             {'num': i + 1, 'horse_num': i + 1, 'name': f'H{i+1}',
-             'win_odds': 1.5 * (i + 1), 'running_style': '差し', 'history': []}
+             'win_odds': round(tot / (1.25 * w[i]), 1),
+             'running_style': '差し', 'history': []}
             for i in range(n_horses)
         ]
         return {'date': '2026-07-26', 'racecourse': '新潟', 'distance': 1600,

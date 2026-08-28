@@ -127,6 +127,42 @@ def _sanitize_win_odds(horses, race_id=''):
     return len(bad)
 
 
+def _base_margin_from_popularity(pop, n_horses):
+    """人気順位 → base_margin（Zipf近似）。残差学習モデルの予測の出発点。
+
+    index.html の `_baseMarginFromPopularity` と同じ式であること
+    （直前オッズ取得時にJS側が同じ土台で組み直すため）。
+    """
+    n = max(int(n_horses), 2)
+    harm = math.log(n) + 0.5772
+    p = max(min((1.0 / max(pop, 1)) / harm, 0.999), 0.001)
+    return math.log(p / (1 - p))
+
+
+def _flat_base_margin(n_horses):
+    """オッズが1頭も取れなかったレース用の中立な base_margin。
+
+    🔴 なぜ必要か（2026-08-29に実測して発見）
+    `calc_all` は人気順位を `sorted(horses, key=lambda x: x.get('win_odds') or 999)`
+    で作る。オッズが全滅すると**全馬が999で同値**になり、Pythonのsortは安定なので
+    順位が**入力順＝馬番順**に付く。つまり「馬番1が1番人気」という**架空の市場**が
+    base_margin に入り、残差学習モデルはそれを予測の土台にしてしまう。
+    これは「アンカー無し」より悪い。土曜夜の日曜予想は odds_coverage=0.0 なので
+    毎週これが起きていた（2026-08-15 C-2）。
+
+    全馬に同じ値を渡せば市場の寄与が順位に効かなくなり、順位は
+    ability_margin（市場を見ないAIの評価）だけで決まる。水準を保つため
+    定数0ではなく「人気1〜nの base_margin の平均」を使う（cal_prob の
+    スケールが動くと穴マーク閾値 cal_prob>=0.15 まで動くため）。
+
+    5窓の実測（複勝回収率 / 各レース1位を1点買い）:
+        健全な人気 82.6%  ／ 馬番順(現状) 73.6%  ／ フラット 83.0%
+        AUC は 5窓すべてで 馬番順 0.66台 ＜ フラット 0.76-0.79
+    """
+    n = max(int(n_horses), 2)
+    return sum(_base_margin_from_popularity(k, n) for k in range(1, n + 1)) / n
+
+
 def _sanitize_odds_book(horses, race_id=''):
     """単勝オッズ盤として成立しない「盤ごと」の異常を検出して無効化する。
 
@@ -2753,10 +2789,19 @@ def calc_all(race, bias_data=None):
         _sanitize_win_odds(_horses_in, race.get('id', ''))
         # 1頭ずつでは異常に見えない「盤ごと壊れている」ケースも弾く
         _sanitize_odds_book(_horses_in, race.get('id', ''))
-        for _rank, _h in enumerate(
-                sorted(_horses_in, key=lambda x: x.get('win_odds') or 999), 1):
-            if not _h.get('popularity') or _h.get('popularity') == 99:
-                _h['popularity'] = _rank
+        # 🔴 オッズが1頭も無いレースで下の sorted() を回すと、全馬が同じキー(999)に
+        #    なり Python の安定ソートによって**人気順位が馬番順にそのまま付く**。
+        #    「馬番1が1番人気」という架空の市場が base_margin に入り、
+        #    アンカー無しより悪くなる（AUC 0.78 → 0.66、5窓すべてで再現）。
+        #    そのため捏造せず、順位付けを ability_margin だけに委ねる。
+        _has_odds = any((_h.get('win_odds') or 0) > 0 for _h in _horses_in)
+        _has_pop  = any(0 < (_h.get('popularity') or 0) < 99 for _h in _horses_in)
+        race['_market_anchor'] = 'odds' if (_has_odds or _has_pop) else 'flat'
+        if _has_odds or _has_pop:
+            for _rank, _h in enumerate(
+                    sorted(_horses_in, key=lambda x: x.get('win_odds') or 999), 1):
+                if not _h.get('popularity') or _h.get('popularity') == 99:
+                    _h['popularity'] = _rank
 
     # ── Pass 1: 全馬の絶対特徴量を収集 ───────────────────────────────────
     horse_data = []  # (h, sc, career, xfeats)
@@ -2809,11 +2854,13 @@ def calc_all(race, bias_data=None):
                 if _XGB_RESIDUAL:
                     # 残差学習: base_margin を設定してから予測
                     _dmat  = _xgb_lib.DMatrix(X_pred, feature_names=list(_XGB_FEATURE_COLS))
-                    _pop   = h.get('popularity') or len(race.get('horses', [])) // 2
                     _n_h   = max(len(race.get('horses', [])), 2)
-                    _harm  = math.log(_n_h) + 0.5772
-                    _p_mkt = max(min((1.0 / max(_pop, 1)) / _harm, 0.999), 0.001)
-                    _bm    = math.log(_p_mkt / (1 - _p_mkt))
+                    if race.get('_market_anchor') == 'flat':
+                        # オッズが1頭も無い。架空の人気を作らず中立な土台にする
+                        _bm = _flat_base_margin(_n_h)
+                    else:
+                        _pop = h.get('popularity') or _n_h // 2
+                        _bm  = _base_margin_from_popularity(_pop, _n_h)
                     import numpy as _np_bm
                     _dmat.set_base_margin(_np_bm.array([_bm]))
                     # output_margin=True必須: 指定しないとBooster.predict()は
