@@ -23,6 +23,7 @@ captured_at と minutes_to_post を必ず記録する。学習時は
 「T分前モデルなら minutes_to_post >= T の行だけ」で切れば時点が固定される。
 """
 import argparse
+import json
 import os
 import sys
 import time
@@ -35,9 +36,19 @@ from src.scraper.jra_scraper import (                          # noqa: E402
     get_kaisai_on_date, find_r01_odds, fetch_odds_for_race,
     fetch_races_on_date,
 )
-from src.utils.db import init_db, save_odds_snapshots, save_race_schedule  # noqa: E402
-
 JST = timezone(timedelta(hours=9))
+
+# 🔴 収集は keiba.db に直接書かない。
+#   このジョブは 09:20〜14:50 JST の5.5時間走るが、その間に weekend.yml の
+#   refresh が 11:30 と 14:00 に走り、同じ data/keiba.db を push する。
+#   ジョブ開始時に checkout した keiba.db を最後に上書き push すると、
+#   **その間の race_predictions / prediction_snapshots が黙って消える**。
+#   バイナリなので git はマージできない。
+#   → 収集側は自分だけが書く追記専用の JSONL に落とし、
+#     keiba.db への取り込みは sunday-results.yml（keiba.db の持ち主）で行う。
+#   副次的に「5.5時間ぶんを最後に1回だけ push する」危うさも消える
+#   （テキストなので途中で何度でも push できる）。
+TS_DIR = 'odds_ts'
 
 # North Star #4: 新しいリクエスト元には必ず件数上限を設ける。
 MAX_REQUESTS_DEFAULT = 4000
@@ -60,7 +71,35 @@ def _post_dt(date_str, post_time):
         return None
 
 
-def build_schedule(sess, date_str, base_dir):
+def _ts_path(base_dir, date_str, out_dir=None):
+    """収集先。CI では **作業ツリーの外** を指すこと。
+
+    🔴 git の作業ツリー内に書くと、並行する push 処理の `git reset --hard` が
+       収集中のファイルを巻き戻し、直前に書いた行が消える（'a' で開き直す
+       たびに短くなったファイルの末尾に追記してしまう）。
+       外に置けば git が何をしても収集は壊れない。
+    """
+    d = out_dir or os.path.join(base_dir, 'data', TS_DIR)
+    os.makedirs(d, exist_ok=True)
+    return os.path.join(d, f'{date_str}.jsonl')
+
+
+def _append(path, kind, rows):
+    """1行1レコードで追記し、毎回 flush する。
+
+    途中でジョブが落ちても、それまでに書いた分は必ず残る。
+    """
+    if not rows:
+        return 0
+    with open(path, 'a', encoding='utf-8') as f:
+        for r in rows:
+            f.write(json.dumps({'kind': kind, **r}, ensure_ascii=False) + '\n')
+        f.flush()
+        os.fsync(f.fileno())
+    return len(rows)
+
+
+def build_schedule(sess, date_str, base_dir, out_dir=None):
     """出馬表から発走時刻と頭数を取り、race_schedule に保存して返す。
 
     ⚠ これを最初にやらないと「発走何分前か」が永久に復元できない。
@@ -76,7 +115,7 @@ def build_schedule(sess, date_str, base_dir):
             'post_time': r.get('start_time'),
             'n_horses': len(r.get('horses') or []),
         })
-    saved = save_race_schedule(rows, base_dir=base_dir)
+    saved = _append(_ts_path(base_dir, date_str, out_dir), 'schedule', rows)
     n_with_time = sum(1 for x in rows if x['post_time'])
     print(f'📅 出馬表 {len(rows)}レース（発走時刻あり {n_with_time}）'
           f' / 新規保存 {saved} / parse失敗 {len(failures)}')
@@ -88,8 +127,7 @@ def build_schedule(sess, date_str, base_dir):
 
 def collect(base_dir, date_str=None, max_minutes=330,
             interval_sec=INTERVAL_SEC_DEFAULT,
-            max_requests=MAX_REQUESTS_DEFAULT, dry_run=False):
-    init_db(base_dir)
+            max_requests=MAX_REQUESTS_DEFAULT, dry_run=False, out_dir=None):
     sess = create_session()
     now = datetime.now(JST)
     date_str = date_str or now.strftime('%Y%m%d')
@@ -100,7 +138,7 @@ def collect(base_dir, date_str=None, max_minutes=330,
         return {'races': 0, 'snapshots': 0, 'requests': 0}
     print(f'開催: {kaisai}')
 
-    sched = {r['race_id']: r for r in build_schedule(sess, date_str, base_dir)}
+    sched = {r['race_id']: r for r in build_schedule(sess, date_str, base_dir, out_dir)}
     if not sched:
         print('❌ 出馬表が取れないので収集しない')
         return {'races': 0, 'snapshots': 0, 'requests': 0}
@@ -196,7 +234,7 @@ def collect(base_dir, date_str=None, max_minutes=330,
             if dry_run:
                 total_saved += len(rows)
             else:
-                total_saved += save_odds_snapshots(rows, base_dir=base_dir)
+                total_saved += _append(_ts_path(base_dir, date_str, out_dir), 'odds', rows)
 
         print(f'  [{tick.strftime("%H:%M:%S")}] 周回{rounds} '
               f'対象{len(due)}R 保存累計{total_saved} リクエスト{req}')
@@ -220,9 +258,11 @@ def main():
     ap.add_argument('--interval-sec', type=int, default=INTERVAL_SEC_DEFAULT)
     ap.add_argument('--max-requests', type=int, default=MAX_REQUESTS_DEFAULT)
     ap.add_argument('--dry-run', action='store_true')
+    ap.add_argument('--out-dir', default=None,
+                    help='JSONLの出力先。CIでは作業ツリーの外を指すこと')
     a = ap.parse_args()
     collect(a.base_dir, a.date, a.max_minutes, a.interval_sec,
-            a.max_requests, a.dry_run)
+            a.max_requests, a.dry_run, a.out_dir)
 
 
 if __name__ == '__main__':

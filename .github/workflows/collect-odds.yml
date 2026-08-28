@@ -14,6 +14,16 @@ name: Collect Odds Timeseries
 #   つまり**ここで取らなかったものは永久に手に入らない**。
 #   そのため粒度は粗くせず（後で間引けるが細かくはできない）、
 #   発走直前まで取る（最終オッズの唯一の入手経路）。
+#
+# ■ 🔴 keiba.db には触らない
+#   このジョブは 09:20〜14:50 JST 走るが、その間に weekend.yml の refresh が
+#   11:30 / 14:00 に走り同じ data/keiba.db を push する。ジョブ開始時の
+#   keiba.db を最後に上書き push すると、その間の race_predictions /
+#   prediction_snapshots が黙って消える（バイナリなのでgitがマージできない）。
+#   → 収集は data/odds_ts/*.jsonl（このジョブだけが書く追記ファイル）に落とし、
+#     keiba.db への取り込みは sunday-results.yml で行う。
+#   テキストなので途中で何度でも push でき、5.5時間ぶんを最後に1回だけ
+#   push する危うさも同時に消える（2026-07-18のタイムアウト事故と同型）。
 
 on:
   workflow_dispatch:
@@ -70,27 +80,51 @@ jobs:
           IVL="${{ inputs.interval_sec }}"; IVL="${IVL:-120}"
           ARGS=""
           if [ -n "${{ inputs.date }}" ]; then ARGS="--date ${{ inputs.date }}"; fi
-          python scripts/collect_odds.py --base-dir . \
+          git config user.email "bot@keiba_ai"
+          git config user.name "keiba_ai bot"
+          # 🔴 収集先は作業ツリーの外。git reset --hard が収集中のファイルを
+          #    巻き戻して直前の行を失う事故を構造的に防ぐ。
+          STAGE="${RUNNER_TEMP:-/tmp}/odds_ts"
+          mkdir -p "$STAGE"
+          echo "STAGE=$STAGE" >> "$GITHUB_ENV"
+          # 20分ごとに data/odds_ts/ だけを push する見張り。
+          # 収集は取り返しがつかない（発走前にしか存在しない）ので、
+          # ジョブが落ちてもそこまでの分は残るようにする。
+          (
+            while true; do
+              sleep 1200
+              ls "$STAGE"/*.jsonl >/dev/null 2>&1 || continue
+              for i in 1 2 3; do
+                git fetch -q origin main && git reset -q --hard origin/main
+                mkdir -p data/odds_ts && cp "$STAGE"/*.jsonl data/odds_ts/
+                git add data/odds_ts/ || true
+                git diff --cached --quiet && break
+                git commit -q -m "data: オッズ時系列を収集 (中間 $(date -u +%H:%M))"
+                git push -q origin HEAD:main && break
+                sleep $((i * 5))
+              done
+            done
+          ) &
+          PUSHER=$!
+          python scripts/collect_odds.py --base-dir . --out-dir "$STAGE" \
             --max-minutes "$MIN" --interval-sec "$IVL" $ARGS
+          kill $PUSHER 2>/dev/null || true
 
       - name: Commit & Push
         run: |
-          if [ -z "$(git status --porcelain -- data/)" ]; then
-            echo "変更なし"; exit 0
+          # 🔴 data/odds_ts/ だけを push する。data/keiba.db は触らない
+          #    （並行する weekend.yml の refresh を上書きしてしまうため）。
+          #    収集の実体は $STAGE（作業ツリー外）にあるので、resetしても失われない。
+          STAGE="${STAGE:-${RUNNER_TEMP:-/tmp}/odds_ts}"
+          if ! ls "$STAGE"/*.jsonl >/dev/null 2>&1; then
+            echo "収集ファイルなし"; exit 0
           fi
           git config user.email "bot@keiba_ai"
           git config user.name "keiba_ai bot"
-          TMP=$(mktemp -d)
-          git status --porcelain -- data/ | awk '{print $2}' > "$TMP/files.txt"
-          while read -r f; do
-            [ -f "$f" ] && mkdir -p "$TMP/$(dirname "$f")" && cp "$f" "$TMP/$f"
-          done < "$TMP/files.txt"
           for i in 1 2 3 4 5; do
             git fetch origin main && git reset --hard origin/main
-            while read -r f; do
-              [ -f "$TMP/$f" ] && mkdir -p "$(dirname "$f")" && cp "$TMP/$f" "$f"
-            done < "$TMP/files.txt"
-            git add data/ || true
+            mkdir -p data/odds_ts && cp "$STAGE"/*.jsonl data/odds_ts/
+            git add data/odds_ts/ || true
             if git diff --cached --quiet; then echo "差分なし"; exit 0; fi
             git commit -m "data: オッズ時系列を収集 ($(date -u +%Y-%m-%d))"
             if git push origin HEAD:main; then echo "push成功"; exit 0; fi

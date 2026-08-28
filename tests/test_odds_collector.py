@@ -14,6 +14,8 @@ import os
 import sqlite3
 import tempfile
 import unittest
+import json
+import shutil
 
 from src.utils.db import init_db, save_odds_snapshots, save_race_schedule
 
@@ -188,3 +190,91 @@ class TestCollectWorkflow(unittest.TestCase):
         self.assertIn('git add data/', src)
         self.assertNotIn('git add -A', src,
                          '説明していない変更まで巻き込む（2026-08-27の反省）')
+
+
+class TestJsonlSinkAndMerge(unittest.TestCase):
+    """収集は keiba.db に触らず JSONL に落ち、取り込みは別工程で行う。
+
+    🔴 これが崩れると、5.5時間走る collect-odds が、その間に走った
+       weekend.yml の refresh（11:30 / 14:00 JST）の race_predictions を
+       黙って上書きして消す。バイナリなので git はマージできない。
+    """
+
+    def setUp(self):
+        self.d = tempfile.mkdtemp()
+        os.makedirs(os.path.join(self.d, 'data'), exist_ok=True)
+
+    def tearDown(self):
+        shutil.rmtree(self.d, ignore_errors=True)
+
+    def test_collect_odds_does_not_write_keiba_db(self):
+        """収集モジュールが keiba.db への書き込み関数を持ち込んでいないこと。"""
+        src = open(os.path.join(os.path.dirname(os.path.dirname(
+            os.path.abspath(__file__))), 'scripts', 'collect_odds.py')).read()
+        for banned in ('save_odds_snapshots', 'save_race_schedule', 'init_db'):
+            self.assertNotIn(banned, src,
+                             f'collect_odds.py が {banned} を使っている＝keiba.dbを書く')
+
+    def test_append_writes_jsonl_and_survives_reopen(self):
+        from scripts.collect_odds import _append, _ts_path
+        p = _ts_path(self.d, '20260830')
+        _append(p, 'schedule', [{'race_id': 'A', 'post_time': '15:00'}])
+        _append(p, 'odds', [{'race_id': 'A', 'horse_num': 1, 'tansho': 3.0}])
+        lines = [json.loads(x) for x in open(p, encoding='utf-8')]
+        self.assertEqual([r['kind'] for r in lines], ['schedule', 'odds'])
+
+    def test_out_dir_can_point_outside_the_repo(self):
+        """CIでは作業ツリー外に書く。git reset --hard で巻き戻らないため。"""
+        from scripts.collect_odds import _ts_path
+        out = os.path.join(self.d, 'elsewhere')
+        p = _ts_path(self.d, '20260830', out_dir=out)
+        self.assertTrue(p.startswith(out))
+        self.assertNotIn(os.path.join('data', 'odds_ts'), p)
+
+    def test_merge_is_idempotent(self):
+        from scripts.collect_odds import _append, _ts_path
+        from scripts.merge_odds_ts import merge_odds_ts
+        p = _ts_path(self.d, '20260830')
+        _append(p, 'schedule', [{'race_id': '20260830_05_11', 'date': '2026-08-30',
+                                 'racecourse': '新潟', 'race_num': 11,
+                                 'post_time': '15:45', 'n_horses': 16}])
+        _append(p, 'odds', [{'race_id': '20260830_05_11', 'horse_num': 1,
+                             'tansho': 3.2, 'fukusho': 1.5,
+                             'captured_at': '2026-08-30 15:10:00',
+                             'minutes_to_post': 35.0, 'n_captured': 16,
+                             'n_expected': 16, 'is_scratched': False,
+                             'source': 'auto'}])
+        first = merge_odds_ts(self.d)
+        self.assertEqual(first['odds'], 1)
+        self.assertEqual(first['schedule'], 1)
+        self.assertFalse(os.path.exists(p), '取り込み済みJSONLは消える')
+
+        # 同じ内容をもう一度流しても増えない
+        _append(_ts_path(self.d, '20260830'), 'odds',
+                [{'race_id': '20260830_05_11', 'horse_num': 1, 'tansho': 3.2,
+                  'fukusho': 1.5, 'captured_at': '2026-08-30 15:10:00',
+                  'minutes_to_post': 35.0, 'n_captured': 16, 'n_expected': 16,
+                  'is_scratched': False, 'source': 'auto'}])
+        self.assertEqual(merge_odds_ts(self.d)['odds'], 0)
+
+    def test_merge_tolerates_truncated_last_line(self):
+        """収集中にジョブが落ちると最終行が欠ける。1行捨てて続けること。"""
+        from scripts.merge_odds_ts import merge_odds_ts
+        d = os.path.join(self.d, 'data', 'odds_ts')
+        os.makedirs(d, exist_ok=True)
+        with open(os.path.join(d, '20260830.jsonl'), 'w', encoding='utf-8') as f:
+            f.write(json.dumps({'kind': 'schedule', 'race_id': 'X',
+                                'date': '2026-08-30', 'racecourse': '新潟',
+                                'race_num': 1, 'post_time': '10:00',
+                                'n_horses': 8}) + '\n')
+            f.write('{"kind": "odds", "race_id": "X", "horse_nu')  # 途中で切れた
+        self.assertEqual(merge_odds_ts(self.d)['schedule'], 1)
+
+    def test_workflow_pushes_only_odds_ts(self):
+        """ワークフローが data/ を丸ごと push していないこと（keiba.db 保護）。"""
+        y = open(os.path.join(os.path.dirname(os.path.dirname(
+            os.path.abspath(__file__))),
+            '.github', 'workflows', 'collect-odds.yml')).read()
+        self.assertNotIn('git add data/ ', y)
+        self.assertIn('git add data/odds_ts/', y)
+        self.assertNotIn('git status --porcelain -- data/)', y)

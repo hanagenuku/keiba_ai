@@ -47,6 +47,13 @@ jobs:
         env:
           TARGET_DATE: ${{ inputs.date }}
 
+      - name: Merge odds timeseries (collect-odds.yml が残したJSONL)
+        # collect-odds は keiba.db に触らない（並行する weekend.yml の refresh を
+        # 上書きしてしまうため）。keiba.db の持ち主であるここで一度だけ取り込む。
+        # 冪等（UNIQUE制約）なので二重に走っても増えない。
+        continue-on-error: true
+        run: python scripts/merge_odds_ts.py --base-dir .
+
       - name: Ingest pre-race odds log
         run: python scripts/ingest_odds_log.py
         env:
