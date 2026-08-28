@@ -163,6 +163,18 @@ def init_db(base_dir=None, db_path=None):
             created_at  TEXT DEFAULT CURRENT_TIMESTAMP,
             UNIQUE(race_id, horse_num, captured_at)
         );
+        -- 発走時刻。オッズ時系列は「発走何分前か」で揃えないとレース間で比較できない。
+        -- parse_header は start_time を取っていたが、どのDBにも保存されていなかった
+        -- （races.raw_json に245行中6行だけ残っていた。2026-08-27発見）。
+        CREATE TABLE IF NOT EXISTS race_schedule (
+            race_id    TEXT PRIMARY KEY,
+            date       TEXT,
+            racecourse TEXT,
+            race_num   INTEGER,
+            post_time  TEXT,          -- 'HH:MM'（JST）
+            n_horses   INTEGER,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        );
         CREATE INDEX IF NOT EXISTS idx_os_race ON odds_snapshots(race_id);
         -- 全券種の実配当。parse_dividends は8券種すべてを取得しているのに、
         -- 保存していたのは単勝・複勝だけ（results テーブル）で、
@@ -277,6 +289,7 @@ def init_db(base_dir=None, db_path=None):
             "WHERE correction_enabled IS NOT NULL")
     except sqlite3.OperationalError:
         pass
+    _ensure_odds_snapshot_columns(conn)
     conn.commit()
     conn.close()
 
@@ -1308,6 +1321,62 @@ def get_latest_odds_snapshot_time(db_path):
     return row[0] if row and row[0] else ''
 
 
+_ODDS_SNAPSHOT_EXTRA_COLS = (
+    # 複勝は範囲(X.X-Y.Y)で出る。従来は (min+max)/2 に潰していたが、
+    # 範囲の広さ自体が「市場がどれだけ決めかねているか」を表す情報なので両端を残す。
+    ('fukusho_min', 'REAL'),
+    ('fukusho_max', 'REAL'),
+    # 発走まで何分か。post_time が分かる時だけ入る。
+    ('minutes_to_post', 'REAL'),
+    # そのスナップショットで何頭ぶん取れたか / 何頭いるはずか。
+    # 一部しか取れていない回で市場シェアを正規化すると静かに誤った値になる。
+    ('n_captured', 'INTEGER'),
+    ('n_expected', 'INTEGER'),
+    # 取消・除外。1頭消えると全馬のオッズが動くので、記録しないと
+    # 「情報を持った資金流入」と誤読する。
+    ('is_scratched', 'INTEGER DEFAULT 0'),
+)
+
+
+def _ensure_odds_snapshot_columns(conn):
+    """odds_snapshots に後付け列を足す（既存行は NULL のまま残る）。"""
+    have = {r[1] for r in conn.execute('PRAGMA table_info(odds_snapshots)')}
+    for name, decl in _ODDS_SNAPSHOT_EXTRA_COLS:
+        if name not in have:
+            conn.execute(f'ALTER TABLE odds_snapshots ADD COLUMN {name} {decl}')
+
+
+def save_race_schedule(rows, base_dir=None, db_path=None):
+    """発走時刻を race_schedule に保存する。
+
+    オッズ時系列は「発走何分前か」で揃えないとレース間で比較できない。
+    parse_header は start_time を取っていたが、どのDBにも保存されておらず
+    （races.raw_json に245行中6行だけ残っていた）、このままでは
+    何ヶ月集めても時点別の分析ができない状態だった（2026-08-27発見）。
+
+    rows: [{race_id, date, racecourse, race_num, post_time, n_horses}, ...]
+    Returns: 新規保存した行数
+    """
+    path = db_path or get_db_path(base_dir)
+    conn = _connect(path)
+    n = 0
+    for r in rows:
+        rid = str(r.get('race_id') or '')
+        if not rid:
+            continue
+        cur = conn.execute(
+            "INSERT OR REPLACE INTO race_schedule "
+            "(race_id, date, racecourse, race_num, post_time, n_horses) "
+            "VALUES (?, ?, ?, ?, ?, ?)",
+            (rid, str(r.get('date') or ''), str(r.get('racecourse') or ''),
+             r.get('race_num'), r.get('post_time'), r.get('n_horses')),
+        )
+        n += cur.rowcount
+    conn.commit()
+    conn.close()
+    return n
+
+
 def save_odds_snapshots(rows, base_dir=None, db_path=None):
     """直前オッズログ（GASの getOddsLog が返す行）を odds_snapshots に保存する。
 
@@ -1318,6 +1387,7 @@ def save_odds_snapshots(rows, base_dir=None, db_path=None):
     """
     path = db_path or get_db_path(base_dir)
     conn = _connect(path)
+    _ensure_odds_snapshot_columns(conn)
     n = 0
     for r in rows:
         race_id = str(r.get('race_id', ''))
@@ -1327,10 +1397,15 @@ def save_odds_snapshots(rows, base_dir=None, db_path=None):
             continue
         cur = conn.execute(
             "INSERT OR IGNORE INTO odds_snapshots "
-            "(race_id, horse_num, tansho, fukusho, captured_at, source) "
-            "VALUES (?, ?, ?, ?, ?, ?)",
+            "(race_id, horse_num, tansho, fukusho, captured_at, source,"
+            " fukusho_min, fukusho_max, minutes_to_post,"
+            " n_captured, n_expected, is_scratched) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (race_id, int(num), r.get('tansho'), r.get('fukusho'),
-             captured_at, r.get('source', 'chokuzen')),
+             captured_at, r.get('source', 'chokuzen'),
+             r.get('fukusho_min'), r.get('fukusho_max'), r.get('minutes_to_post'),
+             r.get('n_captured'), r.get('n_expected'),
+             int(bool(r.get('is_scratched', False)))),
         )
         n += cur.rowcount
     conn.commit()

@@ -1,0 +1,99 @@
+name: Collect Odds Timeseries
+
+# オッズ時系列の収集（設計書 Phase 0 → B「リアルタイム収集」）。
+#
+# ■ なぜ長時間ジョブ + 内部ループなのか
+#   GitHub Actions の cron は5分粒度で、実際には5〜20分遅延する。
+#   「発走30分前」を揃えたいのに cron のジッタがそのまま誤差になるため、
+#   1本のジョブを走らせ内部で時刻を見て poll する。公開リポジトリなので
+#   Actions 分数は無料。
+#
+# ■ 収集は取り返しがつかない
+#   オッズページは発走前しか存在せず、過去に遡れない（2026-08-17確認）。
+#   結果ページからオッズ列も消滅済み（2026-08-03③）。
+#   つまり**ここで取らなかったものは永久に手に入らない**。
+#   そのため粒度は粗くせず（後で間引けるが細かくはできない）、
+#   発走直前まで取る（最終オッズの唯一の入手経路）。
+
+on:
+  workflow_dispatch:
+    inputs:
+      date:
+        description: '収集する開催日 YYYYMMDD（省略時は当日）'
+        required: false
+        type: string
+      max_minutes:
+        description: '最大実行時間（分）'
+        required: false
+        default: '330'
+        type: string
+      interval_sec:
+        description: 'poll間隔（秒）'
+        required: false
+        default: '120'
+        type: string
+  schedule:
+    # 土日 09:20 JST（00:20 UTC）開始。1本で5.5時間カバーする。
+    - cron: '20 0 * * 6,0'
+    # 15:00 JST（06:00 UTC）から2本目。最終レースまでを拾う。
+    - cron: '0 6 * * 6,0'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: keiba-odds-collect
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    # スクリプト側の上限(330分)より必ず長くする
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Collect
+        run: |
+          MIN="${{ inputs.max_minutes }}"; MIN="${MIN:-330}"
+          # ジョブのtimeout(350)より必ず短くする
+          if [ "$MIN" -gt 330 ]; then MIN=330; fi
+          IVL="${{ inputs.interval_sec }}"; IVL="${IVL:-120}"
+          ARGS=""
+          if [ -n "${{ inputs.date }}" ]; then ARGS="--date ${{ inputs.date }}"; fi
+          python scripts/collect_odds.py --base-dir . \
+            --max-minutes "$MIN" --interval-sec "$IVL" $ARGS
+
+      - name: Commit & Push
+        run: |
+          if [ -z "$(git status --porcelain -- data/)" ]; then
+            echo "変更なし"; exit 0
+          fi
+          git config user.email "bot@keiba_ai"
+          git config user.name "keiba_ai bot"
+          TMP=$(mktemp -d)
+          git status --porcelain -- data/ | awk '{print $2}' > "$TMP/files.txt"
+          while read -r f; do
+            [ -f "$f" ] && mkdir -p "$TMP/$(dirname "$f")" && cp "$f" "$TMP/$f"
+          done < "$TMP/files.txt"
+          for i in 1 2 3 4 5; do
+            git fetch origin main && git reset --hard origin/main
+            while read -r f; do
+              [ -f "$TMP/$f" ] && mkdir -p "$(dirname "$f")" && cp "$TMP/$f" "$f"
+            done < "$TMP/files.txt"
+            git add data/ || true
+            if git diff --cached --quiet; then echo "差分なし"; exit 0; fi
+            git commit -m "data: オッズ時系列を収集 ($(date -u +%Y-%m-%d))"
+            if git push origin HEAD:main; then echo "push成功"; exit 0; fi
+            echo "push失敗 リトライ $i"; sleep $((i * 5))
+          done
+          echo "🔴 5回試してpushできなかった"; exit 1

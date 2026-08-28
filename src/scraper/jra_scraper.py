@@ -415,11 +415,18 @@ def fetch_odds_for_race(sess, odds_base, race_num, date_str, sx):
 
             tansho = None
             fukusho = None
+            fukusho_min = None
+            fukusho_max = None
             for cell in cells[offset + 1:]:
-                # 複勝オッズ: "X.X - Y.Y" 形式の範囲表示 → 中央値を採用
+                # 複勝オッズ: "X.X - Y.Y" 形式の範囲表示。
+                # 中央値だけでなく両端も残す。範囲の広さ自体が
+                # 「市場がどれだけ決めかねているか」を表す情報で、
+                # 平均に潰すと復元できない（2026-08-27）。
                 fm = re.match(r'^(\d{1,4}\.\d)\s*[-~〜]\s*(\d{1,4}\.\d)$', cell)
                 if fm:
-                    fukusho = round((float(fm.group(1)) + float(fm.group(2))) / 2, 1)
+                    fukusho_min = float(fm.group(1))
+                    fukusho_max = float(fm.group(2))
+                    fukusho = round((fukusho_min + fukusho_max) / 2, 1)
                     continue
                 # 単勝オッズ: "X.X" 単独表示（複勝より先に出現する想定）
                 tm = re.match(r'^(\d{1,4}\.\d)$', cell)
@@ -427,7 +434,12 @@ def fetch_odds_for_race(sess, odds_base, race_num, date_str, sx):
                     tansho = float(tm.group(1))
 
             if tansho is not None or fukusho is not None:
-                odds_map[horse_num] = {'tansho': tansho, 'fukusho': fukusho}
+                odds_map[horse_num] = {
+                    'tansho': tansho,
+                    'fukusho': fukusho,
+                    'fukusho_min': fukusho_min,
+                    'fukusho_max': fukusho_max,
+                }
 
     return odds_map
 
