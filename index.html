@@ -735,6 +735,17 @@ function _oddsBookIsUsable(oddsList) {
   return book <= MAX_VALID_ODDS_BOOK_SUM;
 }
 
+// 🔴 オッズも人気も無いレース用の中立な土台。engine.py の _flat_base_margin と同じ。
+//    全馬に同じ値を渡すと市場の寄与が順位に効かなくなり、順位は
+//    ability_margin（市場を見ないAIの評価）だけで決まる。
+//    サーバ側が「馬番順を人気とみなす」捏造をしていた頃は AUC 0.78→0.66 に落ちていた。
+function _flatBaseMargin(n) {
+  const k = Math.max(n, 2);
+  let sum = 0;
+  for (let i = 1; i <= k; i++) sum += _baseMarginFromPopularity(i, k);
+  return sum / k;
+}
+
 function _softmaxTotals(totals, temperature) {
   const maxT = Math.max(...totals);
   const exps = totals.map(t => Math.exp((t - maxT) / temperature));
@@ -813,10 +824,16 @@ function updateOddsAndEV(race, freshOdds) {
     // どちらの場合も従来どおり人気順位(Zipf近似)へ落とす。
     const oddsList = allHorses.map(h => h.odds);
     const useOdds = _oddsBookIsUsable(oddsList);
-    const bms = useOdds
-      ? _baseMarginFromOdds(oddsList)
-      : allHorses.map(h => _baseMarginFromPopularity(h.pop || n, n));
-    race._anchor = useOdds ? 'odds' : 'rank';
+    // 人気が1つも分からないなら、順位を捏造せず中立な土台にする。
+    // （サーバ側 engine.py の _market_anchor='flat' と同じ扱い）
+    const hasPop = allHorses.some(h => h.pop > 0 && h.pop < 99);
+    let bms, anchor;
+    if (useOdds)      { bms = _baseMarginFromOdds(oddsList); anchor = 'odds'; }
+    else if (hasPop)  { bms = allHorses.map(h => _baseMarginFromPopularity(h.pop || n, n));
+                        anchor = 'rank'; }
+    else              { const f = _flatBaseMargin(n); bms = allHorses.map(() => f);
+                        anchor = 'flat'; }
+    race._anchor = anchor;
     const totals = allHorses.map((h, i) => {
       const rawProb = 1 / (1 + Math.exp(-(h.ability_margin + bms[i])));
       return rawProb * 10;
