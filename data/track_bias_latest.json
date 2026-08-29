@@ -1,48 +1,48 @@
 {
-  "inner_outer": -0.12,
-  "pace_bias": -0.22,
-  "track_speed": -0.69,
+  "inner_outer": 0.27,
+  "pace_bias": -0.17,
+  "track_speed": -1.12,
   "summary": "時計遅め",
   "by_course": {
-    "新潟": {
-      "inner_outer": -0.26,
-      "pace_bias": 0.21,
-      "track_speed": -0.12,
-      "summary": "フラット",
-      "style_dist": {
-        "先行": 11,
-        "追込": 9,
-        "差し": 8,
-        "逃げ": 5
-      },
-      "race_count": 11
-    },
-    "中京": {
-      "inner_outer": 0.29,
-      "pace_bias": -0.34,
-      "track_speed": -0.48,
-      "summary": "フラット",
-      "style_dist": {
-        "逃げ": 5,
-        "先行": 8,
-        "差し": 13,
-        "追込": 7
-      },
-      "race_count": 11
-    },
     "札幌": {
-      "inner_outer": -0.39,
-      "pace_bias": -0.53,
-      "track_speed": -1.46,
+      "inner_outer": 0.06,
+      "pace_bias": -0.37,
+      "track_speed": -1.69,
       "summary": "時計遅め",
       "style_dist": {
-        "先行": 9,
-        "追込": 7,
-        "逃げ": 4,
-        "差し": 16
+        "先行": 8,
+        "差し": 14,
+        "逃げ": 6,
+        "追込": 8
       },
       "race_count": 12
+    },
+    "中京": {
+      "inner_outer": 0.64,
+      "pace_bias": -0.7,
+      "track_speed": -0.44,
+      "summary": "フラット",
+      "style_dist": {
+        "先行": 9,
+        "差し": 18,
+        "追込": 6,
+        "逃げ": 3
+      },
+      "race_count": 12
+    },
+    "新潟": {
+      "inner_outer": 0.12,
+      "pace_bias": 0.57,
+      "track_speed": -1.22,
+      "summary": "時計遅め",
+      "style_dist": {
+        "先行": 12,
+        "差し": 11,
+        "追込": 4,
+        "逃げ": 6
+      },
+      "race_count": 11
     }
   },
-  "date": "2026-08-22"
+  "date": "2026-08-29"
 }
