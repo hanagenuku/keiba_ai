@@ -13,7 +13,19 @@ def get_base_from_calendar(place_code, date_str, calendar=None):
 
 
 def get_kaisai_on_date(date_str, sess, calendar=None):
-    """指定日の開催情報を取得（出走表一覧ページから正確なkai/nichiを取得）"""
+    """指定日の開催情報を取得（出走表一覧ページから正確なkai/nichiを取得）
+
+    ⚠ 引数は **(日付, セッション)** の順。逆にすると sess.post が
+      'str' object has no attribute 'post' で失敗し、except に握られて
+      **空の dict が返る＝「開催日ではない」と誤読される**。
+      2026-08-16・2026-08-20(A-1)・2026-08-29(collect_odds) と**3度**再発した。
+      空振りと該当なしは別物なので、取り違えは黙って通さず即座に落とす。
+    """
+    if not isinstance(date_str, str):
+        raise TypeError(
+            f'get_kaisai_on_date(date_str, sess) の引数順が逆です。'
+            f'第1引数は日付文字列(YYYYMMDD)ですが {type(date_str).__name__} が来ました'
+        )
     links = {}
 
     # ① 出走表一覧(pw01dli00)から pw01drl00 形式でkai/nichiを取得（最も信頼性が高い）

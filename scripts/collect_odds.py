@@ -104,7 +104,8 @@ def build_schedule(sess, date_str, base_dir, out_dir=None):
 
     ⚠ これを最初にやらないと「発走何分前か」が永久に復元できない。
     """
-    races, failures = fetch_races_on_date(sess, date_str)
+    races, failures = fetch_races_on_date(sess, date_str,
+                                          os.path.join(base_dir, 'data', 'history.db'))
     rows = []
     for r in races:
         rows.append({
@@ -132,7 +133,7 @@ def collect(base_dir, date_str=None, max_minutes=330,
     now = datetime.now(JST)
     date_str = date_str or now.strftime('%Y%m%d')
 
-    kaisai = get_kaisai_on_date(sess, date_str)
+    kaisai = get_kaisai_on_date(date_str, sess)
     if not kaisai:
         print(f'❌ {date_str} の開催情報が見つかりません（開催日ではない可能性）')
         return {'races': 0, 'snapshots': 0, 'requests': 0}
