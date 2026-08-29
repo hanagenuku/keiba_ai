@@ -12011,5 +12011,910 @@
         "top3_rate": 15.9
       }
     }
+  },
+  {
+    "date": "2026-08-29",
+    "divergence": {
+      "total_horses": 7620,
+      "total_races": 594,
+      "bucket_stats": [
+        {
+          "bucket": "AI<<市場(<0.5x)",
+          "count": 709,
+          "win_rate": 14.7,
+          "top3_rate": 35.8,
+          "tansho_roi": 45.8,
+          "avg_ai_prob": 0.0495,
+          "avg_mkt_prob": 0.1708
+        },
+        {
+          "bucket": "AI<市場(0.5-0.8x)",
+          "count": 1209,
+          "win_rate": 13.7,
+          "top3_rate": 32.1,
+          "tansho_roi": 73.5,
+          "avg_ai_prob": 0.0849,
+          "avg_mkt_prob": 0.1279
+        },
+        {
+          "bucket": "一致(0.8-1.2x)",
+          "count": 1993,
+          "win_rate": 8.6,
+          "top3_rate": 28.4,
+          "tansho_roi": 73.3,
+          "avg_ai_prob": 0.0891,
+          "avg_mkt_prob": 0.0916
+        },
+        {
+          "bucket": "AI>市場(1.2-2.0x)",
+          "count": 1944,
+          "win_rate": 5.7,
+          "top3_rate": 19.4,
+          "tansho_roi": 78.3,
+          "avg_ai_prob": 0.0743,
+          "avg_mkt_prob": 0.0504
+        },
+        {
+          "bucket": "AI>>市場(2.0-3.0x)",
+          "count": 863,
+          "win_rate": 2.2,
+          "top3_rate": 12.4,
+          "tansho_roi": 40.6,
+          "avg_ai_prob": 0.0634,
+          "avg_mkt_prob": 0.0264
+        },
+        {
+          "bucket": "AI>>>市場(3.0x+)",
+          "count": 902,
+          "win_rate": 2.4,
+          "top3_rate": 9.4,
+          "tansho_roi": 79.6,
+          "avg_ai_prob": 0.08,
+          "avg_mkt_prob": 0.0165
+        }
+      ],
+      "rank_matrix": [
+        {
+          "pop_band": "1",
+          "rl_band": "1",
+          "count": 451,
+          "win_rate": 33.0,
+          "top3_rate": 60.3,
+          "tansho_roi": 85.2
+        },
+        {
+          "pop_band": "1",
+          "rl_band": "2-3",
+          "count": 73,
+          "win_rate": 37.0,
+          "top3_rate": 60.3,
+          "tansho_roi": 87.7
+        },
+        {
+          "pop_band": "1",
+          "rl_band": "4-5",
+          "count": 23,
+          "win_rate": 21.7,
+          "top3_rate": 43.5,
+          "tansho_roi": 50.0
+        },
+        {
+          "pop_band": "1",
+          "rl_band": "6-9",
+          "count": 30,
+          "win_rate": 16.7,
+          "top3_rate": 53.3,
+          "tansho_roi": 46.0
+        },
+        {
+          "pop_band": "1",
+          "rl_band": "10+",
+          "count": 15,
+          "win_rate": 33.3,
+          "top3_rate": 46.7,
+          "tansho_roi": 97.3
+        },
+        {
+          "pop_band": "2-3",
+          "rl_band": "1",
+          "count": 83,
+          "win_rate": 13.3,
+          "top3_rate": 42.2,
+          "tansho_roi": 55.8
+        },
+        {
+          "pop_band": "2-3",
+          "rl_band": "2-3",
+          "count": 793,
+          "win_rate": 15.4,
+          "top3_rate": 44.3,
+          "tansho_roi": 85.3
+        },
+        {
+          "pop_band": "2-3",
+          "rl_band": "4-5",
+          "count": 181,
+          "win_rate": 22.7,
+          "top3_rate": 45.3,
+          "tansho_roi": 137.3
+        },
+        {
+          "pop_band": "2-3",
+          "rl_band": "6-9",
+          "count": 96,
+          "win_rate": 7.3,
+          "top3_rate": 33.3,
+          "tansho_roi": 46.6
+        },
+        {
+          "pop_band": "2-3",
+          "rl_band": "10+",
+          "count": 30,
+          "win_rate": 6.7,
+          "top3_rate": 13.3,
+          "tansho_roi": 38.0
+        },
+        {
+          "pop_band": "4-5",
+          "rl_band": "1",
+          "count": 22,
+          "win_rate": 9.1,
+          "top3_rate": 13.6,
+          "tansho_roi": 38.6
+        },
+        {
+          "pop_band": "4-5",
+          "rl_band": "2-3",
+          "count": 187,
+          "win_rate": 11.2,
+          "top3_rate": 38.0,
+          "tansho_roi": 89.3
+        },
+        {
+          "pop_band": "4-5",
+          "rl_band": "4-5",
+          "count": 646,
+          "win_rate": 7.1,
+          "top3_rate": 29.6,
+          "tansho_roi": 63.2
+        },
+        {
+          "pop_band": "4-5",
+          "rl_band": "6-9",
+          "count": 270,
+          "win_rate": 6.3,
+          "top3_rate": 25.9,
+          "tansho_roi": 66.7
+        },
+        {
+          "pop_band": "4-5",
+          "rl_band": "10+",
+          "count": 53,
+          "win_rate": 5.7,
+          "top3_rate": 22.6,
+          "tansho_roi": 56.0
+        },
+        {
+          "pop_band": "6-9",
+          "rl_band": "1",
+          "count": 22,
+          "win_rate": 22.7,
+          "top3_rate": 45.5,
+          "tansho_roi": 220.5
+        },
+        {
+          "pop_band": "6-9",
+          "rl_band": "2-3",
+          "count": 96,
+          "win_rate": 8.3,
+          "top3_rate": 28.1,
+          "tansho_roi": 119.5
+        },
+        {
+          "pop_band": "6-9",
+          "rl_band": "4-5",
+          "count": 269,
+          "win_rate": 7.1,
+          "top3_rate": 25.7,
+          "tansho_roi": 102.1
+        },
+        {
+          "pop_band": "6-9",
+          "rl_band": "6-9",
+          "count": 1440,
+          "win_rate": 3.1,
+          "top3_rate": 17.5,
+          "tansho_roi": 60.8
+        },
+        {
+          "pop_band": "6-9",
+          "rl_band": "10+",
+          "count": 425,
+          "win_rate": 2.8,
+          "top3_rate": 12.2,
+          "tansho_roi": 54.9
+        },
+        {
+          "pop_band": "10+",
+          "rl_band": "1",
+          "count": 13,
+          "win_rate": 7.7,
+          "top3_rate": 15.4,
+          "tansho_roi": 19.2
+        },
+        {
+          "pop_band": "10+",
+          "rl_band": "2-3",
+          "count": 28,
+          "win_rate": 14.3,
+          "top3_rate": 17.9,
+          "tansho_roi": 32.5
+        },
+        {
+          "pop_band": "10+",
+          "rl_band": "4-5",
+          "count": 51,
+          "win_rate": 3.9,
+          "top3_rate": 13.7,
+          "tansho_roi": 78.2
+        },
+        {
+          "pop_band": "10+",
+          "rl_band": "6-9",
+          "count": 405,
+          "win_rate": 3.7,
+          "top3_rate": 12.8,
+          "tansho_roi": 109.4
+        },
+        {
+          "pop_band": "10+",
+          "rl_band": "10+",
+          "count": 1918,
+          "win_rate": 1.1,
+          "top3_rate": 5.3,
+          "tansho_roi": 47.7
+        }
+      ],
+      "ai_fav_win_rate": 28.4,
+      "mkt_fav_win_rate": 32.3,
+      "agree_count": 451,
+      "disagree_count": 140,
+      "disagree_ai_wins": 19,
+      "disagree_mkt_wins": 42,
+      "top_overvalued": [
+        {
+          "date": "2026-06-27",
+          "racecourse": "小倉",
+          "horse": "アンピュルシオン",
+          "num": 7,
+          "ai": 0.2349,
+          "mkt": 0.0033,
+          "ratio": 72.055,
+          "place": 16
+        },
+        {
+          "date": "2026-07-19",
+          "racecourse": "福島",
+          "horse": "ウィッシュリスト",
+          "num": 12,
+          "ai": 0.0947,
+          "mkt": 0.0022,
+          "ratio": 43.93,
+          "place": 15
+        },
+        {
+          "date": "2026-06-28",
+          "racecourse": "函館",
+          "horse": "ビップジョワ",
+          "num": 5,
+          "ai": 0.8368,
+          "mkt": 0.0207,
+          "ratio": 40.45,
+          "place": 16
+        },
+        {
+          "date": "2026-07-25",
+          "racecourse": "札幌",
+          "horse": "ヴァイザーバルコ",
+          "num": 1,
+          "ai": 0.0737,
+          "mkt": 0.0019,
+          "ratio": 39.095,
+          "place": 11
+        },
+        {
+          "date": "2026-07-26",
+          "racecourse": "中京",
+          "horse": "ラスカルキッド",
+          "num": 5,
+          "ai": 0.0477,
+          "mkt": 0.0014,
+          "ratio": 34.722,
+          "place": 12
+        },
+        {
+          "date": "2026-07-19",
+          "racecourse": "小倉",
+          "horse": "アスクザアメリカン",
+          "num": 3,
+          "ai": 0.0465,
+          "mkt": 0.0015,
+          "ratio": 31.572,
+          "place": 8
+        },
+        {
+          "date": "2026-07-04",
+          "racecourse": "函館",
+          "horse": "ウィルオレオール",
+          "num": 2,
+          "ai": 0.3266,
+          "mkt": 0.0106,
+          "ratio": 30.925,
+          "place": 12
+        },
+        {
+          "date": "2026-07-26",
+          "racecourse": "中京",
+          "horse": "ウォーブレイク",
+          "num": 10,
+          "ai": 0.0583,
+          "mkt": 0.002,
+          "ratio": 28.72,
+          "place": 14
+        },
+        {
+          "date": "2026-06-27",
+          "racecourse": "函館",
+          "horse": "ラウターユーベル",
+          "num": 9,
+          "ai": 0.2255,
+          "mkt": 0.0084,
+          "ratio": 26.951,
+          "place": 10
+        },
+        {
+          "date": "2026-07-26",
+          "racecourse": "中京",
+          "horse": "ジャズホリック",
+          "num": 8,
+          "ai": 0.0463,
+          "mkt": 0.0017,
+          "ratio": 26.915,
+          "place": 8
+        }
+      ],
+      "top_undervalued": [
+        {
+          "date": "2026-06-28",
+          "racecourse": "小倉",
+          "horse": "ニュークレド",
+          "num": 6,
+          "ai": 0.0001,
+          "mkt": 0.0593,
+          "ratio": 0.002,
+          "place": 4
+        },
+        {
+          "date": "2026-07-05",
+          "racecourse": "函館",
+          "horse": "ブリヤディアマンテ",
+          "num": 9,
+          "ai": 0.0009,
+          "mkt": 0.0996,
+          "ratio": 0.009,
+          "place": 8
+        },
+        {
+          "date": "2026-06-28",
+          "racecourse": "函館",
+          "horse": "ハルノアメ",
+          "num": 15,
+          "ai": 0.0009,
+          "mkt": 0.0863,
+          "ratio": 0.01,
+          "place": 5
+        },
+        {
+          "date": "2026-07-05",
+          "racecourse": "函館",
+          "horse": "リギーロ",
+          "num": 5,
+          "ai": 0.0012,
+          "mkt": 0.0949,
+          "ratio": 0.013,
+          "place": 9
+        },
+        {
+          "date": "2026-07-05",
+          "racecourse": "函館",
+          "horse": "スタンピー",
+          "num": 3,
+          "ai": 0.0089,
+          "mkt": 0.6066,
+          "ratio": 0.015,
+          "place": 8
+        },
+        {
+          "date": "2026-06-28",
+          "racecourse": "小倉",
+          "horse": "サトノスカイターフ",
+          "num": 2,
+          "ai": 0.0012,
+          "mkt": 0.0691,
+          "ratio": 0.018,
+          "place": 7
+        },
+        {
+          "date": "2026-06-28",
+          "racecourse": "小倉",
+          "horse": "ショウナンガチ",
+          "num": 3,
+          "ai": 0.0044,
+          "mkt": 0.2337,
+          "ratio": 0.019,
+          "place": 6
+        },
+        {
+          "date": "2026-06-28",
+          "racecourse": "小倉",
+          "horse": "サンダーバード",
+          "num": 9,
+          "ai": 0.0055,
+          "mkt": 0.2732,
+          "ratio": 0.02,
+          "place": 1
+        },
+        {
+          "date": "2026-07-04",
+          "racecourse": "小倉",
+          "horse": "リアライズパリオ",
+          "num": 5,
+          "ai": 0.0027,
+          "mkt": 0.1315,
+          "ratio": 0.021,
+          "place": 5
+        },
+        {
+          "date": "2026-07-04",
+          "racecourse": "函館",
+          "horse": "ダノンヒストリー",
+          "num": 3,
+          "ai": 0.012,
+          "mkt": 0.4763,
+          "ratio": 0.025,
+          "place": 1
+        }
+      ],
+      "daily": [
+        {
+          "date": "2026-06-27",
+          "n": 388,
+          "ai_wins": 5,
+          "mkt_wins": 0,
+          "agree": 7,
+          "disagree_ai": 2,
+          "disagree_mkt": 12
+        },
+        {
+          "date": "2026-06-28",
+          "n": 380,
+          "ai_wins": 3,
+          "mkt_wins": 0,
+          "agree": 2,
+          "disagree_ai": 3,
+          "disagree_mkt": 11
+        },
+        {
+          "date": "2026-07-04",
+          "n": 417,
+          "ai_wins": 8,
+          "mkt_wins": 0,
+          "agree": 12,
+          "disagree_ai": 5,
+          "disagree_mkt": 7
+        },
+        {
+          "date": "2026-07-05",
+          "n": 213,
+          "ai_wins": 4,
+          "mkt_wins": 0,
+          "agree": 3,
+          "disagree_ai": 4,
+          "disagree_mkt": 1
+        },
+        {
+          "date": "2026-07-11",
+          "n": 413,
+          "ai_wins": 8,
+          "mkt_wins": 0,
+          "agree": 21,
+          "disagree_ai": 0,
+          "disagree_mkt": 4
+        },
+        {
+          "date": "2026-07-12",
+          "n": 414,
+          "ai_wins": 10,
+          "mkt_wins": 0,
+          "agree": 28,
+          "disagree_ai": 1,
+          "disagree_mkt": 0
+        },
+        {
+          "date": "2026-07-18",
+          "n": 445,
+          "ai_wins": 8,
+          "mkt_wins": 0,
+          "agree": 26,
+          "disagree_ai": 1,
+          "disagree_mkt": 2
+        },
+        {
+          "date": "2026-07-19",
+          "n": 477,
+          "ai_wins": 8,
+          "mkt_wins": 0,
+          "agree": 26,
+          "disagree_ai": 1,
+          "disagree_mkt": 0
+        },
+        {
+          "date": "2026-07-25",
+          "n": 419,
+          "ai_wins": 6,
+          "mkt_wins": 0,
+          "agree": 28,
+          "disagree_ai": 1,
+          "disagree_mkt": 1
+        },
+        {
+          "date": "2026-07-26",
+          "n": 417,
+          "ai_wins": 11,
+          "mkt_wins": 0,
+          "agree": 31,
+          "disagree_ai": 0,
+          "disagree_mkt": 1
+        },
+        {
+          "date": "2026-08-01",
+          "n": 446,
+          "ai_wins": 12,
+          "mkt_wins": 0,
+          "agree": 34,
+          "disagree_ai": 0,
+          "disagree_mkt": 0
+        },
+        {
+          "date": "2026-08-02",
+          "n": 450,
+          "ai_wins": 12,
+          "mkt_wins": 0,
+          "agree": 34,
+          "disagree_ai": 0,
+          "disagree_mkt": 0
+        },
+        {
+          "date": "2026-08-08",
+          "n": 447,
+          "ai_wins": 12,
+          "mkt_wins": 0,
+          "agree": 35,
+          "disagree_ai": 0,
+          "disagree_mkt": 0
+        },
+        {
+          "date": "2026-08-09",
+          "n": 462,
+          "ai_wins": 11,
+          "mkt_wins": 0,
+          "agree": 33,
+          "disagree_ai": 0,
+          "disagree_mkt": 0
+        },
+        {
+          "date": "2026-08-15",
+          "n": 456,
+          "ai_wins": 15,
+          "mkt_wins": 0,
+          "agree": 33,
+          "disagree_ai": 0,
+          "disagree_mkt": 1
+        },
+        {
+          "date": "2026-08-16",
+          "n": 470,
+          "ai_wins": 11,
+          "mkt_wins": 0,
+          "agree": 32,
+          "disagree_ai": 1,
+          "disagree_mkt": 1
+        },
+        {
+          "date": "2026-08-22",
+          "n": 452,
+          "ai_wins": 13,
+          "mkt_wins": 0,
+          "agree": 33,
+          "disagree_ai": 0,
+          "disagree_mkt": 1
+        },
+        {
+          "date": "2026-08-23",
+          "n": 454,
+          "ai_wins": 11,
+          "mkt_wins": 0,
+          "agree": 33,
+          "disagree_ai": 0,
+          "disagree_mkt": 0
+        }
+      ]
+    },
+    "odds_movement": {
+      "total_horses": 4990,
+      "bucket_stats": [
+        {
+          "bucket": "急騰(↓30%+)",
+          "count": 616,
+          "win_rate": 6.3,
+          "top3_rate": 23.2,
+          "avg_change_pct": -49.4
+        },
+        {
+          "bucket": "急騰相当(バッジ対象外)",
+          "count": 116,
+          "win_rate": 35.3,
+          "top3_rate": 65.5,
+          "avg_change_pct": -38.5
+        },
+        {
+          "bucket": "上昇(↓15-30%)",
+          "count": 244,
+          "win_rate": 2.5,
+          "top3_rate": 18.9,
+          "avg_change_pct": -25.2
+        },
+        {
+          "bucket": "上昇相当(バッジ対象外)",
+          "count": 315,
+          "win_rate": 14.0,
+          "top3_rate": 42.5,
+          "avg_change_pct": -19.9
+        },
+        {
+          "bucket": "横ばい(±15%)",
+          "count": 1458,
+          "win_rate": 11.7,
+          "top3_rate": 30.2,
+          "avg_change_pct": -0.3
+        },
+        {
+          "bucket": "下降(↑15-30%)",
+          "count": 483,
+          "win_rate": 7.9,
+          "top3_rate": 23.8,
+          "avg_change_pct": 22.6
+        },
+        {
+          "bucket": "急落(↑30%+)",
+          "count": 1758,
+          "win_rate": 3.0,
+          "top3_rate": 12.1,
+          "avg_change_pct": 310.2
+        }
+      ],
+      "big_risers": [
+        {
+          "date": "2026-07-25",
+          "racecourse": "札幌",
+          "horse": "ヴァイザーバルコ",
+          "num": 1,
+          "morning": 418.0,
+          "chokuzen": 40.4,
+          "change": -90.3,
+          "place": 11
+        },
+        {
+          "date": "2026-07-25",
+          "racecourse": "札幌",
+          "horse": "アスクデッドヒート",
+          "num": 6,
+          "morning": 44.0,
+          "chokuzen": 4.8,
+          "change": -89.1,
+          "place": 4
+        },
+        {
+          "date": "2026-07-25",
+          "racecourse": "札幌",
+          "horse": "ボンドロア",
+          "num": 5,
+          "morning": 92.8,
+          "chokuzen": 10.5,
+          "change": -88.7,
+          "place": 1
+        },
+        {
+          "date": "2026-07-25",
+          "racecourse": "中京",
+          "horse": "プレスバーン",
+          "num": 10,
+          "morning": 25.0,
+          "chokuzen": 3.5,
+          "change": -86.0,
+          "place": 1
+        },
+        {
+          "date": "2026-07-25",
+          "racecourse": "中京",
+          "horse": "エブリーポッシブル",
+          "num": 12,
+          "morning": 50.1,
+          "chokuzen": 8.0,
+          "change": -84.0,
+          "place": 1
+        },
+        {
+          "date": "2026-07-25",
+          "racecourse": "新潟",
+          "horse": "ワディアルリヤハ",
+          "num": 12,
+          "morning": 64.6,
+          "chokuzen": 11.4,
+          "change": -82.4,
+          "place": 3
+        },
+        {
+          "date": "2026-07-25",
+          "racecourse": "新潟",
+          "horse": "ゴールドビリーヴ",
+          "num": 9,
+          "morning": 29.9,
+          "chokuzen": 5.4,
+          "change": -81.9,
+          "place": 1
+        },
+        {
+          "date": "2026-07-19",
+          "racecourse": "函館",
+          "horse": "フィオリアーモ",
+          "num": 3,
+          "morning": 32.1,
+          "chokuzen": 6.0,
+          "change": -81.3,
+          "place": 10
+        },
+        {
+          "date": "2026-07-25",
+          "racecourse": "札幌",
+          "horse": "リギーロ",
+          "num": 2,
+          "morning": 104.5,
+          "chokuzen": 20.5,
+          "change": -80.4,
+          "place": 8
+        },
+        {
+          "date": "2026-07-19",
+          "racecourse": "函館",
+          "horse": "テンカタイヘイ",
+          "num": 4,
+          "morning": 74.5,
+          "chokuzen": 15.3,
+          "change": -79.5,
+          "place": 1
+        }
+      ],
+      "big_fallers": [
+        {
+          "date": "2026-07-05",
+          "racecourse": "福島",
+          "horse": "キングクレオール",
+          "num": 6,
+          "morning": 1.0,
+          "chokuzen": 174.5,
+          "change": 17350.0,
+          "place": 4
+        },
+        {
+          "date": "2026-07-05",
+          "racecourse": "小倉",
+          "horse": "フェミナンジェンヌ",
+          "num": 6,
+          "morning": 1.0,
+          "chokuzen": 142.9,
+          "change": 14190.0,
+          "place": 9
+        },
+        {
+          "date": "2026-07-05",
+          "racecourse": "小倉",
+          "horse": "アスタールテニウム",
+          "num": 2,
+          "morning": 1.1,
+          "chokuzen": 148.5,
+          "change": 13400.0,
+          "place": 10
+        },
+        {
+          "date": "2026-07-05",
+          "racecourse": "福島",
+          "horse": "エイミームーン",
+          "num": 8,
+          "morning": 1.0,
+          "chokuzen": 115.0,
+          "change": 11400.0,
+          "place": 11
+        },
+        {
+          "date": "2026-07-05",
+          "racecourse": "小倉",
+          "horse": "アーブルラーブル",
+          "num": 13,
+          "morning": 2.0,
+          "chokuzen": 216.3,
+          "change": 10715.0,
+          "place": 15
+        },
+        {
+          "date": "2026-07-05",
+          "racecourse": "小倉",
+          "horse": "トッレブランカ",
+          "num": 3,
+          "morning": 2.2,
+          "chokuzen": 222.0,
+          "change": 9990.9,
+          "place": 16
+        },
+        {
+          "date": "2026-07-05",
+          "racecourse": "福島",
+          "horse": "プレザントトーン",
+          "num": 11,
+          "morning": 1.0,
+          "chokuzen": 94.8,
+          "change": 9380.0,
+          "place": 12
+        },
+        {
+          "date": "2026-07-05",
+          "racecourse": "福島",
+          "horse": "ノーブルオリンポス",
+          "num": 9,
+          "morning": 1.0,
+          "chokuzen": 90.6,
+          "change": 8960.0,
+          "place": 15
+        },
+        {
+          "date": "2026-07-05",
+          "racecourse": "小倉",
+          "horse": "ルペイドゥロール",
+          "num": 11,
+          "morning": 1.0,
+          "chokuzen": 74.6,
+          "change": 7360.0,
+          "place": 12
+        },
+        {
+          "date": "2026-07-05",
+          "racecourse": "小倉",
+          "horse": "テイクイットオール",
+          "num": 5,
+          "morning": 1.1,
+          "chokuzen": 80.8,
+          "change": 7245.5,
+          "place": 6
+        }
+      ],
+      "ai_agrees_rising": {
+        "count": 148,
+        "top3_rate": 43.9
+      },
+      "ai_ignores_rising": {
+        "count": 590,
+        "top3_rate": 15.9
+      }
+    }
   }
 ]

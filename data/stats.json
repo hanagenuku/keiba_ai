@@ -1031,27 +1031,31 @@
   "upset_patterns": {
     "total_races": 570,
     "overall_upset_rate": 94.4,
+    "overall_hit3_rate": 5.6,
+    "random_hit3_rate": 0.62,
+    "overall_full_miss_rate": 12.1,
+    "blind_spot_min_n": 30,
     "by_chaos": [
       {
         "label": "A",
         "total": 69,
         "upset_rate": 94.2,
-        "full_miss_rate": 5.8,
-        "longshot_rate": 0.0
+        "hit3_rate": 5.8,
+        "full_miss_rate": 5.8
       },
       {
         "label": "B",
         "total": 22,
         "upset_rate": 95.5,
-        "full_miss_rate": 27.3,
-        "longshot_rate": 0.0
+        "hit3_rate": 4.5,
+        "full_miss_rate": 27.3
       },
       {
         "label": "C",
         "total": 479,
         "upset_rate": 94.4,
-        "full_miss_rate": 12.3,
-        "longshot_rate": 0.0
+        "hit3_rate": 5.6,
+        "full_miss_rate": 12.3
       }
     ],
     "by_heads": [
@@ -1059,22 +1063,22 @@
         "label": "中頭数(9-13頭)",
         "total": 233,
         "upset_rate": 94.0,
-        "full_miss_rate": 6.9,
-        "longshot_rate": 0.0
+        "hit3_rate": 6.0,
+        "full_miss_rate": 6.9
       },
       {
         "label": "多頭数(14頭〜)",
         "total": 286,
         "upset_rate": 96.5,
-        "full_miss_rate": 17.5,
-        "longshot_rate": 0.0
+        "hit3_rate": 3.5,
+        "full_miss_rate": 17.5
       },
       {
         "label": "少頭数(〜8頭)",
         "total": 51,
         "upset_rate": 84.3,
-        "full_miss_rate": 5.9,
-        "longshot_rate": 0.0
+        "hit3_rate": 15.7,
+        "full_miss_rate": 5.9
       }
     ],
     "by_surface": [
@@ -1082,15 +1086,15 @@
         "label": "ダート",
         "total": 227,
         "upset_rate": 96.5,
-        "full_miss_rate": 13.7,
-        "longshot_rate": 0.0
+        "hit3_rate": 3.5,
+        "full_miss_rate": 13.7
       },
       {
         "label": "芝",
         "total": 343,
         "upset_rate": 93.0,
-        "full_miss_rate": 11.1,
-        "longshot_rate": 0.0
+        "hit3_rate": 7.0,
+        "full_miss_rate": 11.1
       }
     ],
     "by_distance": [
@@ -1098,29 +1102,29 @@
         "label": "マイル(1401-1800)",
         "total": 256,
         "upset_rate": 93.8,
-        "full_miss_rate": 10.2,
-        "longshot_rate": 0.0
+        "hit3_rate": 6.2,
+        "full_miss_rate": 10.2
       },
       {
         "label": "中距離(1801-2200)",
         "total": 82,
         "upset_rate": 95.1,
-        "full_miss_rate": 12.2,
-        "longshot_rate": 0.0
+        "hit3_rate": 4.9,
+        "full_miss_rate": 12.2
       },
       {
         "label": "短距離(〜1400)",
         "total": 211,
         "upset_rate": 94.8,
-        "full_miss_rate": 14.7,
-        "longshot_rate": 0.0
+        "hit3_rate": 5.2,
+        "full_miss_rate": 14.7
       },
       {
         "label": "長距離(2201〜)",
         "total": 21,
         "upset_rate": 95.2,
-        "full_miss_rate": 9.5,
-        "longshot_rate": 0.0
+        "hit3_rate": 4.8,
+        "full_miss_rate": 9.5
       }
     ],
     "by_racecourse": [
@@ -1128,43 +1132,43 @@
         "label": "中京",
         "total": 113,
         "upset_rate": 94.7,
-        "full_miss_rate": 8.8,
-        "longshot_rate": 0.0
+        "hit3_rate": 5.3,
+        "full_miss_rate": 8.8
       },
       {
         "label": "函館",
         "total": 80,
         "upset_rate": 95.0,
-        "full_miss_rate": 16.2,
-        "longshot_rate": 0.0
+        "hit3_rate": 5.0,
+        "full_miss_rate": 16.2
       },
       {
         "label": "小倉",
         "total": 73,
         "upset_rate": 97.3,
-        "full_miss_rate": 16.4,
-        "longshot_rate": 0.0
+        "hit3_rate": 2.7,
+        "full_miss_rate": 16.4
       },
       {
         "label": "新潟",
         "total": 113,
         "upset_rate": 93.8,
-        "full_miss_rate": 9.7,
-        "longshot_rate": 0.0
+        "hit3_rate": 6.2,
+        "full_miss_rate": 9.7
       },
       {
         "label": "札幌",
         "total": 118,
         "upset_rate": 91.5,
-        "full_miss_rate": 10.2,
-        "longshot_rate": 0.0
+        "hit3_rate": 8.5,
+        "full_miss_rate": 10.2
       },
       {
         "label": "福島",
         "total": 73,
         "upset_rate": 95.9,
-        "full_miss_rate": 15.1,
-        "longshot_rate": 0.0
+        "hit3_rate": 4.1,
+        "full_miss_rate": 15.1
       }
     ],
     "by_class": [
@@ -1172,115 +1176,125 @@
         "label": "1勝クラス",
         "total": 140,
         "upset_rate": 95.0,
-        "full_miss_rate": 15.7,
-        "longshot_rate": 0.0
+        "hit3_rate": 5.0,
+        "full_miss_rate": 15.7
       },
       {
         "label": "2勝クラス",
         "total": 64,
         "upset_rate": 98.4,
-        "full_miss_rate": 12.5,
-        "longshot_rate": 0.0
+        "hit3_rate": 1.6,
+        "full_miss_rate": 12.5
       },
       {
         "label": "3勝クラス",
         "total": 27,
         "upset_rate": 100.0,
-        "full_miss_rate": 7.4,
-        "longshot_rate": 0.0
+        "hit3_rate": 0.0,
+        "full_miss_rate": 7.4
       },
       {
         "label": "OP/L",
         "total": 33,
         "upset_rate": 93.9,
-        "full_miss_rate": 18.2,
-        "longshot_rate": 0.0
+        "hit3_rate": 6.1,
+        "full_miss_rate": 18.2
       },
       {
         "label": "新馬",
         "total": 71,
         "upset_rate": 94.4,
-        "full_miss_rate": 9.9,
-        "longshot_rate": 0.0
+        "hit3_rate": 5.6,
+        "full_miss_rate": 9.9
       },
       {
         "label": "未勝利",
         "total": 235,
         "upset_rate": 92.3,
-        "full_miss_rate": 10.2,
-        "longshot_rate": 0.0
+        "hit3_rate": 7.7,
+        "full_miss_rate": 10.2
       }
     ],
     "blind_spots": [
       {
-        "label": "新潟・Aグレード",
-        "total": 14,
-        "upset_rate": 100.0,
-        "full_miss_rate": 14.3,
-        "longshot_rate": 0.0
+        "total": 255,
+        "upset_rate": 96.5,
+        "hit3_rate": 3.5,
+        "full_miss_rate": 18.0,
+        "label": "Cグレード・多頭数(14頭〜)",
+        "p_chance": 0.0038
       },
       {
-        "label": "Aグレード・多頭数(14頭〜)",
-        "total": 21,
-        "upset_rate": 100.0,
-        "full_miss_rate": 9.5,
-        "longshot_rate": 0.0
-      },
-      {
-        "label": "芝・Aグレード・多頭数(14頭〜)",
-        "total": 11,
-        "upset_rate": 100.0,
-        "full_miss_rate": 18.2,
-        "longshot_rate": 0.0
-      },
-      {
-        "label": "ダート・Aグレード・多頭数(14頭〜)",
-        "total": 10,
-        "upset_rate": 100.0,
-        "full_miss_rate": 0.0,
-        "longshot_rate": 0.0
-      },
-      {
-        "label": "小倉・Aグレード",
-        "total": 9,
-        "upset_rate": 100.0,
-        "full_miss_rate": 11.1,
-        "longshot_rate": 0.0
-      },
-      {
-        "label": "福島・Bグレード",
-        "total": 5,
-        "upset_rate": 100.0,
-        "full_miss_rate": 60.0,
-        "longshot_rate": 0.0
-      },
-      {
-        "label": "Bグレード・中頭数(9-13頭)",
-        "total": 9,
-        "upset_rate": 100.0,
-        "full_miss_rate": 33.3,
-        "longshot_rate": 0.0
-      },
-      {
-        "label": "函館・Bグレード",
-        "total": 10,
-        "upset_rate": 100.0,
-        "full_miss_rate": 20.0,
-        "longshot_rate": 0.0
-      },
-      {
-        "label": "ダート・Bグレード・中頭数(9-13頭)",
-        "total": 6,
-        "upset_rate": 100.0,
-        "full_miss_rate": 16.7,
-        "longshot_rate": 0.0
-      },
-      {
-        "label": "ダート・Cグレード・多頭数(14頭〜)",
         "total": 115,
         "upset_rate": 98.3,
+        "hit3_rate": 1.7,
         "full_miss_rate": 20.9,
-        "longshot_rate": 0.0
+        "label": "ダート・Cグレード・多頭数(14頭〜)",
+        "p_chance": 0.0052
+      },
+      {
+        "total": 86,
+        "upset_rate": 97.7,
+        "hit3_rate": 2.3,
+        "full_miss_rate": 17.4,
+        "label": "ダート・短距離(〜1400)",
+        "p_chance": 0.0925
+      },
+      {
+        "total": 140,
+        "upset_rate": 95.0,
+        "hit3_rate": 5.0,
+        "full_miss_rate": 15.7,
+        "label": "芝・Cグレード・多頭数(14頭〜)",
+        "p_chance": 0.121
+      },
+      {
+        "total": 57,
+        "upset_rate": 98.2,
+        "hit3_rate": 1.8,
+        "full_miss_rate": 17.5,
+        "label": "小倉・Cグレード",
+        "p_chance": 0.1458
+      },
+      {
+        "total": 62,
+        "upset_rate": 95.2,
+        "hit3_rate": 4.8,
+        "full_miss_rate": 16.1,
+        "label": "函館・Cグレード",
+        "p_chance": 0.2127
+      },
+      {
+        "total": 57,
+        "upset_rate": 96.5,
+        "hit3_rate": 3.5,
+        "full_miss_rate": 14.0,
+        "label": "福島・Cグレード",
+        "p_chance": 0.3852
+      },
+      {
+        "total": 125,
+        "upset_rate": 92.8,
+        "hit3_rate": 7.2,
+        "full_miss_rate": 12.8,
+        "label": "芝・短距離(〜1400)",
+        "p_chance": 0.4461
+      },
+      {
+        "total": 98,
+        "upset_rate": 90.8,
+        "hit3_rate": 9.2,
+        "full_miss_rate": 12.2,
+        "label": "札幌・Cグレード",
+        "p_chance": 0.5291
+      },
+      {
+        "total": 78,
+        "upset_rate": 94.9,
+        "hit3_rate": 5.1,
+        "full_miss_rate": 11.5,
+        "label": "芝・中距離(1801-2200)",
+        "p_chance": 0.6127
       }
     ]
   },
@@ -1301,7 +1315,7 @@
         "races": 11
       }
     ],
-    "workflow_run_at": "2026-08-23T11:02:24Z",
+    "workflow_run_at": "2026-08-28T12:37:37Z",
     "workflow_result": "success"
   },
   "model_kpi": {
@@ -2095,7 +2109,7 @@
     ]
   },
   "odds_movement": {
-    "total_horses": 5021,
+    "total_horses": 4990,
     "bucket_stats": [
       {
         "bucket": "急騰(↓30%+)",
@@ -2141,10 +2155,10 @@
       },
       {
         "bucket": "急落(↑30%+)",
-        "count": 1789,
-        "win_rate": 3.2,
-        "top3_rate": 12.6,
-        "avg_change_pct": 496.0
+        "count": 1758,
+        "win_rate": 3.0,
+        "top3_rate": 12.1,
+        "avg_change_pct": 310.2
       }
     ],
     "big_risers": [
@@ -2252,36 +2266,6 @@
     "big_fallers": [
       {
         "date": "2026-07-05",
-        "racecourse": "小倉",
-        "horse": "トライアンドエラー",
-        "num": 14,
-        "morning": 0.1,
-        "chokuzen": 76.1,
-        "change": 76000.0,
-        "place": 11
-      },
-      {
-        "date": "2026-07-05",
-        "racecourse": "函館",
-        "horse": "スタンピー",
-        "num": 3,
-        "morning": 0.1,
-        "chokuzen": 59.7,
-        "change": 59600.0,
-        "place": 8
-      },
-      {
-        "date": "2026-07-05",
-        "racecourse": "小倉",
-        "horse": "ケンブリッジグレイ",
-        "num": 2,
-        "morning": 0.1,
-        "chokuzen": 53.7,
-        "change": 53600.0,
-        "place": 15
-      },
-      {
-        "date": "2026-07-05",
         "racecourse": "福島",
         "horse": "キングクレオール",
         "num": 6,
@@ -2292,26 +2276,6 @@
       },
       {
         "date": "2026-07-05",
-        "racecourse": "福島",
-        "horse": "ニシノタチアナ",
-        "num": 3,
-        "morning": 0.1,
-        "chokuzen": 16.5,
-        "change": 16400.0,
-        "place": 5
-      },
-      {
-        "date": "2026-07-05",
-        "racecourse": "函館",
-        "horse": "ミリオングローリー",
-        "num": 8,
-        "morning": 0.1,
-        "chokuzen": 15.5,
-        "change": 15400.0,
-        "place": 7
-      },
-      {
-        "date": "2026-07-05",
         "racecourse": "小倉",
         "horse": "フェミナンジェンヌ",
         "num": 6,
@@ -2319,16 +2283,6 @@
         "chokuzen": 142.9,
         "change": 14190.0,
         "place": 9
-      },
-      {
-        "date": "2026-07-05",
-        "racecourse": "小倉",
-        "horse": "ケイアイブラック",
-        "num": 12,
-        "morning": 0.1,
-        "chokuzen": 13.5,
-        "change": 13400.0,
-        "place": 4
       },
       {
         "date": "2026-07-05",
@@ -2349,6 +2303,66 @@
         "chokuzen": 115.0,
         "change": 11400.0,
         "place": 11
+      },
+      {
+        "date": "2026-07-05",
+        "racecourse": "小倉",
+        "horse": "アーブルラーブル",
+        "num": 13,
+        "morning": 2.0,
+        "chokuzen": 216.3,
+        "change": 10715.0,
+        "place": 15
+      },
+      {
+        "date": "2026-07-05",
+        "racecourse": "小倉",
+        "horse": "トッレブランカ",
+        "num": 3,
+        "morning": 2.2,
+        "chokuzen": 222.0,
+        "change": 9990.9,
+        "place": 16
+      },
+      {
+        "date": "2026-07-05",
+        "racecourse": "福島",
+        "horse": "プレザントトーン",
+        "num": 11,
+        "morning": 1.0,
+        "chokuzen": 94.8,
+        "change": 9380.0,
+        "place": 12
+      },
+      {
+        "date": "2026-07-05",
+        "racecourse": "福島",
+        "horse": "ノーブルオリンポス",
+        "num": 9,
+        "morning": 1.0,
+        "chokuzen": 90.6,
+        "change": 8960.0,
+        "place": 15
+      },
+      {
+        "date": "2026-07-05",
+        "racecourse": "小倉",
+        "horse": "ルペイドゥロール",
+        "num": 11,
+        "morning": 1.0,
+        "chokuzen": 74.6,
+        "change": 7360.0,
+        "place": 12
+      },
+      {
+        "date": "2026-07-05",
+        "racecourse": "小倉",
+        "horse": "テイクイットオール",
+        "num": 5,
+        "morning": 1.1,
+        "chokuzen": 80.8,
+        "change": 7245.5,
+        "place": 6
       }
     ],
     "ai_agrees_rising": {
@@ -2360,5 +2374,5 @@
       "top3_rate": 15.9
     }
   },
-  "generated_at": "2026-08-23 11:18"
+  "generated_at": "2026-08-29 04:05"
 }
