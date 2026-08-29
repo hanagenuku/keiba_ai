@@ -278,3 +278,78 @@ class TestJsonlSinkAndMerge(unittest.TestCase):
         self.assertNotIn('git add data/ ', y)
         self.assertIn('git add data/odds_ts/', y)
         self.assertNotIn('git status --porcelain -- data/)', y)
+
+
+class TestCollectEndToEnd(unittest.TestCase):
+    """`collect()` を実際に一度も呼んでいなかったので引数の取り違えを見逃した。
+
+    2026-08-29 の初回実行は 57秒で終わり、ログにこう出ていた:
+        ⚠ 出走表一覧取得失敗: 'str' object has no attribute 'post'
+        ❌ <requests.sessions.Session object at 0x...>の開催情報が見つかりません
+    `get_kaisai_on_date(sess, date)` と引数順を逆にしていた（正しくは (date, sess)）。
+    さらに `fetch_races_on_date` は必須の第3引数 hist_db_path を渡していなかった。
+
+    ⚠ 単体テスト（_append / _ts_path / merge / YAML）は全部通っていた。
+      **経路を通していないテストは、経路のバグを見つけられない。**
+    """
+
+    def setUp(self):
+        self.d = tempfile.mkdtemp()
+        os.makedirs(os.path.join(self.d, 'data'), exist_ok=True)
+
+    def tearDown(self):
+        shutil.rmtree(self.d, ignore_errors=True)
+
+    def test_collect_passes_arguments_in_the_right_order(self):
+        import scripts.collect_odds as co
+
+        seen = {}
+
+        class FakeSession:
+            def post(self, *a, **k):
+                raise AssertionError('ネットワークに出てはいけない')
+
+        def fake_kaisai(date_str, sess, calendar=None):
+            # 本物と同じ順で受ける。逆なら型で分かる。
+            seen['kaisai'] = (type(date_str).__name__, type(sess).__name__)
+            assert isinstance(date_str, str), '第1引数が日付文字列でない'
+            return {'pw01dde0105': '新潟'}
+
+        def fake_races(sess, target_date, hist_db_path):
+            seen['races'] = (type(sess).__name__, type(target_date).__name__,
+                             hist_db_path)
+            assert isinstance(target_date, str), '第2引数が日付文字列でない'
+            return ([{'id': '20260829_05_11', 'date': '2026-08-29',
+                      'racecourse': '新潟', 'race_num': 11,
+                      'start_time': '15:45', 'horses': [{'num': 1}, {'num': 2}]}], [])
+
+        orig = (co.get_kaisai_on_date, co.fetch_races_on_date,
+                co.find_r01_odds, co.create_session)
+        co.get_kaisai_on_date = fake_kaisai
+        co.fetch_races_on_date = fake_races
+        co.find_r01_odds = lambda *a, **k: None      # 盤は見つからない想定で即終了
+        co.create_session = lambda *a, **k: FakeSession()
+        try:
+            co.collect(self.d, date_str='20260829', max_minutes=0)
+        finally:
+            (co.get_kaisai_on_date, co.fetch_races_on_date,
+             co.find_r01_odds, co.create_session) = orig
+
+        self.assertEqual(seen['kaisai'][0], 'str', 'get_kaisai_on_date の第1引数は日付')
+        self.assertEqual(seen['races'][1], 'str', 'fetch_races_on_date の第2引数は日付')
+        self.assertIn('history.db', seen['races'][2], 'hist_db_path が渡っていない')
+
+        # 発走時刻が JSONL に落ちていること（これが無いと分析が成立しない）
+        p = os.path.join(self.d, 'data', 'odds_ts', '20260829.jsonl')
+        self.assertTrue(os.path.exists(p), 'スケジュールが書かれていない')
+        rows = [json.loads(x) for x in open(p, encoding='utf-8')]
+        sched = [r for r in rows if r['kind'] == 'schedule']
+        self.assertEqual(len(sched), 1)
+        self.assertEqual(sched[0]['post_time'], '15:45')
+        self.assertEqual(sched[0]['n_horses'], 2)
+
+    def test_swapped_arguments_raise_instead_of_returning_empty(self):
+        """引数を逆にしたら黙って空を返さず落ちること（3度目の再発を止める）。"""
+        from src.scraper.calendar import get_kaisai_on_date
+        with self.assertRaises(TypeError):
+            get_kaisai_on_date(object(), '20260829')
