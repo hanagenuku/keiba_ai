@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-30T17:28:08.155052+09:00",
+  "generated_at": "2026-08-30T19:17:12.940751+09:00",
   "date": "8月30日(日)",
   "type": "sunday",
   "venues": [
@@ -5993,6 +5993,1684 @@
           "syn_odds": 40.94
         },
         "cmt": "馬場は時計遅め。ミドル想定(53%)で先行有利な展開。やや拮抗したメンバー構成。◎ペルウィクトール(スコア9.1)が最有力。中穴(3.7倍)で期待値十分。"
+      },
+      {
+        "r": 6,
+        "race_id": "20260830_04_06",
+        "odds_cn": "pw151ouS30420260304..06..20260830",
+        "name": "両津湾特別",
+        "dist": "1800mダート",
+        "rec": false,
+        "conf": 58,
+        "chaos_level": "B",
+        "chaos_grade": "B",
+        "num_horses": 15,
+        "value_horses": [
+          {
+            "horse_num": 5,
+            "horse_name": "コパノエビータ",
+            "ev_direct": 7.087,
+            "cal_prob": 0.0131,
+            "market_prob": 0.017
+          },
+          {
+            "horse_num": 12,
+            "horse_name": "マハナ",
+            "ev_direct": 5.329,
+            "cal_prob": 0.0131,
+            "market_prob": 0.0299
+          },
+          {
+            "horse_num": 13,
+            "horse_name": "クロドラバール",
+            "ev_direct": 4.397,
+            "cal_prob": 0.0131,
+            "market_prob": 0.0273
+          },
+          {
+            "horse_num": 6,
+            "horse_name": "アルベリック",
+            "ev_direct": 3.432,
+            "cal_prob": 0.0735,
+            "market_prob": 0.0661
+          },
+          {
+            "horse_num": 11,
+            "horse_name": "ジェーケーボンバー",
+            "ev_direct": 3.292,
+            "cal_prob": 0.0131,
+            "market_prob": 0.0294
+          },
+          {
+            "horse_num": 10,
+            "horse_name": "フラッシング",
+            "ev_direct": 2.972,
+            "cal_prob": 0.0131,
+            "market_prob": 0.0308
+          },
+          {
+            "horse_num": 1,
+            "horse_name": "ピコシー",
+            "ev_direct": 2.364,
+            "cal_prob": 0.0713,
+            "market_prob": 0.1013
+          },
+          {
+            "horse_num": 15,
+            "horse_name": "ノルドヴェスト",
+            "ev_direct": 1.786,
+            "cal_prob": 0.0131,
+            "market_prob": 0.0584
+          }
+        ],
+        "bet_reason": "参考: 馬連+ワイド+三連複F",
+        "honmei": {
+          "n": 2,
+          "name": "ビービーアジャイル",
+          "odds": 1.9,
+          "score": 9.26,
+          "style": "差し"
+        },
+        "horses": [
+          {
+            "n": 1,
+            "name": "ピコシー",
+            "odds": 52.8,
+            "score": 3.5,
+            "pop": 8,
+            "ai_rank": 9,
+            "style": "追込",
+            "tan_pct": 4.5,
+            "ren_pct": 9.0,
+            "fuku_pct": 14.7,
+            "rl_rank": 9,
+            "solo_rank": 8,
+            "cl_rank": 9,
+            "ev": 2.364,
+            "prob_gap": 0.0299,
+            "cal_prob": 0.0713,
+            "mark": "",
+            "ability_margin": 2.648539,
+            "ability_breakdown": [
+              {
+                "category": "基準値",
+                "contrib": 2.6863
+              },
+              {
+                "category": "実力レーティング",
+                "contrib": 0.2124
+              },
+              {
+                "category": "スピード能力",
+                "contrib": 0.0632
+              },
+              {
+                "category": "過去人気推移",
+                "contrib": 0.0299
+              },
+              {
+                "category": "クラス適性",
+                "contrib": 0.0241
+              },
+              {
+                "category": "厩舎",
+                "contrib": 0.0082
+              },
+              {
+                "category": "馬場適性",
+                "contrib": 0.0054
+              },
+              {
+                "category": "近走成績",
+                "contrib": 0.0033
+              },
+              {
+                "category": "ペース適性",
+                "contrib": 0.0007
+              },
+              {
+                "category": "ローテーション",
+                "contrib": 0.0002
+              },
+              {
+                "category": "枠順",
+                "contrib": -0.0076
+              },
+              {
+                "category": "距離適性",
+                "contrib": -0.0252
+              },
+              {
+                "category": "コース適性",
+                "contrib": -0.0341
+              },
+              {
+                "category": "血統",
+                "contrib": -0.0803
+              },
+              {
+                "category": "斤量・馬体",
+                "contrib": -0.0901
+              },
+              {
+                "category": "騎手",
+                "contrib": -0.1478
+              }
+            ],
+            "mx_flag": null,
+            "tansho_odds": 52.8,
+            "fukusho_odds": 7.9
+          },
+          {
+            "n": 2,
+            "name": "ビービーアジャイル",
+            "odds": 1.9,
+            "score": 9.3,
+            "pop": 1,
+            "ai_rank": 1,
+            "style": "差し",
+            "tan_pct": 23.1,
+            "ren_pct": 46.2,
+            "fuku_pct": 58.4,
+            "rl_rank": 1,
+            "solo_rank": 1,
+            "cl_rank": 1,
+            "ev": 0.439,
+            "prob_gap": -0.1831,
+            "cal_prob": 0.7347,
+            "mark": "",
+            "ability_margin": 3.20408,
+            "ability_breakdown": [
+              {
+                "category": "基準値",
+                "contrib": 2.6863
+              },
+              {
+                "category": "騎手",
+                "contrib": 0.18
+              },
+              {
+                "category": "実力レーティング",
+                "contrib": 0.1658
+              },
+              {
+                "category": "クラス適性",
+                "contrib": 0.1175
+              },
+              {
+                "category": "近走成績",
+                "contrib": 0.0585
+              },
+              {
+                "category": "距離適性",
+                "contrib": 0.0428
+              },
+              {
+                "category": "血統",
+                "contrib": 0.0393
+              },
+              {
+                "category": "厩舎",
+                "contrib": 0.034
+              },
+              {
+                "category": "過去人気推移",
+                "contrib": 0.034
+              },
+              {
+                "category": "ペース適性",
+                "contrib": 0.0227
+              },
+              {
+                "category": "馬場適性",
+                "contrib": 0.0113
+              },
+              {
+                "category": "ローテーション",
+                "contrib": 0.0013
+              },
+              {
+                "category": "枠順",
+                "contrib": -0.0032
+              },
+              {
+                "category": "コース適性",
+                "contrib": -0.0188
+              },
+              {
+                "category": "斤量・馬体",
+                "contrib": -0.0271
+              },
+              {
+                "category": "スピード能力",
+                "contrib": -0.1404
+              }
+            ],
+            "mx_flag": null,
+            "tansho_odds": 1.9,
+            "fukusho_odds": 1.1
+          },
+          {
+            "n": 3,
+            "name": "オクトーバーナイン",
+            "odds": 5.4,
+            "score": 7.8,
+            "pop": 2,
+            "ai_rank": 2,
+            "style": "差し",
+            "tan_pct": 15.0,
+            "ren_pct": 30.1,
+            "fuku_pct": 43.1,
+            "rl_rank": 2,
+            "solo_rank": 4,
+            "cl_rank": 2,
+            "ev": 0.812,
+            "prob_gap": 0.0047,
+            "cal_prob": 0.4887,
+            "mark": "",
+            "ability_margin": 2.918071,
+            "ability_breakdown": [
+              {
+                "category": "基準値",
+                "contrib": 2.6863
+              },
+              {
+                "category": "騎手",
+                "contrib": 0.1466
+              },
+              {
+                "category": "実力レーティング",
+                "contrib": 0.0925
+              },
+              {
+                "category": "血統",
+                "contrib": 0.0478
+              },
+              {
+                "category": "過去人気推移",
+                "contrib": 0.0289
+              },
+              {
+                "category": "ペース適性",
+                "contrib": 0.0265
+              },
+              {
+                "category": "クラス適性",
+                "contrib": 0.023
+              },
+              {
+                "category": "近走成績",
+                "contrib": 0.007
+              },
+              {
+                "category": "厩舎",
+                "contrib": 0.0067
+              },
+              {
+                "category": "ローテーション",
+                "contrib": 0.0029
+              },
+              {
+                "category": "馬場適性",
+                "contrib": 0.001
+              },
+              {
+                "category": "枠順",
+                "contrib": -0.0044
+              },
+              {
+                "category": "距離適性",
+                "contrib": -0.0077
+              },
+              {
+                "category": "斤量・馬体",
+                "contrib": -0.0424
+              },
+              {
+                "category": "スピード能力",
+                "contrib": -0.0459
+              },
+              {
+                "category": "コース適性",
+                "contrib": -0.0508
+              }
+            ],
+            "mx_flag": null,
+            "tansho_odds": 5.4,
+            "fukusho_odds": 2.2
+          },
+          {
+            "n": 4,
+            "name": "ニシノケンタマン",
+            "odds": 8.3,
+            "score": 5.6,
+            "pop": 5,
+            "ai_rank": 5,
+            "style": "差し",
+            "tan_pct": 8.0,
+            "ren_pct": 16.0,
+            "fuku_pct": 25.3,
+            "rl_rank": 5,
+            "solo_rank": 2,
+            "cl_rank": 11,
+            "ev": 0.666,
+            "prob_gap": -0.0146,
+            "cal_prob": 0.2574,
+            "mark": "",
+            "ability_margin": 2.952567,
+            "ability_breakdown": [
+              {
+                "category": "基準値",
+                "contrib": 2.6863
+              },
+              {
+                "category": "実力レーティング",
+                "contrib": 0.2312
+              },
+              {
+                "category": "スピード能力",
+                "contrib": 0.0703
+              },
+              {
+                "category": "近走成績",
+                "contrib": 0.0373
+              },
+              {
+                "category": "コース適性",
+                "contrib": 0.0222
+              },
+              {
+                "category": "血統",
+                "contrib": 0.0178
+              },
+              {
+                "category": "斤量・馬体",
+                "contrib": 0.0155
+              },
+              {
+                "category": "距離適性",
+                "contrib": 0.0097
+              },
+              {
+                "category": "ペース適性",
+                "contrib": 0.0024
+              },
+              {
+                "category": "馬場適性",
+                "contrib": 0.0006
+              },
+              {
+                "category": "ローテーション",
+                "contrib": 0.0004
+              },
+              {
+                "category": "クラス適性",
+                "contrib": -0.0099
+              },
+              {
+                "category": "過去人気推移",
+                "contrib": -0.0116
+              },
+              {
+                "category": "枠順",
+                "contrib": -0.0117
+              },
+              {
+                "category": "騎手",
+                "contrib": -0.0422
+              },
+              {
+                "category": "厩舎",
+                "contrib": -0.0658
+              }
+            ],
+            "mx_flag": null,
+            "tansho_odds": 8.3,
+            "fukusho_odds": 2.3
+          },
+          {
+            "n": 5,
+            "name": "コパノエビータ",
+            "odds": 335.6,
+            "score": 0.9,
+            "pop": 15,
+            "ai_rank": 15,
+            "style": "追込",
+            "tan_pct": 2.1,
+            "ren_pct": 4.2,
+            "fuku_pct": 7.1,
+            "rl_rank": 15,
+            "solo_rank": 12,
+            "cl_rank": 14,
+            "ev": 7.087,
+            "prob_gap": 0.0188,
+            "cal_prob": 0.0131,
+            "mark": "",
+            "ability_margin": 1.705406,
+            "ability_breakdown": [
+              {
+                "category": "基準値",
+                "contrib": 2.6863
+              },
+              {
+                "category": "血統",
+                "contrib": 0.1039
+              },
+              {
+                "category": "厩舎",
+                "contrib": 0.0505
+              },
+              {
+                "category": "コース適性",
+                "contrib": 0.0256
+              },
+              {
+                "category": "ローテーション",
+                "contrib": -0.0004
+              },
+              {
+                "category": "斤量・馬体",
+                "contrib": -0.01
+              },
+              {
+                "category": "枠順",
+                "contrib": -0.0132
+              },
+              {
+                "category": "馬場適性",
+                "contrib": -0.0133
+              },
+              {
+                "category": "ペース適性",
+                "contrib": -0.0265
+              },
+              {
+                "category": "距離適性",
+                "contrib": -0.0428
+              },
+              {
+                "category": "クラス適性",
+                "contrib": -0.054
+              },
+              {
+                "category": "スピード能力",
+                "contrib": -0.1557
+              },
+              {
+                "category": "近走成績",
+                "contrib": -0.1609
+              },
+              {
+                "category": "過去人気推移",
+                "contrib": -0.1766
+              },
+              {
+                "category": "騎手",
+                "contrib": -0.1969
+              },
+              {
+                "category": "実力レーティング",
+                "contrib": -0.3107
+              }
+            ],
+            "mx_flag": null,
+            "tansho_odds": 335.6,
+            "fukusho_odds": 47.1
+          },
+          {
+            "n": 6,
+            "name": "アルベリック",
+            "odds": 76.0,
+            "score": 3.5,
+            "pop": 9,
+            "ai_rank": 8,
+            "style": "追込",
+            "tan_pct": 4.5,
+            "ren_pct": 9.0,
+            "fuku_pct": 14.8,
+            "rl_rank": 8,
+            "solo_rank": 6,
+            "cl_rank": 4,
+            "ev": 3.432,
+            "prob_gap": 0.0348,
+            "cal_prob": 0.0735,
+            "mark": "",
+            "ability_margin": 2.785081,
+            "ability_breakdown": [
+              {
+                "category": "基準値",
+                "contrib": 2.6863
+              },
+              {
+                "category": "スピード能力",
+                "contrib": 0.1479
+              },
+              {
+                "category": "騎手",
+                "contrib": 0.1136
+              },
+              {
+                "category": "コース適性",
+                "contrib": 0.1012
+              },
+              {
+                "category": "距離適性",
+                "contrib": 0.0305
+              },
+              {
+                "category": "斤量・馬体",
+                "contrib": 0.0251
+              },
+              {
+                "category": "クラス適性",
+                "contrib": 0.0093
+              },
+              {
+                "category": "ローテーション",
+                "contrib": 0.0049
+              },
+              {
+                "category": "厩舎",
+                "contrib": -0.0076
+              },
+              {
+                "category": "血統",
+                "contrib": -0.0088
+              },
+              {
+                "category": "ペース適性",
+                "contrib": -0.0136
+              },
+              {
+                "category": "枠順",
+                "contrib": -0.0252
+              },
+              {
+                "category": "馬場適性",
+                "contrib": -0.0254
+              },
+              {
+                "category": "過去人気推移",
+                "contrib": -0.0496
+              },
+              {
+                "category": "近走成績",
+                "contrib": -0.0665
+              },
+              {
+                "category": "実力レーティング",
+                "contrib": -0.1371
+              }
+            ],
+            "mx_flag": null,
+            "tansho_odds": 76.0,
+            "fukusho_odds": 12.1
+          },
+          {
+            "n": 7,
+            "name": "トゥーザムーン",
+            "odds": 24.8,
+            "score": 3.8,
+            "pop": 7,
+            "ai_rank": 7,
+            "style": "差し",
+            "tan_pct": 4.8,
+            "ren_pct": 9.7,
+            "fuku_pct": 15.8,
+            "rl_rank": 7,
+            "solo_rank": 9,
+            "cl_rank": 10,
+            "ev": 1.199,
+            "prob_gap": 0.0167,
+            "cal_prob": 0.0868,
+            "mark": "",
+            "ability_margin": 2.604682,
+            "ability_breakdown": [
+              {
+                "category": "基準値",
+                "contrib": 2.6863
+              },
+              {
+                "category": "厩舎",
+                "contrib": 0.0582
+              },
+              {
+                "category": "過去人気推移",
+                "contrib": 0.0424
+              },
+              {
+                "category": "コース適性",
+                "contrib": 0.0198
+              },
+              {
+                "category": "ペース適性",
+                "contrib": 0.0154
+              },
+              {
+                "category": "血統",
+                "contrib": 0.0117
+              },
+              {
+                "category": "実力レーティング",
+                "contrib": 0.0098
+              },
+              {
+                "category": "馬場適性",
+                "contrib": 0.0007
+              },
+              {
+                "category": "ローテーション",
+                "contrib": 0.0003
+              },
+              {
+                "category": "斤量・馬体",
+                "contrib": -0.0036
+              },
+              {
+                "category": "枠順",
+                "contrib": -0.0094
+              },
+              {
+                "category": "近走成績",
+                "contrib": -0.0116
+              },
+              {
+                "category": "距離適性",
+                "contrib": -0.0184
+              },
+              {
+                "category": "騎手",
+                "contrib": -0.0365
+              },
+              {
+                "category": "クラス適性",
+                "contrib": -0.0684
+              },
+              {
+                "category": "スピード能力",
+                "contrib": -0.092
+              }
+            ],
+            "mx_flag": null,
+            "tansho_odds": 24.8,
+            "fukusho_odds": 4.6
+          },
+          {
+            "n": 8,
+            "name": "スターシップ",
+            "odds": 7.2,
+            "score": 6.8,
+            "pop": 3,
+            "ai_rank": 3,
+            "style": "追込",
+            "tan_pct": 11.3,
+            "ren_pct": 22.7,
+            "fuku_pct": 34.2,
+            "rl_rank": 3,
+            "solo_rank": 3,
+            "cl_rank": 3,
+            "ev": 0.816,
+            "prob_gap": 0.0041,
+            "cal_prob": 0.4071,
+            "mark": "",
+            "ability_margin": 2.922297,
+            "ability_breakdown": [
+              {
+                "category": "基準値",
+                "contrib": 2.6863
+              },
+              {
+                "category": "騎手",
+                "contrib": 0.1679
+              },
+              {
+                "category": "過去人気推移",
+                "contrib": 0.1016
+              },
+              {
+                "category": "血統",
+                "contrib": 0.0354
+              },
+              {
+                "category": "厩舎",
+                "contrib": 0.0344
+              },
+              {
+                "category": "近走成績",
+                "contrib": 0.0153
+              },
+              {
+                "category": "馬場適性",
+                "contrib": 0.007
+              },
+              {
+                "category": "スピード能力",
+                "contrib": 0.0042
+              },
+              {
+                "category": "ローテーション",
+                "contrib": 0.002
+              },
+              {
+                "category": "距離適性",
+                "contrib": 0.0014
+              },
+              {
+                "category": "コース適性",
+                "contrib": -0.0111
+              },
+              {
+                "category": "枠順",
+                "contrib": -0.0119
+              },
+              {
+                "category": "斤量・馬体",
+                "contrib": -0.0149
+              },
+              {
+                "category": "クラス適性",
+                "contrib": -0.0164
+              },
+              {
+                "category": "ペース適性",
+                "contrib": -0.0172
+              },
+              {
+                "category": "実力レーティング",
+                "contrib": -0.0617
+              }
+            ],
+            "mx_flag": null,
+            "tansho_odds": 7.2,
+            "fukusho_odds": 2.5
+          },
+          {
+            "n": 9,
+            "name": "ヴァイヴァーイ",
+            "odds": 15.1,
+            "score": 4.3,
+            "pop": 6,
+            "ai_rank": 6,
+            "style": "差し",
+            "tan_pct": 5.6,
+            "ren_pct": 11.3,
+            "fuku_pct": 18.3,
+            "rl_rank": 6,
+            "solo_rank": 7,
+            "cl_rank": 5,
+            "ev": 0.852,
+            "prob_gap": 0.0044,
+            "cal_prob": 0.1367,
+            "mark": "",
+            "ability_margin": 2.660075,
+            "ability_breakdown": [
+              {
+                "category": "基準値",
+                "contrib": 2.6863
+              },
+              {
+                "category": "実力レーティング",
+                "contrib": 0.1635
+              },
+              {
+                "category": "クラス適性",
+                "contrib": 0.0462
+              },
+              {
+                "category": "近走成績",
+                "contrib": 0.0369
+              },
+              {
+                "category": "ペース適性",
+                "contrib": 0.0228
+              },
+              {
+                "category": "騎手",
+                "contrib": 0.0132
+              },
+              {
+                "category": "馬場適性",
+                "contrib": 0.0034
+              },
+              {
+                "category": "ローテーション",
+                "contrib": 0.0018
+              },
+              {
+                "category": "血統",
+                "contrib": -0.0018
+              },
+              {
+                "category": "距離適性",
+                "contrib": -0.0033
+              },
+              {
+                "category": "枠順",
+                "contrib": -0.0043
+              },
+              {
+                "category": "コース適性",
+                "contrib": -0.0067
+              },
+              {
+                "category": "厩舎",
+                "contrib": -0.0248
+              },
+              {
+                "category": "過去人気推移",
+                "contrib": -0.0407
+              },
+              {
+                "category": "斤量・馬体",
+                "contrib": -0.0847
+              },
+              {
+                "category": "スピード能力",
+                "contrib": -0.1479
+              }
+            ],
+            "mx_flag": null,
+            "tansho_odds": 15.1,
+            "fukusho_odds": 3.6
+          },
+          {
+            "n": 10,
+            "name": "フラッシング",
+            "odds": 136.4,
+            "score": 1.0,
+            "pop": 11,
+            "ai_rank": 14,
+            "style": "追込",
+            "tan_pct": 2.2,
+            "ren_pct": 4.4,
+            "fuku_pct": 7.4,
+            "rl_rank": 14,
+            "solo_rank": 15,
+            "cl_rank": 15,
+            "ev": 2.972,
+            "prob_gap": 0.016,
+            "cal_prob": 0.0131,
+            "mark": "",
+            "ability_margin": 1.494286,
+            "ability_breakdown": [
+              {
+                "category": "基準値",
+                "contrib": 2.6863
+              },
+              {
+                "category": "コース適性",
+                "contrib": 0.0935
+              },
+              {
+                "category": "斤量・馬体",
+                "contrib": 0.0297
+              },
+              {
+                "category": "厩舎",
+                "contrib": 0.0222
+              },
+              {
+                "category": "ローテーション",
+                "contrib": 0.0042
+              },
+              {
+                "category": "距離適性",
+                "contrib": -0.0069
+              },
+              {
+                "category": "馬場適性",
+                "contrib": -0.0107
+              },
+              {
+                "category": "血統",
+                "contrib": -0.0204
+              },
+              {
+                "category": "枠順",
+                "contrib": -0.0222
+              },
+              {
+                "category": "クラス適性",
+                "contrib": -0.0339
+              },
+              {
+                "category": "近走成績",
+                "contrib": -0.0709
+              },
+              {
+                "category": "スピード能力",
+                "contrib": -0.0786
+              },
+              {
+                "category": "ペース適性",
+                "contrib": -0.0846
+              },
+              {
+                "category": "騎手",
+                "contrib": -0.276
+              },
+              {
+                "category": "過去人気推移",
+                "contrib": -0.2779
+              },
+              {
+                "category": "実力レーティング",
+                "contrib": -0.4593
+              }
+            ],
+            "mx_flag": null,
+            "tansho_odds": 136.4,
+            "fukusho_odds": 26.0
+          },
+          {
+            "n": 11,
+            "name": "ジェーケーボンバー",
+            "odds": 146.4,
+            "score": 1.1,
+            "pop": 12,
+            "ai_rank": 13,
+            "style": "差し",
+            "tan_pct": 2.2,
+            "ren_pct": 4.5,
+            "fuku_pct": 7.6,
+            "rl_rank": 13,
+            "solo_rank": 13,
+            "cl_rank": 12,
+            "ev": 3.292,
+            "prob_gap": 0.0171,
+            "cal_prob": 0.0131,
+            "mark": "",
+            "ability_margin": 1.647038,
+            "ability_breakdown": [
+              {
+                "category": "基準値",
+                "contrib": 2.6863
+              },
+              {
+                "category": "斤量・馬体",
+                "contrib": 0.0483
+              },
+              {
+                "category": "過去人気推移",
+                "contrib": 0.0242
+              },
+              {
+                "category": "馬場適性",
+                "contrib": 0.0028
+              },
+              {
+                "category": "ローテーション",
+                "contrib": -0.0043
+              },
+              {
+                "category": "距離適性",
+                "contrib": -0.0075
+              },
+              {
+                "category": "枠順",
+                "contrib": -0.01
+              },
+              {
+                "category": "コース適性",
+                "contrib": -0.0188
+              },
+              {
+                "category": "厩舎",
+                "contrib": -0.0221
+              },
+              {
+                "category": "ペース適性",
+                "contrib": -0.0488
+              },
+              {
+                "category": "クラス適性",
+                "contrib": -0.0758
+              },
+              {
+                "category": "近走成績",
+                "contrib": -0.0879
+              },
+              {
+                "category": "血統",
+                "contrib": -0.1159
+              },
+              {
+                "category": "騎手",
+                "contrib": -0.1394
+              },
+              {
+                "category": "スピード能力",
+                "contrib": -0.1687
+              },
+              {
+                "category": "実力レーティング",
+                "contrib": -0.4154
+              }
+            ],
+            "mx_flag": null,
+            "tansho_odds": 146.4,
+            "fukusho_odds": 27.2
+          },
+          {
+            "n": 12,
+            "name": "マハナ",
+            "odds": 208.4,
+            "score": 1.6,
+            "pop": 14,
+            "ai_rank": 10,
+            "style": "追込",
+            "tan_pct": 2.6,
+            "ren_pct": 5.1,
+            "fuku_pct": 8.6,
+            "rl_rank": 10,
+            "solo_rank": 10,
+            "cl_rank": 6,
+            "ev": 5.329,
+            "prob_gap": 0.0218,
+            "cal_prob": 0.0131,
+            "mark": "",
+            "ability_margin": 2.205397,
+            "ability_breakdown": [
+              {
+                "category": "基準値",
+                "contrib": 2.6863
+              },
+              {
+                "category": "クラス適性",
+                "contrib": 0.0481
+              },
+              {
+                "category": "コース適性",
+                "contrib": 0.0426
+              },
+              {
+                "category": "距離適性",
+                "contrib": 0.0353
+              },
+              {
+                "category": "ローテーション",
+                "contrib": -0.0001
+              },
+              {
+                "category": "馬場適性",
+                "contrib": -0.0044
+              },
+              {
+                "category": "斤量・馬体",
+                "contrib": -0.0076
+              },
+              {
+                "category": "過去人気推移",
+                "contrib": -0.0098
+              },
+              {
+                "category": "枠順",
+                "contrib": -0.013
+              },
+              {
+                "category": "近走成績",
+                "contrib": -0.0171
+              },
+              {
+                "category": "厩舎",
+                "contrib": -0.0192
+              },
+              {
+                "category": "ペース適性",
+                "contrib": -0.0299
+              },
+              {
+                "category": "騎手",
+                "contrib": -0.0645
+              },
+              {
+                "category": "スピード能力",
+                "contrib": -0.0788
+              },
+              {
+                "category": "血統",
+                "contrib": -0.1182
+              },
+              {
+                "category": "実力レーティング",
+                "contrib": -0.2443
+              }
+            ],
+            "mx_flag": null,
+            "tansho_odds": 208.4,
+            "fukusho_odds": 26.8
+          },
+          {
+            "n": 13,
+            "name": "クロドラバール",
+            "odds": 180.5,
+            "score": 1.4,
+            "pop": 13,
+            "ai_rank": 11,
+            "style": "先行",
+            "tan_pct": 2.4,
+            "ren_pct": 4.9,
+            "fuku_pct": 8.2,
+            "rl_rank": 11,
+            "solo_rank": 11,
+            "cl_rank": 8,
+            "ev": 4.397,
+            "prob_gap": 0.02,
+            "cal_prob": 0.0131,
+            "mark": "",
+            "ability_margin": 1.944677,
+            "ability_breakdown": [
+              {
+                "category": "基準値",
+                "contrib": 2.6863
+              },
+              {
+                "category": "斤量・馬体",
+                "contrib": 0.0435
+              },
+              {
+                "category": "ペース適性",
+                "contrib": 0.0332
+              },
+              {
+                "category": "コース適性",
+                "contrib": 0.009
+              },
+              {
+                "category": "厩舎",
+                "contrib": 0.0058
+              },
+              {
+                "category": "騎手",
+                "contrib": 0.0051
+              },
+              {
+                "category": "ローテーション",
+                "contrib": 0.0025
+              },
+              {
+                "category": "馬場適性",
+                "contrib": -0.0101
+              },
+              {
+                "category": "枠順",
+                "contrib": -0.0143
+              },
+              {
+                "category": "距離適性",
+                "contrib": -0.0295
+              },
+              {
+                "category": "近走成績",
+                "contrib": -0.0383
+              },
+              {
+                "category": "過去人気推移",
+                "contrib": -0.0794
+              },
+              {
+                "category": "スピード能力",
+                "contrib": -0.0915
+              },
+              {
+                "category": "クラス適性",
+                "contrib": -0.1053
+              },
+              {
+                "category": "血統",
+                "contrib": -0.1473
+              },
+              {
+                "category": "実力レーティング",
+                "contrib": -0.325
+              }
+            ],
+            "mx_flag": null,
+            "tansho_odds": 180.5,
+            "fukusho_odds": 29.3
+          },
+          {
+            "n": 14,
+            "name": "コスモコンフェルマ",
+            "odds": 8.2,
+            "score": 6.1,
+            "pop": 4,
+            "ai_rank": 4,
+            "style": "先行",
+            "tan_pct": 9.3,
+            "ren_pct": 18.5,
+            "fuku_pct": 28.7,
+            "rl_rank": 4,
+            "solo_rank": 5,
+            "cl_rank": 7,
+            "ev": 0.759,
+            "prob_gap": -0.0034,
+            "cal_prob": 0.3057,
+            "mark": "",
+            "ability_margin": 2.904915,
+            "ability_breakdown": [
+              {
+                "category": "基準値",
+                "contrib": 2.6863
+              },
+              {
+                "category": "クラス適性",
+                "contrib": 0.1277
+              },
+              {
+                "category": "スピード能力",
+                "contrib": 0.119
+              },
+              {
+                "category": "騎手",
+                "contrib": 0.0601
+              },
+              {
+                "category": "斤量・馬体",
+                "contrib": 0.0542
+              },
+              {
+                "category": "厩舎",
+                "contrib": 0.0326
+              },
+              {
+                "category": "ペース適性",
+                "contrib": 0.0173
+              },
+              {
+                "category": "血統",
+                "contrib": 0.0108
+              },
+              {
+                "category": "距離適性",
+                "contrib": 0.0041
+              },
+              {
+                "category": "馬場適性",
+                "contrib": -0.0005
+              },
+              {
+                "category": "ローテーション",
+                "contrib": -0.0029
+              },
+              {
+                "category": "枠順",
+                "contrib": -0.0063
+              },
+              {
+                "category": "コース適性",
+                "contrib": -0.0113
+              },
+              {
+                "category": "近走成績",
+                "contrib": -0.0126
+              },
+              {
+                "category": "過去人気推移",
+                "contrib": -0.0222
+              },
+              {
+                "category": "実力レーティング",
+                "contrib": -0.1514
+              }
+            ],
+            "mx_flag": null,
+            "tansho_odds": 8.2,
+            "fukusho_odds": 2.5
+          },
+          {
+            "n": 15,
+            "name": "ノルドヴェスト",
+            "odds": 78.3,
+            "score": 1.2,
+            "pop": 10,
+            "ai_rank": 12,
+            "style": "追込",
+            "tan_pct": 2.3,
+            "ren_pct": 4.6,
+            "fuku_pct": 7.7,
+            "rl_rank": 12,
+            "solo_rank": 14,
+            "cl_rank": 13,
+            "ev": 1.786,
+            "prob_gap": 0.0128,
+            "cal_prob": 0.0131,
+            "mark": "",
+            "ability_margin": 1.551242,
+            "ability_breakdown": [
+              {
+                "category": "基準値",
+                "contrib": 2.6863
+              },
+              {
+                "category": "斤量・馬体",
+                "contrib": 0.0354
+              },
+              {
+                "category": "コース適性",
+                "contrib": 0.0193
+              },
+              {
+                "category": "過去人気推移",
+                "contrib": 0.0159
+              },
+              {
+                "category": "ローテーション",
+                "contrib": 0.0039
+              },
+              {
+                "category": "馬場適性",
+                "contrib": 0.0006
+              },
+              {
+                "category": "枠順",
+                "contrib": -0.0119
+              },
+              {
+                "category": "距離適性",
+                "contrib": -0.0392
+              },
+              {
+                "category": "クラス適性",
+                "contrib": -0.0429
+              },
+              {
+                "category": "スピード能力",
+                "contrib": -0.0516
+              },
+              {
+                "category": "ペース適性",
+                "contrib": -0.0541
+              },
+              {
+                "category": "血統",
+                "contrib": -0.059
+              },
+              {
+                "category": "厩舎",
+                "contrib": -0.0876
+              },
+              {
+                "category": "近走成績",
+                "contrib": -0.0926
+              },
+              {
+                "category": "騎手",
+                "contrib": -0.2246
+              },
+              {
+                "category": "実力レーティング",
+                "contrib": -0.5466
+              }
+            ],
+            "mx_flag": null,
+            "tansho_odds": 78.3,
+            "fukusho_odds": 13.7
+          }
+        ],
+        "bets": [
+          {
+            "tag": "wide",
+            "label": "馬連",
+            "horse": "#2 ビービーアジャイル",
+            "est": "1.9倍",
+            "amt": "¥500"
+          },
+          {
+            "tag": "wide",
+            "label": "ワイド",
+            "horse": "#2 ビービーアジャイル",
+            "est": "1.9倍",
+            "amt": "¥300"
+          },
+          {
+            "tag": "sanfuku",
+            "label": "三連複(10点)",
+            "trio_type": "box",
+            "legs": null,
+            "nums": [
+              1,
+              2,
+              6,
+              7,
+              12
+            ],
+            "combos": [
+              "1-6-12",
+              "6-7-12",
+              "1-7-12",
+              "1-6-7",
+              "2-6-12",
+              "1-2-12",
+              "2-7-12",
+              "1-2-6",
+              "2-6-7",
+              "1-2-7"
+            ],
+            "est": "10点",
+            "amt": "¥1000"
+          }
+        ],
+        "gumbel_bets": [
+          {
+            "tag": "tan",
+            "label": "単勝（軸）",
+            "horse": "#2 ビービーアジャイル",
+            "est": "1.9倍",
+            "amt": "¥100"
+          },
+          {
+            "tag": "wide",
+            "label": "ワイド(3点)",
+            "axis": 2,
+            "horse": "#2 - #8・#14・#4",
+            "mates": [
+              {
+                "n": 8,
+                "name": "スターシップ",
+                "odds": 2.4,
+                "prob": 0.3257
+              },
+              {
+                "n": 14,
+                "name": "コスモコンフェルマ",
+                "odds": 2.8,
+                "prob": 0.234
+              },
+              {
+                "n": 4,
+                "name": "ニシノケンタマン",
+                "odds": 2.9,
+                "prob": 0.198
+              }
+            ],
+            "est": "2.4〜2.9倍",
+            "amt": "¥300"
+          },
+          {
+            "tag": "umaren",
+            "label": "馬連(2点)",
+            "axis": 2,
+            "horse": "#2 - #8・#14",
+            "mates": [
+              {
+                "n": 8,
+                "name": "スターシップ",
+                "odds": 6.1,
+                "prob": 0.1347
+              },
+              {
+                "n": 14,
+                "name": "コスモコンフェルマ",
+                "odds": 6.8,
+                "prob": 0.0937
+              }
+            ],
+            "est": "6.1〜6.8倍",
+            "amt": "¥200",
+            "syn_odds": 3.2
+          },
+          {
+            "tag": "sanfuku",
+            "label": "三連複(13点)",
+            "trio_type": "formation",
+            "legs": [
+              [
+                2
+              ],
+              [
+                8,
+                14
+              ],
+              [
+                1,
+                3,
+                4,
+                6,
+                7,
+                8,
+                9,
+                14
+              ]
+            ],
+            "nums": [
+              1,
+              2,
+              3,
+              4,
+              6,
+              7,
+              8,
+              9,
+              14
+            ],
+            "combos": [
+              "2-3-8",
+              "2-3-14",
+              "2-8-14",
+              "2-4-8",
+              "2-4-14",
+              "2-8-9",
+              "2-6-8",
+              "1-2-8",
+              "2-7-8",
+              "2-9-14",
+              "2-7-14",
+              "1-2-14",
+              "2-6-14"
+            ],
+            "est": "¥700〜¥12,240",
+            "syn_odds": 1.5,
+            "amt": "¥1300"
+          }
+        ],
+        "ai_pair_bets": null,
+        "formation": {
+          "pattern": "ボックス",
+          "axis": null,
+          "axis2": null,
+          "bets": [
+            {
+              "type": "三連複F",
+              "nums": [
+                1,
+                6,
+                12
+              ],
+              "amount": 100
+            },
+            {
+              "type": "三連複F",
+              "nums": [
+                6,
+                7,
+                12
+              ],
+              "amount": 100
+            },
+            {
+              "type": "三連複F",
+              "nums": [
+                1,
+                7,
+                12
+              ],
+              "amount": 100
+            },
+            {
+              "type": "三連複F",
+              "nums": [
+                1,
+                6,
+                7
+              ],
+              "amount": 100
+            },
+            {
+              "type": "三連複F",
+              "nums": [
+                2,
+                6,
+                12
+              ],
+              "amount": 100
+            },
+            {
+              "type": "三連複F",
+              "nums": [
+                1,
+                2,
+                12
+              ],
+              "amount": 100
+            },
+            {
+              "type": "三連複F",
+              "nums": [
+                2,
+                7,
+                12
+              ],
+              "amount": 100
+            },
+            {
+              "type": "三連複F",
+              "nums": [
+                1,
+                2,
+                6
+              ],
+              "amount": 100
+            },
+            {
+              "type": "三連複F",
+              "nums": [
+                2,
+                6,
+                7
+              ],
+              "amount": 100
+            },
+            {
+              "type": "三連複F",
+              "nums": [
+                1,
+                2,
+                7
+              ],
+              "amount": 100
+            }
+          ],
+          "total_points": 10,
+          "total_amount": 1000,
+          "payout_range": {
+            "min": 1056,
+            "mid": 2404,
+            "max": 7202
+          },
+          "syn_odds": 29.93
+        },
+        "cmt": "馬場は時計遅め。ミドル想定(72%)で差し有利な展開。やや拮抗したメンバー構成。◎ビービーアジャイル(スコア9.3)が最有力。断然の1番人気(1.9倍)だが信頼度高い。"
       },
       {
         "r": 7,
