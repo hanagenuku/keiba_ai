@@ -131,6 +131,27 @@ def _load_morning_predictions(db_path, race_ids):
     return morning_map
 
 
+def _winner_odds_from_dividends(result):
+    """単勝の実配当から勝ち馬のオッズを復元する。
+
+    JRAの結果ページは2026-07-04以降 単勝オッズ列そのものが無く、
+    `winner_odds` は導入以来683行すべてNULLだった（2026-08-31に判明）。
+    単勝配当は「100円あたりの払戻」なので /100 で倍率に戻せる。
+    """
+    tansho = (result.get('dividends') or {}).get('tansho')
+    if isinstance(tansho, dict):
+        payout = tansho.get('payout')
+    elif isinstance(tansho, list) and tansho:
+        payout = (tansho[0] or {}).get('payout')
+    else:
+        payout = None
+    try:
+        v = float(payout) / 100.0
+    except (TypeError, ValueError):
+        return None
+    return v if v >= 1.0 else None
+
+
 def _build_shadow_row(result, morning_map, recommended_race_ids):
     """1レース分の shadow_bets 行データを構築する。
 
@@ -231,7 +252,10 @@ def _build_shadow_row(result, morning_map, recommended_race_ids):
         'rl3_name':         rl3.get('horse_name', ''),
         'winner_num':       winner_num,
         'winner_pop':       pop_rank,
-        'winner_odds':      winner.get('win_odds'),
+        # 結果ページから単勝オッズ列が消えたため（2026-08-03③）、
+        # winner.get('win_odds') は常に None になる。単勝の実配当から
+        # 勝ち馬のオッズを復元する（払戻100円あたり → 倍率）。
+        'winner_odds':      winner.get('win_odds') or _winner_odds_from_dividends(result),
         'second_num':       second_num,
         'third_num':        third_num,
         'shadow_tansho_hit':    tan_hit,

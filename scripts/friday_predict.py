@@ -142,6 +142,17 @@ def main():
         json.dump(app_data, f, ensure_ascii=False, indent=2)
     print(f'✅ アプリJSON保存: {APP_PATH}')
 
+    # 画面に出した買い目そのものをDBへ残す（bets は旧ロジック・推奨レースのみで
+    # 画面と別物だったため、2026-08-31 に追加）。失敗しても予想生成は止めない。
+    try:
+        from src.betting.displayed_bets import rows_from_app_json
+        from src.utils.db import save_displayed_bets
+        _n = save_displayed_bets(
+            rows_from_app_json(app_data, snapshot='initial'), ROOT)
+        print(f'✅ 表示買い目を記録: {_n}点 (snapshot=initial)')
+    except Exception as e:
+        print(f'⚠ 表示買い目の記録に失敗（予想には影響なし）: {e}')
+
     checkpoint_db(db_path)
     checkpoint_db(hist_path)
 

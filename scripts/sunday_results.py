@@ -81,7 +81,11 @@ def main():
         # 日曜分のshadow_betsは推奨レースでも常に was_recommended=0 になっていた）
         _conn = sqlite3.connect(db_path)
         _rec_ids = {r[0] for r in _conn.execute(
-            'SELECT DISTINCT race_id FROM bets WHERE date=?', (target_date,)).fetchall()}
+            'SELECT DISTINCT race_id FROM bets WHERE date=?',
+        # bets.date は 'YYYY-MM-DD'、target_date は 'YYYYMMDD'。
+        # 揃えずに比較していたため was_recommended が全683行0だった
+        # （2026-08-31 の棚卸しで判明）
+        (f'{target_date[:4]}-{target_date[4:6]}-{target_date[6:]}',)).fetchall()}
         _conn.close()
         record_all_shadow_bets(all_results, ROOT, recommended_race_ids=_rec_ids)
 

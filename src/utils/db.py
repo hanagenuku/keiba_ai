@@ -192,6 +192,27 @@ def init_db(base_dir=None, db_path=None):
             UNIQUE(race_id, bet_type, combo)
         );
         CREATE INDEX IF NOT EXISTS idx_rd_race ON race_dividends(race_id);
+        -- 画面に実際に出した買い目（gumbel_bets = 軸1頭ベース）。
+        -- `bets` は旧 make_bets() の出力・推奨レースのみで、画面とは別物だった
+        -- （2026-08-31 の棚卸しで判明。詳細は src/betting/displayed_bets.py）。
+        CREATE TABLE IF NOT EXISTS displayed_bets (
+            id             INTEGER PRIMARY KEY AUTOINCREMENT,
+            date           TEXT NOT NULL,
+            race_id        TEXT NOT NULL,
+            racecourse     TEXT,
+            race_num       INTEGER,
+            is_recommended INTEGER DEFAULT 0,
+            snapshot       TEXT NOT NULL,   -- 'initial'(前夜/前日) | 'refresh'(当日)
+            bet_type       TEXT NOT NULL,   -- race_dividends と同じ表記
+            combo          TEXT NOT NULL,   -- 昇順ハイフン連結 '5' / '5-7' / '2-5-7'
+            amount         REAL,            -- 1点あたりの金額（行の合計を点数で等分）
+            is_hit         INTEGER DEFAULT -1,
+            payout         REAL DEFAULT 0,
+            created_at     TEXT DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(race_id, snapshot, bet_type, combo)
+        );
+        CREATE INDEX IF NOT EXISTS idx_db_date ON displayed_bets(date);
+        CREATE INDEX IF NOT EXISTS idx_db_race ON displayed_bets(race_id);
         CREATE TABLE IF NOT EXISTS race_notes (
             id              INTEGER PRIMARY KEY AUTOINCREMENT,
             date            TEXT NOT NULL,
@@ -702,6 +723,118 @@ def save_dividends_db(all_results, base_dir=None, db_path=None):
     conn.commit()
     conn.close()
     return {'races': races, 'rows': rows}
+
+
+def save_displayed_bets(rows, base_dir=None, db_path=None):
+    """画面に出した買い目を保存する。同一 (race_id, snapshot, 券種, 組番) は上書き。
+
+    再実行・リトライで点数が二重に積み上がらないよう UNIQUE で潰す。
+    ただし金額は上書きしたい（オッズが動けば点数配分が変わる）ので
+    INSERT OR IGNORE ではなく明示的に UPDATE する。
+    """
+    if not rows:
+        return 0
+    path = db_path or get_db_path(base_dir)
+    conn = _connect(path)
+    n = 0
+    for r in rows:
+        conn.execute(
+            """INSERT INTO displayed_bets
+               (date, race_id, racecourse, race_num, is_recommended,
+                snapshot, bet_type, combo, amount)
+               VALUES (?,?,?,?,?,?,?,?,?)
+               ON CONFLICT(race_id, snapshot, bet_type, combo) DO UPDATE SET
+                 amount         = excluded.amount,
+                 is_recommended = excluded.is_recommended,
+                 racecourse     = excluded.racecourse,
+                 race_num       = excluded.race_num""",
+            (r['date'], r['race_id'], r.get('racecourse', ''), r.get('race_num', 0),
+             r.get('is_recommended', 0), r.get('snapshot', 'initial'),
+             r['bet_type'], r['combo'], r.get('amount', 0)),
+        )
+        n += 1
+    conn.commit()
+    conn.close()
+    return n
+
+
+def settle_displayed_bets(base_dir=None, db_path=None, hist_db_path=None):
+    """displayed_bets を race_dividends と着順で決済する。
+
+    未決済(is_hit=-1)の行だけを対象にするので、何度呼んでも二重計上しない。
+    的中しているのに配当が引けない行は payout=0 のまま is_hit=1 にする
+    （回収率の分母には入るが分子には入らない＝過大評価しない側に倒す）。
+    """
+    path = db_path or get_db_path(base_dir)
+    conn = _connect(path)
+    conn.row_factory = sqlite3.Row
+
+    pending = conn.execute(
+        'SELECT * FROM displayed_bets WHERE is_hit = -1'
+    ).fetchall()
+    if not pending:
+        conn.close()
+        return {'settled': 0, 'hit': 0, 'invested': 0.0, 'recovered': 0.0, 'no_payout': 0}
+
+    race_ids = {r['race_id'] for r in pending}
+    qmarks = ','.join('?' * len(race_ids))
+    div = {}
+    for row in conn.execute(
+            f'SELECT race_id, bet_type, combo, payout FROM race_dividends '
+            f'WHERE race_id IN ({qmarks})', tuple(race_ids)):
+        div[(row['race_id'], row['bet_type'], row['combo'])] = row['payout']
+
+    # 着順は history.db 側にしかない
+    hp = hist_db_path or os.path.join(base_dir or '.', 'data', 'history.db')
+    top3 = {}
+    if os.path.exists(hp):
+        hc = sqlite3.connect(hp)
+        for rid, hn, pl in hc.execute(
+                f'SELECT race_id, horse_num, place FROM horse_history '
+                f'WHERE place BETWEEN 1 AND 3 AND race_id IN ({qmarks}) '
+                f'ORDER BY race_id, place', tuple(race_ids)):
+            top3.setdefault(rid, []).append(hn)
+        hc.close()
+
+    settled = hit = no_payout = 0
+    invested = recovered = 0.0
+    for b in pending:
+        t = top3.get(b['race_id'])
+        if not t or len(t) < 3:
+            continue  # 結果がまだ入っていない。次回に持ち越す
+        nums = [int(x) for x in b['combo'].split('-')]
+        bt = b['bet_type']
+        if bt == 'tansho':
+            won = nums[0] == t[0]
+        elif bt == 'fukusho':
+            won = nums[0] in t
+        elif bt == 'wide':
+            won = len(set(nums) & set(t)) == 2
+        elif bt == 'umaren':
+            won = set(nums) <= set(t[:2])
+        elif bt == 'sanrenpuku':
+            won = set(nums) == set(t)
+        else:
+            continue
+
+        payout = 0.0
+        if won:
+            p = div.get((b['race_id'], bt, b['combo']))
+            if p is None:
+                no_payout += 1
+            else:
+                payout = (b['amount'] or 0) * p / 100.0
+        conn.execute('UPDATE displayed_bets SET is_hit=?, payout=? WHERE id=?',
+                     (1 if won else 0, payout, b['id']))
+        settled += 1
+        hit += 1 if won else 0
+        invested += b['amount'] or 0
+        recovered += payout
+
+    conn.commit()
+    conn.close()
+    return {'settled': settled, 'hit': hit, 'invested': invested,
+            'recovered': recovered, 'no_payout': no_payout}
 
 
 def get_dividends_for_races(race_ids, base_dir=None, db_path=None):
