@@ -100,6 +100,20 @@ def fetch_and_save_results(sess, hist_path, target_date):
     except Exception as e:
         print(f'⚠ bet_simulation決済失敗（結果取得には影響なし）: {e}')
 
+    # displayed_bets（画面に出した買い目そのもの）の決済。
+    # race_dividends の実配当と history.db の着順で決済する。
+    # is_hit=-1 の行だけが対象なので何度呼んでも二重計上しない。
+    try:
+        from src.utils.db import settle_displayed_bets
+        dsp = settle_displayed_bets(ROOT, hist_db_path=hist_path)
+        if dsp['settled']:
+            roi = (dsp['recovered'] / dsp['invested'] * 100) if dsp['invested'] else 0
+            print(f'【表示買い目 決済】 {dsp["hit"]}/{dsp["settled"]}的中  '
+                  f'¥{dsp["invested"]:,.0f} → ¥{dsp["recovered"]:,.0f} = {roi:.1f}%'
+                  + (f'  ⚠配当引けず{dsp["no_payout"]}件' if dsp['no_payout'] else ''))
+    except Exception as e:
+        print(f'⚠ displayed_bets決済失敗（結果取得には影響なし）: {e}')
+
     # 上の settle は「今回スクレイプしたレース」しか決済しないため、
     # 過去に溜まった未決済行はDB内の既存結果を使って別途決済する。
     # is_hit=-1 の行だけが対象なので二重計上はしない。
@@ -212,6 +226,17 @@ def predict_next_day(sess, hist_path, avg_bias, jst_now, force=False):
         json.dump(app_data, f, ensure_ascii=False, indent=2)
     print(f'✅ アプリJSON保存: {APP_PATH}')
 
+    # 画面に出した買い目そのものをDBへ残す（bets は旧ロジック・推奨レースのみで
+    # 画面と別物だったため、2026-08-31 に追加）。失敗しても予想生成は止めない。
+    try:
+        from src.betting.displayed_bets import rows_from_app_json
+        from src.utils.db import save_displayed_bets
+        _n = save_displayed_bets(
+            rows_from_app_json(app_data, snapshot='initial'), ROOT)
+        print(f'✅ 表示買い目を記録: {_n}点 (snapshot=initial)')
+    except Exception as e:
+        print(f'⚠ 表示買い目の記録に失敗（予想には影響なし）: {e}')
+
 
 def refresh_today(sess, hist_path, avg_bias, jst_now):
     """当日のレースを、その時点の（前夜より成熟した）オッズで予想を再生成する。
@@ -308,6 +333,17 @@ def refresh_today(sess, hist_path, avg_bias, jst_now):
         json.dump(app_data, f, ensure_ascii=False, indent=2)
     print(f'✅ アプリJSON更新: {APP_PATH}')
 
+    # 当日refresh時点の表示買い目。initial と別スナップショットで持つので、
+    # 集計時はどちらか一方を選ぶこと（両方足すと二重計上になる）。
+    try:
+        from src.betting.displayed_bets import rows_from_app_json
+        from src.utils.db import save_displayed_bets
+        _n = save_displayed_bets(
+            rows_from_app_json(app_data, snapshot='refresh'), ROOT)
+        print(f'✅ 表示買い目を記録: {_n}点 (snapshot=refresh)')
+    except Exception as e:
+        print(f'⚠ 表示買い目の記録に失敗（予想には影響なし）: {e}')
+
 
 def _keep_started_races(app_data, path, started_ids):
     """発走済みレースの表示内容を、既存 latest.json のものに差し戻す。
@@ -401,7 +437,11 @@ def main():
             import sqlite3 as _sq
             _conn = _sq.connect(get_db_path(ROOT))
             _rec_ids = {r[0] for r in _conn.execute(
-                'SELECT DISTINCT race_id FROM bets WHERE date=?', (target_date,)).fetchall()}
+                'SELECT DISTINCT race_id FROM bets WHERE date=?',
+        # bets.date は 'YYYY-MM-DD'、target_date は 'YYYYMMDD'。
+        # 揃えずに比較していたため was_recommended が全683行0だった
+        # （2026-08-31 の棚卸しで判明）
+        (f'{target_date[:4]}-{target_date[4:6]}-{target_date[6:]}',)).fetchall()}
             _conn.close()
             record_all_shadow_bets(all_results, ROOT,
                                    bias_data=avg_bias,
