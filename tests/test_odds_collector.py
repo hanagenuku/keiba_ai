@@ -323,17 +323,15 @@ class TestCollectEndToEnd(unittest.TestCase):
                       'racecourse': '新潟', 'race_num': 11,
                       'start_time': '15:45', 'horses': [{'num': 1}, {'num': 2}]}], [])
 
-        orig = (co.get_kaisai_on_date, co.fetch_races_on_date,
-                co.find_r01_odds, co.create_session)
+        orig = (co.get_kaisai_on_date, co.fetch_races_on_date, co.create_session)
         co.get_kaisai_on_date = fake_kaisai
         co.fetch_races_on_date = fake_races
-        co.find_r01_odds = lambda *a, **k: None      # 盤は見つからない想定で即終了
         co.create_session = lambda *a, **k: FakeSession()
         try:
             co.collect(self.d, date_str='20260829', max_minutes=0)
         finally:
             (co.get_kaisai_on_date, co.fetch_races_on_date,
-             co.find_r01_odds, co.create_session) = orig
+             co.create_session) = orig
 
         self.assertEqual(seen['kaisai'][0], 'str', 'get_kaisai_on_date の第1引数は日付')
         self.assertEqual(seen['races'][1], 'str', 'fetch_races_on_date の第2引数は日付')
@@ -353,3 +351,98 @@ class TestCollectEndToEnd(unittest.TestCase):
         from src.scraper.calendar import get_kaisai_on_date
         with self.assertRaises(TypeError):
             get_kaisai_on_date(object(), '20260829')
+
+
+class TestOddsPathActuallyRuns(unittest.TestCase):
+    """🔴 前回の統合テストは find_r01_odds を None に固定していた。
+       つまり**壊れていた経路そのものを迂回**していたので見逃した。
+
+    2026-08-30 の本番: 5.5時間・162周回して **0行**。原因は3つとも
+    「jra_scraper の API を読み違えた」型:
+      ① get_kaisai_on_date の戻り値は {base: **日付**}。会場名ではないので
+         `if v == meta['racecourse']` は永久に一致しない
+      ② find_r01_odds の引数順は (odds_base, date_str, sess)。逆にすると
+         'str' object has no attribute 'post' で256件全滅
+      ③ base はそのままでは使えず _to_odds_base() で変換が要る
+
+    対策は「自前で引き直すのをやめる」こと。fetch_races_on_date が各レースに
+    _odds_cn（base / date_str / race_num / odds_r01）を付けているので、
+    既存の fetch_odds_map と同じくそれを使う。
+    """
+
+    def setUp(self):
+        self.d = tempfile.mkdtemp()
+        os.makedirs(os.path.join(self.d, 'data'), exist_ok=True)
+
+    def tearDown(self):
+        shutil.rmtree(self.d, ignore_errors=True)
+
+    def test_collects_odds_rows_through_the_real_coordinate_path(self):
+        import datetime as _dt
+        import scripts.collect_odds as co
+
+        now = _dt.datetime.now(co.JST)
+        post = (now + _dt.timedelta(minutes=30)).strftime('%H:%M')   # 収集窓の中
+        date_str = now.strftime('%Y%m%d')
+        calls = []
+
+        class FakeSession:
+            pass
+
+        def fake_races(sess, target_date, hist_db_path):
+            return ([{
+                'id': f'{date_str}_05_11', 'date': date_str, 'racecourse': '新潟',
+                'race_num': 11, 'start_time': post,
+                'horses': [{'num': 1}, {'num': 2}, {'num': 3}],
+                '_odds_cn': {'base': 'pw01dde0104' + date_str, 'date_str': date_str,
+                             'sx': 0x12, 'race_num': 11, 'odds_r01': 0x5B},
+            }], [])
+
+        def fake_fetch_odds(sess, odds_base, race_num, ds, sx):
+            calls.append(dict(sess=type(sess).__name__, odds_base=odds_base,
+                              race_num=race_num, date_str=ds, sx=sx))
+            return {1: {'tansho': 3.2, 'fukusho': 1.5,
+                        'fukusho_min': 1.4, 'fukusho_max': 1.6},
+                    2: {'tansho': 5.0, 'fukusho': 2.0,
+                        'fukusho_min': 1.8, 'fukusho_max': 2.2}}
+
+        orig = (co.get_kaisai_on_date, co.fetch_races_on_date,
+                co.fetch_odds_for_race, co.create_session)
+        co.get_kaisai_on_date = lambda d, s, calendar=None: {'pw01dde0104' + d: d}
+        co.fetch_races_on_date = fake_races
+        co.fetch_odds_for_race = fake_fetch_odds
+        co.create_session = lambda *a, **k: FakeSession()
+        try:
+            co.collect(self.d, date_str=date_str, max_minutes=5,
+                       interval_sec=1, max_requests=1, out_dir=None)
+        finally:
+            (co.get_kaisai_on_date, co.fetch_races_on_date,
+             co.fetch_odds_for_race, co.create_session) = orig
+
+        self.assertTrue(calls, '🔴 fetch_odds_for_race が一度も呼ばれていない'
+                               '（＝またオッズを1行も取れていない）')
+        c = calls[0]
+        self.assertEqual(c['sess'], 'FakeSession', '第1引数はセッション')
+        self.assertTrue(c['odds_base'].startswith('pw151'),
+                        f"_to_odds_base を通していない: {c['odds_base']}")
+        self.assertEqual(c['race_num'], 11)
+        self.assertEqual(c['date_str'], date_str)
+
+        p = os.path.join(self.d, 'data', 'odds_ts', f'{date_str}.jsonl')
+        rows = [json.loads(x) for x in open(p, encoding='utf-8')]
+        odds = [r for r in rows if r['kind'] == 'odds']
+        self.assertTrue(odds, '🔴 オッズ行が1行も書かれていない')
+        self.assertEqual(odds[0]['race_id'], f'{date_str}_05_11')
+        self.assertIsNotNone(odds[0]['minutes_to_post'])
+        self.assertEqual(odds[0]['fukusho_min'], 1.4)
+        # スキーマ外の内部キーを漏らしていないこと
+        self.assertNotIn('_cn', rows[0])
+
+    def test_does_not_rederive_odds_coordinates_itself(self):
+        """自前で find_r01_odds を呼んだり会場名で base を引いたりしないこと。"""
+        src = open(os.path.join(os.path.dirname(os.path.dirname(
+            os.path.abspath(__file__))), 'scripts', 'collect_odds.py')).read()
+        self.assertNotIn('find_r01_odds(', src,
+                         'オッズR01の探索を二重に持っている')
+        self.assertIn('_odds_cn', src,
+                      'fetch_races_on_date が用意した座標を使っていない')

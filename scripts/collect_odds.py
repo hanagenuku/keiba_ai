@@ -33,8 +33,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from scripts._session import create_session                    # noqa: E402
 from src.scraper.jra_scraper import (                          # noqa: E402
-    get_kaisai_on_date, find_r01_odds, fetch_odds_for_race,
-    fetch_races_on_date,
+    get_kaisai_on_date, fetch_odds_for_race, fetch_races_on_date,
+    _to_odds_base, calc_suffix,
 )
 JST = timezone(timedelta(hours=9))
 
@@ -116,6 +116,15 @@ def build_schedule(sess, date_str, base_dir, out_dir=None):
             'post_time': r.get('start_time'),
             'n_horses': len(r.get('horses') or []),
         })
+    # 🔴 オッズページの座標は自前で引き直さない。
+    #    fetch_races_on_date が各レースに `_odds_cn`（base / date_str / race_num /
+    #    odds_r01）を付けており、既存の fetch_odds_map もそれを使っている。
+    #    2026-08-30 は自前で会場名→base を引こうとして全滅した:
+    #      ・get_kaisai_on_date の戻り値は {base: **日付**} で会場名ではない
+    #      ・find_r01_odds の引数順は (odds_base, date_str, sess)
+    #      ・base はそのままでは使えず _to_odds_base() で変換が要る
+    #    5.5時間回して0行。同じ探索を二重に持つのをやめる。
+    cn_map = {r.get('id'): r.get('_odds_cn') for r in races}
     saved = _append(_ts_path(base_dir, date_str, out_dir), 'schedule', rows)
     n_with_time = sum(1 for x in rows if x['post_time'])
     print(f'📅 出馬表 {len(rows)}レース（発走時刻あり {n_with_time}）'
@@ -123,6 +132,12 @@ def build_schedule(sess, date_str, base_dir, out_dir=None):
     if rows and n_with_time == 0:
         print('🔴 発走時刻が1件も取れていない。このまま集めても'
               '「発走何分前か」が出せず、時点別の分析ができない。')
+    n_cn = sum(1 for v in cn_map.values() if v and v.get('odds_r01') is not None)
+    print(f'   オッズ座標(_odds_cn)が取れたレース {n_cn}/{len(rows)}')
+    if rows and n_cn == 0:
+        print('🔴 オッズページの座標が1件も取れていない。オッズ未発売の可能性。')
+    for x in rows:
+        x['_cn'] = cn_map.get(x['race_id'])
     return rows
 
 
@@ -143,16 +158,6 @@ def collect(base_dir, date_str=None, max_minutes=330,
     if not sched:
         print('❌ 出馬表が取れないので収集しない')
         return {'races': 0, 'snapshots': 0, 'requests': 0}
-
-    # R01 の suffix は会場ごとに1回だけ探索する（他レースは計算で出る）
-    r01 = {}
-    for base, venue in kaisai.items():
-        sfx = find_r01_odds(sess, base, date_str)
-        if sfx is None:
-            print(f'  ⚠ {venue}: オッズR01が見つからない（未発売の可能性）')
-        else:
-            print(f'  ✅ {venue}: R01 suffix={sfx}')
-        r01[base] = sfx
 
     deadline = now + timedelta(minutes=max_minutes)
     req = 0
@@ -186,24 +191,21 @@ def collect(base_dir, date_str=None, max_minutes=330,
         for rid, meta, mtp in due:
             if req >= max_requests:
                 print(f'⚠ リクエスト上限 {max_requests} に到達'); break
-            # race_id は 'YYYYMMDD_場_R'。odds_base は kaisai のキー側にある
-            odds_base = None
-            for b, v in kaisai.items():
-                if v == meta.get('racecourse'):
-                    odds_base = b
-                    break
-            if odds_base is None or r01.get(odds_base) is None:
+            cn = meta.get('_cn')
+            if not cn or cn.get('odds_r01') is None:
                 # 🔴 黙って飛ばすと「1件も集まらなかった」ことに気づけない。
                 #    空振りと該当なしは別物（2026-08-16の教訓）。
                 if rid not in unmapped:
                     unmapped.add(rid)
-                    why = ('会場名が開催情報と一致しない' if odds_base is None
-                           else 'R01のsuffixが見つからなかった')
+                    why = ('出馬表にオッズ座標(_odds_cn)が無い' if not cn
+                           else 'オッズページのR01が見つからなかった')
                     print(f'  ⚠ {rid} ({meta.get("racecourse")}) を収集できない: {why}')
                 continue
             try:
-                omap = fetch_odds_for_race(sess, odds_base, int(meta['race_num']),
-                                           date_str, r01[odds_base])
+                rn = int(cn['race_num'])
+                omap = fetch_odds_for_race(sess, _to_odds_base(cn['base']), rn,
+                                           cn['date_str'],
+                                           calc_suffix(cn['odds_r01'], rn))
                 req += 1
             except Exception as e:                       # noqa: BLE001
                 print(f'  ⚠ {rid} 取得失敗: {e}')
