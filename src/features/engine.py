@@ -2678,8 +2678,45 @@ def auto_comment(cand, bias_data):
     odds_str  = (f'断然の1番人気({odds:.1f}倍)だが信頼度高い。' if odds <= 3.0 else
                  f'中穴({odds:.1f}倍)で期待値十分。' if odds <= 7.0 else
                  f'穴馬({odds:.1f}倍)で高配当狙い。')
-    return (f'{bias_str}{pace_str}想定({pace_pct}%)で{style}有利な展開。'
+    return (f'{bias_str}'
+            f'{_pace_sentence(pace_key if pace_dist else "mid", pace_str, pace_pct, style)}'
             f'{chaos_str}◎{name}(スコア{score:.1f})が最有力。{odds_str}')
+
+
+# ペースが脚質に与える影響（history.db 74,134頭・前半3Fを距離中央値と比べて3分類）。
+#   ペース   逃げ    先行    差し    追込
+#   スロー  47.9%  44.2%  27.0%   8.6%
+#   ハイ    32.3%  32.3%  26.7%  12.2%
+#   変化   -15.6  -11.9   -0.3   +3.6  ← ハイペースで逃げが最も損をし、追込が得をする
+# 絶対値では常に逃げ・先行が高いが、running_style は結果由来のラベル（実際の
+# 通過順位から付ける）なので同語反復を含む。信用できるのは**変化の向き**の方。
+_PACE_FAVORED = {
+    'high': ('差し・追込', ('差し', '追込')),
+    'slow': ('逃げ・先行', ('逃げ', '先行')),
+}
+
+
+def _pace_sentence(pace_key, pace_str, pace_pct, top_style):
+    """ペース想定と本命の脚質が噛み合うかを述べる。
+
+    旧実装は f'{pace_str}想定({pace_pct}%)で{style}有利な展開。' で、この
+    style は **AI本命自身の脚質** だった。ペースを一切見ていないのに
+    「ハイペースだから逃げ有利」と読める文になり、実測で822件中146件
+    (17.8%) がペースの向きと矛盾していた（「ハイペース想定(96%)で逃げ
+    有利」など）。predict_race_pace は最初から正しい対応（high→stalk /
+    slow→front）を持っていたのに、コメント生成がそれを使っていなかった。
+    2026-08-18 の「AI xx%」バッジ、2026-08-07 の「ROI予測 ~150%」と同型。
+    """
+    fav = _PACE_FAVORED.get(pace_key)
+    if not fav:
+        return f'{pace_str}想定({pace_pct}%)。'
+    label, styles = fav
+    txt = f'{pace_str}想定({pace_pct}%)で{label}に有利な流れ。'
+    if top_style in styles:
+        txt += '◎の脚質はこの展開に噛み合う。'
+    elif top_style:
+        txt += f'◎は{top_style}でこの展開は向かない点に注意。'
+    return txt
 
 
 def diagnose_race(race, bias_data=None):
