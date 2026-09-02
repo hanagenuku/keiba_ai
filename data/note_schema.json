@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "categories": [
     {
       "id": "start",
@@ -104,29 +104,59 @@
       "phase": "post"
     },
     {
-      "id": "condition",
-      "label": "パドック気配",
-      "type": "level",
+      "id": "paddock_score",
+      "label": "パドック評価（10点満点・絶対値）",
+      "type": "score",
+      "scale": {
+        "min": 0,
+        "max": 10,
+        "step": 1
+      },
+      "guide": "レースレベルに合わせた絶対評価。未勝利なら4〜6、重賞なら7〜10のように付ける。同じ点数は、別のレース・別の日でも同じ強さを指すようにする（横比較・過去比較の前提）。",
       "options": [
         {
-          "value": 2,
-          "label": "◎ 抜群"
+          "value": 0,
+          "label": "0"
         },
         {
           "value": 1,
-          "label": "○ 良い"
+          "label": "1"
         },
         {
-          "value": 0,
-          "label": "− 普通"
+          "value": 2,
+          "label": "2"
         },
         {
-          "value": -1,
-          "label": "△ やや不安"
+          "value": 3,
+          "label": "3"
         },
         {
-          "value": -2,
-          "label": "× 不安"
+          "value": 4,
+          "label": "4"
+        },
+        {
+          "value": 5,
+          "label": "5"
+        },
+        {
+          "value": 6,
+          "label": "6"
+        },
+        {
+          "value": 7,
+          "label": "7"
+        },
+        {
+          "value": 8,
+          "label": "8"
+        },
+        {
+          "value": 9,
+          "label": "9"
+        },
+        {
+          "value": 10,
+          "label": "10"
         }
       ],
       "weight": 1.0,
@@ -134,5 +164,12 @@
       "phase": "pre"
     }
   ],
-  "free_memo": true
+  "free_memo": true,
+  "retired": [
+    {
+      "id": "condition",
+      "label": "馬体気配（旧・3段階 1:良/0:普通/-1:不安）",
+      "note": "2026-09-02 に 10点満点の絶対評価（paddock_score）へ移行した。旧キーの値は当時の意味のまま race_notes に残っている（9行）。同じキーを再利用すると 1 が『良』なのか『1点』なのか区別できなくなるため、新しいキーに分けた。旧キーは読まない。"
+    }
+  ]
 }
