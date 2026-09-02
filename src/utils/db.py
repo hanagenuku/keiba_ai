@@ -1562,16 +1562,23 @@ def load_note_schema(base_dir=None, schema_path=None):
 
 
 def calc_handicap_from_notes(notes, schema):
-    """notes_data(dict) とスキーマから補正値合計を計算する。
+    """notes_data(dict) とスキーマから「レース後の不利」の補正値合計を計算する。
 
     feature=true の項目のみを value × weight で合算する。スキーマに無い
     キーや欠損キーは 0 扱い。スキーマが変わっても保存済み notes から再計算できる。
+
+    ⚠ phase='pre'（パドック気配など、レース**前**に入力するもの）は合算しない。
+    レース前の見立てとレース後の不利は意味が違う量で、足すと総和が何も指さなく
+    なる。パドック側を測る時は notes_data のキーを直接読むこと（total_handicap
+    は回顧の不利だけを表す、という既存の意味を壊さないための除外）。
     """
     if not isinstance(notes, dict):
         return 0.0
     total = 0.0
     for cat in schema.get('categories', []):
         if not cat.get('feature'):
+            continue
+        if cat.get('phase') == 'pre':
             continue
         try:
             val = float(notes.get(cat['id'], 0) or 0)
