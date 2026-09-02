@@ -30,11 +30,20 @@ ok(pre.length >= 1, 'レース前(pre)の項目がある');
 ok(post.length >= 1, 'レース後(post)の項目がある');
 ok(schema.categories.every(c => c.phase === 'pre' || c.phase === 'post'),
    '全項目に phase が付いている（未指定だと📝と🐎の両方に出てしまう）');
-ok(pre.some(c => c.id === 'condition'), 'パドック気配が pre 側にある');
-const cond = pre.find(c => c.id === 'condition');
-ok(cond.options.length >= 5, '点数の段階が5つ以上ある（あとから粗くはできるが細かくはできない）');
-ok(cond.options.some(o => o.value > 0) && cond.options.some(o => o.value < 0),
-   '良い側と不安側の両方に振れる');
+ok(pre.some(c => c.id === 'paddock_score'), 'パドック評価が pre 側にある');
+const cond = pre.find(c => c.id === 'paddock_score');
+ok(cond.options.length === 11, '0〜10 の11段階（10点満点の絶対評価）');
+ok(cond.options[0].value === 0 && cond.options[10].value === 10, '下端0・上端10');
+ok(cond.options.every(o => Number.isInteger(o.value) && o.value >= 0 && o.value <= 10),
+   '全て0〜10の整数（負値は絶対評価では意味を持たない）');
+ok(typeof cond.guide === 'string' && cond.guide.length > 0,
+   'レースレベルに合わせる旨のガイドがスキーマにある（横比較の前提）');
+// 🔴 旧 condition(1=良/0=普通/-1=不安) と同じキーを再利用すると、
+//    保存済みの 1 が「良」なのか「1点」なのか永久に区別できなくなる
+ok(!schema.categories.some(c => c.id === 'condition'),
+   '旧キー condition を再利用していない');
+ok((schema.retired || []).some(r => r.id === 'condition'),
+   '旧キーが retired として記録されている（過去データの意味が追える）');
 
 // ── ブラウザ環境の最小スタブ ───────────────────────────────
 function makeEnv(existingByHorse) {
@@ -98,7 +107,7 @@ console.log('■ 入力欄');
   // openPaddockEditor は DOM を組み立てるので HTML 文字列で確認する
   ctx._ov = null;
   const built = HORSES.every(h => cond.options.every(o =>
-    `pd_condition_${h.n}` && true));
+    `pd_paddock_score_${h.n}` && true));
   ok(built, '全頭 × 全段階の入力名が組める');
 }
 
@@ -106,10 +115,10 @@ console.log('■ 入力欄');
 console.log('■ 保存対象');
 {
   const ctx = makeEnv({});
-  ctx._checked['pd_condition_2'] = '1';
+  ctx._checked['pd_paddock_score_2'] = '6';
   const rows = ctx.collectPaddockValues(schema, HORSES, {});
   ok(rows.length === 1 && rows[0].horse_num === 2, '採点した1頭だけが対象になる');
-  ok(rows[0].notes.condition === 1, '点数が数値で入る');
+  ok(rows[0].notes.paddock_score === 6, '点数が数値で入る');
 }
 
 // ── 🔴 相互に消さないこと ──────────────────────────────────
@@ -117,18 +126,18 @@ console.log('■ もう片方の入力を消さない（回帰テスト）');
 {
   // #1 には既に📝で「出遅れ大(2)」が入っている。パドックを付けても残るはず。
   const ctx = makeEnv({});
-  ctx._checked['pd_condition_1'] = '-2';
+  ctx._checked['pd_paddock_score_1'] = '9';
   const rows = ctx.collectPaddockValues(schema, HORSES, {1: {start: 2, blocked: 1}});
   const r = rows.find(x => x.horse_num === 1);
-  ok(r.notes.condition === -2, 'パドック点数が入る');
+  ok(r.notes.paddock_score === 9, 'パドック点数が入る');
   ok(r.notes.start === 2 && r.notes.blocked === 1,
      '📝で入れた不利メモが残る（消えると本番で入力が失われる）');
 }
 {
   // 逆向き: 既存のパドック点数を、パドック側で未選択のまま保存しても消えない
   const ctx = makeEnv({});
-  ctx._checked['pd_condition_2'] = '1';
-  const rows = ctx.collectPaddockValues(schema, HORSES, {1: {condition: 2}, 2: {}});
+  ctx._checked['pd_paddock_score_2'] = '5';
+  const rows = ctx.collectPaddockValues(schema, HORSES, {1: {paddock_score: 8}, 2: {}});
   ok(!rows.some(x => x.horse_num === 1),
      '未採点の馬は送らない＝既存のパドック点数を空で上書きしない');
 }
@@ -139,6 +148,7 @@ ok(html.includes('いまの予想には反映されません'),
    '予想に反映していないと画面に明記している（作り話をしない）');
 ok(html.includes('openPaddockEditor'), '🐎ボタンから開ける');
 ok(/phase !== 'pre'/.test(html), '📝側が pre 項目を出さないよう絞っている');
+ok(html.includes('pad-guide'), '採点の基準を画面に出している');
 
 console.log('');
 console.log(pass + ' passed, ' + fail + ' failed');

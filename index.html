@@ -170,12 +170,13 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
 /* パドック入力（レース前・全頭を1画面で採点する） */
 .pad-btn{background:#1e8449;color:#fff;border:none;border-radius:6px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;margin-left:8px}
 .pad-btn:active{background:#145a32}
-.pad-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eee}
-.pad-name{flex:0 0 96px;font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pad-opts{display:flex;gap:3px;flex:1}
-.pad-opts .opt{flex:1}
+.pad-row{padding:7px 0;border-bottom:1px solid #eee}
+.pad-name{font-size:12px;font-weight:700;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pad-opts{display:flex;gap:2px}
+.pad-opts .opt{flex:1;min-width:0}
 .pad-opts .opt input{display:none}
-.pad-opts .opt span{display:block;text-align:center;padding:7px 2px;font-size:12px;border:1px solid #ccc;border-radius:6px;cursor:pointer;background:#fafafa}
+.pad-opts .opt span{display:block;text-align:center;padding:8px 0;font-size:12px;border:1px solid #ccc;border-radius:5px;cursor:pointer;background:#fafafa}
+.pad-guide{font-size:11px;color:#555;background:#f2f8f4;border-left:3px solid #1e8449;padding:7px 9px;margin:0 0 10px;line-height:1.6}
 .pad-opts .opt input:checked + span{background:#1e8449;color:#fff;border-color:#1e8449;font-weight:700}
 .pad-note{font-size:11px;color:#777;margin:6px 0 10px;line-height:1.5}
 .action-bar{display:flex;gap:6px;padding:8px 12px;overflow-x:auto;-webkit-overflow-scrolling:touch;align-items:flex-start}
@@ -1636,6 +1637,7 @@ async function openPaddockEditor(raceKey) {
         + '未選択の馬は保存しません。<br>⚠ 記録のみで、いまの予想には反映されません。</div>';
   for (const cat of cats) {
     if (cats.length > 1) html += '<div class="note-row"><label>' + cat.label + '</label></div>';
+    if (cat.guide) html += '<div class="pad-guide">' + cat.guide + '</div>';
     for (const h of horses) {
       html += '<div class="pad-row"><div class="pad-name">#' + h.n + ' ' + h.name + '</div>';
       html += '<div class="pad-opts">';
