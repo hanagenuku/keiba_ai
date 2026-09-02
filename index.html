@@ -167,6 +167,17 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
 .note-save{background:#8e44ad;color:#fff}
 .note-save:disabled{background:#b09cc4}
 .note-cancel{background:#eee;color:#333}
+/* パドック入力（レース前・全頭を1画面で採点する） */
+.pad-btn{background:#1e8449;color:#fff;border:none;border-radius:6px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer;margin-left:8px}
+.pad-btn:active{background:#145a32}
+.pad-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #eee}
+.pad-name{flex:0 0 96px;font-size:12px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pad-opts{display:flex;gap:3px;flex:1}
+.pad-opts .opt{flex:1}
+.pad-opts .opt input{display:none}
+.pad-opts .opt span{display:block;text-align:center;padding:7px 2px;font-size:12px;border:1px solid #ccc;border-radius:6px;cursor:pointer;background:#fafafa}
+.pad-opts .opt input:checked + span{background:#1e8449;color:#fff;border-color:#1e8449;font-weight:700}
+.pad-note{font-size:11px;color:#777;margin:6px 0 10px;line-height:1.5}
 .action-bar{display:flex;gap:6px;padding:8px 12px;overflow-x:auto;-webkit-overflow-scrolling:touch;align-items:flex-start}
 .action-wrap{display:flex;flex-direction:column;align-items:center;flex-shrink:0}
 .action-btn{background:#1a5c3a;color:#fff;border:none;border-radius:6px;padding:8px 12px;font-size:11px;font-weight:700;white-space:nowrap;cursor:pointer;width:100%}
@@ -1373,6 +1384,7 @@ function render() {
       if (race.race_id) {
         html += '<div style="padding:6px 14px;text-align:center">';
         html += '<button class="odds-btn" onclick="fetchFreshOdds(\''+k+'\', this)">🔄 直前オッズ取得</button>';
+        html += '<button class="pad-btn" onclick="openPaddockEditor(\''+k+'\')">🐎 パドック</button>';
         html += '<button class="note-btn" onclick="openNoteEditor(\''+k+'\')">📝 不利メモ</button>';
         html += '<button class="umark-clear" onclick="clearUserMarks(\''+_umRid+'\')">印クリア</button>';
         html += '<span class="odds-time" id="odds-time-'+k+'">'+(race._update_time ? ('更新: '+race._update_time) : '')+'</span>';
@@ -1591,6 +1603,156 @@ function render() {
   document.getElementById('race-list').innerHTML = html;
 }
 
+
+// ── パドック入力（レース前・全頭を1画面で採点する） ─────────────────────
+// 不利メモ(📝)がレース**後**の回顧なのに対し、こちらはレース**前**の見立て。
+// スキーマの phase=='pre' の項目だけを扱い、1レース分をまとめて保存する。
+// ⚠ 現時点で予想には一切反映していない（重みを勘で決めると
+//   error_tags の週次補正と同じ「誰も検証しないまま本番を書き換える」状態になる）。
+//   蓄積だけ先に行い、実データが溜まってから基準を先に決めて測る。
+function paddockCategories(schema) {
+  return (schema.categories || []).filter(c => c.phase === 'pre');
+}
+
+async function openPaddockEditor(raceKey) {
+  const race = findRace(raceKey);
+  if (!race || !race.race_id) { alert('レースIDが見つかりません'); return; }
+  let schema;
+  try {
+    schema = await fetchNoteSchema();
+  } catch (err) {
+    alert('スキーマ取得エラー: ' + err.message);
+    return;
+  }
+  const cats = paddockCategories(schema);
+  if (!cats.length) { alert('パドック項目がスキーマにありません'); return; }
+  const date = raceDateFromId(race.race_id);
+  const horses = race.horses || [];
+
+  let html = '<div class="note-overlay" id="pad-overlay" onclick="if(event.target===this)closePaddockEditor()">';
+  html += '<div class="note-modal">';
+  html += '<h3>🐎 パドック（' + date + ' ' + (race.name || '') + '）</h3>';
+  html += '<div class="pad-note">出走前の見立てを全頭ぶん記録します。'
+        + '未選択の馬は保存しません。<br>⚠ 記録のみで、いまの予想には反映されません。</div>';
+  for (const cat of cats) {
+    if (cats.length > 1) html += '<div class="note-row"><label>' + cat.label + '</label></div>';
+    for (const h of horses) {
+      html += '<div class="pad-row"><div class="pad-name">#' + h.n + ' ' + h.name + '</div>';
+      html += '<div class="pad-opts">';
+      for (const opt of cat.options) {
+        html += '<label class="opt"><input type="radio" name="pd_' + cat.id + '_' + h.n + '"'
+              + ' value="' + opt.value + '"><span>' + opt.label + '</span></label>';
+      }
+      html += '</div></div>';
+    }
+  }
+  html += '<div class="note-actions" style="margin-top:12px">';
+  html += '<button class="note-cancel" onclick="closePaddockEditor()">閉じる</button>';
+  html += '<button class="note-save" id="pad-save-btn" onclick="savePaddock(this)">まとめて保存</button>';
+  html += '</div></div></div>';
+
+  const wrap = document.createElement('div');
+  wrap.innerHTML = html;
+  document.body.appendChild(wrap.firstChild);
+  const ov = document.getElementById('pad-overlay');
+  ov._race = race; ov._date = date; ov._schema = schema;
+  // 🔴 race_notes は (date, race_id, horse_num) 単位で notes_data を丸ごと
+  //    差し替える。ここで既存値を持っておかないと、パドックを保存した瞬間に
+  //    📝側で入れた不利メモが消える（逆も同じ）。保存はこの読み込みを待つ。
+  ov._existing = {};
+  ov._loaded = loadExistingPaddock(ov, race, date, cats);
+}
+
+function closePaddockEditor() {
+  const ov = document.getElementById('pad-overlay');
+  if (ov) ov.remove();
+}
+
+// 既に入れた馬は選択状態を復元する（取得失敗は無視して空のまま続行）
+async function loadExistingPaddock(ov, race, date, cats) {
+  // 逐次だと18頭で数秒待たされるので並列で引く
+  await Promise.all((race.horses || []).map(async (h) => {
+    try {
+      const url = GAS_URL + '?action=getNotes&date=' + encodeURIComponent(date)
+                + '&race_id=' + encodeURIComponent(race.race_id) + '&horse_num=' + h.n;
+      const res = await fetch(url, {redirect: 'follow'});
+      const data = await res.json();
+      const nd = (data.status === 'ok' && data.note && data.note.notes_data) || null;
+      if (!nd) return;
+      ov._existing[h.n] = nd;
+      for (const cat of cats) {
+        if (nd[cat.id] === undefined || nd[cat.id] === null) continue;
+        const el = document.querySelector(
+          'input[name="pd_' + cat.id + '_' + h.n + '"][value="' + nd[cat.id] + '"]');
+        if (el) el.checked = true;
+      }
+    } catch (e) { /* 復元失敗は無視 */ }
+  }));
+}
+
+// 採点済みの馬だけを {horse_num, notes} の配列にして返す
+function collectPaddockValues(schema, horses, existing) {
+  const cats = paddockCategories(schema);
+  const preIds = cats.map(c => c.id);
+  const out = [];
+  for (const h of horses) {
+    // 既存の値のうち、パドック項目**以外**（＝📝で入れた不利メモ）は残す
+    const prev = (existing && existing[h.n]) || {};
+    const notes = {};
+    for (const k of Object.keys(prev)) {
+      if (preIds.indexOf(k) === -1) notes[k] = prev[k];
+    }
+    let any = false;
+    for (const cat of cats) {
+      const sel = document.querySelector('input[name="pd_' + cat.id + '_' + h.n + '"]:checked');
+      if (sel) { notes[cat.id] = parseFloat(sel.value); any = true; }
+    }
+    if (any) out.push({horse_num: h.n, horse_name: h.name || '', notes: notes});
+  }
+  return out;
+}
+
+async function savePaddock(btn) {
+  const ov = document.getElementById('pad-overlay');
+  const race = ov._race, date = ov._date, schema = ov._schema;
+  btn.disabled = true;
+  try { await ov._loaded; } catch (e) { /* 復元失敗でも保存は続ける */ }
+  const rows = collectPaddockValues(schema, race.horses || [], ov._existing);
+  if (!rows.length) { btn.disabled = false; alert('採点された馬がありません'); return; }
+
+  const orig = btn.textContent;
+  let ok = 0;
+  const failed = [];
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i];
+    btn.textContent = '保存中 ' + (i + 1) + '/' + rows.length;
+    try {
+      const url = GAS_URL + '?action=saveNote'
+        + '&date=' + encodeURIComponent(date)
+        + '&race_id=' + encodeURIComponent(race.race_id)
+        + '&racecourse=' + encodeURIComponent(venue || '')
+        + '&race_num=' + encodeURIComponent(race.r || '')
+        + '&horse_num=' + r.horse_num
+        + '&horse_name=' + encodeURIComponent(r.horse_name)
+        + '&notes_data=' + encodeURIComponent(JSON.stringify(r.notes))
+        + '&free_memo=';
+      const res = await fetch(url, {redirect: 'follow'});
+      const data = await res.json();
+      if (data.status !== 'ok') throw new Error(data.message || '保存失敗');
+      ok++;
+    } catch (err) {
+      failed.push('#' + r.horse_num);
+    }
+  }
+  if (failed.length) {
+    alert(ok + '頭保存、' + failed.length + '頭失敗（' + failed.join(' ') + '）。もう一度お試しください。');
+    btn.disabled = false; btn.textContent = orig;
+  } else {
+    btn.textContent = '✓ ' + ok + '頭 保存しました';
+    setTimeout(() => { btn.disabled = false; btn.textContent = orig; }, 1500);
+  }
+}
+
 // ── 不利メモ入力（race_notes / スキーマ駆動） ─────────────────────────────
 const NOTE_SCHEMA_URL = 'https://hanagenuku.github.io/keiba_ai/data/note_schema.json';
 const NOTE_SCHEMA_URL_FALLBACK = 'https://raw.githubusercontent.com/hanagenuku/keiba_ai/main/data/note_schema.json';
@@ -1666,8 +1828,13 @@ async function onNoteHorseChange() {
   } catch (e) { /* 既存取得失敗は無視 */ }
 
   const ex = existing && existing.notes_data ? existing.notes_data : {};
+  // 🔴 保存は notes_data を丸ごと差し替えるので、🐎側で入れたパドック気配を
+  //    ここで抱えておかないと 📝 を保存した瞬間に消える。
+  ov._existingNotes = ex;
   let html = '';
-  for (const cat of schema.categories) {
+  // phase=='pre'（パドック気配）はレース前に🐎側で入れるのでここには出さない。
+  // 同じ項目が2画面に出ると、後から開いた側の未選択が先の入力を消しかねない。
+  for (const cat of (schema.categories || []).filter(c => c.phase !== 'pre')) {
     html += '<div class="note-row"><label>'+cat.label+'</label><div class="note-options">';
     for (const opt of cat.options) {
       const checked = (ex[cat.id] === opt.value) ? 'checked' : '';
@@ -1694,7 +1861,7 @@ function collectNoteValues() {
   const schema = ov._schema;
   const notes = {};
   let total = 0;
-  for (const cat of schema.categories) {
+  for (const cat of (schema.categories || []).filter(c => c.phase !== 'pre')) {
     const sel = document.querySelector('input[name="nt_'+cat.id+'"]:checked');
     if (sel) {
       const v = parseFloat(sel.value);
@@ -1716,6 +1883,13 @@ async function saveNote(btn) {
   const horseNum = parseInt(document.getElementById('note-horse').value, 10);
   const horse = (race.horses||[]).find(h => h.n === horseNum) || {};
   const { notes } = collectNoteValues();
+  // パドック項目（phase=='pre'）はこの画面に出していないので、既存値を戻す
+  const prev = ov._existingNotes || {};
+  for (const cat of (ov._schema.categories || [])) {
+    if (cat.phase === 'pre' && prev[cat.id] !== undefined && prev[cat.id] !== null) {
+      notes[cat.id] = prev[cat.id];
+    }
+  }
   const freeEl = document.getElementById('note-free');
   const freeMemo = freeEl ? freeEl.value : '';
 

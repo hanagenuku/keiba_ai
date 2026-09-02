@@ -1,75 +1,137 @@
 {
-  "version": 1,
+  "version": 2,
   "categories": [
     {
       "id": "start",
       "label": "出遅れ",
       "type": "level",
       "options": [
-        {"value": 0, "label": "なし"},
-        {"value": 1, "label": "小"},
-        {"value": 2, "label": "大"}
+        {
+          "value": 0,
+          "label": "なし"
+        },
+        {
+          "value": 1,
+          "label": "小"
+        },
+        {
+          "value": 2,
+          "label": "大"
+        }
       ],
       "weight": 1.0,
-      "feature": true
+      "feature": true,
+      "phase": "post"
     },
     {
       "id": "corner4",
       "label": "4角不利",
       "type": "level",
       "options": [
-        {"value": 0, "label": "なし"},
-        {"value": 1, "label": "小"},
-        {"value": 2, "label": "大"}
+        {
+          "value": 0,
+          "label": "なし"
+        },
+        {
+          "value": 1,
+          "label": "小"
+        },
+        {
+          "value": 2,
+          "label": "大"
+        }
       ],
       "weight": 1.0,
-      "feature": true
+      "feature": true,
+      "phase": "post"
     },
     {
       "id": "blocked",
       "label": "直線詰まり",
       "type": "level",
       "options": [
-        {"value": 0, "label": "なし"},
-        {"value": 1, "label": "小"},
-        {"value": 3, "label": "大"}
+        {
+          "value": 0,
+          "label": "なし"
+        },
+        {
+          "value": 1,
+          "label": "小"
+        },
+        {
+          "value": 3,
+          "label": "大"
+        }
       ],
       "weight": 1.0,
-      "feature": true
+      "feature": true,
+      "phase": "post"
     },
     {
       "id": "no_route",
       "label": "進路なし",
       "type": "binary",
       "options": [
-        {"value": 0, "label": "なし"},
-        {"value": 2, "label": "あり"}
+        {
+          "value": 0,
+          "label": "なし"
+        },
+        {
+          "value": 2,
+          "label": "あり"
+        }
       ],
       "weight": 1.0,
-      "feature": true
+      "feature": true,
+      "phase": "post"
     },
     {
       "id": "pace_disadvantage",
       "label": "展開不利",
       "type": "binary",
       "options": [
-        {"value": 0, "label": "なし"},
-        {"value": 1, "label": "あり"}
+        {
+          "value": 0,
+          "label": "なし"
+        },
+        {
+          "value": 1,
+          "label": "あり"
+        }
       ],
       "weight": 1.0,
-      "feature": true
+      "feature": true,
+      "phase": "post"
     },
     {
       "id": "condition",
-      "label": "馬体気配",
+      "label": "パドック気配",
       "type": "level",
       "options": [
-        {"value": 1, "label": "良"},
-        {"value": 0, "label": "普通"},
-        {"value": -1, "label": "不安"}
+        {
+          "value": 2,
+          "label": "◎ 抜群"
+        },
+        {
+          "value": 1,
+          "label": "○ 良い"
+        },
+        {
+          "value": 0,
+          "label": "− 普通"
+        },
+        {
+          "value": -1,
+          "label": "△ やや不安"
+        },
+        {
+          "value": -2,
+          "label": "× 不安"
+        }
       ],
       "weight": 1.0,
-      "feature": true
+      "feature": true,
+      "phase": "pre"
     }
   ],
   "free_memo": true
