@@ -1,5 +1,6 @@
 import sqlite3
 import json
+import re
 import os
 import shutil
 
@@ -313,6 +314,14 @@ def init_db(base_dir=None, db_path=None):
     _ensure_odds_snapshot_columns(conn)
     conn.commit()
     conn.close()
+    # race_notes.date が JS の Date.toString() 形式で入っていた分を直す
+    # （他テーブルは全て 'YYYY-MM-DD' なので、この列だけ結合できなかった）
+    try:
+        fixed = repair_note_dates(path)
+        if fixed:
+            print(f'  [race_notes] 壊れた date を {fixed}行 修復しました')
+    except Exception:
+        pass
 
 
 def save_race_db(race, base_dir=None, db_path=None):
@@ -1588,6 +1597,69 @@ def calc_handicap_from_notes(notes, schema):
     return round(total, 2)
 
 
+_JS_DATE_RE = re.compile(
+    r'^\w{3}\s+(\w{3})\s+(\d{1,2})\s+(\d{4})')   # 'Sun Sep 06 2026 00:00:00 GMT+0900 (...)'
+_MONTHS = {m: i for i, m in enumerate(
+    ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], 1)}
+
+
+def normalize_note_date(value, race_id=''):
+    """race_notes.date を 'YYYY-MM-DD' に揃える。
+
+    🔴 GAS 側はスプレッドシートのセルを Date オブジェクトとして返すため、
+    getNotesLog 経由で届く date は
+    'Sun Sep 06 2026 00:00:00 GMT+0900 (Japan Standard Time)' という
+    JavaScript の Date.toString() 形式になっていた。他のテーブル
+    （bets / shadow_bets / displayed_bets）は全て 'YYYY-MM-DD' なので、
+    この列だけ日付で結合できない状態だった（2026-08-31 に shadow_bets で
+    起きた「日付形式の食い違いでクエリが0件を返し続ける」と同じ型）。
+
+    優先順位: 既に 'YYYY-MM-DD' ならそのまま > JS形式をパース >
+    race_id 先頭の 'YYYYMMDD' から復元。どれも駄目なら元の値を返す。
+    """
+    v = str(value or '').strip()
+    if re.match(r'^\d{4}-\d{2}-\d{2}$', v):
+        return v
+    m = _JS_DATE_RE.match(v)
+    if m and m.group(1) in _MONTHS:
+        return f'{m.group(3)}-{_MONTHS[m.group(1)]:02d}-{int(m.group(2)):02d}'
+    rid = str(race_id or '')
+    if re.match(r'^\d{8}', rid):
+        return f'{rid[:4]}-{rid[4:6]}-{rid[6:8]}'
+    return v
+
+
+def repair_note_dates(db_path):
+    """保存済み race_notes の壊れた date を 'YYYY-MM-DD' に直す。
+
+    init_db から呼ばれ、既に入っている行を race_id / JS形式から復元する。
+    直せない行はそのまま残す（勝手に捨てない）。Returns: 直した行数
+    """
+    conn = _connect(db_path)
+    try:
+        rows = conn.execute(
+            "SELECT rowid, date, race_id FROM race_notes "
+            "WHERE date NOT LIKE '____-__-__'").fetchall()
+    except sqlite3.OperationalError:
+        conn.close()
+        return 0
+    n = 0
+    for rid_, d, race_id in rows:
+        fixed = normalize_note_date(d, race_id)
+        if fixed != d and re.match(r'^\d{4}-\d{2}-\d{2}$', fixed):
+            try:
+                conn.execute("UPDATE race_notes SET date=? WHERE rowid=?", (fixed, rid_))
+                n += 1
+            except sqlite3.IntegrityError:
+                # 正しい日付の同一行が既にある（重複入力）。壊れた側を捨てる
+                conn.execute("DELETE FROM race_notes WHERE rowid=?", (rid_,))
+                n += 1
+    conn.commit()
+    conn.close()
+    return n
+
+
 def save_race_notes(rows, base_dir=None, db_path=None, schema=None):
     """不利メモログ（GASの getNotesLog が返す行）を race_notes に保存する。
 
@@ -1605,7 +1677,7 @@ def save_race_notes(rows, base_dir=None, db_path=None, schema=None):
     conn = _connect(path)
     n = 0
     for r in rows:
-        date = str(r.get('date', '')).strip()
+        date = normalize_note_date(r.get('date', ''), r.get('race_id', ''))
         num = r.get('horse_num')
         if not date or num is None or str(num) == '':
             continue

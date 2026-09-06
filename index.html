@@ -177,6 +177,10 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
 .pad-opts .opt input{display:none}
 .pad-opts .opt span{display:block;text-align:center;padding:8px 0;font-size:12px;border:1px solid #ccc;border-radius:5px;cursor:pointer;background:#fafafa}
 .pad-guide{font-size:11px;color:#555;background:#f2f8f4;border-left:3px solid #1e8449;padding:7px 9px;margin:0 0 10px;line-height:1.6}
+.pad-done{display:inline-block;background:#1e8449;color:#fff;font-size:9px;font-weight:700;border-radius:8px;padding:1px 6px;margin-left:5px;vertical-align:middle}
+.pad-btn.done{background:#145a32;box-shadow:inset 0 0 0 2px #a9dfbf}
+.pad-done{display:inline-block;background:#1e8449;color:#fff;font-size:9px;font-weight:700;border-radius:8px;padding:1px 6px;margin-left:5px;vertical-align:middle}
+.pad-btn.done{background:#145a32;box-shadow:inset 0 0 0 2px #a9dfbf}
 .pad-opts .opt input:checked + span{background:#1e8449;color:#fff;border-color:#1e8449;font-weight:700}
 .pad-note{font-size:11px;color:#777;margin:6px 0 10px;line-height:1.5}
 .action-bar{display:flex;gap:6px;padding:8px 12px;overflow-x:auto;-webkit-overflow-scrolling:touch;align-items:flex-start}
@@ -336,6 +340,7 @@ function initApp() {
   });
   venue = (D.venues||[])[0] || null;
   render();
+  loadPaddockCoverage();   // 入力済みバッジ（非同期・失敗しても画面は止めない）
   if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !window.navigator.standalone)
     document.getElementById('pwa-hint').style.display = 'flex';
 }
@@ -1225,7 +1230,10 @@ function render() {
         nameAlert = ' <span class="new-rec-alert">NEW推奨</span>';
       }
     }
-    html += '<div class="rc'+(isRec?' rec':'')+'"><div class="rc-head" onclick="toggle(\''+k+'\')"><div class="rc-num">'+race.r+'</div><div class="rc-info"><div class="rc-name">'+race.name+nameAlert+'</div><div class="rc-meta">'+race.dist+'</div></div><div class="rc-right">'+recLabel+'<span class="arr'+(isOpen?' open':'')+'">▼</span></div></div>';
+    // パドック採点済みなら見出しにバッジ（開かなくても一覧で分かる）
+    const padBadge = padCoverCount(race)
+      ? '<span class="pad-done" title="パドック評価 入力済み '+padCoverCount(race)+'頭">🐎'+padCoverCount(race)+'</span>' : '';
+    html += '<div class="rc'+(isRec?' rec':'')+'"><div class="rc-head" onclick="toggle(\''+k+'\')"><div class="rc-num">'+race.r+'</div><div class="rc-info"><div class="rc-name">'+race.name+nameAlert+padBadge+'</div><div class="rc-meta">'+race.dist+'</div></div><div class="rc-right">'+recLabel+'<span class="arr'+(isOpen?' open':'')+'">▼</span></div></div>';
     if (race.honmei) {
       html += '<div class="hstrip" onclick="toggle(\''+k+'\')"><span class="hbadge">◎本命</span><span class="hname">#'+race.honmei.n+' '+race.honmei.name+'</span><span class="hodds">'+(race.honmei.odds||'-')+'倍 / '+(race.honmei.style||'-')+'</span></div>';
     }
@@ -1385,7 +1393,9 @@ function render() {
       if (race.race_id) {
         html += '<div style="padding:6px 14px;text-align:center">';
         html += '<button class="odds-btn" onclick="fetchFreshOdds(\''+k+'\', this)">🔄 直前オッズ取得</button>';
-        html += '<button class="pad-btn" onclick="openPaddockEditor(\''+k+'\')">🐎 パドック</button>';
+        const _pn = padCoverCount(race);
+        html += '<button class="pad-btn'+(_pn?' done':'')+'" onclick="openPaddockEditor(\''+k+'\')">'
+              + (_pn ? '🐎 パドック ✓'+_pn+'頭' : '🐎 パドック') + '</button>';
         html += '<button class="note-btn" onclick="openNoteEditor(\''+k+'\')">📝 不利メモ</button>';
         html += '<button class="umark-clear" onclick="clearUserMarks(\''+_umRid+'\')">印クリア</button>';
         html += '<span class="odds-time" id="odds-time-'+k+'">'+(race._update_time ? ('更新: '+race._update_time) : '')+'</span>';
@@ -1605,6 +1615,44 @@ function render() {
 }
 
 
+// ── パドック入力済みの可視化 ────────────────────────────────────────────
+// 「入れたかどうかが後から分からない」を解決する。GAS の getNotesLog を
+// 1回だけ叩き、paddock_score が入っているレースを race_id 単位で数える。
+// ⚠ 取得に失敗しても画面は絶対に止めない（印が出ないだけ）。
+let _padCover = {};      // { race_id: 採点済み頭数 }
+
+function padCoverCount(race) {
+  return (race && race.race_id && _padCover[race.race_id]) || 0;
+}
+
+// 保存直後に再取得せずその場で反映するための更新口
+function bumpPadCover(raceId, n) {
+  if (!raceId) return;
+  _padCover[raceId] = Math.max(_padCover[raceId] || 0, n);
+}
+
+async function loadPaddockCoverage() {
+  try {
+    // 直近48時間ぶんに絞る（全件だと年々重くなるため）
+    const since = new Date(Date.now() - 48 * 3600 * 1000).toISOString();
+    const res = await fetch(GAS_URL + '?action=getNotesLog&since=' + encodeURIComponent(since),
+                            {redirect: 'follow'});
+    const data = await res.json();
+    if (data.status !== 'ok' || !Array.isArray(data.rows)) return;
+    const cnt = {};
+    for (const r of data.rows) {
+      let nd = r.notes_data;
+      if (typeof nd === 'string') { try { nd = JSON.parse(nd || '{}'); } catch (e) { nd = {}; } }
+      if (!nd || nd.paddock_score === undefined || nd.paddock_score === null) continue;
+      const rid = r.race_id;
+      if (!rid) continue;
+      (cnt[rid] = cnt[rid] || new Set()).add(r.horse_num);
+    }
+    for (const rid in cnt) _padCover[rid] = cnt[rid].size;
+    render();
+  } catch (e) { /* 取得失敗は無視（印が出ないだけ） */ }
+}
+
 // ── パドック入力（レース前・全頭を1画面で採点する） ─────────────────────
 // 不利メモ(📝)がレース**後**の回顧なのに対し、こちらはレース**前**の見立て。
 // スキーマの phase=='pre' の項目だけを扱い、1レース分をまとめて保存する。
@@ -1668,6 +1716,7 @@ async function openPaddockEditor(raceKey) {
 function closePaddockEditor() {
   const ov = document.getElementById('pad-overlay');
   if (ov) ov.remove();
+  render();   // 入力済みバッジを反映
 }
 
 // 既に入れた馬は選択状態を復元する（取得失敗は無視して空のまま続行）
@@ -1746,6 +1795,7 @@ async function savePaddock(btn) {
       failed.push('#' + r.horse_num);
     }
   }
+  bumpPadCover(race.race_id, ok);   // 入力済みバッジをその場で更新
   if (failed.length) {
     alert(ok + '頭保存、' + failed.length + '頭失敗（' + failed.join(' ') + '）。もう一度お試しください。');
     btn.disabled = false; btn.textContent = orig;

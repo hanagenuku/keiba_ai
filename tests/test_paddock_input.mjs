@@ -150,6 +150,27 @@ ok(html.includes('openPaddockEditor'), '🐎ボタンから開ける');
 ok(/phase !== 'pre'/.test(html), '📝側が pre 項目を出さないよう絞っている');
 ok(html.includes('pad-guide'), '採点の基準を画面に出している');
 
+
+// ── 入力済みの可視化（「入れたか後から分からない」の回帰テスト）─────────
+console.log('■ 入力済みバッジ');
+ok(/let _padCover/.test(html), '採点済みレースを race_id 単位で持っている');
+ok(html.includes('loadPaddockCoverage'), 'getNotesLog から入力済みを一括取得する');
+ok(html.includes('action=getNotesLog'), '1レース1リクエストではなく一括で引く');
+ok(/padCoverCount\(race\)/.test(html), '各レースの採点済み頭数を引ける');
+ok(html.includes('pad-done'), '見出しにバッジのCSSがある');
+ok(/rc-name[^\n]*padBadge/.test(html),
+   '折りたたんだ一覧の見出しにバッジが出る（開かなくても分かる）');
+ok(/pad-btn'\+\(_pn\?' done':''\)/.test(html), '🐎ボタン自体の見た目も変わる');
+ok(html.includes('bumpPadCover'), '保存直後に再取得せずその場で反映する');
+ok(/loadPaddockCoverage\(\);\s*\/\/ 入力済みバッジ/.test(html), '起動時に読みに行く');
+// 失敗しても画面を止めないこと
+{
+  const i = html.indexOf('async function loadPaddockCoverage');
+  const body = html.slice(i, html.indexOf('\n}', i));
+  ok(/catch\s*\(e\)\s*\{\s*\/\*/.test(body) || /catch\s*\(e\)\s*\{/.test(body),
+     '取得失敗を握りつぶす（印が出ないだけで画面は動く）');
+}
+
 console.log('');
 console.log(pass + ' passed, ' + fail + ' failed');
 if (fail) process.exit(1);
