@@ -1,0 +1,32 @@
+name: Probe Entry Timing (調査)
+
+# 出走表が JRA 公式にいつ載るかを、生ページをダンプして確かめる調査用。
+#
+# 🔴 2026-09-08(火) に get_kaisai_on_date が今週末を返さなかったことから
+#    「JRAがまだ載せていない」と結論しかけたが、それは推測だった。
+#    確認できていたのは「我々のパーサーが探す形のリンクが無い」ことだけ。
+#    CLAUDE.md の「空振りと該当なしは別物」（2026-08-16）の再発を防ぐため、
+#    パターンで絞らずページの中身そのものを出す。
+#
+# 手動実行のみ。曜日を変えて何度か走らせ、どの曜日から日付が現れるかを見る。
+# ⚠ 完全な読み取り専用。リクエストは3件だけ。
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Probe
+        run: python scripts/probe_entry_timing.py
