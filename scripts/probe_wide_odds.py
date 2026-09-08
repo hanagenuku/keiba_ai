@@ -20,9 +20,22 @@
 
     CNAME = {odds_base}{race_num:02d}{date_str}Z/{suffix}
 
-を投げて単勝・複勝を得ている。この **`Z` が券種の指定子ではないか**が仮説。
-A〜Z を総当たりし、返ってきたページの構造（table数・見出し・
-組番らしき文字列の有無）をログに出す。
+を投げて単勝・複勝を得ている。
+
+🔴 **当初の仮説「この `Z` が券種の指定子」は 2026-09-06 の実行で否定された。**
+A〜Z を総当たりした結果、**A〜Y は全部パラメータエラー、`Z` だけ**が
+「単勝・複勝オッズ（馬番順）」を返した（見出しは
+枠/馬番/馬名/単勝/複勝(2着払い)/性齢/馬体重/負担重量/騎手名/調教師名）。
+ログに「ワイド」が1回出るのはナビゲーションメニューのリンクであって表の中身ではない。
+
+そこで方針を変え、**`Z` で取れる単複ページの `<a>` を全部棚卸しして
+券種リンクの CNAME を特定する**。JRADB は href ではなく onclick の
+doAction('/JRADB/accessX.html','CNAME') に本体を埋めることが多いので両方を見る。
+ワイド系のリンクが見つかったら実際に叩いて、組番が並ぶ盤かどうかを確認する。
+
+⚠ 「券種リンクが無い」と「CNAME を拾えていない」は別物。
+   リンク総数と CNAME 取得数を必ず併記し、空振りを『該当なし』と読み違えない
+   （2026-08-16 の調教調査で実際に踏みかけた誤り）。
 
 ⚠ 完全な読み取り専用。DB・モデル・latest.json には一切書き込まない。
 ⚠ 1レースぶんだけ叩く。ただし `find_r01_odds` は R01 の suffix を
@@ -106,6 +119,38 @@ def _describe(html):
                 head=txt[:120])
 
 
+BET_WORDS = ['ワイド', '馬連', '馬単', '枠連', '3連複', '3連単', '三連複', '三連単',
+             '単勝', '複勝', 'オッズ']
+
+# CNAME は "pw151ouS30620260402" のような英数字の並びに "/15" のような
+# suffix が付く形。区切りの / を含めて丸ごと拾わないと POST できない。
+_CNAME_RE = re.compile(r"['\"]([0-9A-Za-z]{8,}(?:/[0-9A-Za-z]+)?)['\"]")
+_ENDPOINT_RE = re.compile(r"(access[0-9A-Za-z]+\.html)")
+
+
+def extract_links(html):
+    """ページ内の <a> を全部拾い、endpoint と CNAME を復元する。
+
+    JRADB は href ではなく onclick の doAction('/JRADB/accessX.html','CNAME')
+    に本体を埋めることが多いので、href と onclick の両方を見る。
+    ⚠ 「探した結果ゼロ」と「探せていない」を混同しないため、
+       CNAME が取れなかったリンクも件数として必ず残す（2026-08-16 の教訓）。
+    """
+    soup = BeautifulSoup(html, 'lxml')
+    out = []
+    for a in soup.find_all('a'):
+        blob = ' '.join(filter(None, [a.get('href', ''), a.get('onclick', '')]))
+        ep = _ENDPOINT_RE.search(blob)
+        cn = _CNAME_RE.search(blob)
+        out.append(dict(
+            text=unicodedata.normalize('NFKC', a.get_text(' ', strip=True))[:40],
+            href=(a.get('href') or '')[:60],
+            endpoint=ep.group(1) if ep else '',
+            cname=cn.group(1) if cn else '',
+        ))
+    return out
+
+
 def find_kaisai_forward(sess, today=None, days_ahead=PROBE_DAYS_AHEAD):
     """今日から**前方**へ開催日を探し、[(date_str, base), ...] を返す。
 
@@ -161,42 +206,79 @@ def main():
     print(f'   R01 suffix={r01:02X} → R{RACE_NUM:02d} suffix={sx}\n')
 
     print('=' * 88)
-    print('■ CNAME の "Z" を A〜Z に振って、返るページの中身を見る')
+    print('■ 単複オッズページ（Z）を1回だけ取得し、ページ内のリンクを全列挙する')
     print('=' * 88)
-    print(f'{"文字":<5}{"table":>6}{"組番":>6}{"範囲":>6}{"単値":>6}  '
-          f'{"券種キーワード":<28}タイトル')
+    print('  ⚠ A〜Z の総当たりは 2026-09-06 の実行で決着済み。')
+    print('     A〜Y は全部パラメータエラー、Z だけが「単勝・複勝オッズ（馬番順）」を返した。')
+    print('     つまり CNAME の Z は券種の指定子ではない。券種リンクから入口を探す。')
+
+    cn_z = f'{odds_base}{RACE_NUM:02d}{date}Z/{sx}'
+    try:
+        resp = _post(sess, 'accessO.html', cn_z)
+    except Exception as e:
+        print(f'  ❌ 通信例外 {type(e).__name__}: {e}')
+        return
+    if 'パラメータエラー' in resp.text:
+        print('  ❌ Z がパラメータエラー。オッズ未発売の可能性。金曜夜〜日曜に再実行すること')
+        return
+    d0 = _describe(resp.text)
+    print(f'  取得: {d0["title"][:50]}  table {d0["n_table"]}個')
+
+    links = extract_links(resp.text)
+    with_cn = [l for l in links if l['cname']]
+    print(f'\n  リンク総数 {len(links)}  / うち CNAME が取れたもの {len(with_cn)}')
+    print(f'  endpoint の内訳: {sorted({l["endpoint"] for l in links if l["endpoint"]})}')
+
+    print('\n' + '-' * 88)
+    print(f'{"リンク文字":<22}{"endpoint":<20}{"CNAME":<26}href')
     print('-' * 88)
-    hits = []
-    for ch in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
-        cn = f'{odds_base}{RACE_NUM:02d}{date}{ch}/{sx}'
-        try:
-            resp = _post(sess, 'accessO.html', cn)
-        except Exception as e:
-            print(f'{ch:<5}  通信例外 {type(e).__name__}')
-            time.sleep(SLEEP)
-            continue
-        if 'パラメータエラー' in resp.text:
-            print(f'{ch:<5}  パラメータエラー')
-            time.sleep(SLEEP)
-            continue
-        d_ = _describe(resp.text)
-        kw = ' '.join(f'{k}{v}' for k, v in list(d_['kws'].items())[:5])
-        print(f'{ch:<5}{d_["n_table"]:>6}{d_["n_combo"]:>6}{d_["n_range"]:>6}'
-              f'{d_["n_single"]:>6}  {kw[:27]:<28}{d_["title"][:28]}')
-        if d_['n_table']:
-            hits.append((ch, d_, resp.text))
-        time.sleep(SLEEP)
+    bet_links = []
+    for l in links:
+        hit = any(w in l['text'] for w in BET_WORDS)
+        if hit or l['cname']:
+            print(f'{l["text"][:21]:<22}{l["endpoint"][:19]:<20}{l["cname"][:25]:<26}{l["href"]}')
+        if hit and l['cname']:
+            bet_links.append(l)
 
     print('\n' + '=' * 88)
-    print('■ 中身のあったページの本文冒頭（券種を見分けるため）')
+    print('■ 券種リンクの CNAME を、いま使っている単複の CNAME と並べて差分を見る')
     print('=' * 88)
-    for ch, d_, html in hits[:8]:
-        print(f'\n--- "{ch}" ---')
-        print(f'  {d_["head"]}')
-        soup = BeautifulSoup(html, 'lxml')
-        for t in soup.find_all('table')[:2]:
-            rows = t.find_all('tr')[:3]
-            for tr in rows:
+    print(f'  いま使っている（単複）: {cn_z}')
+    for l in bet_links[:12]:
+        print(f'  {l["text"][:16]:<18} {l["endpoint"]:<18} {l["cname"]}')
+
+    # ワイド系のリンクがあれば、実際に叩いて中身を確認する（最大3件）
+    targets = [l for l in bet_links
+               if any(w in l['text'] for w in ['ワイド', '馬連', '3連複', '三連複'])]
+    if not targets:
+        print('\n❌ ワイド/馬連/三連複のリンクが CNAME 付きで見つからなかった。')
+        print('   ⚠ 「リンクが無い」のか「CNAME が JS 側で組み立てられていて拾えない」のかは別問題。')
+        print(f'   上の「リンク総数 {len(links)} / CNAME 取得 {len(with_cn)}」を根拠に判断すること。')
+        return
+
+    print('\n' + '=' * 88)
+    print('■ 券種リンクを実際に叩いて中身を確認する')
+    print('=' * 88)
+    for l in targets[:3]:
+        time.sleep(SLEEP)
+        ep = l['endpoint'] or 'accessO.html'
+        try:
+            r2 = _post(sess, ep, l['cname'])
+        except Exception as e:
+            print(f'  {l["text"][:16]}: 通信例外 {type(e).__name__}')
+            continue
+        if 'パラメータエラー' in r2.text:
+            print(f'  {l["text"][:16]}: パラメータエラー')
+            continue
+        d2 = _describe(r2.text)
+        kw = ' '.join(f'{k}{v}' for k, v in list(d2['kws'].items())[:5])
+        print(f'\n--- {l["text"][:20]} ({ep}) ---')
+        print(f'  タイトル: {d2["title"][:50]}')
+        print(f'  table {d2["n_table"]}  組番 {d2["n_combo"]}  範囲 {d2["n_range"]}  '
+              f'単値 {d2["n_single"]}  券種KW: {kw[:40]}')
+        soup2 = BeautifulSoup(r2.text, 'lxml')
+        for t in soup2.find_all('table')[:2]:
+            for tr in t.find_all('tr')[:4]:
                 cells = [unicodedata.normalize('NFKC', c.get_text(strip=True))
                          for c in tr.find_all(['td', 'th'])]
                 if cells:
@@ -205,9 +287,9 @@ def main():
     print('\n' + '=' * 88)
     print('■ 判定の目安')
     print('=' * 88)
-    print('  ・「組番」が多数 かつ「ワイド」を含む → ワイドのオッズ盤が取れる')
-    print('  ・どの文字でも単勝・複勝しか出ない → accessO は単複専用。')
-    print('    その場合はワイドの取得手段が別に必要（要追加調査）')
+    print('  ・組番(1-2, 1-3…)が多数出るページに到達 → ワイド盤が取れる。D\' の恒等式検証へ進む')
+    print('  ・券種リンクは在るが CNAME が取れない → JS 側で組み立てている。別途調査')
+    print('  ・券種リンク自体が無い → JRA公式の無料経路ではワイド盤に到達できない。D\' は打ち切り')
 
 
 if __name__ == '__main__':
