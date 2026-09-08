@@ -115,3 +115,49 @@ def test_uses_production_odds_base_builder():
 def test_production_odds_base_shape():
     """本番の変換が期待どおりの形であること（プローブが依存する前提の固定）。"""
     assert _to_odds_base('pw01dde010420260302') == 'pw151ouS30420260302'
+
+
+# ── 券種リンクの棚卸し（2026-09-08 に A〜Z 総当たりから方針変更）──────────
+# JRADB は href ではなく onclick の doAction('/JRADB/accessX.html','CNAME')
+# に本体を埋める。実機のこの形を模したフィクスチャで検証する（North Star #6）。
+_ODDS_PAGE_HTML = """
+<html><head><title>単勝・複勝オッズ(馬番順) JRA</title></head><body>
+<a href="/JRADB/accessS.html">出馬表</a>
+<a href="javascript:void(0);"
+   onclick="return doAction('/JRADB/accessO.html','pw151ouB01620260906Z/15');">馬連</a>
+<a href="javascript:void(0);"
+   onclick="return doAction('/JRADB/accessO.html','pw151ouD01620260906Z/15');">ワイド</a>
+<a href="javascript:void(0);"
+   onclick="return doAction('/JRADB/accessO.html','pw151ouF01620260906Z/15');">3連複</a>
+<a href="#">ログイン</a>
+</body></html>
+"""
+
+
+def test_extract_links_reads_cname_from_onclick():
+    """href が javascript:void(0) でも onclick から CNAME と endpoint を復元する。"""
+    links = P.extract_links(_ODDS_PAGE_HTML)
+    wide = [l for l in links if l['text'] == 'ワイド']
+    assert len(wide) == 1, links
+    assert wide[0]['cname'] == 'pw151ouD01620260906Z/15', wide[0]
+    assert wide[0]['endpoint'] == 'accessO.html', wide[0]
+
+
+def test_extract_links_keeps_links_without_cname():
+    """CNAME が取れないリンクも件数として残す。
+    「探した結果ゼロ」と「探せていない」を混同しないための担保。"""
+    links = P.extract_links(_ODDS_PAGE_HTML)
+    assert len(links) == 5, links
+    assert sum(1 for l in links if not l['cname']) == 2, links
+
+
+def test_bet_words_cover_the_target_bet_types():
+    for w in ['ワイド', '馬連', '3連複']:
+        assert w in P.BET_WORDS
+
+
+def test_probe_no_longer_brute_forces_a_to_z():
+    """A〜Z 総当たりは 2026-09-06 の実行で決着済み。復活していないこと。"""
+    body = open('scripts/probe_wide_odds.py', encoding='utf-8').read()
+    assert "for ch in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'" not in body
+    assert 'extract_links(' in body
