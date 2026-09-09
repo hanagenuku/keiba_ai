@@ -15,22 +15,30 @@
 CLAUDE.md が繰り返し警告している「**空振りと該当なしは別物**」（2026-08-16）の
 再発なので、ページの中身そのものを出して判定する。
 
-## 何を出すか
+## 第1回(2026-09-09 火)の結果と、それを受けた変更
 
-`get_kaisai_on_date` が見る2つのページを、パターンで絞らずに丸ごと要約する:
-  - タイトル / 本文長 / table 数
-  - onclick と href に現れる **すべての** pw01系トークン（種類ごとに件数）
-  - ページ内に現れる **すべての8桁日付**（＝どの開催日が載っているか）
-  - リンクの先頭40件（文字列つき）
+出走表一覧ページは**空ではなかった**:
+  pw01drl10×6 / pw17hde10×2 / pw01d5010×1 / pw01dde10×4 / pw151ou10×4
+というトークンを持つリンクがあり、他2ページには無い。
+一方 **8桁の日付は1件も現れない**。
+`get_kaisai_on_date` が探しているのは `pw01drl00` + 8桁日付なので、
+「探し方が違う」のか「今週末がまだ無い」のかが**この時点では区別できない**。
+
+そこで:
+  ① リンク先頭40件（＝全部グローバルナビだった）ではなく、
+     **CNAME を持つリンクを全部**出す
+  ② そのうち中身を持つものを **実際に開いて**、何が載っているかを見る
+  ③ 枠順確定前の情報源の候補である「特別レース登録馬」(accessT) も見る
 
 ⚠ 完全な読み取り専用。DB・モデル・latest.json には一切書き込まない。
-⚠ リクエストは3件だけ。
+⚠ リクエストは十数件（FOLLOW_LIMIT で上限を持つ）。
 """
 import os
 import re
 import sys
+import time
 import unicodedata
-from collections import Counter
+from collections import Counter, OrderedDict
 
 from bs4 import BeautifulSoup
 
@@ -42,15 +50,44 @@ from src.utils.config import JRA_BASE                # noqa: E402
 HEADERS = {'User-Agent': 'Mozilla/5.0'}
 DATE_RE = re.compile(r'\b(20\d{6})\b')
 TOKEN_RE = re.compile(r'(pw[0-9a-z]{5,7})')
+# CNAME は "pw01dde1006202609120120260912" のような英数字の並び。
+# "/F3" のような suffix が付くこともあるので区切りごと拾う。
+CNAME_RE = re.compile(r"['\"]([0-9A-Za-z]{8,}(?:/[0-9A-Za-z]+)?)['\"]")
+ENDPOINT_RE = re.compile(r"(access[0-9A-Za-z]+\.html)")
+
+FOLLOW_LIMIT = 8   # 開いてみるリンクの上限（リクエスト数の歯止め）
 
 
-def dump(name, html):
+def _norm(s):
+    return unicodedata.normalize('NFKC', s or '')
+
+
+def links_with_cname(soup):
+    """CNAME を持つリンクだけを (text, endpoint, cname) で返す。
+
+    JRADB は href ではなく onclick の doAction('/JRADB/accessX.html','CNAME')
+    に本体を埋めるので両方見る。グローバルナビは素の href なのでここに出ない。
+    """
+    out = OrderedDict()
+    for a in soup.find_all('a'):
+        blob = ' '.join(filter(None, [a.get('href', ''), a.get('onclick', '')]))
+        cn = CNAME_RE.search(blob)
+        if not cn:
+            continue
+        ep = ENDPOINT_RE.search(blob)
+        key = (ep.group(1) if ep else '?', cn.group(1))
+        if key not in out:
+            out[key] = _norm(a.get_text(' ', strip=True))[:34]
+    return [(t, ep, cn) for (ep, cn), t in out.items()]
+
+
+def dump(name, html, show_body=300):
     soup = BeautifulSoup(html, 'lxml')
-    txt = unicodedata.normalize('NFKC', soup.get_text(' ', strip=True))
+    txt = _norm(soup.get_text(' ', strip=True))
     title = soup.title.get_text(strip=True) if soup.title else '(なし)'
-    print(f'\n{"=" * 88}')
+    print(f'\n{"=" * 92}')
     print(f'■ {name}')
-    print('=' * 88)
+    print('=' * 92)
     print(f'  タイトル : {title[:70]}')
     print(f'  本文長   : {len(txt)} 字 / table {len(soup.find_all("table"))}個 '
           f'/ a {len(soup.find_all("a"))}個')
@@ -64,51 +101,83 @@ def dump(name, html):
     joined = ' '.join(blobs)
 
     toks = Counter(TOKEN_RE.findall(joined))
-    print(f'  pw系トークンの種類: {dict(toks) if toks else "（1件も無い）"}')
+    print(f'  pw系トークン: {dict(toks) if toks else "（1件も無い）"}')
 
     dates = Counter(DATE_RE.findall(joined + ' ' + txt))
     if dates:
-        print(f'  ページ内に現れる日付: '
-              f'{", ".join(f"{d}({n})" for d, n in sorted(dates.items()))}')
+        print('  ページ内の日付: '
+              + ', '.join(f'{d}({n})' for d, n in sorted(dates.items())))
     else:
-        print('  ページ内に現れる日付: （1件も無い）')
+        print('  ページ内の日付: （1件も無い）')
 
-    print(f'  --- リンク先頭40件 ---')
-    for a in soup.find_all('a')[:40]:
-        t = unicodedata.normalize('NFKC', a.get_text(' ', strip=True))[:26]
-        blob = ' '.join(filter(None, [a.get('href', ''), a.get('onclick', '')]))[:70]
-        if t or blob:
-            print(f'    {t:<28}{blob}')
-    print(f'  --- 本文冒頭 ---')
-    print(f'    {txt[:300]}')
+    lk = links_with_cname(soup)
+    print(f'  --- CNAMEを持つリンク 全{len(lk)}件 ---')
+    for t, ep, cn in lk:
+        print(f'    {t:<36}{ep:<18}{cn}')
+    if show_body:
+        print('  --- 本文冒頭 ---')
+        print(f'    {txt[:show_body]}')
+    return lk
+
+
+def post_cname(sess, endpoint, cname):
+    r = sess.post(f'{JRA_BASE}/JRADB/{endpoint}',
+                  data={'cname': cname, 'CNAME': cname},
+                  headers=HEADERS, timeout=15)
+    r.encoding = 'shift_jis'
+    return r.text
 
 
 def main():
     sess = create_session()
 
     # ① 出走表一覧（get_kaisai_on_date が最初に見るページ）
-    r = sess.post(f'{JRA_BASE}/JRADB/accessD.html',
-                  data={'cname': 'pw01dli00/F3', 'CNAME': 'pw01dli00/F3'},
-                  headers=HEADERS, timeout=15)
-    r.encoding = 'shift_jis'
-    dump('出走表一覧  accessD.html  cname=pw01dli00/F3', r.text)
+    html = post_cname(sess, 'accessD.html', 'pw01dli00/F3')
+    top_links = dump('出走表一覧  accessD.html  cname=pw01dli00/F3', html)
 
     # ② thisweek（フォールバック先）
     r2 = sess.get(f'{JRA_BASE}/keiba/thisweek/', headers=HEADERS, timeout=15)
     r2.encoding = 'shift_jis'
     dump('今週の開催  /keiba/thisweek/', r2.text)
 
-    # ③ 出馬表トップ（枠順未定の段階で別ページに出ていないかの確認）
-    r3 = sess.get(f'{JRA_BASE}/keiba/', headers=HEADERS, timeout=15)
-    r3.encoding = 'shift_jis'
-    dump('競馬メニュー  /keiba/', r3.text)
+    # ③ 特別レース登録馬（枠順確定前の情報源の候補）
+    try:
+        html3 = post_cname(sess, 'accessT.html', 'pw03trl00/29')
+        dump('特別レース登録馬  accessT.html  cname=pw03trl00/29', html3)
+    except Exception as e:      # noqa: BLE001
+        print(f'\n■ 特別レース登録馬: 取得失敗 {type(e).__name__}: {e}')
 
-    print(f'\n{"=" * 88}')
+    # ④ ①で見つかった中身つきリンクを実際に開く
+    print(f'\n{"=" * 92}')
+    print(f'■ ①のリンクを実際に開く（最大{FOLLOW_LIMIT}件）')
+    print('=' * 92)
+    per_token = Counter()
+    followed = 0
+    for t, ep, cn in top_links:
+        if followed >= FOLLOW_LIMIT:
+            break
+        m = TOKEN_RE.search(cn)
+        tok = m.group(1) if m else cn[:9]
+        # トークンの種類ごとに2件までにして、種類を広く見る
+        if per_token[tok] >= 2:
+            continue
+        per_token[tok] += 1
+        try:
+            sub = post_cname(sess, ep, cn)
+        except Exception as e:      # noqa: BLE001
+            print(f'\n■ {t} ({ep} {cn}): 取得失敗 {type(e).__name__}: {e}')
+            continue
+        dump(f'└ {t}  [{ep} {cn}]', sub, show_body=200)
+        followed += 1
+        time.sleep(0.5)
+
+    print(f'\n{"=" * 92}')
     print('■ 判定の目安')
-    print('=' * 88)
-    print('  ・今週末の日付が現れる → JRAは載せている。取れないのはこちらのパーサーの問題')
-    print('  ・日付が1件も現れない → その時点では本当に載っていない')
-    print('  ・pw系トークンが1件も無い → ページ自体が空 or 取得に失敗している（空振り）')
+    print('=' * 92)
+    print('  ・今週末(20260912/20260913)の日付が現れる → JRAは載せている。')
+    print('    取れないのは get_kaisai_on_date の探し方の問題')
+    print('  ・先週末(20260906/20260907)の日付しか現れない → まだ載っていない')
+    print('  ・馬名の並んだ table が出る → 枠順未定でも出走馬は取れる')
 
 
 if __name__ == '__main__':
