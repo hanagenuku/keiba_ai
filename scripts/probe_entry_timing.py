@@ -30,6 +30,33 @@ CLAUDE.md が繰り返し警告している「**空振りと該当なしは別�
   ② そのうち中身を持つものを **実際に開いて**、何が載っているかを見る
   ③ 枠順確定前の情報源の候補である「特別レース登録馬」(accessT) も見る
 
+## 第2回(2026-09-09 火 09:09 JST)の結果 — 火曜については決着した
+
+■ 今週末(20260912/20260913)は出馬表・オッズ・レース結果・払戻金の
+  どのページにも1件も現れない。
+  出馬表一覧に載っているのは先週末(20260905/20260906)の6件だけで、
+  ラベルが「4回中山1日 **馬番確定**」＝終わった開催の出馬表。
+  → 「JRAがまだ載せていない」は今回、全リンクを列挙した結果として確認できた。
+
+■ ⚠ パーサーが探すのは pw01drl00 だが、火曜に載っているのは pw01drl10。
+  00=今週分 / 10=過去分 らしい（結果ページも過去分は pw01srl10）。
+  つまり火曜の空振りは「探し方が古い」のではなく「探すべきものがまだ無い」。
+
+■ オッズは原理的に無い。パリミュチュエル方式なので発売前に盤が存在しない。
+  オッズ選択ページに今週末のリンクはゼロ、あるのは先週末の確定オッズ4件のみ。
+
+■ ✅ 唯一「特別レース登録馬」(accessT.html pw03trl00/29) だけが今週末を持つ。
+  中山・阪神の R9/R10/R11 × 9/12・9/13 = 12レース。
+  🔴 ただし中身は **馬名と負担重量の2列だけ**（実測）:
+      | 馬名             | 負担重量 |
+      | イブニングタイド   | 56.0   |
+      | エリム           | 56.0   |
+  騎手・枠番・馬番・オッズは無い。しかも「登録馬」なので出走馬とも一致しない。
+  平場（未勝利・1勝クラス）は含まれない。
+
+■ 🔴 未確認: 水曜・木曜のどこで出馬表が出るか。金曜夜は動くことが分かっている
+  （本番が毎週それで動いている）が、境界は測っていない。
+
 ⚠ 完全な読み取り専用。DB・モデル・latest.json には一切書き込まない。
 ⚠ リクエストは十数件（FOLLOW_LIMIT で上限を持つ）。
 """
@@ -55,7 +82,7 @@ TOKEN_RE = re.compile(r'(pw[0-9a-z]{5,7})')
 CNAME_RE = re.compile(r"['\"]([0-9A-Za-z]{8,}(?:/[0-9A-Za-z]+)?)['\"]")
 ENDPOINT_RE = re.compile(r"(access[0-9A-Za-z]+\.html)")
 
-FOLLOW_LIMIT = 8   # 開いてみるリンクの上限（リクエスト数の歯止め）
+FOLLOW_LIMIT = 4   # 開いてみるリンクの上限（リクエスト数の歯止め）
 
 
 def _norm(s):
@@ -120,6 +147,34 @@ def dump(name, html, show_body=300):
     return lk
 
 
+def dump_table(name, html):
+    """表がある前提のページ用。見出しと先頭数行をそのまま出す。
+
+    「登録馬が並んでいるのか」「枠番の列があるのか」を目で見て判定するため、
+    列名を推測せず生のセルを出す。
+    """
+    soup = BeautifulSoup(html, 'lxml')
+    txt = _norm(soup.get_text(' ', strip=True))
+    title = soup.title.get_text(strip=True) if soup.title else '(なし)'
+    tables = soup.find_all('table')
+    print(f'\n  {"-" * 88}')
+    print(f'  ■ {name}')
+    print(f'    タイトル : {title[:70]}')
+    print(f'    本文長   : {len(txt)} 字 / table {len(tables)}個')
+    dates = Counter(DATE_RE.findall(txt))
+    print(f'    日付: {dict(dates) if dates else "（1件も無い）"}')
+    for ti, tb in enumerate(tables[:2]):
+        rows = tb.find_all('tr')
+        print(f'    --- table[{ti}] {len(rows)}行 ---')
+        for r in rows[:8]:
+            cells = [_norm(c.get_text(' ', strip=True))[:18]
+                     for c in r.find_all(['th', 'td'])]
+            if any(cells):
+                print('      | ' + ' | '.join(cells))
+    if not tables:
+        print(f'    --- 本文 ---\n    {txt[:600]}')
+
+
 def post_cname(sess, endpoint, cname):
     r = sess.post(f'{JRA_BASE}/JRADB/{endpoint}',
                   data={'cname': cname, 'CNAME': cname},
@@ -141,11 +196,38 @@ def main():
     dump('今週の開催  /keiba/thisweek/', r2.text)
 
     # ③ 特別レース登録馬（枠順確定前の情報源の候補）
+    html3 = ''
     try:
         html3 = post_cname(sess, 'accessT.html', 'pw03trl00/29')
         dump('特別レース登録馬  accessT.html  cname=pw03trl00/29', html3)
     except Exception as e:      # noqa: BLE001
         print(f'\n■ 特別レース登録馬: 取得失敗 {type(e).__name__}: {e}')
+
+    # ③' 特別レース登録馬の「中身」を開く（火曜に今週末を持つ唯一の経路）
+    #     ここに馬名・騎手・負担重量が並ぶのか、枠順が無いだけなのかを見る。
+    print(f'\n{"=" * 92}')
+    print('■ 特別レース登録馬の中身（最大2件）')
+    print('=' * 92)
+    try:
+        tlinks = links_with_cname(BeautifulSoup(html3, 'lxml'))
+    except Exception:      # noqa: BLE001
+        tlinks = []
+    n = 0
+    for t, ep, cn in tlinks:
+        if 'pw03tde' not in cn:
+            continue
+        if n >= 2:
+            break
+        try:
+            detail = post_cname(sess, ep, cn)
+        except Exception as e:      # noqa: BLE001
+            print(f'\n■ {t}: 取得失敗 {type(e).__name__}: {e}')
+            continue
+        dump_table(f'└ {t}  [{ep} {cn}]', detail)
+        n += 1
+        time.sleep(0.5)
+    if n == 0:
+        print('  pw03tde 形式のリンクが1件も無い（＝この経路も空）')
 
     # ④ ①で見つかった中身つきリンクを実際に開く
     print(f'\n{"=" * 92}')
@@ -156,6 +238,9 @@ def main():
     for t, ep, cn in top_links:
         if followed >= FOLLOW_LIMIT:
             break
+        # 日付を持たない CNAME はグローバルナビなので開かない
+        if not DATE_RE.search(cn):
+            continue
         m = TOKEN_RE.search(cn)
         tok = m.group(1) if m else cn[:9]
         # トークンの種類ごとに2件までにして、種類を広く見る
@@ -167,7 +252,7 @@ def main():
         except Exception as e:      # noqa: BLE001
             print(f'\n■ {t} ({ep} {cn}): 取得失敗 {type(e).__name__}: {e}')
             continue
-        dump(f'└ {t}  [{ep} {cn}]', sub, show_body=200)
+        dump_table(f'└ {t}  [{ep} {cn}]', sub)
         followed += 1
         time.sleep(0.5)
 
