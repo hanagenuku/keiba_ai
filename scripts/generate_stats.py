@@ -718,6 +718,61 @@ def _save_kpi_weekly(kpi, base_dir):
         json.dump(existing, f, ensure_ascii=False, indent=2)
 
 
+def save_race_results(base_dir, n_days=4):
+    """直近の開催日ぶんの「馬ごとの着順と配当」を data/race_results.json に書き出す。
+
+    アプリの予想表に結果を重ねるための表示用ファイル。
+    `latest.json` はレース**前**に作られるので結果を持てない。別ファイルにして
+    アプリ側で race_id をキーに突き合わせる（latest.json は一切変えない）。
+
+    🔴 `fukusho_payout` は3着内でも NULL/0 の行が約1.8%ある（スクレイプ漏れ）。
+    2026-08-18③で「0円として集計すると実力を過小評価する」と実測済みなので、
+    ここでも **0 を「0円」として書かない**。null にしてアプリ側で「-」と出す。
+
+    ⚠ `tansho_payout` は1着馬にしか入らない（2着以下は0）。同じ理由で
+    1着以外は null にする。
+    """
+    hist_path = get_history_db_path(base_dir)
+    out = {'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M'),
+           'dates': [], 'races': {}}
+    if not os.path.exists(hist_path):
+        return out
+    try:
+        conn = sqlite3.connect(hist_path)
+        conn.row_factory = sqlite3.Row
+        dates = [r['date'] for r in conn.execute(
+            'SELECT DISTINCT date FROM race_history ORDER BY date DESC LIMIT ?',
+            (int(n_days),)).fetchall()]
+        if dates:
+            ph = ','.join('?' * len(dates))
+            rows = conn.execute(
+                'SELECT race_id, horse_num, place, tansho_payout, fukusho_payout '
+                f'FROM horse_history WHERE date IN ({ph}) AND place IS NOT NULL '
+                'AND place > 0 AND place < 99', dates).fetchall()
+            for r in rows:
+                race = out['races'].setdefault(r['race_id'], {})
+                place = int(r['place'])
+                tan = r['tansho_payout'] or 0
+                fuku = r['fukusho_payout'] or 0
+                race[str(r['horse_num'])] = {
+                    'place': place,
+                    # 1着以外の単勝配当は存在しない。0を配当として書かない
+                    'tan':  int(tan) if (place == 1 and tan > 0) else None,
+                    # 3着内でも欠損する行があるので 0 は「不明」として null
+                    'fuku': int(fuku) if (place <= 3 and fuku > 0) else None,
+                }
+        out['dates'] = dates
+        conn.close()
+    except Exception as e:
+        print(f'⚠ race_results.json 生成失敗（表示のみ・予想には影響なし）: {e}')
+        return out
+    path = os.path.join(base_dir, 'data', 'race_results.json')
+    with open(path, 'w', encoding='utf-8') as f:
+        json.dump(out, f, ensure_ascii=False, separators=(',', ':'))
+    print(f'✅ race_results.json 生成: {len(out["races"])}レース / {len(dates)}開催日')
+    return out
+
+
 def generate_stats(base_dir=None):
     base_dir = base_dir or ROOT
     db_path = get_db_path(base_dir)
@@ -918,6 +973,13 @@ def generate_stats(base_dir=None):
 
     # 週次蓄積
     _save_divergence_weekly(div, odds_mv, base_dir)
+
+    # ── 予想表に重ねる用の「馬ごとの着順・配当」 ─────────────────────────
+    # stats.json とは別ファイル。失敗しても stats 生成自体は止めない。
+    try:
+        save_race_results(base_dir)
+    except Exception as e:
+        print(f'⚠ race_results.json 生成失敗（表示のみ）: {e}')
 
     stats['generated_at'] = datetime.now().strftime('%Y-%m-%d %H:%M')
     conn.close()
