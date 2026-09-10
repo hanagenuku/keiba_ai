@@ -1,17 +1,17 @@
-// 画面の勝率列が「市場ゼロのAI勝率」を出すことを検証する。
+// 画面の「AI勝率 / AI複勝 / 必要オッズ」がEV用の較正済み確率を出すことを検証する。
 //
-// 経緯（2026-09-10 ユーザー要望）:
-//   「勝率表示は市場オッズから算出されているように見える。AI予想の勝率で表示してほしい」
-// 残差学習は raw_margin = base_margin(市場人気) + ability_margin(AI) なので、
-// 従来の tan_pct は市場を土台にした値だった。base_margin をフラット（全馬同値）に
-// 置き換えたAI単独の勝率を ai_tan_pct として出し、画面はそちらを表示する。
+// 経緯（2026-09-11）:
+//   2026-09-10 に AI勝率を softmax(T=3.5) から作って画面に出したが、
+//   OOS 24,993頭で測ると ECE 0.0757 で壊れていた（cal_prob は 0.0094）。
+//   ability経路に Isotonic を通した版は ECE 0.0080 だったので、そちらに差し替える。
 //
-// 🔴 固定したいこと（退行するとユーザーの要望が静かに戻る）:
-//   ① 表示が ai_tan_pct であって tan_pct ではない
-//   ② ai_tan_pct が**オッズに依存しない**（直前オッズを押しても動かない）
-//   ③ EV は従来どおり市場込みの tan_pct から作る（AI勝率×オッズは3度否定・回収57.9%）
-//   ④ RL順位は従来どおり市場込みの勝率で決まる（買い目・軸が動かないこと）
-//   ⑤ JS と Python(app_json._build_solo_probs) の値が一致する
+// 🔴 固定したいこと（退行すると数字が静かに嘘をつく）:
+//   ① 表示は ev_tan_pct / ev_fuku_pct であって tan_pct / fuku_pct ではない
+//   ② 較正器の値が無ければ「-」。**softmax で代用しない**（クライアント計算を持たない）
+//   ③ EV列は「必要オッズ = 1.2 / EV用勝率」であって EV ではない
+//   ④ 必要オッズに届いても**色を付けない**（買い推奨として見せない）
+//   ⑤ 順位用の量は sim_ev という別名で、RL順位・買い目はそちらのまま
+//   ⑥ 直前オッズを押しても EV用確率は動かない
 //
 // 実行: node tests/test_ai_win_rate.mjs
 import fs from 'fs';
@@ -24,114 +24,97 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
 const js = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m => m[1]).join('\n');
 
-const ctx = vm.createContext({ console, Math, document: undefined, window: {},
+const ctx = vm.createContext({ console, Math, JSON, document: undefined, window: {},
                                localStorage: { getItem: () => null, setItem: () => {} },
                                fetch: () => Promise.reject(new Error('no net')),
                                setInterval: () => 0, clearInterval: () => {},
                                setTimeout: () => 0, addEventListener: () => {} });
 try { vm.runInContext(js, ctx); } catch (e) { /* DOM依存の初期化は無視 */ }
 
-const { _ensureAiProbs, updateOddsAndEV } = ctx;
-assert.ok(_ensureAiProbs, '_ensureAiProbs が無い');
+const { updateOddsAndEV } = ctx;
+assert.ok(updateOddsAndEV, 'updateOddsAndEV が読めていない');
 
 let pass = 0;
 const t = (name, fn) => { fn(); console.log('  ✅', name); pass++; };
 
-// 本番と同じ形の馬辞書（ability_margin は残差モデルが必ず入れる）
 const AM = [1.2, -0.4, 0.7, -1.1, 0.05, 2.0, -0.9, 0.33, -0.15, 1.5, -2.2, 0.9];
 const mkRace = (odds) => ({ horses: AM.map((m, i) => ({
   n: i + 1, ability_margin: m, tan_pct: 8.0, fuku_pct: 25.0,
+  ev_tan_pct: 5.0 + i, ev_fuku_pct: 15.0 + i, need_odds: Math.round(1200 / (5 + i)) / 10,
   odds: odds ? odds[i] : null, pop: i + 1, rl_rank: i + 1,
 })) });
-// updateOddsAndEV(race, freshOdds) は {馬番: {tansho}} を取る
 const fresh = (odds) => Object.fromEntries(odds.map((o, i) => [String(i + 1), { tansho: o }]));
 
-console.log('■ AI勝率の算出');
-t('全馬に ai_tan_pct / ai_fuku_pct が付く', () => {
-  const r = mkRace(); _ensureAiProbs(r);
-  r.horses.forEach(h => {
-    assert.ok(h.ai_tan_pct != null && h.ai_fuku_pct != null);
-  });
+console.log('■ ① 表示はEV用の確率を読む');
+t('勝率・複勝列が ev_tan_pct / ev_fuku_pct を読む', () => {
+  assert.ok(/const _aiT = h\.ev_tan_pct, _aiF = h\.ev_fuku_pct;/.test(html),
+            '表示が ev_* を見ていない');
+  assert.ok(html.includes('>AI勝率</th>') && html.includes('>AI複勝</th>'));
 });
 
-t('勝率はレース内で合計100%になる', () => {
-  const r = mkRace(); _ensureAiProbs(r);
-  const s = r.horses.reduce((a, h) => a + h.ai_tan_pct, 0);
-  assert.ok(Math.abs(s - 100) < 0.6, `合計 ${s}`);
+t('順位用の値はツールチップに残す（消さない）', () => {
+  assert.ok(/順位用（市場込み・softmax）の勝率/.test(html));
 });
 
-t('ability_margin が高い馬ほど AI勝率が高い', () => {
-  const r = mkRace(); _ensureAiProbs(r);
-  const best = r.horses[AM.indexOf(Math.max(...AM))];
-  const worst = r.horses[AM.indexOf(Math.min(...AM))];
-  assert.ok(best.ai_tan_pct > worst.ai_tan_pct);
-  assert.strictEqual(best.ai_tan_pct, Math.max(...r.horses.map(h => h.ai_tan_pct)));
+console.log('■ ② 値が無ければ数字を作らない');
+t('🔴 クライアント側で確率を計算し直す関数を持たない', () => {
+  assert.strictEqual(ctx._ensureAiProbs, undefined,
+                     '_ensureAiProbs が残っている（softmaxでの代用が復活する）');
+  assert.ok(!html.includes('_ensureAiProbs('), '_ensureAiProbs の呼び出しが残っている');
 });
 
-t('🔴 オッズを変えても AI勝率は動かない（市場ゼロであることの検査）', () => {
-  const a = mkRace([1.2, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50]);
-  const b = mkRace([50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 1.2]);
-  _ensureAiProbs(a); _ensureAiProbs(b);
-  a.horses.forEach((h, i) => assert.strictEqual(h.ai_tan_pct, b.horses[i].ai_tan_pct));
+t('ev_tan_pct が無ければ "-"（tan_pct で代用しない）', () => {
+  assert.ok(!/h\.ev_tan_pct\s*!=\s*null\s*\?\s*h\.ev_tan_pct\s*:\s*h\.tan_pct/.test(html),
+            '順位用の勝率にフォールバックしている');
 });
 
-t('ability_margin が1頭でも欠けたら列を作らない（非残差モデル）', () => {
-  const r = mkRace(); r.horses[3].ability_margin = null;
-  _ensureAiProbs(r);
-  assert.ok(r.horses.every(h => h.ai_tan_pct == null));
+console.log('■ ③④ 必要オッズ列');
+t('ヘッダが「必要ｵｯｽﾞ」で、EV ではない', () => {
+  assert.ok(html.includes('>必要ｵｯｽﾞ</th>'), 'ヘッダが必要オッズになっていない');
+  assert.ok(!/>EV<\/th>/.test(html), 'EV 列が残っている');
 });
 
-t('サーバが入れた値を上書きしない', () => {
-  const r = mkRace(); r.horses.forEach(h => { h.ai_tan_pct = 1.1; h.ai_fuku_pct = 2.2; });
-  _ensureAiProbs(r);
-  assert.ok(r.horses.every(h => h.ai_tan_pct === 1.1));
+t('セルが need_odds を読む', () => {
+  assert.ok(/const evVal = h\.need_odds;/.test(html));
 });
 
-console.log('■ 表示（勝率列が AI勝率 であること）');
-t('① 勝率列は ai_tan_pct を読む', () => {
-  assert.ok(/const _aiT = h\.ai_tan_pct/.test(html), '表示が ai_tan_pct を見ていない');
-  assert.ok(/const _aiF = h\.ai_fuku_pct/.test(html));
-  assert.ok(html.includes('>AI勝率</th>'), 'ヘッダが AI勝率 になっていない');
-  assert.ok(html.includes('>AI複勝</th>'));
+t('🔴 必要オッズに届いても色を付けない（買い推奨として見せない）', () => {
+  assert.ok(/val-met/.test(html), '達成クラスが無い');
+  const m = html.match(/\.htbl td\.val-met\{([^}]*)\}/);
+  assert.ok(m, 'val-met の CSS が無い');
+  assert.ok(!/color:#(2|1|0)[0-9a-f]{5}/i.test(m[1]) || /color:#333/.test(m[1]),
+            '緑系の色が付いている: ' + m[1]);
+  assert.ok(/font-weight/.test(m[1]), '太字だけの中立表示になっていない');
 });
 
-t('市場込みの値はツールチップに残る（消さない）', () => {
-  assert.ok(/市場込みモデルの勝率/.test(html));
+t('実測値がツールチップに書いてある（改善しないことを明示）', () => {
+  assert.ok(/73\.7%/.test(html) && /73\.1%/.test(html),
+            '「超えても改善しない」実測値が書かれていない');
 });
 
-console.log('■ 🔴 買い目・EV・RL順位が動いていないこと');
-t('③ EV は従来どおり tan_pct（市場込み）から作る', () => {
+console.log('■ ⑤⑥ 順位用との分離');
+t('sim_ev が順位用の量として分離されている', () => {
+  assert.ok(/h\.sim_ev = \(h\.odds/.test(html), 'sim_ev の算出が無い');
+  assert.ok(!/\bh\.ev\b/.test(html), 'h.ev が残っている（期待値と誤読される）');
+});
+
+t('⑥ 直前オッズを押しても EV用確率と必要オッズは動かない', () => {
   const o = [2.0, 4.0, 6.0, 8.0, 10, 12, 14, 16, 18, 20, 25, 30];
   const r = mkRace(o);
-  _ensureAiProbs(r);
-  updateOddsAndEV(r, fresh(o));
-  // updateOddsAndEV は tan_pct を市場込みで振り直したうえで EV を作る
-  r.horses.forEach(h => {
-    const want = Math.round((h.tan_pct / 100) * h.odds * 1000) / 1000;
-    assert.strictEqual(h.ev, want, `EV が tan_pct 由来でない (#${h.n})`);
+  const before = r.horses.map(h => [h.ev_tan_pct, h.ev_fuku_pct, h.need_odds]);
+  updateOddsAndEV(r, fresh([30, 25, 20, 18, 16, 14, 12, 10, 8, 6, 4, 2]));
+  r.horses.forEach((h, i) => {
+    assert.deepStrictEqual([h.ev_tan_pct, h.ev_fuku_pct, h.need_odds], before[i]);
   });
 });
 
-t('④ RL順位は市場込みの勝率で決まる（AI勝率ではない）', () => {
-  // 馬番12(ability 0.9)より馬番6(ability 2.0)の方がAI評価は上だが、
-  // 馬番12に極端に短いオッズを与えると市場込みの勝率では逆転する。
+t('順位用（tan_pct）と RL順位は従来どおり市場で動く', () => {
   const odds = [50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 1.1];
   const r = mkRace(odds);
-  _ensureAiProbs(r);
   updateOddsAndEV(r, fresh(odds));
-  const byAi = [...r.horses].sort((a, b) => b.ai_tan_pct - a.ai_tan_pct)[0];
-  const rl1  = r.horses.find(h => h.rl_rank === 1);
-  assert.strictEqual(byAi.n, 6, 'AI勝率1位は ability 最大の馬');
-  assert.notStrictEqual(rl1.n, byAi.n, 'RL1が AI勝率1位と同じ＝市場が効いていない');
+  const rl1 = r.horses.find(h => h.rl_rank === 1);
   assert.strictEqual(rl1.n, 12, 'RL1 は市場込みの勝率で決まるべき');
-});
-
-t('② 直前オッズを押しても AI勝率は変わらない', () => {
-  const r = mkRace([2.0, 4.0, 6.0, 8.0, 10, 12, 14, 16, 18, 20, 25, 30]);
-  _ensureAiProbs(r);
-  const before = r.horses.map(h => h.ai_tan_pct);
-  updateOddsAndEV(r, fresh([30, 25, 20, 18, 16, 14, 12, 10, 8, 6, 4, 2]));
-  r.horses.forEach((h, i) => assert.strictEqual(h.ai_tan_pct, before[i]));
+  assert.ok(r.horses.every(h => h.sim_ev != null), 'sim_ev が計算されていない');
 });
 
 console.log(`\n✅ ${pass} テスト通過`);

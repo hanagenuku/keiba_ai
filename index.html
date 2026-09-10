@@ -95,6 +95,9 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
 .htbl td.col-odds{font-size:10px;color:#666}
 /* バリュー列 */
 .htbl th.col-val{background:#117a65}
+/* ③ 必要オッズに実オッズが届いた馬。🔴 「買い推奨」ではないので色を付けず太字だけ。
+   超える馬だけを買った実測は回収73.7%で、全部買う73.1%と変わらない */
+.htbl td.val-met{font-weight:800;color:#333}
 .htbl th.col-solo{background:#8e6b3f}
 .htbl th.col-fin{background:#1b4332;width:30px}
 .htbl td.col-fin{font-weight:800;font-size:10px;white-space:nowrap}
@@ -701,7 +704,7 @@ async function fetchFreshOdds(raceKey, btn) {
       race._morning_ev = {};
       race._morning_rec = race.rec;
       for (const h of (race.horses || [])) {
-        race._morning_ev[h.n] = h.ev;
+        race._morning_ev[h.n] = h.sim_ev;
         h._morning_odds = h.odds || null;
         h._morning_pop = h.pop != null ? h.pop : null;
       }
@@ -795,18 +798,6 @@ function _flatBaseMargin(n) {
   return sum / k;
 }
 
-// ── 市場ゼロAIの勝率（画面の「AI勝率」「AI複勝」列）──────────────────────
-// ユーザー要望(2026-09-10): 「勝率が市場オッズから算出されているように見える。
-// AI予想の勝率で表示してほしい」。残差学習は
-//   raw_margin = base_margin(市場人気) + ability_margin(AI)
-// なので通常の勝率は市場を土台にしている。base_margin をフラット（全馬同値）に
-// 置き換えると、市場を土台から外したAI単独の勝率になる。
-// サーバ側 src/betting/app_json.py の _build_solo_probs と同じ計算。
-// 新しい latest.json には ai_tan_pct が入っているので、これは
-// 古い latest.json を開いたときのフォールバック。
-//
-// ⚠ この確率は当てる力では通常の勝率に劣る（単勝AUC 0.7778 vs 0.8252）。
-// 🔴 ai_tan_pct × オッズ を買い目の根拠にしないこと（3度否定・回収57.9%）。
 // ── 結果オーバーレイ ───────────────────────────────────────────────────────
 // レース後に data/race_results.json（着順・配当）を読み、予想表と一覧カードに重ねる。
 // 🔴 配当が取れていない行は null で来る。「0円」と書かず「-」にする
@@ -941,20 +932,13 @@ function _tblClass() {
   return 'htbl ' + _hiddenCols().map(k => 'h-' + k).join(' ');
 }
 
-function _ensureAiProbs(race) {
-  const hs = race.horses || [];
-  if (!hs.length) return;
-  if (hs.every(h => h.ai_tan_pct != null)) return;      // サーバが入れている
-  if (!hs.every(h => h.ability_margin != null)) return; // 非残差モデル → 列は出さない
-  const bm = _flatBaseMargin(hs.length);
-  const totals = hs.map(h => (1 / (1 + Math.exp(-(h.ability_margin + bm)))) * 10);
-  const wins = _softmaxTotals(totals, 3.5);
-  const t3 = _harvilleTop3(wins);
-  hs.forEach((h, i) => {
-    h.ai_tan_pct  = Math.round(Math.min(60, wins[i] * 100) * 10) / 10;
-    h.ai_fuku_pct = Math.round(t3[i][1] * 100 * 10) / 10;
-  });
-}
+// ── EV用の絶対確率について ──────────────────────────────────────────────
+// 画面の「AI勝率」「AI複勝」「必要オッズ」は、サーバ側 src/betting/app_json.py の
+// _build_ev_probs が入れる ev_tan_pct / ev_fuku_pct / need_odds をそのまま出す。
+// 🔴 ここで計算し直さない。Isotonic 較正はJSで再現できないため、
+//    値が無いレース（古い latest.json・較正器なし）は素直に「-」と出す。
+//    2026-09-10 に softmax で代用したが ECE 0.0757 と壊れていたので取り下げた。
+// 🔴 当日オッズに依存しないので、直前オッズを押しても値は変わらない（変えてはいけない）。
 
 function _softmaxTotals(totals, temperature) {
   const maxT = Math.max(...totals);
@@ -1067,7 +1051,10 @@ function updateOddsAndEV(race, freshOdds) {
   }
 
   for (const h of allHorses) {
-    h.ev = (h.odds && h.odds > 0 && h.tan_pct != null)
+    // 🔴 sim_ev は「順位用確率(softmax) × オッズ」。**期待値ではない**ので画面に出さない。
+    //    内部ロジック（AI強気ペア・買い目候補・変動サマリー）だけが読む。
+    //    画面に出すのは need_odds（必要オッズ）＝ EV用の較正済み確率から作った値。
+    h.sim_ev = (h.odds && h.odds > 0 && h.tan_pct != null)
          ? Math.round((h.tan_pct / 100) * h.odds * 1000) / 1000
          : null;
   }
@@ -1128,13 +1115,13 @@ function updateRecFlag(race) {
     .sort((a, b) => (a.rl_rank || 99) - (b.rl_rank || 99));
   if (horses.length === 0) return;
   const rl1 = horses[0];
-  const rl1Ev = rl1.ev || 0;
+  const rl1Ev = rl1.sim_ev || 0;
   const rl1Odds = rl1.tansho_odds || rl1.odds || 0;
   const wasRec = race._morning_rec != null ? race._morning_rec : race.rec;
 
   // 推奨外し: RL1のオッズが1.5倍未満（ガチガチ本命＝妙味なし）
   // または RL上位3頭全員のEVが0.8未満（買い目が全滅）
-  const rl3Evs = horses.slice(0, 3).map(h => h.ev || 0);
+  const rl3Evs = horses.slice(0, 3).map(h => h.sim_ev || 0);
   const allLowEv = rl3Evs.every(ev => ev < 0.8);
   if (wasRec && (rl1Odds < 1.5 || allLowEv)) {
     race.rec = false;
@@ -1148,7 +1135,7 @@ function updateRecFlag(race) {
   if (!wasRec) {
     const hasValue = horses.slice(0, 3).some(h => {
       const o = h.tansho_odds || h.odds || 0;
-      return (h.ev || 0) >= 1.2 && o >= 2.0 && o <= 30.0;
+      return (h.sim_ev || 0) >= 1.2 && o >= 2.0 && o <= 30.0;
     });
     if (hasValue) {
       race.rec = true;
@@ -1198,7 +1185,7 @@ function recalcBets(race) {
   const chaosGrade = race.chaos_grade || 'B';
   const hasOdds = horses.some(h => h.fukusho_odds != null);
 
-  const valueHorses = horses.filter(h => h.ev != null && h.ev >= 1.3);
+  const valueHorses = horses.filter(h => h.sim_ev != null && h.sim_ev >= 1.3);
 
   const top1 = horses[0];
   const top2 = horses[1];
@@ -1324,7 +1311,7 @@ function buildValueChangeDetail(race) {
   let html = '<div style="font-size:10px;color:#666;padding:2px 0">';
   for (const h of (race.horses || [])) {
     const oldEv = race._morning_ev[h.n];
-    const newEv = h.ev;
+    const newEv = h.sim_ev;
     if (oldEv != null && newEv != null && Math.abs(newEv - oldEv) >= 0.1) {
       const oldStr = oldEv.toFixed(2);
       const newStr = newEv.toFixed(2);
@@ -1472,7 +1459,6 @@ function render() {
         }
       }
       const _umRid = umarkRaceKey(race);
-      _ensureAiProbs(race);   // 古い latest.json 用のフォールバック（新しいものはサーバが入れている）
       // 「AI単」＝市場（オッズ）を土台から外したAI単独の順位（solo_rank）。
       // 残差学習モデル運用時のみ付与されるため、無いレースでは列ごと出さない。
       const _hasSolo = (race.horses||[]).some(h => h.solo_rank != null);
@@ -1483,18 +1469,19 @@ function render() {
       // 結果が出ていれば「着」列を先頭に足す（レース前は列ごと出さない）
       const _res = _resultsFor(race);
       const _finTh = _res ? '<th class="col-fin">着</th>' : '';
-      html += '<table class="'+_tblClass()+'">'+'<tr>'+_finTh+'<th class="col-um" title="タップで ◎○▲△✕ を切り替え。端末内だけに保存されます">印</th><th style="width:20px">番</th><th class="col-name">馬名</th><th class="col-pop" style="width:22px">人</th><th class="col-odds" style="width:34px">ｵｯｽﾞ</th><th class="col-mk">特記</th><th class="col-rl" style="width:24px">RL</th>'+_soloTh+'<th style="width:32px" title="市場（オッズ）を土台から外した、AI単独の勝率。カッコ内は市場を土台にしたモデルの勝率で、EV・買い目・RL順位はそちらを使います">AI勝率</th><th style="width:32px" title="市場を土台から外した、AI単独の3着内率。カッコ内は市場を土台にしたモデルの値">AI複勝</th><th class="col-val" style="width:32px" title="市場を土台にしたモデルの勝率×オッズ。AI勝率×オッズではありません（それは3度否定され回収57.9%）。単体では買い目の根拠になりません（下のEV買い目欄を参照）">EV</th></tr>';
+      html += '<table class="'+_tblClass()+'">'+'<tr>'+_finTh+'<th class="col-um" title="タップで ◎○▲△✕ を切り替え。端末内だけに保存されます">印</th><th style="width:20px">番</th><th class="col-name">馬名</th><th class="col-pop" style="width:22px">人</th><th class="col-odds" style="width:34px">ｵｯｽﾞ</th><th class="col-mk">特記</th><th class="col-rl" style="width:24px">RL</th>'+_soloTh+'<th style="width:32px" title="当日のオッズを直接使わないAI確率をIsotonicで較正した絶対確率（確認期24,993頭でECE 0.0080）。⚠ レース内合計は100%になりません。⚠ 少頭数では高め・多頭数では低めに出ます（5-9頭で-8.7pt / 17頭以上で+4.3pt）。順位付け・買い目には別の確率を使っています">AI勝率</th><th style="width:32px" title="同じくIsotonic較正済みの3着内率。70%までの全帯で予測と実測のズレが±1.6pt以内。⚠ 70%超は−7.5pt、少頭数レースは−8.7pt ずれるので額面どおり読まないこと">AI複勝</th><th class="col-val" style="width:40px" title="EV=1.2 になるのに必要な単勝オッズ（＝1.2÷AI勝率）。🔴 実オッズがこれを超えても『買い』ではありません。超える馬だけを買った実測回収率は73.7%で、全部買う73.1%と変わりません（2026-09-11・単勝8,703頭）">必要ｵｯｽﾞ</th></tr>';
       for (const h of (race.horses||[])) {
         const isH = race.honmei && h.n === race.honmei.n;
         const rl = (!h.rl_rank || h.rl_rank >= 99) ? '-' : h.rl_rank;
-        // 表示はAI単独（市場ゼロ）の勝率。無い場合のみ従来の勝率に落とす。
-        // ⚠ EV・買い目・軸・RL順位は従来の tan_pct/fuku_pct のまま（変更していない）。
-        const _aiT = h.ai_tan_pct  != null ? h.ai_tan_pct  : h.tan_pct;
-        const _aiF = h.ai_fuku_pct != null ? h.ai_fuku_pct : h.fuku_pct;
-        const _tTip = (h.ai_tan_pct != null && h.tan_pct != null)
-                    ? ' title="市場込みモデルの勝率 '+h.tan_pct+'%"' : '';
-        const _fTip = (h.ai_fuku_pct != null && h.fuku_pct != null)
-                    ? ' title="市場込みモデルの3着内率 '+h.fuku_pct+'%"' : '';
+        // 🔑 表示はEV用の絶対確率（Isotonic較正済み・当日オッズを使わない）。
+        //    無ければ「-」。順位用(softmax)で代用しない（ECE 0.0757 で壊れるため）。
+        // ⚠ 買い目・軸・RL順位は従来の tan_pct/fuku_pct のまま（変更していない）。
+        const _aiT = h.ev_tan_pct, _aiF = h.ev_fuku_pct;
+        const _tTip = (_aiT != null && h.tan_pct != null)
+                    ? ' title="順位用（市場込み・softmax）の勝率は '+h.tan_pct+'%。'
+                      + 'こちらは合計100%になりますが絶対確率としては読めません"' : '';
+        const _fTip = (_aiF != null && h.fuku_pct != null)
+                    ? ' title="順位用（市場込み・softmax）の3着内率は '+h.fuku_pct+'%"' : '';
         const tan = _aiT != null ? '<span'+_tTip+'>'+_aiT+'%</span>' : '-';
         const fuku = _aiF != null ? '<span'+_fTip+'>'+_aiF+'%</span>' : '-';
         const hi = _aiF != null && _aiF >= 38;
@@ -1517,12 +1504,14 @@ function render() {
         // EV表示（pn × win_odds、参考値）。バックテストで買い目の根拠にはならないと
         // 確認済み（2026-07-05検証）。明らかなnon-value(EV<1.0)の除外用にのみ使う想定
         // なので、1.0以上を「買い信号」のように緑ハイライトしない（2026-07-24修正）。
-        const evVal = h.ev;
+        const evVal = h.need_odds;
         let valCell = '-';
         let valClass = 'val-none';
         if (evVal != null && evVal > 0) {
-          valCell = evVal.toFixed(2);
-          valClass = evVal >= 1.0 ? 'val-neutral' : 'val-over';
+          valCell = evVal >= 100 ? String(Math.round(evVal)) : evVal.toFixed(1);
+          // ③ 「買い推奨」としては見せない。実オッズが必要オッズに届いていても
+          //    色を付けず、太字だけにする（実測73.7% vs 全部買う73.1%＝改善しない）。
+          valClass = (h.odds && h.odds >= evVal) ? 'val-met' : 'val-none';
         }
 
         // 人気急上昇マーク

@@ -92,65 +92,105 @@ class TestSoloRankInAppJson:
         assert _build_solo_ranks(field) == before
 
 
-# ── 市場ゼロAIの勝率（画面の「AI勝率」列・2026-09-10 ユーザー要望）──────────
-# ユーザー要望「勝率を市場オッズ由来ではなくAI予想の勝率で表示して」への対応。
-# base_margin をフラット（全馬同値）に置き換えたAI単独の確率。
-# 🔴 表示専用であり、EV・買い目・軸・RL順位・レース厳選は従来のままであること。
+# ── EV用の絶対確率（2026-09-11）────────────────────────────────────────────
+# 🔑 このプロジェクトには性質の違う確率が2種類あり、混ぜてはいけない。
+#    EV用   : sigmoid(ability + フラット土台) → Isotonic  馬ごとの絶対値が正しい
+#    順位用 : softmax(T=3.5) → Harville                  レース内合計が 1.0 / 3.0
+# 順位用を絶対確率として読むと ECE 0.0757（EV用は 0.0080）。
+# ⚠ EV用はレース内合計が 1.0 / 3.0 に**ならない**。それが正しい。
+
+import numpy as np
+import pytest
+from sklearn.isotonic import IsotonicRegression
+
+from src.betting import app_json as _aj
+
+
+@pytest.fixture
+def fake_cal(tmp_path, monkeypatch):
+    """本番と同じ形（Isotonic 2本入りの pkl）の較正器を置く。North Star #6。"""
+    import pickle
+    x = np.linspace(0.02, 0.98, 200)
+    d = {'win': IsotonicRegression(out_of_bounds='clip').fit(x, x * 0.3),
+         'fuku': IsotonicRegression(out_of_bounds='clip').fit(x, x * 0.8),
+         'n_rows': 200, 'fitted_on': 'test'}
+    (tmp_path / 'data').mkdir()
+    with open(tmp_path / 'data' / 'ability_calibrator.pkl', 'wb') as f:
+        pickle.dump(d, f)
+    monkeypatch.setattr(_aj, '_ABILITY_CAL_DIR', None)
+    monkeypatch.setattr(_aj, '_ABILITY_CAL', None)
+    return str(tmp_path)
+
 
 def _scored(margins):
     return [_horse(i + 1, i + 1, 0.1, m, odds=2.0 + i) for i, m in enumerate(margins)]
 
 
-def test_solo_probs_sum_to_one():
-    from src.betting.app_json import _build_solo_probs
-    r = _build_solo_probs(_scored([1.2, -0.4, 0.7, -1.1, 0.05, 2.0]))
-    assert abs(sum(w for w, _ in r.values()) - 1.0) < 1e-6
-
-
-def test_solo_probs_follow_ability():
-    from src.betting.app_json import _build_solo_probs
-    r = _build_solo_probs(_scored([1.2, -0.4, 0.7, -1.1, 0.05, 2.0]))
+def test_ev_probs_follow_ability(fake_cal):
+    r = _aj._build_ev_probs(_scored([1.2, -0.4, 0.7, -1.1, 0.05, 2.0]), fake_cal)
     assert max(r, key=lambda k: r[k][0]) == 6      # ability 2.0
     assert min(r, key=lambda k: r[k][0]) == 4      # ability -1.1
 
 
-def test_solo_probs_independent_of_market():
-    """🔴 市場ゼロであることの検査: オッズ・人気を変えても値が動かない。"""
-    from src.betting.app_json import _build_solo_probs
+def test_ev_probs_independent_of_market(fake_cal):
+    """🔴 当日のオッズ・人気を変えても値が動かない（EV設計の前提）。"""
     ms = [1.2, -0.4, 0.7, -1.1, 0.05, 2.0]
     a, b = _scored(ms), _scored(ms)
     for i, h in enumerate(a):
-        h['win_odds'] = 2.0 + i * 5
-        h['popularity'] = i + 1
+        h['win_odds'], h['popularity'] = 2.0 + i * 5, i + 1
     for i, h in enumerate(b):
-        h['win_odds'] = 60.0 - i * 5
-        h['popularity'] = len(b) - i
-    assert _build_solo_probs(a) == _build_solo_probs(b)
+        h['win_odds'], h['popularity'] = 60.0 - i * 5, len(b) - i
+    assert _aj._build_ev_probs(a, fake_cal) == _aj._build_ev_probs(b, fake_cal)
 
 
-def test_solo_probs_empty_when_any_ability_missing():
-    from src.betting.app_json import _build_solo_probs
+def test_ev_probs_empty_without_calibrator(tmp_path, monkeypatch):
+    """🔴 較正器が無ければ数字を作らない（softmax で代用しない）。"""
+    monkeypatch.setattr(_aj, '_ABILITY_CAL_DIR', None)
+    monkeypatch.setattr(_aj, '_ABILITY_CAL', None)
+    assert _aj._build_ev_probs(_scored([1.2, -0.4, 0.7]), str(tmp_path)) == {}
+
+
+def test_ev_probs_empty_when_any_ability_missing(fake_cal):
     sc = _scored([1.2, -0.4, 0.7])
     sc[1]['ability_margin'] = None
-    assert _build_solo_probs(sc) == {}
+    assert _aj._build_ev_probs(sc, fake_cal) == {}
 
 
-def test_horse_dict_carries_ai_pct():
-    """馬辞書に ai_tan_pct / ai_fuku_pct が乗り、従来の勝率も残っていること。"""
+def test_horse_dict_carries_ev_fields(fake_cal):
+    """馬辞書に EV用確率と必要オッズが乗り、順位用の確率も残っていること。"""
     scored = _scored([1.2, -0.4, 0.7, -1.1, 0.05, 2.0])
     hs = _build_horses_list(scored, scored[0],
-                            sorted(scored, key=lambda x: x['win_odds']))
-    assert all(h['ai_tan_pct'] is not None for h in hs)
-    assert all(h['ai_fuku_pct'] is not None for h in hs)
-    # 表示専用なので、EV・買い目が使う従来の勝率は消えていない
-    assert all(h['tan_pct'] is not None for h in hs)
+                            sorted(scored, key=lambda x: x['win_odds']), base_dir=fake_cal)
+    for h in hs:
+        assert h['ev_tan_pct'] is not None and h['ev_fuku_pct'] is not None
+        # 必要オッズ = 1.2 / EV用勝率
+        assert h['need_odds'] == pytest.approx(1.2 / (h['ev_tan_pct'] / 100), rel=0.02)
+        # 順位用は別に残っている（買い目・軸が使う）
+        assert h['tan_pct'] is not None and h['fuku_pct'] is not None
 
 
-def test_ai_pct_none_for_non_residual_model():
+def test_no_ev_field_in_horse_dict(fake_cal):
+    """🔴 'ev' という名前を画面に出さない。順位用の量は sim_ev に分離した。"""
     scored = _scored([1.2, -0.4, 0.7])
-    for h in scored:
-        h['ability_margin'] = None
     hs = _build_horses_list(scored, scored[0],
-                            sorted(scored, key=lambda x: x['win_odds']))
-    assert all(h['ai_tan_pct'] is None for h in hs)
-    assert all(h['tan_pct'] is not None for h in hs)
+                            sorted(scored, key=lambda x: x['win_odds']), base_dir=fake_cal)
+    assert 'ev' not in hs[0], "'ev' が残っている（期待値と誤読される）"
+    assert 'sim_ev' in hs[0]
+
+
+def test_ev_fields_none_without_calibrator(tmp_path, monkeypatch):
+    monkeypatch.setattr(_aj, '_ABILITY_CAL_DIR', None)
+    monkeypatch.setattr(_aj, '_ABILITY_CAL', None)
+    scored = _scored([1.2, -0.4, 0.7])
+    hs = _build_horses_list(scored, scored[0],
+                            sorted(scored, key=lambda x: x['win_odds']), base_dir=str(tmp_path))
+    assert all(h['ev_tan_pct'] is None and h['need_odds'] is None for h in hs)
+    assert all(h['tan_pct'] is not None for h in hs)   # 順位用は影響を受けない
+
+
+def test_marks_use_sim_ev_not_ev():
+    """🔴 マーク付与が読む内部量は sim_ev（順位用）。名前で性質が分かること。"""
+    import inspect
+    src = inspect.getsource(_aj._assign_marks)
+    assert "h.get('sim_ev')" in src
+    assert "h.get('ev')" not in src, "順位用の量が 'ev' のまま残っている"
