@@ -95,6 +95,31 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
 .htbl td.col-odds{font-size:10px;color:#666}
 /* バリュー列 */
 .htbl th.col-val{background:#117a65}
+.htbl th.col-solo{background:#8e6b3f}
+.htbl th.col-fin{background:#1b4332;width:30px}
+.htbl td.col-fin{font-weight:800;font-size:10px;white-space:nowrap}
+/* 表示列チューザ: 列クラスを th/td 両方に付けてあるので、表側の1クラスで隠せる */
+.htbl.h-pop  th.col-pop,  .htbl.h-pop  td.col-pop  {display:none}
+.htbl.h-odds th.col-odds, .htbl.h-odds td.col-odds {display:none}
+.htbl.h-mk   th.col-mk,   .htbl.h-mk   td.col-mk   {display:none}
+.htbl.h-solo th.col-solo, .htbl.h-solo td.col-solo {display:none}
+.htbl.h-val  th.col-val,  .htbl.h-val  td.col-val  {display:none}
+.colbar{display:flex;gap:4px;flex-wrap:wrap;padding:0 0 6px}
+.colbar button{font-size:10px;padding:2px 8px;border-radius:10px;border:1px solid var(--border);
+  background:var(--card);color:#666;cursor:pointer}
+.colbar button.on{background:#2d6a4f;color:#fff;border-color:#2d6a4f;font-weight:700}
+.rsum{display:flex;gap:6px;flex-wrap:wrap;padding:0 0 8px;font-size:10px;align-items:center}
+.rsum .chip{background:var(--card);border:1px solid var(--border);border-radius:4px;padding:2px 7px;color:#555}
+.rsum .chip b{color:#2d6a4f}
+.rsum .anch{font-weight:700;padding:2px 8px;border-radius:4px;color:#fff}
+.t3{display:flex;flex-direction:column;gap:2px;padding:4px 10px 6px;cursor:pointer}
+.t3 .t3row{display:flex;gap:6px;align-items:center;font-size:11px}
+.t3 .t3rk{width:15px;text-align:center;font-weight:800;color:#fff;border-radius:3px;font-size:9px;
+  line-height:15px;background:#8e6b3f}
+.t3 .t3rk.r1{background:#e67e22}
+.t3 .t3nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.t3 .t3od{color:#666;font-size:10px}
+.t3 .t3fin{font-weight:800;font-size:10px}
 /* バリューバッジ（表内EV列は参考値。買い信号として緑強調しない・2026-07-24） */
 .val-buy{color:#fff;background:#27ae60;font-weight:800;font-size:10px;border-radius:3px}
 .val-neutral{color:#888;font-weight:600;font-size:10px}
@@ -266,6 +291,10 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
 const DATA_URL  = 'https://hanagenuku.github.io/keiba_ai/data/latest.json';
 const DATA_URL_FALLBACK = 'https://raw.githubusercontent.com/hanagenuku/keiba_ai/main/data/latest.json';
 const STATS_URL = 'https://hanagenuku.github.io/keiba_ai/data/stats.json';
+// 予想表に結果を重ねるための「馬ごとの着順・配当」。latest.json はレース前に
+// 作られるので結果を持てない。scripts/generate_stats.save_race_results が書く。
+const RESULTS_URL = 'https://hanagenuku.github.io/keiba_ai/data/race_results.json';
+const RESULTS_URL_FALLBACK = 'https://raw.githubusercontent.com/hanagenuku/keiba_ai/main/data/race_results.json';
 const STATS_URL_FALLBACK = 'https://raw.githubusercontent.com/hanagenuku/keiba_ai/main/data/stats.json';
 const GAS_URL   = 'https://script.google.com/macros/s/AKfycbxcpXYNxHPS4wFmnX-EOyWaTU8AKt1ZQhJAL6dz5sTeEWoR319EfCqqDB0B1NHTHAYW/exec';
 const EV_BUY_THRESHOLD = 1.3;
@@ -293,6 +322,9 @@ async function loadData(preferRaw) {
     if (!res.ok) throw new Error('HTTP ' + res.status);
     D = await res.json();
     initApp();
+    // 結果ファイルは後追いで良い（レース前は存在しないのが正常）。
+    // 取れたら描き直して、予想表と一覧に着順・配当を重ねる。
+    loadRaceResults().then(ok => { if (ok) render(); }).catch(() => {});
   } catch(e) {
     document.getElementById('race-list').innerHTML = '<div class="error-box">⚠️ <strong>データ読み込みエラー</strong><br><br>' + e.message + '<br><br><strong>確認事項:</strong><br>• Colabで予想生成を実行済みか<br><br><button class="reload-btn" onclick="loadData()" style="margin:8px 0 0">再読み込み</button></div>';
     document.getElementById('hdate').textContent = 'エラー';
@@ -775,6 +807,140 @@ function _flatBaseMargin(n) {
 //
 // ⚠ この確率は当てる力では通常の勝率に劣る（単勝AUC 0.7778 vs 0.8252）。
 // 🔴 ai_tan_pct × オッズ を買い目の根拠にしないこと（3度否定・回収57.9%）。
+// ── 結果オーバーレイ ───────────────────────────────────────────────────────
+// レース後に data/race_results.json（着順・配当）を読み、予想表と一覧カードに重ねる。
+// 🔴 配当が取れていない行は null で来る。「0円」と書かず「-」にする
+//    （2026-08-18③: 欠損を0円として集計すると実力を過小評価する、と実測済み）。
+// ⚠ let ではなく var。テスト(tests/test_race_ui.mjs)は index.html の <script> を
+//    vm コンテキストで実行して検証するが、let はコンテキストのプロパティにならず
+//    外から差し替えられない。本番の挙動は var でも変わらない。
+var _RESULTS = null;
+
+async function loadRaceResults() {
+  for (const u of [RESULTS_URL, RESULTS_URL_FALLBACK]) {
+    try {
+      const r = await fetch(u + '?t=' + Date.now(), { cache: 'no-store' });
+      if (r.ok) { _RESULTS = await r.json(); return true; }
+    } catch (e) { /* 結果がまだ無いのは正常。黙って諦める */ }
+  }
+  return false;
+}
+
+function _resultsFor(race) {
+  if (!_RESULTS || !_RESULTS.races || !race || !race.race_id) return null;
+  return _RESULTS.races[race.race_id] || null;
+}
+
+function _finBadge(place) {
+  if (place == null) return '';
+  if (place === 1) return '<span style="color:#d4a017">🥇1着</span>';
+  if (place === 2) return '<span style="color:#7f8c8d">🥈2着</span>';
+  if (place === 3) return '<span style="color:#a0522d">🥉3着</span>';
+  return '<span style="color:#999">' + place + '着</span>';
+}
+
+function _payoutText(rec) {
+  if (!rec) return '';
+  const p = [];
+  if (rec.tan  != null) p.push('単' + rec.tan);
+  if (rec.fuku != null) p.push('複' + rec.fuku);
+  // 3着内なのに配当が取れていない行が約1.8%ある。0円と書かない
+  if (!p.length && rec.place != null && rec.place <= 3) return '<span style="color:#bbb">配当-</span>';
+  return p.length ? '<span style="color:#c0392b;font-weight:700">' + p.join(' ') + '</span>' : '';
+}
+
+// ── レース要約チップ（能力差・脚質の内訳・オッズの土台）────────────────────
+// 🔴 隊列の「位置」は出さない。2026-08-17/08-26 に天井を測って打ち切った
+//    （完璧なペース予測でも +0.0007、展開系29列を全部抜いても −0.0001）。
+//    ここで出すのは過去走の多数決である**脚質のカウント**＝事実のみ。
+function _styleCounts(race) {
+  const c = { '逃げ': 0, '先行': 0, '差し': 0, '追込': 0 };
+  for (const h of (race.horses || [])) {
+    const st = h.style || '差し';
+    if (c[st] != null) c[st]++;
+  }
+  return c;
+}
+
+// AIのレース内評価の幅。クラスが上がるほど縮むことが実測されている
+// （2026-08-18: 未勝利 5.83 → OP 3.92）。当てやすさの目安として出す。
+function _abilitySpread(race) {
+  const v = (race.horses || []).map(h => h.score).filter(x => x != null);
+  if (v.length < 2) return null;
+  const mx = Math.max(...v), mn = Math.min(...v);
+  return { spread: mx - mn, avg: v.reduce((a, b) => a + b, 0) / v.length };
+}
+
+// いま表示している勝率が「何時点のオッズ」を土台にしているか。
+// 🔑 D-2⑤(2026-08-25): 直前オッズを押すこと自体が +0.0188 AUC。
+//    朝のままなのか押した後なのかが一目で分かることに実利がある。
+function _anchorChip(race) {
+  const a = race._anchor;                      // updateOddsAndEV が設定する
+  if (race._update_time) {
+    const lbl = a === 'odds' ? '直前オッズ反映' : a === 'rank' ? '直前オッズ(順位のみ)' : '直前オッズ(土台なし)';
+    const col = a === 'odds' ? '#27ae60' : '#e67e22';
+    return '<span class="anch" style="background:' + col + '" title="' + race._update_time
+         + ' 時点のオッズで勝率を組み直しています">' + lbl + '</span>';
+  }
+  const hasOdds = (race.horses || []).some(h => h.odds > 0);
+  return hasOdds
+    ? '<span class="anch" style="background:#7f8c8d" title="予想生成時点のオッズのままです。締め切り前に「直前オッズ取得」を押すと組み直します">生成時オッズ</span>'
+    : '<span class="anch" style="background:#c0392b" title="オッズが1件も取れていません。市場の土台を捏造せず中立にしています（engine.py の flat アンカーと同じ）">オッズ未取得</span>';
+}
+
+function _raceSummaryBar(race) {
+  const sp = _abilitySpread(race);
+  const sc = _styleCounts(race);
+  let h = '<div class="rsum">' + _anchorChip(race);
+  if (sp) {
+    h += '<span class="chip" title="AIのレース内評価の最大−最小。小さいほど拮抗していて当てにくい（実測: 未勝利5.83 → OP3.92）">'
+       + '能力差 <b>' + sp.spread.toFixed(1) + '</b> / 平均 ' + sp.avg.toFixed(1) + '</span>';
+  }
+  h += '<span class="chip" title="過去走の多数決による脚質の内訳。⚠ 隊列の位置は予測であり、実測で効かないと確定しているので出していません">'
+     + '逃' + sc['逃げ'] + ' 先' + sc['先行'] + ' 差' + sc['差し'] + ' 追' + sc['追込'] + '</span>';
+  h += '</div>';
+  return h;
+}
+
+// ── 一覧カードの上位3頭ストリップ ─────────────────────────────────────────
+function _top3Strip(race, key) {
+  const hs = (race.horses || []).filter(h => h.rl_rank && h.rl_rank <= 3)
+                                .sort((a, b) => a.rl_rank - b.rl_rank);
+  if (!hs.length) return '';
+  const res = _resultsFor(race);
+  let h = '<div class="t3" onclick="toggle(\'' + key + '\')">';
+  for (const x of hs) {
+    const r = res ? res[String(x.n)] : null;
+    h += '<div class="t3row"><span class="t3rk' + (x.rl_rank === 1 ? ' r1' : '') + '">' + x.rl_rank + '</span>'
+       + '<span class="t3nm">#' + x.n + ' ' + x.name + '</span>'
+       + '<span class="t3od">' + (x.odds ? x.odds.toFixed(1) + '倍' : '-') + '</span>'
+       + '<span class="t3fin">' + (r ? _finBadge(r.place) + ' ' + _payoutText(r) : '') + '</span></div>';
+  }
+  return h + '</div>';
+}
+
+// ── 表示列チューザ ────────────────────────────────────────────────────────
+const COLS = [['pop','人'], ['odds','ｵｯｽﾞ'], ['mk','特記'], ['solo','AI単'], ['val','EV']];
+function _hiddenCols() {
+  try { return JSON.parse(localStorage.getItem('keiba_hidden_cols') || '[]'); }
+  catch (e) { return []; }
+}
+function toggleCol(key) {
+  const cur = _hiddenCols();
+  const next = cur.includes(key) ? cur.filter(x => x !== key) : cur.concat([key]);
+  try { localStorage.setItem('keiba_hidden_cols', JSON.stringify(next)); } catch (e) {}
+  render();
+}
+function _colBar() {
+  const hid = _hiddenCols();
+  return '<div class="colbar">' + COLS.map(([k, lbl]) =>
+    '<button class="' + (hid.includes(k) ? '' : 'on') + '" onclick="event.stopPropagation();toggleCol(\'' + k + '\')">'
+    + lbl + '</button>').join('') + '</div>';
+}
+function _tblClass() {
+  return 'htbl ' + _hiddenCols().map(k => 'h-' + k).join(' ');
+}
+
 function _ensureAiProbs(race) {
   const hs = race.horses || [];
   if (!hs.length) return;
@@ -1261,11 +1427,17 @@ function render() {
     const padBadge = padCoverCount(race)
       ? '<span class="pad-done" title="パドック評価 入力済み '+padCoverCount(race)+'頭">🐎'+padCoverCount(race)+'</span>' : '';
     html += '<div class="rc'+(isRec?' rec':'')+'"><div class="rc-head" onclick="toggle(\''+k+'\')"><div class="rc-num">'+race.r+'</div><div class="rc-info"><div class="rc-name">'+race.name+nameAlert+padBadge+'</div><div class="rc-meta">'+race.dist+'</div></div><div class="rc-right">'+recLabel+'<span class="arr'+(isOpen?' open':'')+'">▼</span></div></div>';
-    if (race.honmei) {
+    // 上位3頭（結果が出ていれば着順・配当も重ねる）。
+    // 従来は◎本命1頭だけだったが、一覧のまま「AIが誰を並べたか」を読めるようにする。
+    const _t3 = _top3Strip(race, k);
+    if (_t3) {
+      html += _t3;
+    } else if (race.honmei) {
       html += '<div class="hstrip" onclick="toggle(\''+k+'\')"><span class="hbadge">◎本命</span><span class="hname">#'+race.honmei.n+' '+race.honmei.name+'</span><span class="hodds">'+(race.honmei.odds||'-')+'倍 / '+(race.honmei.style||'-')+'</span></div>';
     }
     if (isOpen) {
       html += '<div class="detail open"><div class="det-inner"><div class="sec">出走馬・AI評価</div>';
+      html += _raceSummaryBar(race);
       if (race.chaos_grade) {
         const gradeColor = {A:'#2980b9', B:'#e67e22', C:'#c0392b'}[race.chaos_grade] || '#999';
         const gradeLabel = {A:'堅い', B:'中荒れ', C:'大荒れ'}[race.chaos_grade] || '';
@@ -1305,9 +1477,13 @@ function render() {
       // 残差学習モデル運用時のみ付与されるため、無いレースでは列ごと出さない。
       const _hasSolo = (race.horses||[]).some(h => h.solo_rank != null);
       const _soloTh = _hasSolo
-        ? '<th class="col-rl" style="width:26px" title="市場（オッズ）を土台から外した、AI単独の評価順位。RLは市場を土台にAIが補正した順位で、買い目・軸はRLを使います。AI単は参考表示です（実測では当てる力はRLに劣ります）">AI単</th>'
+        ? '<th class="col-solo" style="width:26px" title="市場（オッズ）を土台から外した、AI単独の評価順位。RLは市場を土台にAIが補正した順位で、買い目・軸はRLを使います。AI単は参考表示です（実測では当てる力はRLに劣ります）">AI単</th>'
         : '';
-      html += '<table class="htbl"><tr><th class="col-um" title="タップで ◎○▲△✕ を切り替え。端末内だけに保存されます">印</th><th style="width:20px">番</th><th class="col-name">馬名</th><th class="col-pop" style="width:22px">人</th><th class="col-odds" style="width:34px">ｵｯｽﾞ</th><th class="col-mk">特記</th><th class="col-rl" style="width:24px">RL</th>'+_soloTh+'<th style="width:32px" title="市場（オッズ）を土台から外した、AI単独の勝率。カッコ内は市場を土台にしたモデルの勝率で、EV・買い目・RL順位はそちらを使います">AI勝率</th><th style="width:32px" title="市場を土台から外した、AI単独の3着内率。カッコ内は市場を土台にしたモデルの値">AI複勝</th><th class="col-val" style="width:32px" title="市場を土台にしたモデルの勝率×オッズ。AI勝率×オッズではありません（それは3度否定され回収57.9%）。単体では買い目の根拠になりません（下のEV買い目欄を参照）">EV</th></tr>';
+      html += _colBar();
+      // 結果が出ていれば「着」列を先頭に足す（レース前は列ごと出さない）
+      const _res = _resultsFor(race);
+      const _finTh = _res ? '<th class="col-fin">着</th>' : '';
+      html += '<table class="'+_tblClass()+'">'+'<tr>'+_finTh+'<th class="col-um" title="タップで ◎○▲△✕ を切り替え。端末内だけに保存されます">印</th><th style="width:20px">番</th><th class="col-name">馬名</th><th class="col-pop" style="width:22px">人</th><th class="col-odds" style="width:34px">ｵｯｽﾞ</th><th class="col-mk">特記</th><th class="col-rl" style="width:24px">RL</th>'+_soloTh+'<th style="width:32px" title="市場（オッズ）を土台から外した、AI単独の勝率。カッコ内は市場を土台にしたモデルの勝率で、EV・買い目・RL順位はそちらを使います">AI勝率</th><th style="width:32px" title="市場を土台から外した、AI単独の3着内率。カッコ内は市場を土台にしたモデルの値">AI複勝</th><th class="col-val" style="width:32px" title="市場を土台にしたモデルの勝率×オッズ。AI勝率×オッズではありません（それは3度否定され回収57.9%）。単体では買い目の根拠になりません（下のEV買い目欄を参照）">EV</th></tr>';
       for (const h of (race.horses||[])) {
         const isH = race.honmei && h.n === race.honmei.n;
         const rl = (!h.rl_rank || h.rl_rank >= 99) ? '-' : h.rl_rank;
@@ -1416,14 +1592,25 @@ function render() {
               else if (d <= -3) cell += '<span style="color:#95a5a6;font-size:9px" title="RLの評価は市場に支えられている（AI単独ではもっと下）">↓'+Math.abs(d)+'</span>';
             }
           }
-          _soloTd = '<td class="col-rl" style="color:#666">'+cell+'</td>';
+          _soloTd = '<td class="col-solo" style="color:#666">'+cell+'</td>';
         }
 
         const _um = getUserMark(_umRid, h.n);
         const _umCell = '<td class="col-um"><span class="umark'+(_um?' umark-on':'')
           + '" data-rid="'+_umRid+'" onclick="cycleUserMark(\''+_umRid+'\','+h.n+',this)">'
           + _um + '</span></td>';
-        html += '<tr'+(isH?' class="hl"':'')+'>'+_umCell+'<td>'+(isH?'◎':'')+h.n+'</td><td class="col-name">'+h.name+surgeBadge+'</td><td class="col-pop">'+pop+'</td><td class="col-odds">'+odds+'</td><td>'+mkBadge(h.mark)+'</td><td class="col-rl">'+rl+gapBadge+mxBadge+breakdownBadge+'</td>'+_soloTd+'<td>'+tan+'</td><td class="'+(hi?'phi':'plo')+'">'+fuku+'</td><td class="'+valClass+'">'+valCell+'</td></tr>';
+        // 着順・配当を同じ行に重ねる。3着内は行ごと薄く色を付ける
+        const _r = _res ? _res[String(h.n)] : null;
+        const _finTd = _res
+          ? '<td class="col-fin">'+(_r ? _finBadge(_r.place)+'<br>'+_payoutText(_r) : '-')+'</td>'
+          : '';
+        let _rowCls = isH ? ' class="hl"' : '';
+        if (_r && _r.place != null && _r.place <= 3) {
+          const bg = _r.place === 1 ? 'rgba(230,126,34,0.14)'
+                   : _r.place === 2 ? 'rgba(127,140,141,0.14)' : 'rgba(160,82,45,0.12)';
+          _rowCls = ' style="background:'+bg+'"';
+        }
+        html += '<tr'+_rowCls+'>'+_finTd+_umCell+'<td>'+(isH?'◎':'')+h.n+'</td><td class="col-name">'+h.name+surgeBadge+'</td><td class="col-pop">'+pop+'</td><td class="col-odds">'+odds+'</td><td class="col-mk">'+mkBadge(h.mark)+'</td><td class="col-rl">'+rl+gapBadge+mxBadge+breakdownBadge+'</td>'+_soloTd+'<td>'+tan+'</td><td class="'+(hi?'phi':'plo')+'">'+fuku+'</td><td class="'+valClass+'">'+valCell+'</td></tr>';
       }
       html += '</table>';
       if (race.race_id) {
