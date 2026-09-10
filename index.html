@@ -763,6 +763,33 @@ function _flatBaseMargin(n) {
   return sum / k;
 }
 
+// ── 市場ゼロAIの勝率（画面の「AI勝率」「AI複勝」列）──────────────────────
+// ユーザー要望(2026-09-10): 「勝率が市場オッズから算出されているように見える。
+// AI予想の勝率で表示してほしい」。残差学習は
+//   raw_margin = base_margin(市場人気) + ability_margin(AI)
+// なので通常の勝率は市場を土台にしている。base_margin をフラット（全馬同値）に
+// 置き換えると、市場を土台から外したAI単独の勝率になる。
+// サーバ側 src/betting/app_json.py の _build_solo_probs と同じ計算。
+// 新しい latest.json には ai_tan_pct が入っているので、これは
+// 古い latest.json を開いたときのフォールバック。
+//
+// ⚠ この確率は当てる力では通常の勝率に劣る（単勝AUC 0.7778 vs 0.8252）。
+// 🔴 ai_tan_pct × オッズ を買い目の根拠にしないこと（3度否定・回収57.9%）。
+function _ensureAiProbs(race) {
+  const hs = race.horses || [];
+  if (!hs.length) return;
+  if (hs.every(h => h.ai_tan_pct != null)) return;      // サーバが入れている
+  if (!hs.every(h => h.ability_margin != null)) return; // 非残差モデル → 列は出さない
+  const bm = _flatBaseMargin(hs.length);
+  const totals = hs.map(h => (1 / (1 + Math.exp(-(h.ability_margin + bm)))) * 10);
+  const wins = _softmaxTotals(totals, 3.5);
+  const t3 = _harvilleTop3(wins);
+  hs.forEach((h, i) => {
+    h.ai_tan_pct  = Math.round(Math.min(60, wins[i] * 100) * 10) / 10;
+    h.ai_fuku_pct = Math.round(t3[i][1] * 100 * 10) / 10;
+  });
+}
+
 function _softmaxTotals(totals, temperature) {
   const maxT = Math.max(...totals);
   const exps = totals.map(t => Math.exp((t - maxT) / temperature));
@@ -1273,19 +1300,28 @@ function render() {
         }
       }
       const _umRid = umarkRaceKey(race);
+      _ensureAiProbs(race);   // 古い latest.json 用のフォールバック（新しいものはサーバが入れている）
       // 「AI単」＝市場（オッズ）を土台から外したAI単独の順位（solo_rank）。
       // 残差学習モデル運用時のみ付与されるため、無いレースでは列ごと出さない。
       const _hasSolo = (race.horses||[]).some(h => h.solo_rank != null);
       const _soloTh = _hasSolo
         ? '<th class="col-rl" style="width:26px" title="市場（オッズ）を土台から外した、AI単独の評価順位。RLは市場を土台にAIが補正した順位で、買い目・軸はRLを使います。AI単は参考表示です（実測では当てる力はRLに劣ります）">AI単</th>'
         : '';
-      html += '<table class="htbl"><tr><th class="col-um" title="タップで ◎○▲△✕ を切り替え。端末内だけに保存されます">印</th><th style="width:20px">番</th><th class="col-name">馬名</th><th class="col-pop" style="width:22px">人</th><th class="col-odds" style="width:34px">ｵｯｽﾞ</th><th class="col-mk">特記</th><th class="col-rl" style="width:24px">RL</th>'+_soloTh+'<th style="width:32px">勝率</th><th style="width:32px">複勝</th><th class="col-val" style="width:32px" title="勝率×オッズの参考値。単体では買い目の根拠になりません（下のEV買い目欄を参照）">EV</th></tr>';
+      html += '<table class="htbl"><tr><th class="col-um" title="タップで ◎○▲△✕ を切り替え。端末内だけに保存されます">印</th><th style="width:20px">番</th><th class="col-name">馬名</th><th class="col-pop" style="width:22px">人</th><th class="col-odds" style="width:34px">ｵｯｽﾞ</th><th class="col-mk">特記</th><th class="col-rl" style="width:24px">RL</th>'+_soloTh+'<th style="width:32px" title="市場（オッズ）を土台から外した、AI単独の勝率。カッコ内は市場を土台にしたモデルの勝率で、EV・買い目・RL順位はそちらを使います">AI勝率</th><th style="width:32px" title="市場を土台から外した、AI単独の3着内率。カッコ内は市場を土台にしたモデルの値">AI複勝</th><th class="col-val" style="width:32px" title="市場を土台にしたモデルの勝率×オッズ。AI勝率×オッズではありません（それは3度否定され回収57.9%）。単体では買い目の根拠になりません（下のEV買い目欄を参照）">EV</th></tr>';
       for (const h of (race.horses||[])) {
         const isH = race.honmei && h.n === race.honmei.n;
         const rl = (!h.rl_rank || h.rl_rank >= 99) ? '-' : h.rl_rank;
-        const tan = h.tan_pct != null ? h.tan_pct+'%' : '-';
-        const fuku = h.fuku_pct != null ? h.fuku_pct+'%' : '-';
-        const hi = h.fuku_pct != null && h.fuku_pct >= 38;
+        // 表示はAI単独（市場ゼロ）の勝率。無い場合のみ従来の勝率に落とす。
+        // ⚠ EV・買い目・軸・RL順位は従来の tan_pct/fuku_pct のまま（変更していない）。
+        const _aiT = h.ai_tan_pct  != null ? h.ai_tan_pct  : h.tan_pct;
+        const _aiF = h.ai_fuku_pct != null ? h.ai_fuku_pct : h.fuku_pct;
+        const _tTip = (h.ai_tan_pct != null && h.tan_pct != null)
+                    ? ' title="市場込みモデルの勝率 '+h.tan_pct+'%"' : '';
+        const _fTip = (h.ai_fuku_pct != null && h.fuku_pct != null)
+                    ? ' title="市場込みモデルの3着内率 '+h.fuku_pct+'%"' : '';
+        const tan = _aiT != null ? '<span'+_tTip+'>'+_aiT+'%</span>' : '-';
+        const fuku = _aiF != null ? '<span'+_fTip+'>'+_aiF+'%</span>' : '-';
+        const hi = _aiF != null && _aiF >= 38;
 
         // 人気
         const pop = h.pop != null ? h.pop : '-';

@@ -2,6 +2,8 @@
 アプリ用 JSON 生成。
 ノートブックの to_app_json を分離。
 """
+import math
+
 from src.betting.ev_filter import (VENUE_ORDER,
                                     calc_market_probs, calc_value_score,
                                     detect_value_horses, is_maiden_race,
@@ -109,6 +111,43 @@ def _build_solo_ranks(scored):
     return {h['num']: i + 1 for i, h in enumerate(order)}
 
 
+def _build_solo_probs(scored):
+    """市場ゼロAIの勝率・3着内率を {horse_num: (win, top3)} で返す。
+
+    残差学習は `raw_margin = base_margin(市場人気) + ability_margin(AI)` なので、
+    画面の「勝率」は市場アンカーを土台にした値である。ユーザーから
+    「AI予想の勝率で表示してほしい」(2026-09-10) という要望を受け、
+    **base_margin をフラット（全馬同値）に置き換えたAI単独の勝率**を併せて出す。
+
+    フラット値は定数0ではなく `_flat_base_margin`（人気1〜nの平均）を使う。
+    engine.py がオッズ全滅時に使うのと同じ土台なので、
+    「市場が何も分かっていない状態でAIだけが評価したら」という意味になる。
+
+    ⚠ この確率は当てる力では通常の `tan_pct` に劣る（実測）:
+        単勝AUC 市場ゼロAI 0.7778 / 市場ありAI 0.8252（2026-08-03）
+        5窓のAUC フラット 0.7569〜0.7872 / 健全な人気 0.7799〜0.8014（2026-08-29）
+    したがって **EV・買い目・軸・RL順位・レース厳選には使わない**。
+    `_build_solo_ranks` と同じ「読むための併記」の扱いとする。
+
+    🔴 `ai_tan_pct × オッズ` を買い目の根拠にしないこと。
+    それは 2026-07-05 / 07-30 / 08-31 に3度否定された EV そのもので、
+    本番8,546頭で EV>=1.0 は回収57.9%（買わない側が75.0%）だった。
+
+    1頭でも `ability_margin` を欠くレースは全体で {} を返す（順位側と同じ方針）。
+    """
+    if not scored or any(h.get('ability_margin') is None for h in scored):
+        return {}
+    from src.features.engine import _flat_base_margin, calc_harville_probs
+    from src.models.predict import softmax_probs
+    n = len(scored)
+    bm = _flat_base_margin(n)
+    # engine.calc_all と同じ経路: sigmoid(margin) → ×10 → softmax(T=3.5) → Harville
+    totals = [1.0 / (1.0 + math.exp(-(h['ability_margin'] + bm))) * 10 for h in scored]
+    wins = softmax_probs(totals, temperature=3.5)
+    top3 = [t3 for _, t3 in calc_harville_probs(wins)]
+    return {h['num']: (w, t3) for h, w, t3 in zip(scored, wins, top3)}
+
+
 def _build_horses_list(scored, top1, by_odds, odds_lookup=None, base_dir=None):
     """アプリ表示用の馬リストを生成する（馬番順）。
 
@@ -120,6 +159,7 @@ def _build_horses_list(scored, top1, by_odds, odds_lookup=None, base_dir=None):
     marks = _assign_marks(scored, by_odds)
     odds_lookup = odds_lookup or {}
     solo_ranks = _build_solo_ranks(scored)
+    solo_probs = _build_solo_probs(scored)
 
     _mx_classify = None
     if base_dir is not None:
@@ -153,6 +193,12 @@ def _build_horses_list(scored, top1, by_odds, odds_lookup=None, base_dir=None):
             # _build_solo_ranks のdocstring（当てる力では rl_rank に劣る）。
             # 非残差モデル時はNone → アプリ側で列ごと非表示にする。
             'solo_rank': solo_ranks.get(h['num']),
+            # 市場ゼロAIの勝率・3着内率（画面の「AI勝率」「AI複勝」列）。
+            # ⚠ 表示専用。EV・買い目・軸・RL順位は従来の tan_pct/fuku_pct のまま。
+            'ai_tan_pct':  (round(min(60, solo_probs[h['num']][0] * 100), 1)
+                            if h['num'] in solo_probs else None),
+            'ai_fuku_pct': (round(solo_probs[h['num']][1] * 100, 1)
+                            if h['num'] in solo_probs else None),
             'cl_rank':  h.get('cl_rank', 99),
             'ev':       ev_val,
             'prob_gap': round(h.get('prob_gap', 0.0), 4),

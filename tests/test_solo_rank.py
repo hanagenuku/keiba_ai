@@ -90,3 +90,67 @@ class TestSoloRankInAppJson:
         for h in field:
             h['win_odds'] *= 3.0   # 市場が総取っ替えになった想定
         assert _build_solo_ranks(field) == before
+
+
+# ── 市場ゼロAIの勝率（画面の「AI勝率」列・2026-09-10 ユーザー要望）──────────
+# ユーザー要望「勝率を市場オッズ由来ではなくAI予想の勝率で表示して」への対応。
+# base_margin をフラット（全馬同値）に置き換えたAI単独の確率。
+# 🔴 表示専用であり、EV・買い目・軸・RL順位・レース厳選は従来のままであること。
+
+def _scored(margins):
+    return [_horse(i + 1, i + 1, 0.1, m, odds=2.0 + i) for i, m in enumerate(margins)]
+
+
+def test_solo_probs_sum_to_one():
+    from src.betting.app_json import _build_solo_probs
+    r = _build_solo_probs(_scored([1.2, -0.4, 0.7, -1.1, 0.05, 2.0]))
+    assert abs(sum(w for w, _ in r.values()) - 1.0) < 1e-6
+
+
+def test_solo_probs_follow_ability():
+    from src.betting.app_json import _build_solo_probs
+    r = _build_solo_probs(_scored([1.2, -0.4, 0.7, -1.1, 0.05, 2.0]))
+    assert max(r, key=lambda k: r[k][0]) == 6      # ability 2.0
+    assert min(r, key=lambda k: r[k][0]) == 4      # ability -1.1
+
+
+def test_solo_probs_independent_of_market():
+    """🔴 市場ゼロであることの検査: オッズ・人気を変えても値が動かない。"""
+    from src.betting.app_json import _build_solo_probs
+    ms = [1.2, -0.4, 0.7, -1.1, 0.05, 2.0]
+    a, b = _scored(ms), _scored(ms)
+    for i, h in enumerate(a):
+        h['win_odds'] = 2.0 + i * 5
+        h['popularity'] = i + 1
+    for i, h in enumerate(b):
+        h['win_odds'] = 60.0 - i * 5
+        h['popularity'] = len(b) - i
+    assert _build_solo_probs(a) == _build_solo_probs(b)
+
+
+def test_solo_probs_empty_when_any_ability_missing():
+    from src.betting.app_json import _build_solo_probs
+    sc = _scored([1.2, -0.4, 0.7])
+    sc[1]['ability_margin'] = None
+    assert _build_solo_probs(sc) == {}
+
+
+def test_horse_dict_carries_ai_pct():
+    """馬辞書に ai_tan_pct / ai_fuku_pct が乗り、従来の勝率も残っていること。"""
+    scored = _scored([1.2, -0.4, 0.7, -1.1, 0.05, 2.0])
+    hs = _build_horses_list(scored, scored[0],
+                            sorted(scored, key=lambda x: x['win_odds']))
+    assert all(h['ai_tan_pct'] is not None for h in hs)
+    assert all(h['ai_fuku_pct'] is not None for h in hs)
+    # 表示専用なので、EV・買い目が使う従来の勝率は消えていない
+    assert all(h['tan_pct'] is not None for h in hs)
+
+
+def test_ai_pct_none_for_non_residual_model():
+    scored = _scored([1.2, -0.4, 0.7])
+    for h in scored:
+        h['ability_margin'] = None
+    hs = _build_horses_list(scored, scored[0],
+                            sorted(scored, key=lambda x: x['win_odds']))
+    assert all(h['ai_tan_pct'] is None for h in hs)
+    assert all(h['tan_pct'] is not None for h in hs)

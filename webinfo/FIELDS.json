@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "frozen_at": "2026-09-09",
+  "note": "承認後に凍結。以後、項目・選択肢の追加・変更・削除をしない。変更する場合は schema_version を上げ、それ以前の蓄積とは別データとして扱う（同じ列として混ぜない）。",
+  "target": {
+    "horses": "AI上位3頭（軸を含む）＋ 中穴が上位3頭に含まれない場合はその1頭。最大4頭/レース",
+    "races": "select_quality_races が選んだレースのみ（約6R/日）"
+  },
+  "fields": [
+    {
+      "id": "oikiri_grade",
+      "label": "追い切り評価",
+      "type": "enum",
+      "options": ["最上位", "上位", "標準", "下位", "なし", "不明"],
+      "note": "媒体ごとに S/A/B/C・◎○▲△・5段階など表記が違うため、4段階へ正規化する。『なし』=探した上で評価が付いていないと確認できた。『不明』=判別できなかった。この2つを混ぜない（充足率の測定が壊れる）。"
+    },
+    {
+      "id": "oikiri_grade_raw",
+      "label": "追い切り評価（原表記）",
+      "type": "text",
+      "note": "媒体が書いたラベルをそのまま。正規化が正しいか後から検証できるようにする。"
+    },
+    {
+      "id": "oikiri_note",
+      "label": "追い切り短評",
+      "type": "text",
+      "note": "🔴 要約せず原文のまま。パターン抽出は探索期にのみ行い、確認期に入る前に定義を凍結する（PROTOCOL.md の『短評パターンの扱い』を参照）。"
+    },
+    {
+      "id": "stable_comment",
+      "label": "陣営コメント",
+      "type": "enum",
+      "options": ["強気", "中立", "弱気", "なし", "不明"],
+      "note": "『なし』=探した上でコメントが存在しないと確認できた。『不明』=判別できなかった。"
+    },
+    {
+      "id": "stable_comment_raw",
+      "label": "陣営コメント（原文）",
+      "type": "text"
+    },
+    {
+      "id": "condition_note",
+      "label": "状態に関する記述",
+      "type": "enum",
+      "options": ["好意的", "否定的", "混在", "なし", "不明"]
+    },
+    {
+      "id": "condition_note_raw",
+      "label": "状態に関する記述（原文）",
+      "type": "text"
+    }
+  ],
+  "meta": [
+    {"id": "captured_at", "type": "iso8601", "required": true,
+     "note": "タイムゾーン付き。発走前であることの証明。"},
+    {"id": "post_time", "type": "iso8601", "required": true,
+     "note": "そのレースの発走時刻。captured_at < post_time を保存時に検査する。"},
+    {"id": "source_urls", "type": "list[str]", "required": true,
+     "note": "🔴 参照した全URL。後から『結果ページを見ていないか』を第三者が検証できる。空リストは不可（1件も見ずに記録することは無い）。"},
+    {"id": "n_found", "type": "int", "required": true,
+     "note": "🔑 4項目（oikiri_grade / oikiri_note / stable_comment / condition_note）のうち『なし』『不明』以外が入った数（0〜4）。情報が無かったこと自体がデータ。"},
+    {"id": "model", "type": "str", "required": true,
+     "note": "収集したモデル識別子。判定基準が変わりうるため。"},
+    {"id": "session_id", "type": "str", "required": true,
+     "note": "『結果を見ていないセッション』であることの追跡と、κ測定の2パス識別に使う。"},
+    {"id": "dup_pass", "type": "int", "required": false,
+     "note": "再現性測定（Cohen's κ）用。1回目=1, 2回目=2。通常の収集では省略。"}
+  ],
+  "storage": {
+    "table": "race_notes",
+    "phase": "pre",
+    "key_prefix": "web_",
+    "warning": "race_notes は notes_data を丸ごと差し替える仕様。📝(不利メモ)・🐎(パドック)・web の3経路が同じ行を書くので、保存前に既存値を読み、自分の担当外のキーを戻すこと（2026-09-02 と同じ defect）。"
+  }
+}
