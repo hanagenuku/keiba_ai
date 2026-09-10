@@ -112,6 +112,25 @@ def main():
                   '（xgb_calibrator.pkl → .stale）')
         print('⚠ cal_prob は生シグモイド確率になります（RL順位・買い目には影響なし）')
 
+    # ── EV用の較正器も作り直す ──────────────────────────────────────────
+    # 🔴 ability経路の較正器はモデルに紐づく。差し替えたら必ず作り直すこと。
+    #    残したままだと画面の AI勝率・必要オッズだけが静かに誤る。
+    print('🎯 EV用（ability経路）較正器 再作成中...')
+    try:
+        from scripts.build_ability_calibrator import build_ability_calibrator
+        ac = build_ability_calibrator(ROOT)
+    except Exception as e:
+        ac = None
+        print(f'⚠ ability較正器の作成中に例外: {e}')
+    if ac is None:
+        stale = os.path.join(data_dir, 'ability_calibrator.pkl')
+        if os.path.exists(stale):
+            shutil.move(stale, stale + '.stale')
+            print('⚠ 作成失敗。旧較正器は新モデルと不整合なため退避しました'
+                  '（ability_calibrator.pkl → .stale）')
+        print('⚠ 画面の AI勝率・AI複勝・必要オッズは「-」になります'
+              '（順位付け・買い目には影響なし）')
+
     print('✅ 月次再学習完了')
 
 

@@ -3,6 +3,8 @@
 ノートブックの to_app_json を分離。
 """
 import math
+import os
+import pickle
 
 from src.betting.ev_filter import (VENUE_ORDER,
                                     calc_market_probs, calc_value_score,
@@ -33,14 +35,18 @@ def _assign_marks(scored, by_odds):
     """
     market_probs = calc_market_probs(scored)
 
-    # EV未計算なら計算する
+    # 🔴 sim_ev = softmax確率(pn) × オッズ。**較正済みの期待値ではない**。
+    #    マーク付与・順位付け専用の内部量で、画面には出さない。
+    #    「EVに使う確率」は別に持つ（_build_ev_probs / ev_tan_pct）。
+    #    2026-09-11: pn は softmax T=3.5 を通しており ECE 0.0515。
+    #    これを期待値として読むと EV>=1.0 が回収57.9%（買わない側75.0%）になる。
     for i, h in enumerate(scored):
-        if 'ev' not in h:
+        if 'sim_ev' not in h:
             ai_prob = h.get('pn', 0) or 0
             m_prob  = market_probs[i]
             odds    = h.get('win_odds') or 0
             vs      = calc_value_score(ai_prob, m_prob, odds)
-            h['ev']       = vs['ev']
+            h['sim_ev']   = vs['ev']
             h['prob_gap'] = vs['prob_gap']
             h['is_value'] = vs['is_value']
 
@@ -57,16 +63,16 @@ def _assign_marks(scored, by_odds):
 
     # 高マーク: 3番人気以内 かつ AI上位3位 かつ EV>=1.0
     for h in scored:
-        if h['_pop'] <= 3 and h['ai_rank'] <= 3 and (h.get('ev') or 0) >= 1.0:
+        if h['_pop'] <= 3 and h['ai_rank'] <= 3 and (h.get('sim_ev') or 0) >= 1.0:
             marks[h['num']] = '高'
 
     # 推マーク: AI順位が人気より3以上高い かつ AI上位8位 かつ EV>=1.2（最大2頭）
     osusume = [h for h in scored
                if h['ai_rank'] <= h['_pop'] - 3
                and h['ai_rank'] <= 8
-               and (h.get('ev') or 0) >= 1.2
+               and (h.get('sim_ev') or 0) >= 1.2
                and marks[h['num']] == '']
-    osusume.sort(key=lambda h: h.get('ev') or 0, reverse=True)
+    osusume.sort(key=lambda h: h.get('sim_ev') or 0, reverse=True)
     for h in osusume[:2]:
         marks[h['num']] = '推'
 
@@ -74,11 +80,11 @@ def _assign_marks(scored, by_odds):
     ana_cands = [h for h in scored
                  if h['_pop'] >= 6
                  and h['ai_rank'] <= 5
-                 and (h.get('ev') or 0) >= 1.5
+                 and (h.get('sim_ev') or 0) >= 1.5
                  and h.get('pn', 0) >= 0.15
                  and marks[h['num']] == '']
     if ana_cands:
-        ana = max(ana_cands, key=lambda h: h.get('ev') or 0)
+        ana = max(ana_cands, key=lambda h: h.get('sim_ev') or 0)
         marks[ana['num']] = '穴'
 
     return marks
@@ -111,41 +117,75 @@ def _build_solo_ranks(scored):
     return {h['num']: i + 1 for i, h in enumerate(order)}
 
 
-def _build_solo_probs(scored):
-    """市場ゼロAIの勝率・3着内率を {horse_num: (win, top3)} で返す。
+_ABILITY_CAL = None
+_ABILITY_CAL_DIR = None
 
-    残差学習は `raw_margin = base_margin(市場人気) + ability_margin(AI)` なので、
-    画面の「勝率」は市場アンカーを土台にした値である。ユーザーから
-    「AI予想の勝率で表示してほしい」(2026-09-10) という要望を受け、
-    **base_margin をフラット（全馬同値）に置き換えたAI単独の勝率**を併せて出す。
 
-    フラット値は定数0ではなく `_flat_base_margin`（人気1〜nの平均）を使う。
-    engine.py がオッズ全滅時に使うのと同じ土台なので、
-    「市場が何も分かっていない状態でAIだけが評価したら」という意味になる。
+def _load_ability_calibrator(base_dir):
+    """EV用の絶対確率を作る Isotonic 較正器を読む（無ければ None）。
 
-    ⚠ この確率は当てる力では通常の `tan_pct` に劣る（実測）:
-        単勝AUC 市場ゼロAI 0.7778 / 市場ありAI 0.8252（2026-08-03）
-        5窓のAUC フラット 0.7569〜0.7872 / 健全な人気 0.7799〜0.8014（2026-08-29）
-    したがって **EV・買い目・軸・RL順位・レース厳選には使わない**。
-    `_build_solo_ranks` と同じ「読むための併記」の扱いとする。
+    生成は `scripts/build_ability_calibrator.py`。本番モデルを差し替えたら作り直すこと。
+    """
+    global _ABILITY_CAL, _ABILITY_CAL_DIR
+    if _ABILITY_CAL_DIR == base_dir:
+        return _ABILITY_CAL
+    _ABILITY_CAL_DIR = base_dir
+    _ABILITY_CAL = None
+    if not base_dir:
+        return None
+    path = os.path.join(base_dir, 'data', 'ability_calibrator.pkl')
+    try:
+        with open(path, 'rb') as f:
+            _ABILITY_CAL = pickle.load(f)
+    except Exception:
+        _ABILITY_CAL = None
+    return _ABILITY_CAL
 
-    🔴 `ai_tan_pct × オッズ` を買い目の根拠にしないこと。
-    それは 2026-07-05 / 07-30 / 08-31 に3度否定された EV そのもので、
-    本番8,546頭で EV>=1.0 は回収57.9%（買わない側が75.0%）だった。
+
+def _build_ev_probs(scored, base_dir):
+    """**EV用**の絶対確率を {horse_num: (単勝, 3着内)} で返す。較正器が無ければ {}。
+
+    🔑 このプロジェクトには性質の違う確率が2種類ある。混ぜないこと。
+
+    | | 作り方 | 満たすもの | 用途 |
+    |---|---|---|---|
+    | **EV用**（これ） | `sigmoid(ability + フラット土台)` → Isotonic | **馬ごとの絶対値が正しい** | 必要オッズ・EV |
+    | 順位用（`tan_pct`/`fuku_pct`） | `softmax(T=3.5)` → Harville | **レース内合計が 1.0 / 3.0** | 順位付け・シミュレーション・買い目 |
+
+    2026-09-11 に確認期 24,993頭で実測した（`calib/RESULTS_ability.md`）:
+
+        腕                         ECE      備考
+        未補正 sigmoid(ability)   0.0623   40-50%帯で +18.9pt 過小
+        ★Isotonic（これ）          0.0080   70%までの全帯で ±1.6pt 以内
+        順位用（softmax→Harville） 0.0757   10-20%帯 -7.8pt / 50-60%帯 +18.0pt
+        （参考）cal_prob            0.0094
+        （参考）市場                 0.0097
+
+    ⚠ **レース内合計は 3.0 にならない**（中央値 2.92・5〜95%点 2.23〜4.08）。
+    それで正しい。合計を 3.0 に正規化すると ECE が 0.0080 → 0.0211 に悪化する
+    （＝馬ごとの正直さと制約充足はトレードオフ）。合計が要る用途では順位用を使うこと。
+
+    ⚠ `ability_margin` には `f_pop_last` 等**過去の市場評価が含まれる**。
+    「市場を一切見ていない確率」ではなく **当日の現在オッズを直接使わない確率**である。
+
+    🔴 **回収率は改善しない。** 必要オッズを超える馬だけを買った実測は
+    単勝 8,703頭で **73.7%**（全部買う 73.1%）。
+    これは「画面の数字が嘘をつかなくなる」変更であって「儲かる」変更ではない。
 
     1頭でも `ability_margin` を欠くレースは全体で {} を返す（順位側と同じ方針）。
     """
-    if not scored or any(h.get('ability_margin') is None for h in scored):
+    cal = _load_ability_calibrator(base_dir)
+    if not cal or not scored or any(h.get('ability_margin') is None for h in scored):
         return {}
-    from src.features.engine import _flat_base_margin, calc_harville_probs
-    from src.models.predict import softmax_probs
-    n = len(scored)
-    bm = _flat_base_margin(n)
-    # engine.calc_all と同じ経路: sigmoid(margin) → ×10 → softmax(T=3.5) → Harville
-    totals = [1.0 / (1.0 + math.exp(-(h['ability_margin'] + bm))) * 10 for h in scored]
-    wins = softmax_probs(totals, temperature=3.5)
-    top3 = [t3 for _, t3 in calc_harville_probs(wins)]
-    return {h['num']: (w, t3) for h, w, t3 in zip(scored, wins, top3)}
+    from src.features.engine import _flat_base_margin
+    bm = _flat_base_margin(len(scored))
+    e0 = [1.0 / (1.0 + math.exp(-(h['ability_margin'] + bm))) for h in scored]
+    try:
+        win = cal['win'].predict(e0)
+        fuku = cal['fuku'].predict(e0)
+    except Exception:
+        return {}
+    return {h['num']: (float(w), float(f)) for h, w, f in zip(scored, win, fuku)}
 
 
 def _build_horses_list(scored, top1, by_odds, odds_lookup=None, base_dir=None):
@@ -159,7 +199,7 @@ def _build_horses_list(scored, top1, by_odds, odds_lookup=None, base_dir=None):
     marks = _assign_marks(scored, by_odds)
     odds_lookup = odds_lookup or {}
     solo_ranks = _build_solo_ranks(scored)
-    solo_probs = _build_solo_probs(scored)
+    ev_probs = _build_ev_probs(scored, base_dir)
 
     _mx_classify = None
     if base_dir is not None:
@@ -174,7 +214,10 @@ def _build_horses_list(scored, top1, by_odds, odds_lookup=None, base_dir=None):
         pn  = h.get('pn', 0)
         wo  = h.get('win_odds', 0) or 0
 
-        ev_val = round(pn * wo, 3) if wo > 0 else None
+        # 🔴 順位用確率(pn=softmax)×オッズ。**期待値ではない**ので画面には出さない。
+        #    残すのは AI強気ペア等の内部ロジックが読むため（sim_ev と同じ性質）。
+        sim_ev_val = round(pn * wo, 3) if wo > 0 else None
+        _evp = ev_probs.get(h['num'])
 
         horse = {
             'n':        h['num'],
@@ -193,14 +236,19 @@ def _build_horses_list(scored, top1, by_odds, odds_lookup=None, base_dir=None):
             # _build_solo_ranks のdocstring（当てる力では rl_rank に劣る）。
             # 非残差モデル時はNone → アプリ側で列ごと非表示にする。
             'solo_rank': solo_ranks.get(h['num']),
-            # 市場ゼロAIの勝率・3着内率（画面の「AI勝率」「AI複勝」列）。
-            # ⚠ 表示専用。EV・買い目・軸・RL順位は従来の tan_pct/fuku_pct のまま。
-            'ai_tan_pct':  (round(min(60, solo_probs[h['num']][0] * 100), 1)
-                            if h['num'] in solo_probs else None),
-            'ai_fuku_pct': (round(solo_probs[h['num']][1] * 100, 1)
-                            if h['num'] in solo_probs else None),
+            # ── EV用の絶対確率（Isotonic較正済み・当日の現在オッズを使わない）──
+            # 画面の「AI勝率」「AI複勝」列と「必要オッズ」列はこれを使う。
+            # ⚠ レース内合計は 1.0 / 3.0 にならない。それで正しい（_build_ev_probs 参照）。
+            # ⚠ 較正器が無ければ None → 画面は「-」（数字を作らない）。
+            'ev_tan_pct':  round(_evp[0] * 100, 1) if _evp else None,
+            'ev_fuku_pct': round(_evp[1] * 100, 1) if _evp else None,
+            # 必要オッズ = 1.2 / EV用勝率。「このオッズが付いて初めて EV=1.2」という意味。
+            # 🔴 これを超えたら買い、ではない。超える馬だけ買った実測は回収73.7%で
+            #    全部買う73.1%と変わらない（2026-09-11・単勝8,703頭）。
+            'need_odds': (round(1.2 / (_evp[0] or 1e-9), 1)
+                          if _evp and _evp[0] and _evp[0] > 0.004 else None),
             'cl_rank':  h.get('cl_rank', 99),
-            'ev':       ev_val,
+            'sim_ev':   sim_ev_val,
             'prob_gap': round(h.get('prob_gap', 0.0), 4),
             'cal_prob': round(h.get('cal_prob', pn), 4),
             'mark':     marks[h['num']],
