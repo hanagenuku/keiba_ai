@@ -1298,14 +1298,10 @@ def parse_result_soup(soup, racecourse, race_num, date, place_code):
             info['surface'] = '芝' if dm and dm.group(2) == '芝' else ('ダート' if dm and dm.group(2) == 'ダ' else None)
             if info['surface'] is None:
                 return None  # 判定不能なら静かに捨てる（誤判定混入を避ける）
-        c = header.replace('本賞金', '').replace('付加賞', '')
-        sp = re.search(r'([぀-鿿゠-ヿa-zA-Z0-9]+(?:賞|杯|記念|特別|ステークス|カップ|トロフィー))', c)
-        gen = re.search(r'(\d歳(?:以上)?(?:未勝利|1勝クラス|2勝クラス|3勝クラス|オープン))', header)
-        info['race_name'] = (
-            sp.group(1).strip()
-            if sp and sp.group(1) not in ('本賞', '付加賞') and len(sp.group(1)) >= 3
-            else gen.group(1).strip() if gen else ''
-        )
+        # 🔴 ここには parse_rname と同じ正規表現が複製されており、
+        #    両方に「新馬」が無いまま同時に壊れていた（2026-09-11 に発見）。
+        #    複製をやめて parse_rname を共有する。rn=None なので失敗時は ''（従来どおり）。
+        info['race_name'] = parse_rname(header)
         tc_m = re.search(r'(良|稍重|重|不良)', header)
         info['track_condition'] = tc_m.group(1) if tc_m else '良'
         info['race_class'] = _extract_class(header)
