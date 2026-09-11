@@ -119,7 +119,20 @@ def parse_header(text):
     return info
 
 
-def parse_rname(text, rn):
+def parse_rname(text, rn=None):
+    """ヘッダ全文からレース名を取る。取れなければ rn があれば 'R05' 形式、無ければ ''。
+
+    🔴 2026-09-11 に **新馬戦だけ名前が落ちていた** のを修正した。
+    総称パターンに `新馬` が無く、「2歳新馬」が1つも一致しないため
+    `f'R{rn:02d}'` にフォールバックし、アプリに「R05」と表示されていた
+    （本番 latest.json で実際に発生・history.db 側は race_name が空になっていた）。
+    ⚠ `race_class` は `_extract_class` が別途 '新馬' を正しく取れているので、
+    モデルへの入力は壊れていない。**表示名だけ**の不具合だった。
+
+    ⚠ 同じ正規表現が `jra_scraper._parse_result_header` にも複製されており、
+    両方で同時に壊れていた（2026-08-09③「対になっている処理は片方だけ直る」と同型）。
+    複製をやめてこの関数を共有する形にした。
+    """
     c = text.replace('本賞金', '').replace('付加賞', '')
     sp = re.search(
         r'([぀-鿿゠-ヿa-zA-Z0-9]+(?:賞|杯|記念|特別|ステークス|カップ|トロフィー))', c
@@ -128,8 +141,15 @@ def parse_rname(text, rn):
         n = sp.group(1).strip()
         if n not in ('本賞', '付加賞') and len(n) >= 3:
             return n
-    gen = re.search(r'(\d歳(?:以上)?(?:未勝利|1勝クラス|2勝クラス|3勝クラス|オープン))', text)
-    return gen.group(1).strip() if gen else f'R{rn:02d}'
+    gen = re.search(
+        r'(\d歳(?:以上)?(?:新馬|未勝利|1勝クラス|2勝クラス|3勝クラス|オープン))', text)
+    if not gen:
+        # 「2歳新馬」以外の表記（頭に年齢が付かない等）でも新馬だけは拾う。
+        # ここまで来ている＝特別名も他の総称も無いので、誤って別のレース名を潰さない。
+        gen = re.search(r'((?:\d歳)?新馬)', text)
+    if gen:
+        return gen.group(1).strip()
+    return f'R{rn:02d}' if rn is not None else ''
 
 
 def parse_hist(text):

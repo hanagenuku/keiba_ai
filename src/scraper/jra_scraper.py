@@ -255,6 +255,11 @@ def fetch_horse_pedigree(sess, cname):
 # 達してしまう（2026-07-18 に実際に発生・全データ喪失）。上限に達した馬は
 # 静かにスキップし、次回の実行で改めて拾われる（数週間かけて段階的に埋まる）。
 PEDIGREE_FETCH_BUDGET_DEFAULT = 60
+# suffix が計算式から外れた時の近傍走査。0x00〜0xFF を尽くすので ±128。
+SUFFIX_SCAN_HALF_RANGE = 128
+# ⚠ 実行全体での走査リクエスト上限（North Star #4）。1レース最大256件なので
+#    3レースぶん。これが無いとJRA不調時に全レースが全域走査してタイムアウトする。
+SUFFIX_SCAN_BUDGET_DEFAULT = 800
 
 
 def _fill_pedigree(sess, horses, hist_db_path, budget=None):
@@ -531,16 +536,25 @@ def fetch_races_on_date(sess, target_date, hist_db_path):
     Returns:
         (all_races, failures) のタプル。
         failures: [{'racecourse': str, 'race_num': int, 'reason': str}, ...]
-        ページ自体が取得できた（=そのレースは実在する）のにパースに失敗した
-        もののみを記録する。障害レースのスキップ、および該当venueがその日
-        12レース未満で該当レース番号のページ自体が存在しないケース
-        （suffix探索を尽くしても soup が None のまま）は意図した挙動のため
-        含めない。
+        記録するのは「そのレースが実在するのに取れなかった」もの:
+          - ページは取れたがパースに失敗した（従来どおり）
+          - 🔴 **カードの途中が抜けた**（Rn が取れず Rn+1 以降が取れている）
+
+        記録しないのは意図した挙動:
+          - 障害レースのスキップ（`_parse_shutuba` が None を返す）
+          - カード**末尾**が取れないケース（その日12レース未満の開催がある）
+
+        🔴 2026-09-12 に中山R03が `suffix=B5 → パラメータエラー/ページなし` で
+        落ちたが failures が空のままで、アプリにも警告が出ず、ユーザーが目視で
+        気づくまで分からなかった。「ページなし」を一律で無視していたのが原因。
+        12レース未満の開催を誤検知しないよう、**後続レースが取れているか**で
+        「途中の穴」と「末尾の短いカード」を切り分ける。
     """
     print(f'📡 {target_date} 出走表取得中...')
     all_races = []
     failures = []
     pedigree_budget = {'remaining': PEDIGREE_FETCH_BUDGET_DEFAULT}
+    scan_budget = {'remaining': SUFFIX_SCAN_BUDGET_DEFAULT}
     links = get_kaisai_on_date(target_date, sess)
     for base, date_str in links.items():
         pc = re.search(r'pw01dde01(\d{2})', base)
@@ -556,6 +570,7 @@ def fetch_races_on_date(sess, target_date, hist_db_path):
         odds_base = _to_odds_base(base)
         odds_r01 = find_r01_odds(odds_base, date_str, sess)
         print(f'  オッズR01: {odds_r01:02X}' if odds_r01 is not None else '  オッズR01: 未発見')
+        page_missing, got_nums = [], []
         for r in range(1, 13):
             sx = calc_suffix(r01, r)
             _, soup = _try_fetch_shutuba(sess, base, r, date_str, sx)
@@ -569,14 +584,23 @@ def fetch_races_on_date(sess, target_date, hist_db_path):
                         soup = soup2
                         sx = sx_simple
 
-            # 全レース共通：計算式が外れた場合に近傍±60をスキャン
+            # 全レース共通：計算式が外れた場合に近傍をスキャン。
+            # 🔴 2026-09-12 に中山R03が ±60 では見つからず1レース丸ごと落ちた。
+            #    suffix は 0x00〜0xFF なので ±128 で全域を尽くす。
+            # ⚠ North Star #4: 実行全体のリクエスト数に上限を持たせる。
+            #    上限が無いとJRA側が不調な日に全レースが全域走査して
+            #    タイムアウトでその回のデータを丸ごと失う（2026-07-18の事故）。
             if soup is None:
                 base_s = int(sx, 16)
                 found_delta = None
-                for delta in range(1, 61):
+                for delta in range(1, SUFFIX_SCAN_HALF_RANGE + 1):
+                    if scan_budget['remaining'] <= 0:
+                        print(f'  R{r:02d}: suffix走査の予算切れ（±{delta - 1} まで）')
+                        break
                     for sign, cand in [(+delta, (base_s + delta) % 256),
                                        (-delta, (base_s - delta) % 256)]:
                         sx_c = f'{cand:02X}'
+                        scan_budget['remaining'] -= 1
                         _, soup_c = _try_fetch_shutuba(sess, base, r, date_str, sx_c)
                         if soup_c is not None:
                             soup = soup_c
@@ -589,9 +613,10 @@ def fetch_races_on_date(sess, target_date, hist_db_path):
                     print(f'  R{r:02d}: suffix補正 {found_delta:+d} → {sx}')
 
             if soup is None:
-                # 開催venueがその日12レース未満しかない場合も含まれるため
-                # （fetch_results()の同種分岐と同じ扱い）、failuresには含めない。
+                # ここでは失敗と決めつけない（12レース未満の開催がある）。
+                # venueのループが終わってから「後続レースが取れているか」で判定する。
                 print(f'  R{r:02d}: suffix={sx} → パラメータエラー/ページなし')
+                page_missing.append(r)
                 continue
 
             race = _parse_shutuba(soup, rc, r, date_str, pc, hist_db_path)
@@ -631,10 +656,21 @@ def fetch_races_on_date(sess, target_date, hist_db_path):
             race['_odds_cn'] = {'base': base, 'date_str': date_str, 'sx': sx, 'race_num': r, 'odds_r01': odds_r01}
 
             all_races.append(race)
+            got_nums.append(r)
             print(f'  R{r:02d}: {race.get("race_name", "")} '
                   f'{race.get("num_horses", 0)}頭 '
                   f'{race.get("distance", 0)}m{race.get("surface", "")}')
             time.sleep(0.8)
+        # 🔴 「途中の穴」だけを失敗として記録する。
+        #    Rn が取れず Rn+1 以降が取れている ＝ そのレースは実在するのに落ちた。
+        #    末尾（後続が1つも無い）は12レース未満の開催なので記録しない。
+        last_ok = max(got_nums) if got_nums else 0
+        for r in page_missing:
+            if r < last_ok:
+                print(f'  🔴 R{r:02d}: カード途中の欠番（R{last_ok:02d}は取れている）→ 取得失敗として記録')
+                failures.append({'racecourse': rc, 'race_num': r,
+                                 'reason': 'ページなし(カード途中の欠番)'})
+
     print(f'\n📋 出走表取得完了: {len(all_races)}レース'
           + (f'（取得失敗 {len(failures)}件）' if failures else ''))
     return all_races, failures
@@ -1298,14 +1334,10 @@ def parse_result_soup(soup, racecourse, race_num, date, place_code):
             info['surface'] = '芝' if dm and dm.group(2) == '芝' else ('ダート' if dm and dm.group(2) == 'ダ' else None)
             if info['surface'] is None:
                 return None  # 判定不能なら静かに捨てる（誤判定混入を避ける）
-        c = header.replace('本賞金', '').replace('付加賞', '')
-        sp = re.search(r'([぀-鿿゠-ヿa-zA-Z0-9]+(?:賞|杯|記念|特別|ステークス|カップ|トロフィー))', c)
-        gen = re.search(r'(\d歳(?:以上)?(?:未勝利|1勝クラス|2勝クラス|3勝クラス|オープン))', header)
-        info['race_name'] = (
-            sp.group(1).strip()
-            if sp and sp.group(1) not in ('本賞', '付加賞') and len(sp.group(1)) >= 3
-            else gen.group(1).strip() if gen else ''
-        )
+        # 🔴 ここには parse_rname と同じ正規表現が複製されており、
+        #    両方に「新馬」が無いまま同時に壊れていた（2026-09-11 に発見）。
+        #    複製をやめて parse_rname を共有する。rn=None なので失敗時は ''（従来どおり）。
+        info['race_name'] = parse_rname(header)
         tc_m = re.search(r'(良|稍重|重|不良)', header)
         info['track_condition'] = tc_m.group(1) if tc_m else '良'
         info['race_class'] = _extract_class(header)
