@@ -89,6 +89,10 @@ from src.scraper.calendar import get_kaisai_on_date    # noqa: E402
 from src.scraper.jra_scraper import (                  # noqa: E402
     JRA_BASE, HEADERS, find_r01_odds, calc_suffix, _to_odds_base,
 )
+from src.betting.wide_book import (                    # noqa: E402
+    parse_fukusho_book, parse_wide_book, check_books, implied_top3,
+    identity_residual, fmt_check, MIN_FIELD_SIZE,
+)
 
 SLEEP = 1.0
 # 前方に何日ぶん探すか（今日を含む）。次の開催まで最大でも1週間なので8日あれば届く。
@@ -180,6 +184,124 @@ def find_kaisai_forward(sess, today=None, days_ahead=PROBE_DAYS_AHEAD):
         else:
             time.sleep(SLEEP)
     return found
+
+
+def _wide_cname_for(links):
+    """単複ページのリンクから、そのレースのワイド盤の CNAME を1つ選ぶ。
+
+    2026-09-12 の実行で券種は CNAME の 4文字目で分かれると判明している
+    （単複 pw151 / 枠連 pw153 / 馬連 pw154 / **ワイド pw155**）。
+    ⚠ ただし suffix は券種ごとに違う（EE / F6 / 7A / FE …）ので
+       文字列置換で作らず、必ずリンクから取る。
+    """
+    for l in links:
+        if 'ワイド' in l['text'] and l['cname']:
+            return l['endpoint'] or 'accessO.html', l['cname']
+    return None, None
+
+
+def _dump_wide_structure(html, n_tables=2, n_rows=4):
+    """ワイド盤の生の表構造を出す（軸馬をどこから読めるかを実データで確かめる）。
+
+    ⚠ 構造を推測してパーサを書かない。North Star #6。
+    """
+    soup = BeautifulSoup(html, 'lxml')
+    for ti, t in enumerate(soup.find_all('table')[:n_tables]):
+        cap = t.find('caption')
+        print(f'    -- table[{ti}] caption={_n(cap.get_text(" ", strip=True)) if cap else None!r}')
+        for tr in t.find_all('tr')[:n_rows]:
+            cells = [(c.name, _n(c.get_text(" ", strip=True)))
+                     for c in tr.find_all(['td', 'th'])]
+            if cells:
+                print(f'       {cells[:8]}')
+
+
+def _n(s):
+    return unicodedata.normalize('NFKC', s or '').strip()
+
+
+def run_step12(sess, odds_base, date, r01, max_races=12):
+    """全レースで Step 1（盤の健全性）→ Step 2（恒等式）を測る。"""
+    print('\n' + '=' * 88)
+    print('■ Step 1（盤の健全性）+ Step 2（恒等式）— dprime/CRITERIA.md 事前登録')
+    print('=' * 88)
+    print('  🔴 ここは価格の話だけ。Step 3（実際の3着内との突合）は結果が出るまで測れない。')
+    print(f'  🔴 8頭未満は複勝が2着払いなので対象外にする（MIN_FIELD_SIZE={MIN_FIELD_SIZE}）。')
+
+    rows = []
+    dumped = False
+    for rn in range(1, max_races + 1):
+        sx = calc_suffix(r01, rn)
+        cn = f'{odds_base}{rn:02d}{date}Z/{sx}'
+        try:
+            time.sleep(SLEEP)
+            r = _post(sess, 'accessO.html', cn)
+        except Exception as e:
+            print(f'  R{rn:02d}: 単複ページ 通信例外 {type(e).__name__}')
+            continue
+        if 'パラメータエラー' in r.text:
+            print(f'  R{rn:02d}: 単複ページ パラメータエラー（未発売/存在せず）')
+            continue
+
+        fuku = parse_fukusho_book(r.text)
+        ep, wcn = _wide_cname_for(extract_links(r.text))
+        if not wcn:
+            print(f'  R{rn:02d}: ワイドのリンクが取れない（複勝 {len(fuku)}頭は取得済み）')
+            continue
+        try:
+            time.sleep(SLEEP)
+            rw = _post(sess, ep, wcn)
+        except Exception as e:
+            print(f'  R{rn:02d}: ワイド盤 通信例外 {type(e).__name__}')
+            continue
+        if 'パラメータエラー' in rw.text:
+            print(f'  R{rn:02d}: ワイド盤 パラメータエラー')
+            continue
+
+        if not dumped:
+            print(f'\n  ▼ R{rn:02d} のワイド盤の生構造（軸馬をどこから読めるかの確認）')
+            _dump_wide_structure(rw.text)
+            dumped = True
+
+        pairs, src = parse_wide_book(rw.text)
+        n = len(fuku)
+        chk = check_books(fuku, pairs, n, how='mid')
+        resid = identity_residual(pairs, how='mid')
+        print(f'\n  R{rn:02d} {fmt_check(chk)}')
+        print(f'       軸馬の決め方: 見出し {src["header"]}表 / 推測 {src["inferred"]}表'
+              f'  / Σq−3 の残差 {resid:.2e}')
+
+        if not (chk['field_ok'] and chk['pairs_complete']
+                and chk['fuku_ok'] and chk['wide_ok']):
+            print('       → Step 1 未通過。このレースは Step 2 に進めない')
+            continue
+
+        line = {'race': rn, 'n': n}
+        for how in ('min', 'mid', 'max'):
+            res = implied_top3(fuku, pairs, how=how)
+            if res is None:
+                continue
+            line[how] = res
+            print(f'       [{how}] Σq={res["sum_q"]:.6f} Σp={res["sum_p"]:.6f}'
+                  f'  全変動 {res["total_variation"]:.4f}'
+                  f'  max|d| {res["max_abs_d"]:.4f}')
+        rows.append(line)
+
+    print('\n' + '-' * 88)
+    if not rows:
+        print('  Step 1 を通過したレースが0件。上のログで理由を確認すること。')
+        print('  ⚠ 「盤が壊れている」と「読み方が間違っている」は別物（CRITERIA Step 2）。')
+        return
+    print(f'  Step 1 通過 {len(rows)}レース。Step 2 の要約:')
+    for how in ('min', 'mid', 'max'):
+        tv = [r[how]['total_variation'] for r in rows if how in r]
+        mx = [r[how]['max_abs_d'] for r in rows if how in r]
+        if tv:
+            print(f'    [{how}] 全変動 平均 {sum(tv)/len(tv):.4f} 最大 {max(tv):.4f}'
+                  f'  / max|d| 平均 {sum(mx)/len(mx):.4f} 最大 {max(mx):.4f}')
+    print('  🔴 3通り（min/max/中点）で符号も桁も揃っていなければ、'
+          'それは範囲表記の扱いの産物であって市場の不整合ではない。')
+    print('  🔴 Step 3（実際の3着内との突合）を通すまで「情報がある」とは書かない。')
 
 
 def main():
@@ -288,6 +410,14 @@ def main():
                          for c in tr.find_all(['td', 'th'])]
                 if cells:
                     print(f'    {cells[:12]}')
+
+    # ------------------------------------------------------------------
+    # Step 1（盤の健全性）と Step 2（恒等式）を、全レースで実際に測る。
+    # dprime/CRITERIA.md に結果を見る前に登録した手順。到達しただけで
+    # 「使える」とは書かない。Step 3 以降（実際の3着内との突合）は
+    # 結果が出た後でないと測れないので、ここでは価格の話だけを扱う。
+    # ------------------------------------------------------------------
+    run_step12(sess, odds_base, date, r01)
 
     print('\n' + '=' * 88)
     print('■ 判定の目安')
