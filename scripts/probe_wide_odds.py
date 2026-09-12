@@ -91,7 +91,7 @@ from src.scraper.jra_scraper import (                  # noqa: E402
 )
 from src.betting.wide_book import (                    # noqa: E402
     parse_fukusho_book, parse_wide_book, check_books, implied_top3,
-    identity_residual, fmt_check, MIN_FIELD_SIZE,
+    identity_residual, fmt_check, field_size_from_wide, MIN_FIELD_SIZE,
 )
 
 SLEEP = 1.0
@@ -200,20 +200,29 @@ def _wide_cname_for(links):
     return None, None
 
 
-def _dump_wide_structure(html, n_tables=2, n_rows=4):
-    """ワイド盤の生の表構造を出す（軸馬をどこから読めるかを実データで確かめる）。
+def _dump_table_structure(html, n_tables=2, n_rows=4):
+    """表の生構造を出す（rowspan/colspan 込み）。
 
     ⚠ 構造を推測してパーサを書かない。North Star #6。
+    🔴 rowspan を出すのが要点。2026-09-13 は単複ページの枠に rowspan が
+       付いていて1枠の2頭目が落ち、どのレースも「8頭」に見えていた。
     """
     soup = BeautifulSoup(html, 'lxml')
     for ti, t in enumerate(soup.find_all('table')[:n_tables]):
         cap = t.find('caption')
-        print(f'    -- table[{ti}] caption={_n(cap.get_text(" ", strip=True)) if cap else None!r}')
+        print(f'    -- table[{ti}] caption='
+              f'{_n(cap.get_text(" ", strip=True)) if cap else None!r}')
         for tr in t.find_all('tr')[:n_rows]:
-            cells = [(c.name, _n(c.get_text(" ", strip=True)))
-                     for c in tr.find_all(['td', 'th'])]
+            cells = []
+            for c in tr.find_all(['td', 'th']):
+                span = ''
+                if c.get('rowspan'):
+                    span += f'@r{c.get("rowspan")}'
+                if c.get('colspan'):
+                    span += f'@c{c.get("colspan")}'
+                cells.append((c.name + span, _n(c.get_text(' ', strip=True))[:14]))
             if cells:
-                print(f'       {cells[:8]}')
+                print(f'       {cells[:10]}')
 
 
 def _n(s):
@@ -259,12 +268,17 @@ def run_step12(sess, odds_base, date, r01, max_races=12):
             continue
 
         if not dumped:
-            print(f'\n  ▼ R{rn:02d} のワイド盤の生構造（軸馬をどこから読めるかの確認）')
-            _dump_wide_structure(rw.text)
+            print(f'\n  ▼ R{rn:02d} の単複盤の生構造（rowspan の効き方の確認）')
+            _dump_table_structure(r.text, n_tables=1, n_rows=6)
+            print(f'  ▼ R{rn:02d} のワイド盤の生構造（軸馬をどこから読めるかの確認）')
+            _dump_table_structure(rw.text, n_tables=2, n_rows=4)
             dumped = True
 
         pairs, src = parse_wide_book(rw.text)
-        n = len(fuku)
+        # 🔴 頭数は複勝の件数ではなくワイド盤から取る。複勝のパースが
+        #    不完全だと「頭数も組数も少なく見える」ので壊れに気づけない
+        #    （2026-09-13 に実際にそうなった。全レースが8頭に見えていた）
+        n = field_size_from_wide(pairs)
         chk = check_books(fuku, pairs, n, how='mid')
         resid = identity_residual(pairs, how='mid')
         print(f'\n  R{rn:02d} {fmt_check(chk)}')
