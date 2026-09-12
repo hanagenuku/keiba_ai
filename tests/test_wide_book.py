@@ -19,8 +19,10 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from src.betting.wide_book import (
     parse_odds_cell, parse_fukusho_book, parse_wide_book, check_books,
-    implied_top3, identity_residual, book_sum, MIN_FIELD_SIZE,
+    implied_top3, identity_residual, book_sum, expand_table,
+    field_size_from_wide, MIN_FIELD_SIZE,
 )
+from bs4 import BeautifulSoup
 
 
 def _fuku_html(rows):
@@ -38,11 +40,13 @@ def _wide_html(pairs, n, with_caption):
     """軸馬ごとに1テーブル。各行は [相手の馬番, オッズ範囲] しか持たない実機の形。"""
     parts = []
     for a in range(1, n + 1):
-        rows = ''.join(f'<tr><td>{b}</td><td>{lo}-{hi}</td></tr>'
+        # 実機は [('th', 相手の馬番), ('td', '33.0 - 35.7')]
+        rows = ''.join(f'<tr><th>{b}</th><td>{lo} - {hi}</td></tr>'
                        for (x, b), (lo, hi) in sorted(pairs.items()) if x == a)
         if not rows:
             continue
-        cap = f'<caption>{a}番</caption>' if with_caption else ''
+        # 実機（2026-09-13 実測）は caption が馬番の数字だけ
+        cap = f'<caption>{a}</caption>' if with_caption else ''
         parts.append(f'<table>{cap}{rows}</table>')
     return '<html><body>' + ''.join(parts) + '</body></html>'
 
@@ -223,3 +227,75 @@ class TestProbeWiring:
                    encoding='utf-8').read()
         assert 'contents: read' in yml
         assert 'git add' not in yml and 'git push' not in yml
+
+
+# ---------------------------------------------------------------------------
+# 🔴 2026-09-13 の実機で判明した構造の回帰テスト
+#
+# 単複ページは **枠に rowspan** が付いている（1枠に2頭）。展開せずに
+# 列位置で引くと1枠の2頭目が丸ごと落ち、**どのレースでも必ず「8頭」**に
+# なる（枠の数＝8）。実際 R01〜R12 のすべてで 8 が返り、16頭立ても
+# 10頭立ても区別できていなかった。
+#
+# 見出しから列を引いていても、行側がずれていれば意味がない。
+# 「見出しで引いているから安全」という思い込みを潰したのがこの1件。
+# ---------------------------------------------------------------------------
+
+def _fuku_html_with_rowspan(n_frames=8, per_frame=2):
+    """実機と同じ形: 枠に rowspan、2頭目の行は先頭セルが無い。"""
+    trs = []
+    num = 0
+    for f in range(1, n_frames + 1):
+        for k in range(per_frame):
+            num += 1
+            fuku = f'{1.0 + num * 0.1:.1f}-{1.5 + num * 0.1:.1f}'
+            waku = f'<td rowspan="{per_frame}">{f}</td>' if k == 0 else ''
+            trs.append(f'<tr>{waku}<td>{num}</td><td>ウマ{num}</td>'
+                       f'<td>{2.0 + num}</td><td>{fuku}</td><td>牡3</td></tr>')
+    return ('<html><body><table>'
+            '<tr><th>枠</th><th>馬番</th><th>馬名</th>'
+            '<th>単勝</th><th>複勝(2着払い)</th><th>性齢</th></tr>'
+            + ''.join(trs) + '</table></body></html>')
+
+
+class TestRowspanRegression:
+    def test_second_horse_of_each_frame_is_not_dropped(self):
+        """修正前は 16頭中 8頭しか取れなかった（枠の数だけ）。"""
+        got = parse_fukusho_book(_fuku_html_with_rowspan(8, 2))
+        assert len(got) == 16, f'1枠2頭目が落ちている: {sorted(got)}'
+        assert sorted(got) == list(range(1, 17))
+
+    def test_expand_table_pads_short_rows(self):
+        soup = BeautifulSoup(_fuku_html_with_rowspan(2, 2), 'lxml')
+        grid = expand_table(soup.find('table'))
+        widths = {len(r) for r in grid if r}
+        assert widths == {6}, f'行ごとに列数が揃っていない: {widths}'
+        # 2頭目の行にも枠の値が複製されていること
+        assert grid[1][0] == '1' and grid[2][0] == '1'
+
+    def test_uneven_frames_are_handled(self):
+        # 10頭立て（枠によって1頭/2頭が混ざる形の簡略版）
+        got = parse_fukusho_book(_fuku_html_with_rowspan(5, 2))
+        assert len(got) == 10
+
+
+class TestFieldSizeComesFromWideBoard:
+    def test_field_size_from_wide(self):
+        assert field_size_from_wide(_flat_pairs(16)) == 16
+        assert field_size_from_wide(_flat_pairs(10)) == 10
+
+    def test_incomplete_fuku_is_reported_not_hidden(self):
+        """複勝が欠けていても頭数は縮まず、欠けとして見えること。
+
+        🔴 これが 2026-09-13 の実害。頭数を複勝の件数から取っていたため
+        「8頭立てで組が120」という矛盾した表示になり、ワイド側が壊れて
+        いるように見えていた。実際に壊れていたのは複勝のパースのほう。
+        """
+        n = 16
+        pairs = _flat_pairs(n)
+        fuku = {i: (2.0, 3.0) for i in range(1, 9)}   # 半分しか取れていない
+        c = check_books(fuku, pairs, field_size_from_wide(pairs))
+        assert c['n_horses'] == 16
+        assert c['pairs_complete'] is True          # ワイドは正常
+        assert c['fuku_complete'] is False          # 複勝が欠けている
+        assert c['n_fuku'] == 8
