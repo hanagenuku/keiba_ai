@@ -1338,7 +1338,7 @@
         "races": 11
       }
     ],
-    "workflow_run_at": "2026-09-12T02:53:47Z",
+    "workflow_run_at": "2026-09-12T07:32:36Z",
     "workflow_result": "success"
   },
   "model_kpi": {
@@ -2465,5 +2465,5 @@
       "top3_rate": 16.0
     }
   },
-  "generated_at": "2026-09-12 07:32"
+  "generated_at": "2026-09-12 09:13"
 }
