@@ -219,7 +219,7 @@ def predict_next_day(sess, hist_path, avg_bias, jst_now, force=False):
         if not market_odds_map.get(_rid):
             market_odds_map[_rid] = _om
     app_data = to_app_json(selected, races, avg_bias, jst_now,
-                           day_type='sunday', market_odds_map=market_odds_map,
+                           day_type='sunday', market_odds_map=market_odds_map, base_dir=ROOT,
                            odds_updated_count=n_odds, parse_failures=parse_failures)
     os.makedirs(os.path.dirname(APP_PATH), exist_ok=True)
     with open(APP_PATH, 'w', encoding='utf-8') as f:
@@ -318,7 +318,7 @@ def refresh_today(sess, hist_path, avg_bias, jst_now):
             market_odds_map[_rid] = _om
 
     app_data = to_app_json(selected, races, avg_bias, jst_now,
-                           day_type=day_type, market_odds_map=market_odds_map,
+                           day_type=day_type, market_odds_map=market_odds_map, base_dir=ROOT,
                            odds_updated_count=n_odds, parse_failures=parse_failures,
                            same_day=True)
 
