@@ -18,6 +18,7 @@ from src.utils.db import (init_db, get_db_path, get_history_db_path,
                            check_and_update_bets,
                            save_race_predictions, update_prediction_results,
                            settle_bet_simulation, backfill_bet_simulation)
+from src.utils.fmt import format_odds
 from src.betting.make_bets import init_betting, make_bets, log_bet_simulation
 from src.betting.ev_filter import select_quality_races, build_market_odds_from_races
 from src.features.engine import calc_all
@@ -199,7 +200,8 @@ def predict_next_day(sess, hist_path, avg_bias, jst_now, force=False):
 
         print(f'【{i}】{race["racecourse"]} R{race["race_num"]:02d} {race.get("race_name", "")}'
               f'  {race["distance"]}m{race["surface"]}  {race.get("num_horses", 0)}頭')
-        print(f'  ◎ #{top1["num"]} {top1["name"]}  {top1.get("win_odds", 0):.1f}倍  スコア:{top1["total"]:.2f}')
+        print(f'  ◎ #{top1["num"]} {top1["name"]}  {format_odds(top1.get("win_odds"))}'
+              f'  スコア:{top1["total"]:.2f}')
         for b in bets:
             print(f'  {b["type"]} #{b["nums"][0]} ¥{b["amount"]:,}  EV:{b["ev"]:.2f}')
         print(f'  投資: ¥{invest:,}')
