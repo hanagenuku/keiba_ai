@@ -56,6 +56,42 @@ def parse_odds_cell(text):
     return None
 
 
+def expand_table(table):
+    """rowspan / colspan を展開して、行ごとに同じ列数のセル文字列を返す。
+
+    🔴 2026-09-13 の実測でここが決定打だった。単複ページは **枠に rowspan** が
+    付いており（1枠に2頭）、2頭目の行は先頭セルが1つ足りない。列位置を
+    そのまま使うと**2頭目が全部落ちて、どのレースでも必ず「8頭」になる**
+    （枠の数＝8）。実際 R01〜R12 のすべてで len(fuku)==8 になり、
+    16頭立てでも 10頭立てでも 8 が返っていた。
+
+    見出しから列を引いていても、行側がずれていれば意味がない。
+    「見出しで引いているから安全」という思い込みを潰した形。
+    """
+    grid = {}
+    rows = table.find_all('tr')
+    for r, tr in enumerate(rows):
+        c = 0
+        for cell in tr.find_all(['td', 'th']):
+            while (r, c) in grid:
+                c += 1
+            try:
+                rs = max(1, int(cell.get('rowspan', 1)))
+                cs = max(1, int(cell.get('colspan', 1)))
+            except (TypeError, ValueError):
+                rs = cs = 1
+            txt = _norm(cell.get_text(' '))
+            for dr in range(rs):
+                for dc in range(cs):
+                    grid[(r + dr, c + dc)] = txt
+            c += cs
+    out = []
+    for r in range(len(rows)):
+        cols = [c for (rr, c) in grid if rr == r]
+        out.append([grid.get((r, c), '') for c in range(max(cols) + 1)] if cols else [])
+    return out
+
+
 def parse_fukusho_book(html):
     """単複ページ（pw151…）から複勝オッズを読む。
 
@@ -63,29 +99,34 @@ def parse_fukusho_book(html):
     列位置を決め打ちせず**見出しから引く**（2026-08-03③で結果ページの列が
     まるごとズレて1ヶ月気づかなかった事故があるため）。
 
+    🔴 かつ **rowspan を展開してから**引く。枠に rowspan が付いているので、
+       展開しないと1枠の2頭目が丸ごと落ちる（2026-09-13 に実測・上記参照）。
+
     Returns: {馬番: (min, max)}  取消馬は入らない
     """
     soup = BeautifulSoup(html, 'lxml')
     out = {}
     for table in soup.find_all('table'):
-        heads = [_norm(th.get_text(' ')) for th in table.find_all('th')]
+        grid = expand_table(table)
         i_num = i_fuku = None
-        for i, h in enumerate(heads):
-            if i_num is None and '馬番' in h:
-                i_num = i
-            if i_fuku is None and '複勝' in h:
-                i_fuku = i
+        for row in grid:
+            for i, cell in enumerate(row):
+                if i_num is None and '馬番' in cell:
+                    i_num = i
+                if i_fuku is None and '複勝' in cell:
+                    i_fuku = i
+            if i_num is not None and i_fuku is not None:
+                break
         if i_num is None or i_fuku is None:
             continue
-        for tr in table.find_all('tr'):
-            cells = [_norm(c.get_text(' ')) for c in tr.find_all(['td', 'th'])]
-            if len(cells) <= max(i_num, i_fuku):
+        for row in grid:
+            if len(row) <= max(i_num, i_fuku):
                 continue
-            if not _NUM.match(cells[i_num]):
+            if not _NUM.match(row[i_num]):
                 continue
-            o = parse_odds_cell(cells[i_fuku])
+            o = parse_odds_cell(row[i_fuku])
             if o:
-                out[int(cells[i_num])] = o
+                out[int(row[i_num])] = o
     return out
 
 
@@ -122,17 +163,18 @@ def parse_wide_book(html):
         if not rows:
             continue
 
-        axis = None
+        # 🔴 軸馬は caption だけから読む。実機（2026-09-13）は
+        #    <caption>1</caption> と馬番の数字だけが入っている。
+        #    行の <th> は「相手の馬番」なので、そこを軸馬と読むと全部ずれる。
         cap = table.find('caption')
         blob = _norm(cap.get_text(' ')) if cap else ''
-        if not blob:
-            th = table.find('th')
-            blob = _norm(th.get_text(' ')) if th else ''
-        m = re.search(r'(\d{1,2})', blob)
-        if m and blob and not _RANGE.match(blob):
+        m = re.fullmatch(r'\s*(\d{1,2})\s*番?\s*', blob)
+        if m:
             axis = int(m.group(1))
             src['header'] += 1
         else:
+            # caption が無い形に変わった時の保険。並び順ではなく
+            # 「その表の最小の相手番号 − 1」で補い、推測したことを必ず残す。
             axis = min(n for n, _ in rows) - 1
             src['inferred'] += 1
         if axis <= 0:
@@ -154,6 +196,22 @@ def book_sum(book, how='mid'):
     return sum(1.0 / _pick(v, how) for v in book.values() if _pick(v, how) > 0)
 
 
+def field_size_from_wide(wide_pairs):
+    """ワイド盤に出てくる馬番の種類数＝出走頭数。
+
+    🔴 複勝側の件数から頭数を決めてはいけない。複勝のパースが不完全だと
+    「頭数も組数も少なく見える」ので、壊れていることに気づけなくなる
+    （2026-09-13 に実際にそうなった。どのレースも8頭に見えていた）。
+    ワイド盤は C(n,2) 組が揃っているかを Σ で独立に検算できるので、
+    こちら側を基準にする。
+    """
+    nums = set()
+    for a, b in wide_pairs:
+        nums.add(a)
+        nums.add(b)
+    return len(nums)
+
+
 def check_books(fuku, wide_pairs, n_horses, how='mid'):
     """Step 1: 盤そのものが読めているか。モデルも控除率の推定も使わない。
 
@@ -171,6 +229,7 @@ def check_books(fuku, wide_pairs, n_horses, how='mid'):
         'n_pairs': len(wide_pairs),
         'want_pairs': want_pairs,
         'pairs_complete': len(wide_pairs) == want_pairs,
+        'fuku_complete': len(fuku) == n_horses,
         'sum_fuku': sf, 'exp_fuku': exp_f,
         'sum_wide': sw, 'exp_wide': exp_w,
         'fuku_ok': abs(sf - exp_f) <= exp_f * BOOK_TOLERANCE,
@@ -228,5 +287,6 @@ def fmt_check(c):
     return (f"[{c['how']}] {c['n_horses']}頭 "
             f"{mark(c['field_ok'])}8頭以上 "
             f"{mark(c['pairs_complete'])}組 {c['n_pairs']}/{c['want_pairs']} "
+            f"{mark(c['fuku_complete'])}複勝 {c['n_fuku']}/{c['n_horses']}頭 "
             f"{mark(c['fuku_ok'])}Σ複勝 {c['sum_fuku']:.3f}(理論{c['exp_fuku']:.3f}) "
             f"{mark(c['wide_ok'])}Σワイド {c['sum_wide']:.3f}(理論{c['exp_wide']:.3f})")
