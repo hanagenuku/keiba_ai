@@ -3019,8 +3019,32 @@ def calc_all(race, bias_data=None):
         h['f_relative_score'] = round((h['total'] - min_score) / score_range * 10, 2)
 
     RELATIVE_WEIGHT = 0.10
+    # 🔴 pace_bonus は 2026-09-13 に既定OFF（PACE_BONUS=1 で復帰）。
+    #
+    #   pace_bonus = (自馬のf_pace − レース平均) × (P(スロー) − P(ハイ)) × 0.5
+    #
+    #   レース内相対の混合は単調変換なので順位を動かさない。**順位を動かして
+    #   いたのは pace_bonus だけ**で、19.1%の馬・最大12位ぶん動かしていた。
+    #   この手書きの層は導入以来一度も検証されておらず、2026-08-24 E-1 では
+    #   「CSVに f_front_adv/f_back_adv が無く再現できない」として検証対象からも
+    #   外れていた。2026-09-13 に 32,904頭 / 2,388レース（train_end 2025-06-30・
+    #   2026年は完全OOS）で測った結果:
+    #
+    #     3着内AUC  P0 補正なし 0.7685 → P1 本番 0.7665  （−0.0019・3四半期とも負）
+    #               対照 シャッフル 0.7648 / 対照 符号反転 0.7631
+    #     係数掃引  探索期(1-4月)で選ぶ最良 α* = 0。α に対して単調に悪化
+    #     軸の複勝  P0 82.9% vs P1 82.8%（入れ替わるのは2,388中23レースだけ）
+    #     押し上げ  100%超のセルは 0/6。10+人気では**符号反転の対照が96.9%で
+    #               本番の68.3%を上回る**（帯によって符号が逆＝一貫しない）
+    #
+    #   ✅ 向き自体は雑音ではない（P1 > シャッフル > 符号反転）。素の f_pace は
+    #      人気を揃えても単調に有利（1-3人気 +1.1pt … 10+人気 +14.3pt）。
+    #      🔴 ただし最良でも複勝回収 82.7% で控除率を超えない。
+    #      2026-08-24「先行広め 80.8%」の再確認であって新しい発見ではない。
+    #   詳細は pace/RESULTS.md。
+    _pace_on = os.environ.get('PACE_BONUS', '0') == '1'
     for h in out:
-        pace_bonus = (h['f_front_adv'] + h['f_back_adv']) * 0.5
+        pace_bonus = (h['f_front_adv'] + h['f_back_adv']) * 0.5 if _pace_on else 0.0
         rel = h['f_relative_score']
         h['total'] = round(
             h['total'] * (1 - RELATIVE_WEIGHT) + rel * RELATIVE_WEIGHT + pace_bonus, 2
