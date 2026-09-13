@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-13T09:30:09.579363+09:00",
+  "generated_at": "2026-09-13T16:35:58.793370+09:00",
   "date": "9月13日(日)",
   "type": "sunday",
   "venues": [
@@ -13,7 +13,7 @@
   "recommended_count": 6,
   "message": null,
   "stats": {
-    "invest": 8700,
+    "invest": 10700,
     "rec": 6
   },
   "races": {
@@ -35572,7 +35572,7 @@
     ]
   },
   "data_quality": {
-    "odds_coverage": 1.0,
+    "odds_coverage": 0.964,
     "parse_failures": []
   }
 }
