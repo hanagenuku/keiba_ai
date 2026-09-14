@@ -1,0 +1,328 @@
+{
+ "version": 1,
+ "_note": "ユーザー提供のコース物理データ。すべての数値に src を付けてある。**特徴量として使ってよいのは src が official / stated のものだけ**。「長い」「比較的長い」等の記述しかない距離は数値を入れていない（欠測のまま）。",
+ "_elevation_warning": "course_elevation_range_m（コース全体）と course_distance_profiles.json の hill.elevation_diff_m（直線／ゴール前の坂）は**別の量**。混ぜないこと。例: 中山芝は全体5.3m / ゴール前坂2.2m。",
+ "_src_levels": {
+  "official": "JRA公式が距離別に明記している値",
+  "stated": "ユーザー提供資料に「約○m」として記載（公式明記の確認は取れていない）",
+  "web": "2026-07 のweb検索由来（要検証・低〜中信頼度）",
+  "na": "該当なし（直線コース等、概念が存在しない）"
+ },
+ "courses": {
+  "東京_芝": {
+   "direction": "左",
+   "final_straight_m": 525.9,
+   "course_elevation_range_m": 2.7,
+   "lap_m": null,
+   "src": "stated"
+  },
+  "東京_ダート": {
+   "direction": "左",
+   "final_straight_m": 501.6,
+   "course_elevation_range_m": 2.5,
+   "lap_m": 1899,
+   "src": "stated"
+  },
+  "中山_芝": {
+   "direction": "右",
+   "final_straight_m": 310.0,
+   "course_elevation_range_m": 5.3,
+   "lap_m": null,
+   "src": "stated"
+  },
+  "中山_ダート": {
+   "direction": "右",
+   "final_straight_m": 308.0,
+   "course_elevation_range_m": 4.5,
+   "lap_m": null,
+   "src": "stated"
+  },
+  "京都_芝_内回り": {
+   "direction": "右",
+   "final_straight_m": 328.4,
+   "course_elevation_range_m": 3.1,
+   "lap_m": null,
+   "src": "stated"
+  },
+  "京都_芝_外回り": {
+   "direction": "右",
+   "final_straight_m": 403.7,
+   "course_elevation_range_m": 4.3,
+   "lap_m": null,
+   "src": "stated"
+  },
+  "京都_ダート": {
+   "direction": "右",
+   "final_straight_m": null,
+   "course_elevation_range_m": 3.0,
+   "lap_m": null,
+   "src": "stated"
+  },
+  "阪神_芝_内回り": {
+   "direction": "右",
+   "final_straight_m": 356.5,
+   "course_elevation_range_m": 1.9,
+   "lap_m": 1689,
+   "src": "stated"
+  },
+  "阪神_芝_外回り": {
+   "direction": "右",
+   "final_straight_m": 473.6,
+   "course_elevation_range_m": 2.4,
+   "lap_m": 2089,
+   "src": "stated"
+  },
+  "阪神_ダート": {
+   "direction": "右",
+   "final_straight_m": 352.7,
+   "course_elevation_range_m": 1.6,
+   "lap_m": null,
+   "src": "stated"
+  },
+  "中京_芝": {
+   "direction": "左",
+   "final_straight_m": 412.5,
+   "course_elevation_range_m": 3.5,
+   "lap_m": 1705.9,
+   "src": "stated"
+  },
+  "中京_ダート": {
+   "direction": "左",
+   "final_straight_m": 410.7,
+   "course_elevation_range_m": 3.4,
+   "lap_m": 1530,
+   "src": "stated"
+  },
+  "新潟_芝_外回り": {
+   "direction": "左",
+   "final_straight_m": 658.7,
+   "course_elevation_range_m": 2.2,
+   "lap_m": 2223,
+   "src": "stated"
+  },
+  "新潟_芝_内回り": {
+   "direction": "左",
+   "final_straight_m": 358.7,
+   "course_elevation_range_m": 0.8,
+   "lap_m": 1623,
+   "src": "stated"
+  },
+  "新潟_ダート": {
+   "direction": "左",
+   "final_straight_m": 353.9,
+   "course_elevation_range_m": 0.6,
+   "lap_m": 1472.5,
+   "src": "stated"
+  },
+  "福島_芝": {
+   "direction": "右",
+   "final_straight_m": 292.0,
+   "course_elevation_range_m": 1.9,
+   "lap_m": 1600,
+   "src": "stated"
+  },
+  "福島_ダート": {
+   "direction": "右",
+   "final_straight_m": 295.7,
+   "course_elevation_range_m": 2.1,
+   "lap_m": 1444.6,
+   "src": "stated"
+  },
+  "小倉_芝": {
+   "direction": "右",
+   "final_straight_m": 293.0,
+   "course_elevation_range_m": 3.0,
+   "lap_m": 1615.1,
+   "src": "stated"
+  },
+  "小倉_ダート": {
+   "direction": "右",
+   "final_straight_m": 291.3,
+   "course_elevation_range_m": 2.9,
+   "lap_m": 1445.4,
+   "src": "stated"
+  },
+  "札幌_芝": {
+   "direction": "右",
+   "final_straight_m": 266.1,
+   "course_elevation_range_m": 0.7,
+   "lap_m": 1640.9,
+   "src": "stated"
+  },
+  "札幌_ダート": {
+   "direction": "右",
+   "final_straight_m": 264.3,
+   "course_elevation_range_m": 0.9,
+   "lap_m": 1487,
+   "src": "stated"
+  },
+  "函館_芝": {
+   "direction": "右",
+   "final_straight_m": 262.1,
+   "course_elevation_range_m": 3.5,
+   "lap_m": 1626.6,
+   "src": "stated"
+  },
+  "函館_ダート": {
+   "direction": "右",
+   "final_straight_m": 260.3,
+   "course_elevation_range_m": 3.5,
+   "lap_m": 1475.8,
+   "src": "stated"
+  }
+ },
+ "distances": {
+  "中山_芝_1600": {
+   "loop": "外",
+   "first_corner": 2,
+   "src": "official",
+   "start_to_first_corner_m": 240.0,
+   "note": "JRA公式「240mほど」",
+   "web_value_m": 240.0,
+   "web_delta_m": 0.0
+  },
+  "中山_芝_2000": {
+   "loop": "内",
+   "first_corner": 1,
+   "src": "official",
+   "start_to_first_corner_m": 400.0,
+   "note": "JRA公式「約400m」"
+  },
+  "京都_芝_2000": {
+   "loop": "内",
+   "first_corner": 1,
+   "src": "official",
+   "start_to_first_corner_m": 300.0,
+   "note": "JRA公式「1角まで約300m」"
+  },
+  "小倉_芝_1800": {
+   "loop": null,
+   "first_corner": 1,
+   "src": "official",
+   "start_to_first_corner_m": 270.0,
+   "note": "JRA公式・小倉大賞典解説「約270m」",
+   "web_value_m": 272.0,
+   "web_delta_m": 2.0
+  },
+  "函館_芝_2000": {
+   "loop": null,
+   "first_corner": 1,
+   "src": "official",
+   "start_to_first_corner_m": 470.0,
+   "note": "JRA公式「1角まで約470m」"
+  },
+  "東京_芝_1600": {
+   "loop": null,
+   "first_corner": 3,
+   "src": "stated",
+   "start_to_first_corner_m": 550.0,
+   "note": "「約550m前後」"
+  },
+  "東京_芝_2000": {
+   "loop": null,
+   "first_corner": 2,
+   "src": "stated",
+   "start_to_first_corner_m": 100.0,
+   "note": "「約100m前後の短い区間」"
+  },
+  "阪神_芝_1200": {
+   "loop": "内",
+   "first_corner": 3,
+   "src": "stated",
+   "start_to_first_corner_m": 243.0,
+   "web_value_m": 243.0,
+   "web_delta_m": 0.0
+  },
+  "阪神_芝_1400": {
+   "loop": "内",
+   "first_corner": 3,
+   "src": "stated",
+   "start_to_first_corner_m": 443.0
+  },
+  "阪神_芝_1800": {
+   "loop": "外",
+   "first_corner": 3,
+   "src": "stated",
+   "start_to_first_corner_m": 600.0,
+   "note": "「3角まで約600m」"
+  },
+  "阪神_芝_2000": {
+   "loop": "内",
+   "first_corner": 1,
+   "src": "stated",
+   "start_to_first_corner_m": 325.0,
+   "note": "「1角まで約325m」"
+  },
+  "新潟_芝_1600": {
+   "loop": "外",
+   "first_corner": 3,
+   "src": "stated",
+   "start_to_first_corner_m": 550.0,
+   "note": "「3角まで約550m」"
+  },
+  "福島_芝_1800": {
+   "loop": null,
+   "first_corner": 1,
+   "src": "stated",
+   "start_to_first_corner_m": 300.0,
+   "note": "「1角まで約300m」"
+  },
+  "福島_芝_2000": {
+   "loop": null,
+   "first_corner": 1,
+   "src": "stated",
+   "start_to_first_corner_m": 500.0,
+   "note": "「1角まで約500m」"
+  },
+  "小倉_芝_2000": {
+   "loop": null,
+   "first_corner": 1,
+   "src": "stated",
+   "start_to_first_corner_m": 470.0,
+   "note": "「1角まで約470m」",
+   "web_value_m": 472.0,
+   "web_delta_m": 2.0
+  },
+  "札幌_芝_1800": {
+   "loop": null,
+   "first_corner": 1,
+   "src": "stated",
+   "start_to_first_corner_m": 180.0,
+   "note": "「1角まで約180m」"
+  },
+  "札幌_芝_2000": {
+   "loop": null,
+   "first_corner": 1,
+   "src": "stated",
+   "start_to_first_corner_m": 380.0,
+   "note": "「1角まで約380m」"
+  },
+  "函館_芝_1800": {
+   "loop": null,
+   "first_corner": 1,
+   "src": "stated",
+   "start_to_first_corner_m": 276.0,
+   "note": "「約276m前後」"
+  },
+  "新潟_芝_1000": {
+   "loop": "直線",
+   "first_corner": null,
+   "src": "na",
+   "note": "JRA唯一の直線芝1000m。コーナーなし"
+  }
+ },
+ "special": {
+  "中京_芝_1600": {
+   "start_to_mainline_merge_m": 200,
+   "src": "official",
+   "note": "🔴 これは「本線合流まで」であって1角までではない。別列。"
+  },
+  "阪神_芝_1600": {
+   "start_to_first_corner_min_m": 500,
+   "loop": "外",
+   "first_corner": 3,
+   "src": "stated",
+   "note": "「3角まで500m以上」＝下限のみ。点推定にしない"
+  }
+ }
+}
