@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "_note": "style_advantage は history.db の実データから generate_style_advantage.py で生成する（デフォルト値は短直線=逃先有利、長直線=差追有利の傾向に基づく暫定値）",
   "courses": {
     "東京_芝": {
@@ -10,9 +10,9 @@
       "uphill_severity": "medium",
       "course_type": "spacious",
       "style_advantage": {
-        "escape": 0.20,
-        "front":  0.30,
-        "stalk":  0.35,
+        "escape": 0.2,
+        "front": 0.3,
+        "stalk": 0.35,
         "closer": 0.15
       }
     },
@@ -25,8 +25,8 @@
       "course_type": "spacious",
       "style_advantage": {
         "escape": 0.22,
-        "front":  0.35,
-        "stalk":  0.30,
+        "front": 0.35,
+        "stalk": 0.3,
         "closer": 0.13
       }
     },
@@ -39,8 +39,8 @@
       "course_type": "tight",
       "style_advantage": {
         "escape": 0.38,
-        "front":  0.42,
-        "stalk":  0.16,
+        "front": 0.42,
+        "stalk": 0.16,
         "closer": 0.04
       }
     },
@@ -52,9 +52,9 @@
       "uphill_severity": "steep",
       "course_type": "tight",
       "style_advantage": {
-        "escape": 0.40,
-        "front":  0.38,
-        "stalk":  0.18,
+        "escape": 0.4,
+        "front": 0.38,
+        "stalk": 0.18,
         "closer": 0.04
       }
     },
@@ -67,9 +67,9 @@
       "course_type": "spacious",
       "style_advantage": {
         "escape": 0.25,
-        "front":  0.35,
-        "stalk":  0.30,
-        "closer": 0.10
+        "front": 0.35,
+        "stalk": 0.3,
+        "closer": 0.1
       }
     },
     "阪神_ダート": {
@@ -81,8 +81,8 @@
       "course_type": "standard",
       "style_advantage": {
         "escape": 0.32,
-        "front":  0.38,
-        "stalk":  0.24,
+        "front": 0.38,
+        "stalk": 0.24,
         "closer": 0.06
       }
     },
@@ -95,8 +95,8 @@
       "course_type": "spacious",
       "style_advantage": {
         "escape": 0.28,
-        "front":  0.35,
-        "stalk":  0.28,
+        "front": 0.35,
+        "stalk": 0.28,
         "closer": 0.09
       }
     },
@@ -109,8 +109,8 @@
       "course_type": "standard",
       "style_advantage": {
         "escape": 0.36,
-        "front":  0.38,
-        "stalk":  0.20,
+        "front": 0.38,
+        "stalk": 0.2,
         "closer": 0.06
       }
     },
@@ -123,8 +123,8 @@
       "course_type": "spacious",
       "style_advantage": {
         "escape": 0.18,
-        "front":  0.27,
-        "stalk":  0.38,
+        "front": 0.27,
+        "stalk": 0.38,
         "closer": 0.17
       }
     },
@@ -137,9 +137,9 @@
       "course_type": "standard",
       "style_advantage": {
         "escape": 0.28,
-        "front":  0.35,
-        "stalk":  0.27,
-        "closer": 0.10
+        "front": 0.35,
+        "stalk": 0.27,
+        "closer": 0.1
       }
     },
     "中京_芝": {
@@ -151,9 +151,9 @@
       "course_type": "standard",
       "style_advantage": {
         "escape": 0.28,
-        "front":  0.32,
-        "stalk":  0.30,
-        "closer": 0.10
+        "front": 0.32,
+        "stalk": 0.3,
+        "closer": 0.1
       }
     },
     "中京_ダート": {
@@ -164,9 +164,9 @@
       "uphill_severity": "medium",
       "course_type": "standard",
       "style_advantage": {
-        "escape": 0.30,
-        "front":  0.35,
-        "stalk":  0.27,
+        "escape": 0.3,
+        "front": 0.35,
+        "stalk": 0.27,
         "closer": 0.08
       }
     },
@@ -179,8 +179,8 @@
       "course_type": "flat_tight",
       "style_advantage": {
         "escape": 0.35,
-        "front":  0.42,
-        "stalk":  0.18,
+        "front": 0.42,
+        "stalk": 0.18,
         "closer": 0.05
       }
     },
@@ -193,8 +193,8 @@
       "course_type": "flat_tight",
       "style_advantage": {
         "escape": 0.38,
-        "front":  0.40,
-        "stalk":  0.17,
+        "front": 0.4,
+        "stalk": 0.17,
         "closer": 0.05
       }
     },
@@ -207,8 +207,8 @@
       "course_type": "flat_tight",
       "style_advantage": {
         "escape": 0.36,
-        "front":  0.47,
-        "stalk":  0.16,
+        "front": 0.47,
+        "stalk": 0.16,
         "closer": 0.02
       }
     },
@@ -221,8 +221,8 @@
       "course_type": "flat_tight",
       "style_advantage": {
         "escape": 0.38,
-        "front":  0.44,
-        "stalk":  0.14,
+        "front": 0.44,
+        "stalk": 0.14,
         "closer": 0.04
       }
     },
@@ -235,8 +235,8 @@
       "course_type": "tight",
       "style_advantage": {
         "escape": 0.38,
-        "front":  0.40,
-        "stalk":  0.18,
+        "front": 0.4,
+        "stalk": 0.18,
         "closer": 0.04
       }
     },
@@ -249,8 +249,8 @@
       "course_type": "tight",
       "style_advantage": {
         "escape": 0.46,
-        "front":  0.31,
-        "stalk":  0.20,
+        "front": 0.31,
+        "stalk": 0.2,
         "closer": 0.05
       }
     },
@@ -263,8 +263,8 @@
       "course_type": "flat_tight",
       "style_advantage": {
         "escape": 0.38,
-        "front":  0.42,
-        "stalk":  0.16,
+        "front": 0.42,
+        "stalk": 0.16,
         "closer": 0.04
       }
     },
@@ -276,11 +276,128 @@
       "uphill_severity": "none",
       "course_type": "flat_tight",
       "style_advantage": {
-        "escape": 0.40,
-        "front":  0.40,
-        "stalk":  0.16,
+        "escape": 0.4,
+        "front": 0.4,
+        "stalk": 0.16,
         "closer": 0.04
       }
+    },
+    "京都_芝_内回り": {
+      "straight_length": 328.4,
+      "straight_class": "short",
+      "turn": "right",
+      "has_uphill": false,
+      "uphill_severity": "none",
+      "course_type": "spacious",
+      "style_advantage": {
+        "escape": 0.28,
+        "front": 0.35,
+        "stalk": 0.28,
+        "closer": 0.09
+      },
+      "course_elevation_range_m": 3.1,
+      "_loop": "内回り",
+      "_note": "#255 のコース物理データで内外回りを分離。style_advantage は基底から引き継ぎ（未検証・#250参照）"
+    },
+    "京都_芝_外回り": {
+      "straight_length": 403.7,
+      "straight_class": "medium",
+      "turn": "right",
+      "has_uphill": false,
+      "uphill_severity": "none",
+      "course_type": "spacious",
+      "style_advantage": {
+        "escape": 0.28,
+        "front": 0.35,
+        "stalk": 0.28,
+        "closer": 0.09
+      },
+      "course_elevation_range_m": 4.3,
+      "_loop": "外回り",
+      "_note": "#255 のコース物理データで内外回りを分離。style_advantage は基底から引き継ぎ（未検証・#250参照）"
+    },
+    "阪神_芝_内回り": {
+      "straight_length": 356.5,
+      "straight_class": "medium",
+      "turn": "right",
+      "has_uphill": true,
+      "uphill_severity": "steep",
+      "course_type": "spacious",
+      "style_advantage": {
+        "escape": 0.25,
+        "front": 0.35,
+        "stalk": 0.3,
+        "closer": 0.1
+      },
+      "course_elevation_range_m": 1.9,
+      "_loop": "内回り",
+      "_note": "#255 のコース物理データで内外回りを分離。style_advantage は基底から引き継ぎ（未検証・#250参照）"
+    },
+    "阪神_芝_外回り": {
+      "straight_length": 473.6,
+      "straight_class": "medium",
+      "turn": "right",
+      "has_uphill": true,
+      "uphill_severity": "steep",
+      "course_type": "spacious",
+      "style_advantage": {
+        "escape": 0.25,
+        "front": 0.35,
+        "stalk": 0.3,
+        "closer": 0.1
+      },
+      "course_elevation_range_m": 2.4,
+      "_loop": "外回り",
+      "_note": "#255 のコース物理データで内外回りを分離。style_advantage は基底から引き継ぎ（未検証・#250参照）"
+    },
+    "新潟_芝_内回り": {
+      "straight_length": 358.7,
+      "straight_class": "medium",
+      "turn": "left",
+      "has_uphill": false,
+      "uphill_severity": "none",
+      "course_type": "spacious",
+      "style_advantage": {
+        "escape": 0.18,
+        "front": 0.27,
+        "stalk": 0.38,
+        "closer": 0.17
+      },
+      "course_elevation_range_m": 0.8,
+      "_loop": "内回り",
+      "_note": "#255 のコース物理データで内外回りを分離。style_advantage は基底から引き継ぎ（未検証・#250参照）"
+    },
+    "新潟_芝_外回り": {
+      "straight_length": 658.7,
+      "straight_class": "very_long",
+      "turn": "left",
+      "has_uphill": false,
+      "uphill_severity": "none",
+      "course_type": "spacious",
+      "style_advantage": {
+        "escape": 0.18,
+        "front": 0.27,
+        "stalk": 0.38,
+        "closer": 0.17
+      },
+      "course_elevation_range_m": 2.2,
+      "_loop": "外回り",
+      "_note": "#255 のコース物理データで内外回りを分離。style_advantage は基底から引き継ぎ（未検証・#250参照）"
+    },
+    "新潟_芝_直線": {
+      "straight_length": 1000.0,
+      "straight_class": "very_long",
+      "turn": "なし",
+      "has_uphill": false,
+      "uphill_severity": "none",
+      "course_type": "spacious",
+      "style_advantage": {
+        "escape": 0.18,
+        "front": 0.27,
+        "stalk": 0.38,
+        "closer": 0.17
+      },
+      "_note": "JRA唯一の直線1000m。コーナーが無く、レース全体が直線"
     }
   },
   "straight_class_values": {
@@ -288,5 +405,6 @@
     "long": 3,
     "medium": 2,
     "short": 1
-  }
+  },
+  "_loop_note": "内回り/外回りを分離した（#255）。get_course_profile に distance を渡すと loop_by_distance で内外が確定する距離だけ専用キーに解決する。'両'（同じ距離で内外どちらも使う）は解決せず基底キーのまま。"
 }
