@@ -17,6 +17,11 @@ _XGB_RESIDUAL       = False   # True なら残差学習モデル（base_margin �
 _CALIBRATOR         = None
 _XGB_CALIBRATOR     = None
 _PACE_MODEL         = None
+# 展開予想（前半600m の実数予測）。2026-09-15 に旧19特徴量モデルを置き換えた。
+# 旧モデルは学習時に「そのレースの実際の脚質・実測agari3f」を、推論時に
+# 「過去走からの推定・定数36.0」を渡されていた（一致率 39.8%）。
+# 新モデルは**レース条件だけ**を入力にするのでこの違反が起こせない。
+_RACE_SHAPE_MODEL   = None
 # Plackett-Luce レーティング。学習も推論も **この1本を読む**ことで
 # パリティを担保する（書き込み側だけが違う。詳細は pl_rating.py の冒頭）。
 #   推論: init_engine が data/pl_rating.pkl をロード
@@ -253,6 +258,7 @@ def init_engine(base_dir,
                 horse_venue_dist_dict=None):
     """エンジンのグローバル変数を設定する。ノートブックのセル4で呼ぶ"""
     global _XGB_FUKUSHO_MODEL, _XGB_FEATURE_COLS, _XGB_RESIDUAL, _CALIBRATOR, _XGB_CALIBRATOR, _PACE_MODEL
+    global _RACE_SHAPE_MODEL
     global _JOCKEY_PACE_STATS, _PL_RATINGS
     global _W, _horse_dist_dict, _horse_course_dict, _horse_venue_dist_dict, _post_zone_bias
     global _jockey_dict, _trainer_dict, _hist_db_path, _SPEED_INDEX_CALC, _MEMBER_LEVEL_CACHE
@@ -345,6 +351,21 @@ def init_engine(base_dir,
     elif os.path.exists(f'{base_dir}/data/pace_model.pkl'):
         with open(f'{base_dir}/data/pace_model.pkl', 'rb') as f:
             _PACE_MODEL = pickle.load(f)
+
+    # 展開予想モデル（前半600m の実数予測 + 各馬の P(先頭)）。
+    # 無ければ旧 pace_model.pkl → ルールベース の順にフォールバックする。
+    _RACE_SHAPE_MODEL = None
+    _rs_path = os.path.join(base_dir, 'data', 'race_shape_model.pkl')
+    if os.path.exists(_rs_path):
+        try:
+            with open(_rs_path, 'rb') as f:
+                _RACE_SHAPE_MODEL = pickle.load(f)
+            _rs_meta = _RACE_SHAPE_MODEL.get('meta', {})
+            print(f"  展開予想: 前半600m RMSE {_rs_meta.get('rmse')} / "
+                  f"P(先頭) AUC {_RACE_SHAPE_MODEL.get('lead', {}).get('auc')}")
+        except Exception as _e_rs:
+            print(f'  ⚠ race_shape_model のロード失敗: {_e_rs}')
+            _RACE_SHAPE_MODEL = None
 
     jps_path = os.path.join(base_dir, 'data', 'jockey_pace_stats.json')
     if os.path.exists(jps_path):
@@ -1261,11 +1282,59 @@ def _build_pace_features_for_inference(race):
     }
 
 
+def _race_shape_pace_distribution(race):
+    """展開予想モデル（前半600m の実数予測）から high/mid/slow を出す。
+
+    🔑 入力は**レース条件だけ**（距離・表面・クラス・頭数）。出走馬の脚質や
+       agari3f は一切見ない。旧モデルはそこで学習/推論パリティを壊していた
+       （学習=そのレースの実際の脚質 / 推論=過去走からの推定・一致率 39.8%）。
+    ⚠ 出走馬の構成（P(先頭)の分布・過去の通過位置・過去の上がり）は
+       足すと2窓とも悪化したので入れていない（tenkai/RESULTS.md）。
+    """
+    if _RACE_SHAPE_MODEL is None:
+        return None
+    try:
+        from src.features.race_shape import (
+            pace_model_inputs, pace_probs_from_seconds, dist_zone)
+        import pandas as _pd
+        model = _RACE_SHAPE_MODEL.get('pace_model')
+        cols = _RACE_SHAPE_MODEL.get('pace_cols')
+        th_all = _RACE_SHAPE_MODEL.get('thresholds') or {}
+        if model is None or not cols:
+            return None
+        dist = race.get('distance') or 1600
+        surf = race.get('surface', '芝')
+        row = pace_model_inputs(dist, surf,
+                                race.get('race_class') or race.get('class'),
+                                len(race.get('horses', [])))
+        X = _pd.DataFrame([{c: row.get(c, -1) for c in cols}])[cols]
+        pred = float(model.predict(X)[0])
+        race['_early_pace_pred'] = round(pred, 3)
+        th = th_all.get(f'{surf}|{dist_zone(dist)}')
+        return pace_probs_from_seconds(pred, _RACE_SHAPE_MODEL.get('sigma'), th)
+    except Exception as _e:
+        _warn_race_shape_fallback(_e)
+        return None
+
+
+_RACE_SHAPE_ERRORS_WARNED = set()
+
+
+def _warn_race_shape_fallback(err):
+    key = f'{type(err).__name__}: {err}'
+    if key not in _RACE_SHAPE_ERRORS_WARNED:
+        _RACE_SHAPE_ERRORS_WARNED.add(key)
+        print(f'⚠ 展開予想モデルが使えず旧経路にフォールバック: {key}')
+
+
 def calc_pace_distribution(race):
     horses = race.get('horses', [])
     n = max(len(horses), 1)
     esc   = race.get('escape_count', 0)
     front = race.get('front_count', 0)
+    shaped = _race_shape_pace_distribution(race)
+    if shaped is not None:
+        return shaped
     if _PACE_MODEL is not None:
         feat_cols = getattr(_PACE_MODEL, '_pace_feature_cols', None)
         if feat_cols and len(feat_cols) > 8:
