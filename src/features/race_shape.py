@@ -366,11 +366,45 @@ def _load_physical(base_dir):
     return _PHYSICAL_CACHE[key]
 
 
+_STARTS_CACHE = {}
+
+
+def _load_starts(base_dir):
+    """距離単位のコース台帳（data/course_starts.json）。"""
+    key = base_dir or '.'
+    if key not in _STARTS_CACHE:
+        import json, os
+        path = os.path.join(key, 'data', 'course_starts.json')
+        try:
+            with open(path, encoding='utf-8') as f:
+                _STARTS_CACHE[key] = json.load(f)
+        except Exception:
+            _STARTS_CACHE[key] = {}
+    return _STARTS_CACHE[key]
+
+
+def course_start_record(racecourse, surface, distance, base_dir=None):
+    """(会場, 馬場, 実距離) の台帳エントリ。無ければ None。"""
+    rows = (_load_starts(base_dir) or {}).get('starts') or {}
+    return rows.get(f'{racecourse}_{surface}_{int(distance or 0)}')
+
+
 def start_to_first_corner_m(racecourse, surface, distance, base_dir=None):
     """スタート→最初のコーナーまでの距離。**出典が確かなものだけ**返す。
 
-    返せないときは None（欠測）。呼び出し側で埋めないこと。
+    ⚠ ユーザー指示: 「約○m と書かれていない距離について、推定値を勝手に
+       feature として採用しないこと」。src が official/stated のものだけ返す。
+       返せないときは None（欠測）。呼び出し側で埋めないこと。
+
+    距離単位の台帳 course_starts.json を先に見る（会場単位の course_physical.json
+    の完全な上位互換で、値の食い違いが無いことをテストで固定している）。
     """
+    rec = course_start_record(racecourse, surface, distance, base_dir)
+    if rec and rec.get('start_to_first_corner_src') in USABLE_PHYSICAL_SRC:
+        v = rec.get('start_to_first_corner_m')
+        if v is not None:
+            return float(v)
+
     ph = _load_physical(base_dir)
     rows = (ph or {}).get('distances') or {}
     rec = rows.get(f'{racecourse}_{surface}_{int(distance or 0)}')
