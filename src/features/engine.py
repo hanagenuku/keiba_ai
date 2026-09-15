@@ -1609,13 +1609,62 @@ def load_course_profiles(base_dir=None):
     return _COURSE_PROFILES
 
 
-def get_course_profile(racecourse, surface, base_dir=None):
-    """競馬場+コース（芝/ダート）のプロファイルを取得。未定義なら None。"""
+def get_course_profile(racecourse, surface, base_dir=None, distance=None):
+    """競馬場+コース（芝/ダート）のプロファイルを取得。未定義なら None。
+
+    distance を渡すと、**内外回りが距離で一意に決まる芝**（中山・阪神・京都・新潟）
+    については専用キー（例 '新潟_芝_内回り'）に解決する。
+
+    🔴 なぜ必要か（2026-09-14・#255）: この関数は長く venue×surface の20キーしか
+    引けず、**外回りの直線長が内回りのレースにも適用されていた**。
+        新潟_芝 659m → 実際 内回り 358.7m  （101レース・+84% の誤り）
+        阪神_芝 474m → 実際 内回り 356.5m  （231レース・+33%）
+        京都_芝 404m → 実際 内回り 328.4m  （ 75レース・+23%）
+        新潟芝1000（直線コース）84レースも 659m と教わっていた
+    合計 407レース＝history.db の 3.4%。値は f_straight_match / straight_class /
+    f_course_fit_score 経由で本番134特徴量に届く。
+
+    ⚠ '両'（同じ距離で内外どちらも使う。阪神1400・京都1400/1600/2000・新潟1400/2000）
+      は距離から解決できないので**推定せず**基底キーのまま返す。
+    """
     profiles = load_course_profiles(base_dir)
     if not profiles:
         return None
+    courses = profiles.get('courses', {})
     key = f'{racecourse}_{surface}'
-    return profiles.get('courses', {}).get(key)
+    if distance:
+        loop = resolve_course_loop(racecourse, surface, distance, base_dir, strict=True)
+        if loop:
+            return courses.get(f'{key}_{loop}', courses.get(key))
+    return courses.get(key)
+
+
+def resolve_course_loop(racecourse, surface, distance, base_dir=None, strict=False):
+    """芝の内回り/外回りを距離から解決する。分岐が無い/未定義なら None。
+
+    strict=True : '内'/'外'/'直線' が明示されている距離だけ解決する（推定しない）。
+                  直線長のように内外で 33〜84% も違う値を引くときに使う。
+    strict=False: '両'・'外内' も内回り扱いにする（坂・コーナー特性の近似用。
+                  2026-07-23 導入時からの既存挙動）。
+    """
+    if surface != '芝':
+        return None
+    profiles = load_course_distance_profiles(base_dir)
+    if not profiles:
+        return None
+    loop_map = profiles.get('loop_by_distance', {}).get(f'{racecourse}_芝')
+    if not loop_map:
+        return None
+    loop = loop_map.get(str(int(distance)))
+    if loop == '直線':
+        return '直線'
+    if loop == '内':
+        return '内回り'
+    if loop == '外':
+        return '外回り'
+    if not strict and loop in ('外内', '両'):
+        return '内回り'
+    return None
 
 
 # コーナーのタイト度を数値化（木モデルに渡すため）。Tight=小回り、Wide=大回り。
@@ -1644,15 +1693,19 @@ def load_course_distance_profiles(base_dir=None):
 
 
 def _resolve_turf_loop(profiles, racecourse, distance):
-    """中山・阪神・京都・新潟の芝は内回り/外回りが距離で固定的に決まる
-    （レースごとの選択ではなくJRAのコース設計）。loop_by_distanceで解決する。
-    分岐を持たない競馬場や未定義の距離は None（=分岐なしとして扱う）を返す。
+    """坂・コーナー特性用の内外回り解決（'両'等も内回りに寄せる既存挙動）。
+
+    ⚠ 直線長のように内外で大きく違う値には strict=True を使うこと。
+      2つの解決規則が別々に育つと片方だけ直される（このプロジェクトで
+      繰り返し事故になった形）ため、実体は resolve_course_loop に集約している。
     """
     loop_map = profiles.get('loop_by_distance', {}).get(f'{racecourse}_芝')
     if not loop_map:
         return None
     loop = loop_map.get(str(int(distance)))
-    if loop in ('内', '外内', '両', '直線'):
+    if loop == '直線':
+        return '内回り'
+    if loop in ('内', '外内', '両'):
         return '内回り'
     if loop == '外':
         return '外回り'
@@ -1735,7 +1788,7 @@ def calc_course_demand_profile(racecourse, surface, distance, base_dir=None):
     lo, hi = _HILL_DIFF_RANGE
     stamina_demand = (max(lo, min(hi, hill_diff)) - lo) / (hi - lo)
 
-    profile = get_course_profile(racecourse, surface, base_dir)
+    profile = get_course_profile(racecourse, surface, base_dir, distance=distance)
     straight = profile.get('straight_length') if profile else None
     if straight is None:
         speed_demand = 0.5  # コース未定義時は中立
@@ -1799,7 +1852,7 @@ def _default_course_features():
 
 
 def calc_course_aptitude_features(horse_name, today_racecourse, today_surface,
-                                  history, base_dir=None):
+                                  history, base_dir=None, today_distance=None):
     """馬の過去走をコース形状で分類し、今日のコースへの適性を計算する。
 
     history : list of dict（racecourse, surface, place, agari3f/last_3f を含む）
@@ -1813,7 +1866,8 @@ def calc_course_aptitude_features(horse_name, today_racecourse, today_surface,
         f_agari_at_similar : 似た直線のコースでの最速上がり（小さいほど良い）
         f_course_coverage  : 同一コースでの経験走数（信頼度）
     """
-    today = get_course_profile(today_racecourse, today_surface, base_dir)
+    today = get_course_profile(today_racecourse, today_surface, base_dir,
+                               distance=today_distance)
     if today is None:
         return _default_course_features()
 
@@ -1842,7 +1896,8 @@ def calc_course_aptitude_features(horse_name, today_racecourse, today_surface,
         if place is None or place <= 0 or place >= 99:
             continue
 
-        prof = get_course_profile(rc, sf, base_dir)
+        # 過去走も同じ規則で内外回りを解決する（今走だけ直すと比較がずれる）
+        prof = get_course_profile(rc, sf, base_dir, distance=hrec.get('distance'))
         if prof is None:
             continue
 
@@ -2030,7 +2085,8 @@ def calc_style_course_fit(horse, race, base_dir=None):
     コース未定義または脚質不明時は 0.25（4脚質均等）を返す。
     """
     profile = get_course_profile(
-        race.get('racecourse', ''), race.get('surface', '芝'), base_dir
+        race.get('racecourse', ''), race.get('surface', '芝'), base_dir,
+        distance=race.get('distance'),
     )
     if not profile or 'style_advantage' not in profile:
         return 0.25
@@ -2357,7 +2413,7 @@ def calc_features_for_xgb(h, race):
     # 過去走をコース形状（直線長・回り・坂）で分類し、今走コースへの適性を算出。
     # course_profiles.json が無い／コース未定義ならデフォルト0で安全にフォールバック。
     course_feats = calc_course_aptitude_features(
-        h.get('name', ''), rc, surf, hist,
+        h.get('name', ''), rc, surf, hist, today_distance=dist,
     )
     feats.update(course_feats)
 
