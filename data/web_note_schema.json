@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "purpose": "週末の予想生成日に web から集めた情報を、予想には反映せずそのまま記録する",
+  "model_consumed": false,
+  "why_not_consumed": [
+    "この環境から到達できるのは WebSearch の要約だけで、個別ページは egress proxy に阻まれる。",
+    "要約は日付が混ざることがあり、そのまま特徴量にすると『間違った値を静かに配る』ことになる。",
+    "そもそも過去分の web 情報が無いので学習データが作れない（North Star #3）。",
+    "本プロジェクトでは検証なしの後付け補正レイヤーが例外なく撤回されている",
+    "（市場補正レイヤー / error_tags週次補正 / rank_matrix_filter / AI xx%バッジ / ROI150%）。",
+    "したがって『まず溜める → 基準を先に書く → 測る → 通れば繋ぐ』の順で進める（パドック入力と同じ）。"
+  ],
+  "fields": {
+    "date": {"type": "string", "format": "YYYY-MM-DD", "required": true},
+    "collected_at": {"type": "string", "format": "ISO8601 JST", "required": true},
+    "phase": {"type": "string", "enum": ["pre"], "required": true,
+              "note": "レース前に集めた情報であることの明示。post は作らない"},
+    "model_consumed": {"type": "boolean", "const": false, "required": true},
+    "venues": {
+      "type": "object",
+      "note": "会場名 → 下記",
+      "value": {
+        "going": {"type": "object", "note": "{'芝': 良/稍重/重/不良, 'ダート': 同}"},
+        "weather": {"type": "string"},
+        "course_setting": {"type": "string", "note": "A/B/Cコース等の内柵位置"},
+        "note": {"type": "string", "note": "傷みの位置など、人が読む用"},
+        "source": {"type": "string", "required": true},
+        "confidence": {"type": "string", "enum": ["official", "reported", "inferred"],
+                       "required": true,
+                       "note": "official=JRA公式の発表 / reported=報道・実況 / inferred=天気などからの推測"}
+      }
+    },
+    "races": {
+      "type": "array",
+      "value": {
+        "race_id": {"type": "string"},
+        "kind": {"type": "string", "enum": ["scratch", "jockey_change", "news", "other"]},
+        "note": {"type": "string"},
+        "source": {"type": "string", "required": true},
+        "confidence": {"type": "string", "enum": ["official", "reported", "inferred"], "required": true}
+      }
+    }
+  },
+  "rules": [
+    "数値・区分を書くときは必ず source と confidence を付ける（出典の無い値を作らない）。",
+    "confidence=inferred のものを後で特徴量にしない。使ってよいのは official のみ。",
+    "分からないものは書かない。空欄のままにする（『たぶん良』と埋めない）。",
+    "予想（latest.json / race_predictions / bets）は一切書き換えない。"
+  ]
+}

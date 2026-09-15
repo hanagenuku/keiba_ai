@@ -298,6 +298,22 @@ def refresh_today(sess, hist_path, avg_bias, jst_now):
         print(f'⏭ 発走済み {len(started)}R / 発走時刻不明 {len(unknown)}R は'
               f'予想を更新しません（確定オッズの混入を防ぐため）')
 
+    # ── 当日の馬場状態を、先に終わったレースの結果から拾って反映する ──────
+    # f_track_cond は学習時だけ本物の馬場が入り、推論時はつねに 0.0（良）
+    # だった（2026-08-26 記録の既知のパリティ違反）。良でないレースは 27.2%。
+    # 🔑 リークではない: 予測対象より前に終わったレースの公開情報だけを使う。
+    # ⚠ 8時台のrunではまだ1レースも終わっていないので実行しない
+    #   （256件のsuffix探索を空振りさせるだけで時間を溶かす）。
+    # ⚠ COLLECT_GOING=0 で無効化できる。失敗しても予想は止めない。
+    if os.environ.get('COLLECT_GOING', '1') != '0' and jst_now.hour >= 10:
+        try:
+            from src.scraper.going import collect_today_going, apply_going_to_races
+            going = collect_today_going(sess, target_date)
+            n_going = apply_going_to_races(upcoming, going)
+            print(f'   馬場状態を反映: {n_going}R / 発走前 {len(upcoming)}R')
+        except Exception as e:
+            print(f'⚠ 馬場状態の取得に失敗（既定の「良」のまま続行）: {e}')
+
     print('💾 発走前レースの予測を race_predictions に更新保存中...')
     # snapshot: 08時台の従来runは 'refresh'（既存の比較コードとの互換）。
     # それ以降の追加runは 'refresh_HH' で別枠に残し、どの時点が一番当たるかを

@@ -11,16 +11,31 @@
 推定脚質と実際の脚質の一致率は **39.8%**。19特徴量のうち6つがこの経路にあり、
 3分類の精度は 学習時入力 52.80% に対し **推論時入力では 50.45%** だった。
 
-さらに「逃げ／先行／差し／追込」の4分類ラベル自体が表現として悪い。
-前半3F を実数で予測して測ると（学習2025 / 検定2026・完全OOS・2,082レース）:
+さらに「逃げ／先行／差し／追込」の4分類ラベル自体が表現として悪い（ラベルが
+距離帯×表面のパーセンタイルなので、距離そのものが最重要特徴量になってしまう）。
+そこで**前半600m を実数で予測する**形に作り直した。
 
-    条件だけ（距離・表面・馬場・頭数・クラス）  RMSE 1.5730s
-    + 既存の脚質カウント                   RMSE 1.5439s  (-0.0290s)
-    + 本モジュールの連続量                  RMSE 1.5071s  (-0.0659s)
-    + そのレースの**実際の脚質**（反則・天井）   RMSE 1.5447s  (-0.0283s)
+🔴 その過程で2つ目の defect を踏んだ。目的変数にしていた `race_history.first_3f`
+は「記録された先頭3区間の和」で、**端数区間を記録する回としない回があるため
+同じ距離で二峰**になっていた（下の early_pace_seconds を参照）。
+揃えた目的変数で測り直すと、レース構成（P(先頭)の分布・過去の通過位置・
+過去の上がり）を足すと**2窓とも悪化**した:
 
-**事後の正解ラベルを知っているより、本モジュールのほうが 2.3倍良い。**
-展開が説明する分散は R² 0.2891 → 0.3474（展開由来 2.6% → 5.8%）。
+    条件だけ（距離・表面・クラス・頭数）   窓A 0.8272s / 窓B 0.8325s
+    + P(先頭)由来                     +0.0145 / +0.0077
+    + 過去の通過位置                    +0.0121 / +0.0167
+    + 過去の上がり                     +0.0130 / +0.0051
+    + 全部                          +0.0151 / +0.0210
+
+⚠ 初版のこの docstring には「作り直した連続量は反則版（そのレースの実際の脚質を
+  知っている）の 2.3倍良い」と書いてあったが、**壊れた目的変数の産物だったので
+  取り消した**。詳細は tenkai/RESULTS.md。
+
+→ ペースは**レース条件だけ**で決める。副産物として学習時と推論時の入力が
+  構造的に同一になり、上のパリティ違反が起こせなくなる。
+  本モジュールの馬ごとの量（P(先頭)・隊列争い）は**ペース予測には使わず**、
+  「逃げそうな馬は距離が持つか／他の馬にどう影響するか」を本体モデルで
+  測るための入力として残す。
 
 設計
 ----
@@ -30,6 +45,62 @@
 構造的に起こせなくするための作りである。
 """
 import math
+
+# JRAのラップタイムは「スタート→最初の200m標識」が端数区間になる。
+# 1700m なら 100m + 200m×8。この端数を無視して先頭3区間を足すと、
+# 同じ距離でも記録の仕方で 5秒以上ずれる（2026-09-14 実測）。
+LAP_SEGMENT_M = 200.0
+EARLY_SECTION_M = 600.0
+
+
+def parse_lap_times(lap_times):
+    """'7.1-11.1-12.4-...' を float のリストにする。壊れていれば空リスト。"""
+    if not lap_times:
+        return []
+    out = []
+    for tok in str(lap_times).split('-'):
+        try:
+            v = float(tok)
+        except (TypeError, ValueError):
+            return []
+        if v <= 0:
+            return []
+        out.append(v)
+    return out
+
+
+def early_pace_seconds(lap_times, distance, n_seg=3):
+    """前半3ハロン（600m）の所要秒。**端数区間の有無を吸収して揃える。**
+
+    🔴 既存の race_history.first_3f は「記録された先頭3区間の和」で、
+       同じ距離でも記録の仕方で別の量になっていた（2026-09-14 実測）:
+
+           ダート1700m  n=9  lap 7.1-11.1-12.4-…  合計108.3s  先頭100mを記録
+                       n=8  lap 11.5-12.1-13.1-… 合計100.1s  先頭100mを記録しない
+           first_3f     端数側 30.05s (248R) / フル側 35.53s (101R)   差 5.48s
+
+       前半3F の std は 1.85s なのでこの差は致命的。さらに端数記録の割合は
+       2025-07 の 25.4% から 2026-08 の 0% へ変わっており、学習期と検定期で
+       別の量になる。実際、first_3f を目的変数にすると検定期の RMSE が
+       2.2590s（平均を答える 1.5288s より悪い）まで劣化した。
+
+    ここでは区間数から端数の有無を判定し、**どちらも「最初の200m標識からの
+    3区間」**に揃える。1700m ならどちらも 100m→700m の区間になる。
+    """
+    laps = parse_lap_times(lap_times)
+    if not laps or not distance or distance <= 0:
+        return None
+    rem = int(distance) % int(LAP_SEGMENT_M)
+    n_with_partial = int(distance) // int(LAP_SEGMENT_M) + (1 if rem else 0)
+    # 端数区間が記録されているのは、区間数が端数込みの本数と一致するときだけ
+    start = 1 if (rem and len(laps) == n_with_partial) else 0
+    seg = laps[start:start + n_seg]
+    if len(seg) < n_seg:
+        return None
+    return round(sum(seg), 3)
+
+
+
 
 # 「ハナを切った経験がある」とみなす正規化位置のしきい値
 CAN_LEAD_POS = 0.10
@@ -153,3 +224,69 @@ def race_shape_features(summaries, lead_probs, popularities=None):
         'pop_of_leader': pop_leader,
         'n_horses': n,
     }
+
+
+# ─────────────────────────────────────────────────────────────────────
+# ペース（前半600m）モデルの入出力。**学習も推論もここを通す。**
+#
+# 🔑 旧モデルのパリティ違反（学習=実際の脚質 / 推論=推定脚質・一致率39.8%）を
+#    構造的に起こせなくするため、入力はレース条件だけに限り、
+#    その組み立てをこの1関数に閉じ込める。
+# ─────────────────────────────────────────────────────────────────────
+PACE_INPUT_COLS = ['dist', 'surface_num', 'cls', 'n_horses']
+
+DIST_ZONES = [(0, 1400, '~1400'), (1401, 1800, '1401-1800'),
+              (1801, 2200, '1801-2200'), (2201, 9999, '2201~')]
+
+# クラスは序数。カテゴリ番号にするとDBと出馬表で採番がずれるので使わない。
+# （engine.calc_features_for_xgb の f_class_level と同じ対応表）
+CLASS_LEVEL = {'新馬': 1, '未勝利': 2, '1勝': 3, '1勝クラス': 3, '2勝': 4,
+               '2勝クラス': 4, '3勝': 5, '3勝クラス': 5, 'OP': 6, 'オープン': 6,
+               'L': 7, 'G3': 8, 'G2': 9, 'G1': 10}
+DEFAULT_CLASS_LEVEL = 3
+
+
+def dist_zone(distance):
+    d = int(distance or 0)
+    for lo, hi, label in DIST_ZONES:
+        if lo <= d <= hi:
+            return label
+    return '2201~'
+
+
+def class_level(race_class):
+    return float(CLASS_LEVEL.get((race_class or '').strip(), DEFAULT_CLASS_LEVEL))
+
+
+def pace_model_inputs(distance, surface, race_class, n_horses):
+    """ペースモデルへ渡す1行。学習・推論ともこの関数で作る。"""
+    return {
+        'dist': float(distance or 1600),
+        'surface_num': 1.0 if surface == '芝' else 0.0,
+        'cls': class_level(race_class),
+        'n_horses': float(n_horses or 0) or 14.0,
+    }
+
+
+def _norm_cdf(x):
+    return 0.5 * (1.0 + math.erf(x / math.sqrt(2.0)))
+
+
+def pace_probs_from_seconds(pred_seconds, sigma, thresholds):
+    """予測した前半600m（秒）を high/mid/slow の確率に直す。
+
+    前半が**速い**＝秒数が小さい＝ハイペース。
+    thresholds は [33%点, 67%点]（学習期の同じ距離帯×表面で算出）。
+    ハードな3値ではなく正規分布で確率にするので、閾値ぎりぎりでも極端にならない。
+    """
+    if pred_seconds is None or not thresholds or len(thresholds) < 2:
+        return None
+    s = max(float(sigma or 0.0), 0.05)
+    q33, q67 = float(thresholds[0]), float(thresholds[1])
+    p_high = _norm_cdf((q33 - pred_seconds) / s)
+    p_slow = 1.0 - _norm_cdf((q67 - pred_seconds) / s)
+    p_mid = max(0.0, 1.0 - p_high - p_slow)
+    tot = p_high + p_mid + p_slow or 1.0
+    return {'high': round(p_high / tot, 3),
+            'mid': round(p_mid / tot, 3),
+            'slow': round(p_slow / tot, 3)}
