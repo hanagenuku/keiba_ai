@@ -1306,7 +1306,8 @@ def _race_shape_pace_distribution(race):
         surf = race.get('surface', '芝')
         row = pace_model_inputs(dist, surf,
                                 race.get('race_class') or race.get('class'),
-                                len(race.get('horses', [])))
+                                len(race.get('horses', [])),
+                                race.get('racecourse'))
         X = _pd.DataFrame([{c: row.get(c, -1) for c in cols}])[cols]
         pred = float(model.predict(X)[0])
         race['_early_pace_pred'] = round(pred, 3)

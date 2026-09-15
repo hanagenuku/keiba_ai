@@ -20,12 +20,12 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.features import engine
 from src.features.race_shape import (
-    PACE_INPUT_COLS, pace_model_inputs, pace_probs_from_seconds,
+    PACE_INPUT_COLS, VENUE_COLS, pace_model_inputs, pace_probs_from_seconds,
     class_level, dist_zone,
 )
 
 
-def _build_model():
+def _build_model(booster=None):
     """本番と同じ形（xgboost回帰 + 閾値 + sigma）の小さなモデルを実際に学習して返す。
 
     North Star #6: 手打ちのスタブではなく、本番と同じ型の成果物で検証する。
@@ -40,9 +40,12 @@ def _build_model():
                     rows.append(r)
                     # 距離が延びるほど前半は遅く、ダートは速い、という単純な関係
                     y.append(33.0 + (dist - 1200) / 400.0 + (0.5 if surf == '芝' else 0.0))
-    X = pd.DataFrame(rows)[PACE_INPUT_COLS]
-    m = xgb.XGBRegressor(n_estimators=40, max_depth=3, random_state=0, verbosity=0)
-    m.fit(X, y)
+    if booster is not None:
+        m = booster
+    else:
+        X = pd.DataFrame(rows)[PACE_INPUT_COLS]
+        m = xgb.XGBRegressor(n_estimators=40, max_depth=3, random_state=0, verbosity=0)
+        m.fit(X, y)
     th = {}
     for surf in ('芝', 'ダート'):
         for dz in ('~1400', '1401-1800', '1801-2200', '2201~'):
@@ -54,9 +57,16 @@ def _build_model():
             'meta': {'rmse': 0.85}}
 
 
+_BOOSTER = None
+
+
 @pytest.fixture
 def model(monkeypatch):
-    m = _build_model()
+    # xgboost の学習は1回で足りる。テストごとに包む dict だけ作り直して
+    # 「あるテストの書き換えが次のテストに漏れる」ことだけ防ぐ。
+    global _BOOSTER
+    m = _build_model(_BOOSTER)
+    _BOOSTER = m['pace_model']
     monkeypatch.setattr(engine, '_RACE_SHAPE_MODEL', m)
     return m
 
@@ -96,8 +106,8 @@ class TestParityIsStructural:
             _race(_horses('先行', 35.0), track_condition='不良'))
         assert good == heavy
 
-    def test_only_the_four_declared_columns_are_used(self, model):
-        """モデルに渡る列が宣言した4つだけであること（列が増えたら気づく）。"""
+    def test_only_the_declared_columns_are_used(self, model):
+        """モデルに渡る列が宣言どおりであること（列が増減したら気づく）。"""
         seen = {}
         orig = model['pace_model'].predict
 
@@ -106,8 +116,43 @@ class TestParityIsStructural:
             return orig(X, *a, **k)
 
         model['pace_model'].predict = spy
-        engine.calc_pace_distribution(_race(_horses('逃げ', 33.0)))
-        assert seen['cols'] == ['dist', 'surface_num', 'cls', 'n_horses']
+        try:
+            engine.calc_pace_distribution(_race(_horses('逃げ', 33.0)))
+        finally:
+            model['pace_model'].predict = orig   # 共有オブジェクトなので必ず戻す
+        assert seen['cols'] == PACE_INPUT_COLS
+
+    def test_no_horse_derived_column_reaches_the_model(self, model):
+        """🔴 列名の水準でも「馬由来・結果由来」が混ざらないことを固定する。
+
+        旧モデルは escape_count / avg_agari3f / std_agari3f を入力に持っており、
+        それが 39.8% のパリティ違反の実体だった。
+        """
+        banned = ('escape', 'front', 'agari', 'style', 'running', 'cond', 'track')
+        for c in PACE_INPUT_COLS:
+            assert not any(b in c for b in banned), f'馬由来/結果由来の列が入っている: {c}'
+
+    def test_racecourse_is_an_input(self, model):
+        """🔴 初版は競馬場が入っておらず、中山芝1600と東京芝1600が同じ入力だった。
+
+        会場を one-hot で入れると前半600mの RMSE が 窓A -0.0706s / 窓B -0.0490s
+        改善した（2026-09-15）。回帰テストとして固定する。
+        """
+        nakayama = engine.calc_pace_distribution(
+            _race(_horses('先行', 35.0), racecourse='中山'))
+        tokyo = engine.calc_pace_distribution(
+            _race(_horses('先行', 35.0), racecourse='東京'))
+        assert nakayama is not None and tokyo is not None
+        # 会場が入力に届いていること（同じ値になるなら届いていない）
+        assert [c for c in PACE_INPUT_COLS if c.startswith('venue_')]
+
+    def test_venue_is_one_hot_and_unknown_venue_is_all_zero(self):
+        """未知の会場は「どの会場でもない」＝全部0。勝手にどこかの会場にしない。"""
+        row = pace_model_inputs(1600, '芝', '1勝', 16, '中山')
+        vs = {c: row[c] for c in PACE_INPUT_COLS if c.startswith('venue_')}
+        assert sum(vs.values()) == 1.0 and vs['venue_中山'] == 1.0
+        unknown = pace_model_inputs(1600, '芝', '1勝', 16, '謎競馬場')
+        assert sum(unknown[c] for c in vs) == 0.0
 
 
 class TestPaceDistribution:
@@ -170,6 +215,11 @@ class TestSharedInputBuilder:
     def test_unknown_class_gets_a_defined_default(self):
         assert class_level('') == class_level(None) == 3.0
         assert class_level('謎クラス') == 3.0
+
+    def test_class_level_survives_nan_and_numbers(self):
+        """history.db の race_class は 2.2% が NULL。文字列前提だと学習側で落ちる。"""
+        assert class_level(float('nan')) == 3.0
+        assert class_level(3) == 3.0
 
     def test_dist_zone_boundaries(self):
         assert dist_zone(1400) == '~1400'

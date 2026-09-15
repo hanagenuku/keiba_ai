@@ -42,6 +42,9 @@ LEAD_COLS = ['p_led', 'p_mean', 'p_min', 'p_last', 'p_std', 'p_n',
 #        + 過去の通過位置  +0.0121 / +0.0167
 #        + 過去の上がり   +0.0130 / +0.0051
 #        + 全部        +0.0151 / +0.0210
+#    🔴 ただし初版は「条件」が4列しかなく**競馬場が入っていなかった**。
+#      会場を one-hot で足すと 窓A -0.0706s / 窓B -0.0490s 改善する（2026-09-15）。
+#      「条件だけで決まる」のではなく「条件の指定が足りていなかった」。
 #    ✅ 副産物として、条件だけなら**学習時と推論時の入力が同一**になり、
 #       旧モデルのパリティ違反（実際の脚質 vs 推定脚質・一致率39.8%）が構造的に消える。
 #    ⚠ cond（馬場状態）は**推論時つねに「良」**（出馬表に載っていない既知の
@@ -131,8 +134,9 @@ def train_race_shape(base_dir, train_end='2026-06-30', seed=42):
 
     d = R.merge(F, on='race_id', how='inner', suffixes=('', '_shape'))
     # 🔑 推論と同じ関数で列を作る（engine 側も pace_model_inputs を呼ぶ）
-    pin = pd.DataFrame([pace_model_inputs(dist, sf, cls, nh) for dist, sf, cls, nh
-                        in zip(d.dist, d.sf, d.race_class, d.n_horses)])
+    pin = pd.DataFrame([pace_model_inputs(dist, sf, cls, nh, rc)
+                        for dist, sf, cls, nh, rc
+                        in zip(d.dist, d.sf, d.race_class, d.n_horses, d.rc)])
     for c in PACE_COLS:
         d[c] = pin[c].values
     d['dz'] = d.dist.map(dist_zone)

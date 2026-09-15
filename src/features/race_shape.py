@@ -31,8 +31,15 @@
   知っている）の 2.3倍良い」と書いてあったが、**壊れた目的変数の産物だったので
   取り消した**。詳細は tenkai/RESULTS.md。
 
-→ ペースは**レース条件だけ**で決める。副産物として学習時と推論時の入力が
+→ ペースは**レース条件**で決める。副産物として学習時と推論時の入力が
   構造的に同一になり、上のパリティ違反が起こせなくなる。
+
+🔴 2026-09-15 訂正: 初版はここで「条件だけで決まる」と書いたが、その「条件」が
+   4列（距離・表面・クラス・頭数）しかなく**競馬場が入っていなかった**。
+   会場を one-hot で足すと 窓A -0.0706s / 窓B -0.0490s 改善する。
+   正しくは「**この条件セットの下では馬特徴の追加価値を確認できなかった**」まで。
+   コースの物理情報は会場を入れた後では追加価値が確認できず不採用
+   （会場ごとにほぼ定数なので one-hot が先に吸収する）。tenkai/RESULTS_COURSE.md 参照。
   本モジュールの馬ごとの量（P(先頭)・隊列争い）は**ペース予測には使わず**、
   「逃げそうな馬は距離が持つか／他の馬にどう影響するか」を本体モデルで
   測るための入力として残す。
@@ -233,7 +240,19 @@ def race_shape_features(summaries, lead_probs, popularities=None):
 #    構造的に起こせなくするため、入力はレース条件だけに限り、
 #    その組み立てをこの1関数に閉じ込める。
 # ─────────────────────────────────────────────────────────────────────
-PACE_INPUT_COLS = ['dist', 'surface_num', 'cls', 'n_horses']
+# 🔴 2026-09-15: 初版は4列だけで **競馬場が入っていなかった**（中山芝1600と
+#    東京芝1600が同じ入力）。会場を one-hot で足すと前半600mの RMSE が
+#    **窓A -0.0706s / 窓B -0.0490s**（M0比 8〜9%）改善した。
+#    序数（venue_idx）だと -0.0676/-0.0416 で、one-hot の方が両窓とも良い
+#    （順序の無いカテゴリを序数にするのは損）。詳細は tenkai/RESULTS_COURSE.md。
+# ⚠ コースの物理情報（直線長・坂・コーナー・スタート→1角）は、会場を one-hot で
+#    入れた**後**では追加価値を確認できなかった（窓A -0.0072 / 窓B +0.0018 で不一致）。
+#    会場ごとにほぼ定数なので one-hot が先に吸収してしまう。無意味という意味ではなく、
+#    いまのデータ量では会場ダミーと区別できない、ということ。
+_PACE_BASE_COLS = ['dist', 'surface_num', 'cls', 'n_horses']
+VENUE_COLS = [f'venue_{v}' for v in
+              ('札幌', '函館', '福島', '新潟', '東京', '中山', '中京', '京都', '阪神', '小倉')]
+PACE_INPUT_COLS = _PACE_BASE_COLS + VENUE_COLS
 
 DIST_ZONES = [(0, 1400, '~1400'), (1401, 1800, '1401-1800'),
               (1801, 2200, '1801-2200'), (2201, 9999, '2201~')]
@@ -255,17 +274,30 @@ def dist_zone(distance):
 
 
 def class_level(race_class):
-    return float(CLASS_LEVEL.get((race_class or '').strip(), DEFAULT_CLASS_LEVEL))
+    # ⚠ NaN（float）や数値が来ることがある（history.db の race_class は 2.2% が NULL）。
+    #    文字列前提にすると学習側で落ちるので型を吸収する。
+    if race_class is None or isinstance(race_class, float) and race_class != race_class:
+        key = ''
+    else:
+        key = str(race_class).strip()
+    return float(CLASS_LEVEL.get(key, DEFAULT_CLASS_LEVEL))
 
 
-def pace_model_inputs(distance, surface, race_class, n_horses):
-    """ペースモデルへ渡す1行。学習・推論ともこの関数で作る。"""
-    return {
+def pace_model_inputs(distance, surface, race_class, n_horses, racecourse=None):
+    """ペースモデルへ渡す1行。学習・推論ともこの関数で作る。
+
+    ⚠ 会場は one-hot。未知の会場は全部 0（＝どの会場でもない）で通す。
+       欠測にせず 0 にするのは、one-hot の「どれでもない」が自然な表現だから。
+    """
+    row = {
         'dist': float(distance or 1600),
         'surface_num': 1.0 if surface == '芝' else 0.0,
         'cls': class_level(race_class),
         'n_horses': float(n_horses or 0) or 14.0,
     }
+    for c in VENUE_COLS:
+        row[c] = 1.0 if c == f'venue_{racecourse}' else 0.0
+    return row
 
 
 def _norm_cdf(x):
@@ -290,3 +322,113 @@ def pace_probs_from_seconds(pred_seconds, sigma, thresholds):
     return {'high': round(p_high / tot, 3),
             'mid': round(p_mid / tot, 3),
             'slow': round(p_slow / tot, 3)}
+
+# ─────────────────────────────────────────────────────────────────────
+# コースの物理情報（ペースモデル用）
+#
+# 🔴 2026-09-15 の初版では `['dist','surface_num','cls','n_horses']` の4列しか
+#    使っておらず、**競馬場すら入っていなかった**（中山芝1600と東京芝1600が
+#    同じ入力）。「条件だけでペースは決まる」と書いたが、その「条件」が
+#    ここまで薄い状態での話だった。
+#
+# ⚠ 出典の扱い（ユーザーの明示指示）:
+#    「約○mと書かれていない距離について、推定値を勝手にfeatureとして採用しない」
+#    `course_physical.json` の `distances` は official / stated / web / na の
+#    4段階を持つ。**official と stated だけ**を数値として使い、
+#    それ以外は None（欠測）のまま返す。平均等で埋めない。
+# ─────────────────────────────────────────────────────────────────────
+VENUES = ('札幌', '函館', '福島', '新潟', '東京', '中山', '中京', '京都', '阪神', '小倉')
+USABLE_PHYSICAL_SRC = ('official', 'stated')
+_CORNER_TIGHT = {'Tight': 1.0, 'Normal': 2.0, 'Wide': 3.0, 'Very Wide': 4.0}
+_COURSE_TYPE = {'tight': 1.0, 'standard': 2.0, 'spacious': 3.0}
+_UPHILL_SEV = {'gentle': 1.0, 'moderate': 2.0, 'steep': 3.0}
+_LOOP_NUM = {'内回り': 1.0, '外回り': 2.0, '直線': 3.0}
+
+COURSE_PACE_COLS = [
+    'venue_idx', 'straight_m', 'turn_num', 'loop_num', 'course_type_num',
+    'uphill', 'uphill_sev', 'hill_m', 'elev_range_m',
+    'corner_tight_num', 'dirt_turf_start', 'start_to_corner_m',
+]
+
+_PHYSICAL_CACHE = {}
+
+
+def _load_physical(base_dir):
+    key = base_dir or '.'
+    if key not in _PHYSICAL_CACHE:
+        import json, os
+        path = os.path.join(key, 'data', 'course_physical.json')
+        try:
+            with open(path, encoding='utf-8') as f:
+                _PHYSICAL_CACHE[key] = json.load(f)
+        except Exception:
+            _PHYSICAL_CACHE[key] = {}
+    return _PHYSICAL_CACHE[key]
+
+
+def start_to_first_corner_m(racecourse, surface, distance, base_dir=None):
+    """スタート→最初のコーナーまでの距離。**出典が確かなものだけ**返す。
+
+    返せないときは None（欠測）。呼び出し側で埋めないこと。
+    """
+    ph = _load_physical(base_dir)
+    rows = (ph or {}).get('distances') or {}
+    rec = rows.get(f'{racecourse}_{surface}_{int(distance or 0)}')
+    if not rec or rec.get('src') not in USABLE_PHYSICAL_SRC:
+        return None
+    v = rec.get('start_to_first_corner_m')
+    return float(v) if v is not None else None
+
+
+def course_pace_features(racecourse, surface, distance, base_dir=None):
+    """ペースモデルに渡すコースの物理特徴。**学習も推論もこの関数を通す。**
+
+    値が取れないものは None（欠測）で返す。XGBoost の欠測分岐に任せる。
+    """
+    from src.features.engine import (
+        get_course_profile, load_course_distance_profiles, resolve_course_loop)
+
+    out = {c: None for c in COURSE_PACE_COLS}
+    out['venue_idx'] = float(VENUES.index(racecourse)) if racecourse in VENUES else None
+
+    prof = get_course_profile(racecourse, surface, base_dir, distance=distance)
+    if prof:
+        out['straight_m'] = float(prof.get('straight_length') or 0) or None
+        out['turn_num'] = {'right': 1.0, 'left': -1.0, 'なし': 0.0}.get(prof.get('turn'))
+        out['course_type_num'] = _COURSE_TYPE.get(prof.get('course_type'))
+        out['uphill'] = 1.0 if prof.get('has_uphill') else 0.0
+        out['uphill_sev'] = _UPHILL_SEV.get(prof.get('uphill_severity'))
+
+    loop = resolve_course_loop(racecourse, surface, distance, base_dir, strict=True)
+    out['loop_num'] = _LOOP_NUM.get(loop)
+
+    cdp = load_course_distance_profiles(base_dir) or {}
+    base_key = f'{racecourse}_{surface}'
+    for src_key, dst, table in (
+            ('hill', 'hill_m', cdp.get('hill') or {}),
+            ('corner', 'corner_tight_num', cdp.get('corner_tightness') or {})):
+        rec = table.get(f'{base_key}_{loop}') if loop else None
+        if rec is None:
+            rec = table.get(base_key)
+        if rec is None:
+            continue
+        if dst == 'hill_m':
+            v = rec.get('elevation_diff_m') if isinstance(rec, dict) else None
+            out[dst] = float(v) if v is not None else None
+        else:
+            out[dst] = _CORNER_TIGHT.get(rec)
+
+    if surface == 'ダート':
+        lst = (cdp.get('dirt_turf_start') or {}).get(racecourse) or []
+        out['dirt_turf_start'] = 1.0 if int(distance or 0) in lst else 0.0
+    else:
+        out['dirt_turf_start'] = 0.0
+
+    ph = _load_physical(base_dir)
+    rec = ((ph or {}).get('courses') or {}).get(base_key)
+    if rec and rec.get('course_elevation_range_m') is not None:
+        out['elev_range_m'] = float(rec['course_elevation_range_m'])
+
+    out['start_to_corner_m'] = start_to_first_corner_m(
+        racecourse, surface, distance, base_dir)
+    return out
