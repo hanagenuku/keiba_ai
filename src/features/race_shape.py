@@ -390,25 +390,19 @@ def course_start_record(racecourse, surface, distance, base_dir=None):
 
 
 def start_to_first_corner_m(racecourse, surface, distance, base_dir=None):
-    """スタート→最初のコーナーまでの距離。**出典が確かなものだけ**返す。
+    """スタート→最初のコーナーまでの距離。**status が 'ok' の行だけ**返す。
 
-    ⚠ ユーザー指示: 「約○m と書かれていない距離について、推定値を勝手に
-       feature として採用しないこと」。src が official/stated のものだけ返す。
-       返せないときは None（欠測）。呼び出し側で埋めないこと。
+    ⚠ ユーザー指示（コース物理DB 第2版 §19）:
+       禁止1 数字を推測しない / 禁止2 本線合流距離を初角距離として返さない /
+       禁止5 欠損を0にしない。返せないときは None。呼び出し側で埋めないこと。
 
-    距離単位の台帳 course_starts.json を先に見る（会場単位の course_physical.json
-    の完全な上位互換で、値の食い違いが無いことをテストで固定している）。
+    🔴 出典は data/course_starts.json（第2版）**だけ**。
+       会場単位の古い course_physical.json は見ない。両方見ていた頃、
+       東京芝2000 で旧ファイルの 100m（＝本線合流までの距離）が漏れていた
+       （第2版はここを merge_ambiguous に格下げしている）。禁止2 そのもの。
     """
     rec = course_start_record(racecourse, surface, distance, base_dir)
-    if rec and rec.get('start_to_first_corner_src') in USABLE_PHYSICAL_SRC:
-        v = rec.get('start_to_first_corner_m')
-        if v is not None:
-            return float(v)
-
-    ph = _load_physical(base_dir)
-    rows = (ph or {}).get('distances') or {}
-    rec = rows.get(f'{racecourse}_{surface}_{int(distance or 0)}')
-    if not rec or rec.get('src') not in USABLE_PHYSICAL_SRC:
+    if not rec or rec.get('start_to_first_corner_status') != 'ok':
         return None
     v = rec.get('start_to_first_corner_m')
     return float(v) if v is not None else None
