@@ -1,0 +1,1183 @@
+{
+ "n_rows": 164915,
+ "n_feats": 134,
+ "dead_constant": [
+  {
+   "col": "f_early_speed",
+   "kind": "constant",
+   "value": 36.0,
+   "nonnull": 164915
+  }
+ ],
+ "zero_gain": [
+  "f_course_stamina_demand",
+  "f_early_speed",
+  "f_is_debut",
+  "f_same_course_rate"
+ ],
+ "gain": {
+  "f_is_debut": 0.0,
+  "f_pos_avg_3": 0.605,
+  "f_pos_std_3": 0.6554,
+  "f_p_front": 1.0628,
+  "f_p_mid": 0.5486,
+  "f_p_back": 0.5152,
+  "f_last1_pos3c": 0.7669,
+  "f_last2_pos3c": 0.6761,
+  "f_last3_pos3c": 0.4739,
+  "f_late_speed": 0.4856,
+  "f_last1_3f": 0.3597,
+  "f_last2_3f": 0.4188,
+  "f_last3_3f": 0.4997,
+  "f_early_speed": 0.0,
+  "f_recent": 1.1361,
+  "f_recent_fukusho": 0.4492,
+  "f_career_runs": 0.4771,
+  "f_last1_rank": 1.7149,
+  "f_last2_rank": 0.6157,
+  "f_last3_rank": 0.5865,
+  "f_dist_fukusho": 0.5613,
+  "f_course_fukusho": 0.3915,
+  "f_perf_highpace": 0.5613,
+  "f_perf_slowpace": 1.0873,
+  "f_jockey": 1.141,
+  "f_jockey_rate": 0.842,
+  "f_trainer": 0.9353,
+  "f_post": 0.5735,
+  "f_days_since_last": 0.5161,
+  "f_interval_score": 0.4578,
+  "f_blood": 0.565,
+  "f_weight_load": 0.4386,
+  "f_pace": 0.5067,
+  "f_speed_avg": 0.5622,
+  "f_speed_max": 0.4873,
+  "f_speed_last": 0.5292,
+  "f_speed_trend": 0.4967,
+  "f_sex": 0.3917,
+  "f_age": 0.5632,
+  "f_track_cond": 0.5654,
+  "f_heavy_track_rate": 0.3196,
+  "f_class_level": 0.6659,
+  "f_class_jump": 0.5697,
+  "f_finish_time_avg": 0.4922,
+  "f_time_diff_avg": 1.349,
+  "f_weight_trend_avg": 0.6567,
+  "f_weight_last_diff": 0.4801,
+  "f_competitiveness": 0.9341,
+  "f_competitive_best": 0.7224,
+  "f_speed_fig_last": 0.7209,
+  "f_speed_fig_avg": 0.6632,
+  "f_speed_fig_max": 0.9949,
+  "f_same_course_rate": 0.0,
+  "f_same_turn_rate": 0.4535,
+  "f_straight_match": 0.441,
+  "f_uphill_match": 0.5755,
+  "f_agari_at_similar": 0.8521,
+  "f_course_coverage": 0.3956,
+  "f_course_type_rate": 0.6599,
+  "f_tight_vs_spacious": 0.3954,
+  "f_uphill_severity_rate": 0.4975,
+  "f_corner_position_change": 0.6316,
+  "f_agari_rank_at_type": 0.4544,
+  "f_dirt_turf_start": 0.5731,
+  "f_course_hill_diff": 0.6183,
+  "f_course_corner_tight": 0.2549,
+  "f_style_course_fit": 0.7964,
+  "f_pace_fit": 0.5451,
+  "f_style_total_fit": 0.5414,
+  "f_pace_prob_fast": 0.5533,
+  "f_pace_prob_slow": 0.4539,
+  "f_pace_x_style": 0.4612,
+  "f_agari_ability": 0.6172,
+  "f_stamina_score": 0.4841,
+  "f_speed_score": 0.4497,
+  "f_optimal_distance": 0.381,
+  "f_dist_vs_optimal": 0.7616,
+  "f_dist_change": 0.652,
+  "f_speed_x_shortening": 0.5944,
+  "f_stamina_x_extension": 1.1569,
+  "f_dist_confidence": 0.4697,
+  "f_course_stamina_demand": 0.0,
+  "f_course_speed_demand": 0.5951,
+  "f_course_fit_score": 0.552,
+  "f_pop_last": 2.0808,
+  "f_pop_avg": 1.8537,
+  "f_beat_market_rate": 0.6039,
+  "f_pl_rating": 1.3748,
+  "f_pl_rating_n": 0.4778,
+  "rl_f_speed_avg_rank": 0.7095,
+  "rl_f_speed_avg_vs_field": 0.5756,
+  "rl_f_speed_last_rank": 0.5116,
+  "rl_f_speed_last_vs_field": 0.7355,
+  "rl_f_recent_rank": 3.3615,
+  "rl_f_recent_vs_field": 3.439,
+  "rl_f_recent_fukusho_rank": 1.6225,
+  "rl_f_recent_fukusho_vs_field": 0.6613,
+  "rl_f_late_speed_rank": 0.4516,
+  "rl_f_late_speed_vs_field": 0.5062,
+  "cl_f_jockey_rank": 1.1335,
+  "cl_f_jockey_vs_field": 1.1086,
+  "cl_f_trainer_rank": 0.7351,
+  "cl_f_trainer_vs_field": 0.6386,
+  "cl_f_dist_fukusho_rank": 0.5676,
+  "cl_f_dist_fukusho_vs_field": 0.5358,
+  "cl_f_course_fukusho_rank": 0.4608,
+  "cl_f_course_fukusho_vs_field": 0.5572,
+  "cl_f_blood_rank": 0.6118,
+  "cl_f_blood_vs_field": 0.6647,
+  "cl_f_heavy_track_rank": 0.5561,
+  "cl_f_heavy_track_vs_field": 0.5594,
+  "cl_f_weight_load_rank": 0.753,
+  "cl_f_weight_load_vs_field": 0.6373,
+  "rl_f_finish_time_rank": 0.6293,
+  "rl_f_finish_time_vs_field": 0.5064,
+  "rl_f_time_diff_rank": 0.5601,
+  "rl_f_time_diff_vs_field": 0.5972,
+  "rl_f_speed_fig_last_rank": 1.1132,
+  "rl_f_speed_fig_last_vs_field": 0.6435,
+  "rl_f_speed_fig_avg_rank": 0.8441,
+  "rl_f_speed_fig_avg_vs_field": 0.8028,
+  "rl_f_speed_fig_max_rank": 0.9015,
+  "rl_f_speed_fig_max_vs_field": 0.7516,
+  "cl_f_style_course_fit_rank": 0.5586,
+  "cl_f_style_course_fit_vs_field": 0.6905,
+  "cl_f_pace_fit_rank": 0.4462,
+  "cl_f_pace_fit_vs_field": 0.4328,
+  "cl_f_style_total_fit_rank": 0.6793,
+  "cl_f_style_total_fit_vs_field": 0.546,
+  "rl_f_pl_rating": 2.1823,
+  "rl_f_pl_rating_z": 1.3755,
+  "rl_f_pl_rating_rank": 1.608,
+  "f_rl_rank": 0.6922,
+  "f_cl_rank": 5.2971
+ },
+ "dup_pairs": [
+  {
+   "a": "f_course_fukusho",
+   "b": "f_same_course_rate",
+   "r": 1.0,
+   "gain_a": 0.392,
+   "gain_b": 0.0
+  },
+  {
+   "a": "f_course_hill_diff",
+   "b": "f_course_stamina_demand",
+   "r": 1.0,
+   "gain_a": 0.618,
+   "gain_b": 0.0
+  },
+  {
+   "a": "f_jockey",
+   "b": "f_jockey_rate",
+   "r": 0.9984,
+   "gain_a": 1.141,
+   "gain_b": 0.842
+  },
+  {
+   "a": "cl_f_pace_fit_rank",
+   "b": "cl_f_style_total_fit_rank",
+   "r": 0.982,
+   "gain_a": 0.446,
+   "gain_b": 0.679
+  },
+  {
+   "a": "rl_f_pl_rating",
+   "b": "rl_f_pl_rating_z",
+   "r": 0.9655,
+   "gain_a": 2.182,
+   "gain_b": 1.376
+  },
+  {
+   "a": "f_competitiveness",
+   "b": "f_competitive_best",
+   "r": 0.9464,
+   "gain_a": 0.934,
+   "gain_b": 0.722
+  },
+  {
+   "a": "f_course_fukusho",
+   "b": "cl_f_course_fukusho_vs_field",
+   "r": 0.9422,
+   "gain_a": 0.392,
+   "gain_b": 0.557
+  },
+  {
+   "a": "f_same_course_rate",
+   "b": "cl_f_course_fukusho_vs_field",
+   "r": 0.9422,
+   "gain_a": 0.0,
+   "gain_b": 0.557
+  },
+  {
+   "a": "f_jockey",
+   "b": "cl_f_jockey_vs_field",
+   "r": 0.9418,
+   "gain_a": 1.141,
+   "gain_b": 1.109
+  },
+  {
+   "a": "f_jockey_rate",
+   "b": "cl_f_jockey_vs_field",
+   "r": 0.9411,
+   "gain_a": 0.842,
+   "gain_b": 1.109
+  },
+  {
+   "a": "f_heavy_track_rate",
+   "b": "cl_f_heavy_track_vs_field",
+   "r": 0.936,
+   "gain_a": 0.32,
+   "gain_b": 0.559
+  },
+  {
+   "a": "f_pace_fit",
+   "b": "f_style_total_fit",
+   "r": 0.9315,
+   "gain_a": 0.545,
+   "gain_b": 0.541
+  },
+  {
+   "a": "f_uphill_match",
+   "b": "f_uphill_severity_rate",
+   "r": 0.927,
+   "gain_a": 0.576,
+   "gain_b": 0.498
+  },
+  {
+   "a": "cl_f_pace_fit_vs_field",
+   "b": "cl_f_style_total_fit_vs_field",
+   "r": 0.927,
+   "gain_a": 0.433,
+   "gain_b": 0.546
+  },
+  {
+   "a": "f_trainer",
+   "b": "cl_f_trainer_vs_field",
+   "r": 0.9184,
+   "gain_a": 0.935,
+   "gain_b": 0.639
+  },
+  {
+   "a": "f_pace_prob_fast",
+   "b": "f_pace_prob_slow",
+   "r": -0.918,
+   "gain_a": 0.553,
+   "gain_b": 0.454
+  },
+  {
+   "a": "f_dist_fukusho",
+   "b": "cl_f_dist_fukusho_vs_field",
+   "r": 0.911,
+   "gain_a": 0.561,
+   "gain_b": 0.536
+  },
+  {
+   "a": "f_style_course_fit",
+   "b": "cl_f_style_course_fit_vs_field",
+   "r": 0.9088,
+   "gain_a": 0.796,
+   "gain_b": 0.691
+  },
+  {
+   "a": "f_pl_rating",
+   "b": "rl_f_pl_rating",
+   "r": 0.9082,
+   "gain_a": 1.375,
+   "gain_b": 2.182
+  },
+  {
+   "a": "f_career_runs",
+   "b": "f_pl_rating_n",
+   "r": 0.9077,
+   "gain_a": 0.477,
+   "gain_b": 0.478
+  },
+  {
+   "a": "f_speed_fig_avg",
+   "b": "f_speed_fig_max",
+   "r": 0.9067,
+   "gain_a": 0.663,
+   "gain_b": 0.995
+  },
+  {
+   "a": "cl_f_style_course_fit_rank",
+   "b": "cl_f_style_total_fit_rank",
+   "r": 0.9004,
+   "gain_a": 0.559,
+   "gain_b": 0.679
+  }
+ ],
+ "groups": [
+  {
+   "cols": [
+    "f_last1_rank",
+    "f_pl_rating",
+    "f_recent",
+    "rl_f_pl_rating",
+    "rl_f_pl_rating_rank",
+    "rl_f_pl_rating_z",
+    "rl_f_recent_rank",
+    "rl_f_recent_vs_field"
+   ],
+   "gain": 16.192
+  },
+  {
+   "cols": [
+    "cl_f_jockey_rank",
+    "cl_f_jockey_vs_field",
+    "f_jockey",
+    "f_jockey_rate"
+   ],
+   "gain": 4.225
+  },
+  {
+   "cols": [
+    "f_pop_avg",
+    "f_pop_last"
+   ],
+   "gain": 3.934
+  },
+  {
+   "cols": [
+    "cl_f_pace_fit_vs_field",
+    "cl_f_style_course_fit_vs_field",
+    "cl_f_style_total_fit_vs_field",
+    "f_pace_fit",
+    "f_style_course_fit",
+    "f_style_total_fit"
+   ],
+   "gain": 3.552
+  },
+  {
+   "cols": [
+    "f_speed_avg",
+    "f_speed_last",
+    "f_speed_max",
+    "rl_f_speed_last_rank",
+    "rl_f_speed_last_vs_field"
+   ],
+   "gain": 2.826
+  },
+  {
+   "cols": [
+    "cl_f_dist_fukusho_rank",
+    "cl_f_dist_fukusho_vs_field",
+    "f_dist_fukusho",
+    "f_recent_fukusho",
+    "rl_f_recent_fukusho_vs_field"
+   ],
+   "gain": 2.775
+  },
+  {
+   "cols": [
+    "f_rl_rank",
+    "rl_f_late_speed_rank",
+    "rl_f_speed_avg_rank",
+    "rl_f_speed_avg_vs_field"
+   ],
+   "gain": 2.429
+  },
+  {
+   "cols": [
+    "f_speed_fig_avg",
+    "f_speed_fig_last",
+    "f_speed_fig_max"
+   ],
+   "gain": 2.379
+  },
+  {
+   "cols": [
+    "cl_f_trainer_rank",
+    "cl_f_trainer_vs_field",
+    "f_trainer"
+   ],
+   "gain": 2.309
+  },
+  {
+   "cols": [
+    "f_time_diff_avg",
+    "rl_f_time_diff_vs_field"
+   ],
+   "gain": 1.946
+  },
+  {
+   "cols": [
+    "f_last1_pos3c",
+    "f_p_back",
+    "f_pos_avg_3"
+   ],
+   "gain": 1.887
+  },
+  {
+   "cols": [
+    "rl_f_speed_fig_avg_rank",
+    "rl_f_speed_fig_max_rank"
+   ],
+   "gain": 1.746
+  },
+  {
+   "cols": [
+    "cl_f_pace_fit_rank",
+    "cl_f_style_course_fit_rank",
+    "cl_f_style_total_fit_rank"
+   ],
+   "gain": 1.684
+  },
+  {
+   "cols": [
+    "f_competitive_best",
+    "f_competitiveness",
+    "f_is_debut"
+   ],
+   "gain": 1.656
+  },
+  {
+   "cols": [
+    "rl_f_speed_fig_avg_vs_field",
+    "rl_f_speed_fig_max_vs_field"
+   ],
+   "gain": 1.554
+  },
+  {
+   "cols": [
+    "f_career_runs",
+    "f_days_since_last",
+    "f_pl_rating_n"
+   ],
+   "gain": 1.471
+  },
+  {
+   "cols": [
+    "f_uphill_match",
+    "f_uphill_severity_rate"
+   ],
+   "gain": 1.073
+  },
+  {
+   "cols": [
+    "f_pace_prob_fast",
+    "f_pace_prob_slow"
+   ],
+   "gain": 1.007
+  },
+  {
+   "cols": [
+    "cl_f_course_fukusho_vs_field",
+    "f_course_fukusho",
+    "f_same_course_rate"
+   ],
+   "gain": 0.949
+  },
+  {
+   "cols": [
+    "f_same_turn_rate",
+    "f_straight_match"
+   ],
+   "gain": 0.894
+  },
+  {
+   "cols": [
+    "cl_f_heavy_track_vs_field",
+    "f_heavy_track_rate"
+   ],
+   "gain": 0.879
+  },
+  {
+   "cols": [
+    "f_finish_time_avg",
+    "f_optimal_distance"
+   ],
+   "gain": 0.873
+  },
+  {
+   "cols": [
+    "f_last1_3f",
+    "f_late_speed"
+   ],
+   "gain": 0.845
+  },
+  {
+   "cols": [
+    "f_course_hill_diff",
+    "f_course_stamina_demand"
+   ],
+   "gain": 0.618
+  }
+ ],
+ "buckets": {
+  "馬のみ": [
+   "f_is_debut",
+   "f_pos_avg_3",
+   "f_pos_std_3",
+   "f_p_front",
+   "f_p_mid",
+   "f_p_back",
+   "f_last1_pos3c",
+   "f_last2_pos3c",
+   "f_last3_pos3c",
+   "f_late_speed",
+   "f_last1_3f",
+   "f_last2_3f",
+   "f_last3_3f",
+   "f_recent",
+   "f_recent_fukusho",
+   "f_career_runs",
+   "f_last1_rank",
+   "f_last2_rank",
+   "f_last3_rank",
+   "f_perf_highpace",
+   "f_perf_slowpace",
+   "f_jockey",
+   "f_jockey_rate",
+   "f_trainer",
+   "f_days_since_last",
+   "f_interval_score",
+   "f_weight_load",
+   "f_speed_avg",
+   "f_speed_max",
+   "f_speed_last",
+   "f_speed_trend",
+   "f_sex",
+   "f_age",
+   "f_heavy_track_rate",
+   "f_class_jump",
+   "f_weight_trend_avg",
+   "f_weight_last_diff",
+   "f_competitiveness",
+   "f_competitive_best",
+   "f_tight_vs_spacious",
+   "f_corner_position_change",
+   "f_pace_fit",
+   "f_agari_ability",
+   "f_stamina_score",
+   "f_speed_score",
+   "f_optimal_distance",
+   "f_dist_confidence",
+   "f_pop_last",
+   "f_pop_avg",
+   "f_beat_market_rate",
+   "f_pl_rating",
+   "f_pl_rating_n",
+   "rl_f_speed_avg_rank",
+   "rl_f_speed_avg_vs_field",
+   "rl_f_speed_last_rank",
+   "rl_f_speed_last_vs_field",
+   "rl_f_recent_rank",
+   "rl_f_recent_vs_field",
+   "rl_f_recent_fukusho_rank",
+   "rl_f_recent_fukusho_vs_field",
+   "rl_f_late_speed_rank",
+   "rl_f_late_speed_vs_field",
+   "cl_f_jockey_rank",
+   "cl_f_jockey_vs_field",
+   "cl_f_trainer_rank",
+   "cl_f_trainer_vs_field",
+   "cl_f_blood_rank",
+   "cl_f_blood_vs_field",
+   "cl_f_heavy_track_rank",
+   "cl_f_heavy_track_vs_field",
+   "cl_f_weight_load_rank",
+   "cl_f_weight_load_vs_field",
+   "cl_f_pace_fit_rank",
+   "cl_f_pace_fit_vs_field",
+   "cl_f_style_total_fit_rank",
+   "rl_f_pl_rating",
+   "rl_f_pl_rating_z",
+   "rl_f_pl_rating_rank",
+   "f_rl_rank"
+  ],
+  "レース共通": [
+   "f_early_speed",
+   "f_track_cond",
+   "f_class_level",
+   "f_dirt_turf_start",
+   "f_course_hill_diff",
+   "f_course_corner_tight",
+   "f_pace_prob_fast",
+   "f_pace_prob_slow",
+   "f_course_stamina_demand",
+   "f_course_speed_demand"
+  ],
+  "馬×今回の条件": [
+   "f_dist_fukusho",
+   "f_course_fukusho",
+   "f_post",
+   "f_blood",
+   "f_pace",
+   "f_finish_time_avg",
+   "f_time_diff_avg",
+   "f_speed_fig_last",
+   "f_speed_fig_avg",
+   "f_speed_fig_max",
+   "f_same_course_rate",
+   "f_same_turn_rate",
+   "f_straight_match",
+   "f_uphill_match",
+   "f_agari_at_similar",
+   "f_course_coverage",
+   "f_course_type_rate",
+   "f_uphill_severity_rate",
+   "f_agari_rank_at_type",
+   "f_style_course_fit",
+   "f_style_total_fit",
+   "f_pace_x_style",
+   "f_dist_vs_optimal",
+   "f_dist_change",
+   "f_speed_x_shortening",
+   "f_stamina_x_extension",
+   "f_course_fit_score",
+   "cl_f_dist_fukusho_rank",
+   "cl_f_dist_fukusho_vs_field",
+   "cl_f_course_fukusho_rank",
+   "cl_f_course_fukusho_vs_field",
+   "rl_f_finish_time_rank",
+   "rl_f_finish_time_vs_field",
+   "rl_f_time_diff_rank",
+   "rl_f_time_diff_vs_field",
+   "rl_f_speed_fig_last_rank",
+   "rl_f_speed_fig_last_vs_field",
+   "rl_f_speed_fig_avg_rank",
+   "rl_f_speed_fig_avg_vs_field",
+   "rl_f_speed_fig_max_rank",
+   "rl_f_speed_fig_max_vs_field",
+   "cl_f_style_course_fit_rank",
+   "cl_f_style_course_fit_vs_field",
+   "cl_f_style_total_fit_vs_field",
+   "f_cl_rank"
+  ]
+ },
+ "market_corr": [
+  {
+   "col": "rl_f_recent_rank",
+   "r": 0.6599
+  },
+  {
+   "col": "f_pop_last",
+   "r": 0.6249
+  },
+  {
+   "col": "rl_f_recent_vs_field",
+   "r": -0.6232
+  },
+  {
+   "col": "rl_f_pl_rating_rank",
+   "r": 0.6132
+  },
+  {
+   "col": "f_pop_avg",
+   "r": 0.6107
+  },
+  {
+   "col": "f_recent",
+   "r": -0.5866
+  },
+  {
+   "col": "f_cl_rank",
+   "r": 0.5836
+  },
+  {
+   "col": "rl_f_pl_rating",
+   "r": -0.5726
+  },
+  {
+   "col": "rl_f_pl_rating_z",
+   "r": -0.5707
+  },
+  {
+   "col": "f_pl_rating",
+   "r": -0.5247
+  },
+  {
+   "col": "f_last1_rank",
+   "r": 0.5233
+  },
+  {
+   "col": "rl_f_recent_fukusho_rank",
+   "r": 0.5135
+  },
+  {
+   "col": "rl_f_recent_fukusho_vs_field",
+   "r": -0.509
+  },
+  {
+   "col": "f_recent_fukusho",
+   "r": -0.4786
+  },
+  {
+   "col": "rl_f_time_diff_rank",
+   "r": 0.4749
+  },
+  {
+   "col": "cl_f_dist_fukusho_rank",
+   "r": 0.4575
+  },
+  {
+   "col": "cl_f_dist_fukusho_vs_field",
+   "r": -0.4502
+  },
+  {
+   "col": "rl_f_speed_fig_last_rank",
+   "r": 0.4474
+  },
+  {
+   "col": "f_rl_rank",
+   "r": 0.4473
+  },
+  {
+   "col": "rl_f_time_diff_vs_field",
+   "r": -0.4334
+  },
+  {
+   "col": "rl_f_speed_fig_avg_rank",
+   "r": 0.4318
+  },
+  {
+   "col": "f_dist_fukusho",
+   "r": -0.4291
+  },
+  {
+   "col": "cl_f_jockey_rank",
+   "r": 0.4168
+  },
+  {
+   "col": "rl_f_speed_fig_max_rank",
+   "r": 0.4112
+  },
+  {
+   "col": "f_uphill_match",
+   "r": -0.4041
+  },
+  {
+   "col": "f_same_turn_rate",
+   "r": -0.4037
+  },
+  {
+   "col": "f_time_diff_avg",
+   "r": 0.3978
+  },
+  {
+   "col": "rl_f_speed_fig_avg_vs_field",
+   "r": -0.3961
+  },
+  {
+   "col": "rl_f_speed_fig_last_vs_field",
+   "r": -0.3916
+  },
+  {
+   "col": "f_agari_ability",
+   "r": -0.3896
+  },
+  {
+   "col": "f_uphill_severity_rate",
+   "r": -0.3811
+  },
+  {
+   "col": "f_straight_match",
+   "r": -0.379
+  },
+  {
+   "col": "f_course_type_rate",
+   "r": -0.3774
+  },
+  {
+   "col": "f_last2_rank",
+   "r": 0.376
+  },
+  {
+   "col": "cl_f_trainer_rank",
+   "r": 0.3658
+  },
+  {
+   "col": "rl_f_speed_fig_max_vs_field",
+   "r": -0.3655
+  },
+  {
+   "col": "f_speed_score",
+   "r": -0.3629
+  },
+  {
+   "col": "f_jockey",
+   "r": -0.3585
+  },
+  {
+   "col": "f_jockey_rate",
+   "r": -0.3579
+  },
+  {
+   "col": "cl_f_jockey_vs_field",
+   "r": -0.3543
+  },
+  {
+   "col": "rl_f_finish_time_rank",
+   "r": 0.3142
+  },
+  {
+   "col": "cl_f_course_fukusho_vs_field",
+   "r": -0.3096
+  },
+  {
+   "col": "cl_f_course_fukusho_rank",
+   "r": 0.3036
+  },
+  {
+   "col": "f_agari_rank_at_type",
+   "r": 0.3035
+  },
+  {
+   "col": "cl_f_trainer_vs_field",
+   "r": -0.3021
+  },
+  {
+   "col": "f_course_fukusho",
+   "r": -0.2995
+  },
+  {
+   "col": "f_same_course_rate",
+   "r": -0.2995
+  },
+  {
+   "col": "cl_f_style_course_fit_rank",
+   "r": 0.2968
+  },
+  {
+   "col": "cl_f_heavy_track_rank",
+   "r": 0.2953
+  },
+  {
+   "col": "f_speed_fig_last",
+   "r": -0.2941
+  },
+  {
+   "col": "f_trainer",
+   "r": -0.2907
+  },
+  {
+   "col": "rl_f_speed_avg_rank",
+   "r": 0.2836
+  },
+  {
+   "col": "cl_f_heavy_track_vs_field",
+   "r": -0.2791
+  },
+  {
+   "col": "f_last3_rank",
+   "r": 0.2775
+  },
+  {
+   "col": "cl_f_style_total_fit_rank",
+   "r": 0.2751
+  },
+  {
+   "col": "f_heavy_track_rate",
+   "r": -0.273
+  },
+  {
+   "col": "f_pos_avg_3",
+   "r": 0.2684
+  },
+  {
+   "col": "cl_f_pace_fit_rank",
+   "r": 0.2664
+  },
+  {
+   "col": "f_speed_fig_avg",
+   "r": -0.2626
+  },
+  {
+   "col": "f_p_back",
+   "r": 0.2612
+  },
+  {
+   "col": "cl_f_style_course_fit_vs_field",
+   "r": -0.2518
+  },
+  {
+   "col": "rl_f_late_speed_rank",
+   "r": 0.2482
+  },
+  {
+   "col": "rl_f_finish_time_vs_field",
+   "r": -0.2451
+  },
+  {
+   "col": "f_style_course_fit",
+   "r": -0.2389
+  },
+  {
+   "col": "cl_f_blood_vs_field",
+   "r": -0.2292
+  },
+  {
+   "col": "cl_f_style_total_fit_vs_field",
+   "r": -0.2289
+  },
+  {
+   "col": "f_speed_fig_max",
+   "r": -0.2281
+  },
+  {
+   "col": "cl_f_blood_rank",
+   "r": 0.2251
+  },
+  {
+   "col": "f_perf_highpace",
+   "r": -0.224
+  },
+  {
+   "col": "f_last1_pos3c",
+   "r": 0.2136
+  },
+  {
+   "col": "f_p_front",
+   "r": -0.2125
+  },
+  {
+   "col": "rl_f_speed_last_rank",
+   "r": 0.2096
+  },
+  {
+   "col": "f_perf_slowpace",
+   "r": -0.2084
+  },
+  {
+   "col": "f_style_total_fit",
+   "r": -0.2066
+  },
+  {
+   "col": "f_stamina_score",
+   "r": -0.2042
+  },
+  {
+   "col": "rl_f_speed_avg_vs_field",
+   "r": -0.203
+  },
+  {
+   "col": "f_last2_pos3c",
+   "r": 0.1994
+  },
+  {
+   "col": "f_course_fit_score",
+   "r": -0.172
+  },
+  {
+   "col": "cl_f_pace_fit_vs_field",
+   "r": -0.172
+  },
+  {
+   "col": "f_last3_pos3c",
+   "r": 0.1718
+  },
+  {
+   "col": "rl_f_late_speed_vs_field",
+   "r": -0.1713
+  },
+  {
+   "col": "f_speed_max",
+   "r": -0.1702
+  },
+  {
+   "col": "f_speed_avg",
+   "r": -0.1655
+  },
+  {
+   "col": "f_pace_fit",
+   "r": -0.1489
+  },
+  {
+   "col": "f_late_speed",
+   "r": 0.1484
+  },
+  {
+   "col": "f_age",
+   "r": 0.144
+  },
+  {
+   "col": "rl_f_speed_last_vs_field",
+   "r": -0.1387
+  },
+  {
+   "col": "f_speed_last",
+   "r": -0.1259
+  },
+  {
+   "col": "f_last1_3f",
+   "r": 0.1225
+  },
+  {
+   "col": "cl_f_weight_load_vs_field",
+   "r": 0.1106
+  },
+  {
+   "col": "f_beat_market_rate",
+   "r": 0.1043
+  },
+  {
+   "col": "f_corner_position_change",
+   "r": -0.1004
+  },
+  {
+   "col": "f_last2_3f",
+   "r": 0.0968
+  },
+  {
+   "col": "f_class_jump",
+   "r": -0.0964
+  },
+  {
+   "col": "f_weight_load",
+   "r": 0.0924
+  },
+  {
+   "col": "f_optimal_distance",
+   "r": -0.087
+  },
+  {
+   "col": "f_blood",
+   "r": -0.0809
+  },
+  {
+   "col": "f_pace_prob_slow",
+   "r": -0.08
+  },
+  {
+   "col": "f_pace_prob_fast",
+   "r": 0.0799
+  },
+  {
+   "col": "f_sex",
+   "r": 0.0784
+  },
+  {
+   "col": "f_competitive_best",
+   "r": 0.0744
+  },
+  {
+   "col": "f_competitiveness",
+   "r": 0.074
+  },
+  {
+   "col": "f_stamina_x_extension",
+   "r": 0.0694
+  },
+  {
+   "col": "f_pace_x_style",
+   "r": 0.0691
+  },
+  {
+   "col": "f_last3_3f",
+   "r": 0.0681
+  },
+  {
+   "col": "f_course_coverage",
+   "r": -0.0615
+  },
+  {
+   "col": "f_agari_at_similar",
+   "r": 0.0585
+  },
+  {
+   "col": "f_pos_std_3",
+   "r": 0.0529
+  },
+  {
+   "col": "f_weight_trend_avg",
+   "r": -0.0497
+  },
+  {
+   "col": "f_dist_confidence",
+   "r": -0.0497
+  },
+  {
+   "col": "f_speed_trend",
+   "r": 0.0473
+  },
+  {
+   "col": "f_finish_time_avg",
+   "r": -0.0457
+  },
+  {
+   "col": "f_dirt_turf_start",
+   "r": 0.0375
+  },
+  {
+   "col": "f_p_mid",
+   "r": -0.0369
+  },
+  {
+   "col": "f_weight_last_diff",
+   "r": -0.0367
+  },
+  {
+   "col": "f_is_debut",
+   "r": 0.0299
+  },
+  {
+   "col": "f_course_corner_tight",
+   "r": -0.0279
+  },
+  {
+   "col": "f_dist_change",
+   "r": 0.0259
+  },
+  {
+   "col": "f_pl_rating_n",
+   "r": 0.0254
+  },
+  {
+   "col": "f_tight_vs_spacious",
+   "r": -0.0215
+  },
+  {
+   "col": "f_course_speed_demand",
+   "r": 0.0206
+  },
+  {
+   "col": "f_dist_vs_optimal",
+   "r": 0.0186
+  },
+  {
+   "col": "f_post",
+   "r": -0.0184
+  },
+  {
+   "col": "f_days_since_last",
+   "r": -0.0155
+  },
+  {
+   "col": "f_career_runs",
+   "r": -0.0152
+  },
+  {
+   "col": "cl_f_weight_load_rank",
+   "r": -0.0143
+  },
+  {
+   "col": "f_pace",
+   "r": -0.0103
+  },
+  {
+   "col": "f_speed_x_shortening",
+   "r": -0.0086
+  },
+  {
+   "col": "f_course_stamina_demand",
+   "r": -0.0085
+  },
+  {
+   "col": "f_course_hill_diff",
+   "r": -0.0085
+  },
+  {
+   "col": "f_class_level",
+   "r": -0.0063
+  },
+  {
+   "col": "f_track_cond",
+   "r": 0.0057
+  },
+  {
+   "col": "f_interval_score",
+   "r": 0.0003
+  }
+ ]
+}
