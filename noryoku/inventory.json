@@ -1,0 +1,806 @@
+{
+ "f_is_debut": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_pos_avg_3": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_pos_std_3": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_p_front": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_p_mid": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_p_back": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_last1_pos3c": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_last2_pos3c": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_last3_pos3c": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_late_speed": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_last1_3f": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_last2_3f": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_last3_3f": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_early_speed": {
+  "varies_horse": false,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": false
+ },
+ "f_recent": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_recent_fukusho": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_career_runs": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_last1_rank": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_last2_rank": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_last3_rank": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_dist_fukusho": {
+  "varies_horse": true,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_course_fukusho": {
+  "varies_horse": true,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_perf_highpace": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_perf_slowpace": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_jockey": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": false
+ },
+ "f_jockey_rate": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": false
+ },
+ "f_trainer": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": false
+ },
+ "f_post": {
+  "varies_horse": true,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": false
+ },
+ "f_days_since_last": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_interval_score": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_blood": {
+  "varies_horse": true,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": false
+ },
+ "f_weight_load": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": false
+ },
+ "f_pace": {
+  "varies_horse": true,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": false
+ },
+ "f_speed_avg": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_speed_max": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_speed_last": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_speed_trend": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_sex": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": false
+ },
+ "f_age": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": false
+ },
+ "f_track_cond": {
+  "varies_horse": false,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": false
+ },
+ "f_heavy_track_rate": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_class_level": {
+  "varies_horse": false,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": false
+ },
+ "f_class_jump": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_finish_time_avg": {
+  "varies_horse": true,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_time_diff_avg": {
+  "varies_horse": true,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_weight_trend_avg": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_weight_last_diff": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_competitiveness": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_competitive_best": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_speed_fig_last": {
+  "varies_horse": true,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_speed_fig_avg": {
+  "varies_horse": true,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_speed_fig_max": {
+  "varies_horse": true,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_same_course_rate": {
+  "varies_horse": true,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_same_turn_rate": {
+  "varies_horse": true,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_straight_match": {
+  "varies_horse": true,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_uphill_match": {
+  "varies_horse": true,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_agari_at_similar": {
+  "varies_horse": true,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_course_coverage": {
+  "varies_horse": true,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_course_type_rate": {
+  "varies_horse": true,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_tight_vs_spacious": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_uphill_severity_rate": {
+  "varies_horse": true,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_corner_position_change": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_agari_rank_at_type": {
+  "varies_horse": true,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_dirt_turf_start": {
+  "varies_horse": false,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": false
+ },
+ "f_course_hill_diff": {
+  "varies_horse": false,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": false
+ },
+ "f_course_corner_tight": {
+  "varies_horse": false,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": false
+ },
+ "f_style_course_fit": {
+  "varies_horse": true,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_pace_fit": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_style_total_fit": {
+  "varies_horse": true,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_pace_prob_fast": {
+  "varies_horse": false,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": false
+ },
+ "f_pace_prob_slow": {
+  "varies_horse": false,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": false
+ },
+ "f_pace_x_style": {
+  "varies_horse": true,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_agari_ability": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_stamina_score": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_speed_score": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_optimal_distance": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_dist_vs_optimal": {
+  "varies_horse": true,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_dist_change": {
+  "varies_horse": true,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_speed_x_shortening": {
+  "varies_horse": true,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_stamina_x_extension": {
+  "varies_horse": true,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_dist_confidence": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_course_stamina_demand": {
+  "varies_horse": false,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": false
+ },
+ "f_course_speed_demand": {
+  "varies_horse": false,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": false
+ },
+ "f_course_fit_score": {
+  "varies_horse": true,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_pop_last": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_pop_avg": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_beat_market_rate": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_pl_rating": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": false
+ },
+ "f_pl_rating_n": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": false
+ },
+ "rl_f_speed_avg_rank": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "rl_f_speed_avg_vs_field": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "rl_f_speed_last_rank": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "rl_f_speed_last_vs_field": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "rl_f_recent_rank": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "rl_f_recent_vs_field": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "rl_f_recent_fukusho_rank": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "rl_f_recent_fukusho_vs_field": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "rl_f_late_speed_rank": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "rl_f_late_speed_vs_field": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "cl_f_jockey_rank": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": false
+ },
+ "cl_f_jockey_vs_field": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": false
+ },
+ "cl_f_trainer_rank": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": false
+ },
+ "cl_f_trainer_vs_field": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": false
+ },
+ "cl_f_dist_fukusho_rank": {
+  "varies_horse": true,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "cl_f_dist_fukusho_vs_field": {
+  "varies_horse": true,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "cl_f_course_fukusho_rank": {
+  "varies_horse": true,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "cl_f_course_fukusho_vs_field": {
+  "varies_horse": true,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "cl_f_blood_rank": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": false
+ },
+ "cl_f_blood_vs_field": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": false
+ },
+ "cl_f_heavy_track_rank": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "cl_f_heavy_track_vs_field": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "cl_f_weight_load_rank": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": false
+ },
+ "cl_f_weight_load_vs_field": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": false
+ },
+ "rl_f_finish_time_rank": {
+  "varies_horse": true,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "rl_f_finish_time_vs_field": {
+  "varies_horse": true,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "rl_f_time_diff_rank": {
+  "varies_horse": true,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "rl_f_time_diff_vs_field": {
+  "varies_horse": true,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "rl_f_speed_fig_last_rank": {
+  "varies_horse": true,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "rl_f_speed_fig_last_vs_field": {
+  "varies_horse": true,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "rl_f_speed_fig_avg_rank": {
+  "varies_horse": true,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "rl_f_speed_fig_avg_vs_field": {
+  "varies_horse": true,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "rl_f_speed_fig_max_rank": {
+  "varies_horse": true,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "rl_f_speed_fig_max_vs_field": {
+  "varies_horse": true,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "cl_f_style_course_fit_rank": {
+  "varies_horse": true,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "cl_f_style_course_fit_vs_field": {
+  "varies_horse": true,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "cl_f_pace_fit_rank": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "cl_f_pace_fit_vs_field": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "cl_f_style_total_fit_rank": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "cl_f_style_total_fit_vs_field": {
+  "varies_horse": true,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "rl_f_pl_rating": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": false
+ },
+ "rl_f_pl_rating_z": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": false
+ },
+ "rl_f_pl_rating_rank": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": false
+ },
+ "f_rl_rank": {
+  "varies_horse": true,
+  "varies_course": false,
+  "varies_market": false,
+  "varies_hist": true
+ },
+ "f_cl_rank": {
+  "varies_horse": true,
+  "varies_course": true,
+  "varies_market": false,
+  "varies_hist": true
+ }
+}
