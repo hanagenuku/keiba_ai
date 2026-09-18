@@ -1,0 +1,111 @@
+{
+ "n_races": 1773,
+ "n_skipped": 227,
+ "seed": 20260918,
+ "period": [
+  "2023-01-07",
+  "2024-12-31"
+ ],
+ "same_cond": 120,
+ "t_cols": [
+  "f_style_course_fit",
+  "f_dist_vs_optimal",
+  "f_speed_x_shortening",
+  "f_stamina_x_extension",
+  "f_course_fit_score"
+ ],
+ "gate_a": 0.8,
+ "gate_b": 0.7,
+ "control_b": {
+  "checks": [
+   [
+    "c-4 δ=0 が完全一致",
+    true,
+    "最大差 0.000e+00"
+   ],
+   [
+    "c-3 条件を差し替えなければ τ=1",
+    true,
+    "最小 τ 1.000000000"
+   ],
+   [
+    "c-1 能力注入で ρ̄>0.95",
+    true,
+    "ρ̄ 0.9985"
+   ],
+   [
+    "c-2 合成適性で ρ̄<0.10",
+    true,
+    "ρ̄ 0.0072"
+   ],
+   [
+    "c-2 合成適性で τ̄<0.30",
+    true,
+    "τ̄ 0.0635"
+   ]
+  ],
+  "c4_max_diff": 0.0,
+  "c3_min_tau": 1.0,
+  "c1_rho": 0.9985003799039184,
+  "c2_rho": 0.007205283940187198,
+  "c2_tau": 0.06347229957262804
+ },
+ "control_a": {
+  "mean": 0.0005334820736929718,
+  "std": 0.006932491203369069,
+  "thr": 0.0009804023080836714,
+  "pass": true
+ },
+ "gate_0a": {
+  "rho_bar": 0.4930901509625355,
+  "pass": true,
+  "pct": {
+   "5": -0.05857497341368308,
+   "25": 0.3285714285714285,
+   "50": 0.5314685314685316,
+   "75": 0.7024793388429752,
+   "95": 0.8982352941176466
+  },
+  "mean_abs_rank_diff": 2.9586930257939015,
+  "frac_rank_diff_ge3": 0.44577623899311963,
+  "perm_p": 0.0,
+  "per_col_rho": {
+   "f_style_course_fit": 0.17126965951425194,
+   "f_dist_vs_optimal": 0.19062381518372343,
+   "f_speed_x_shortening": -0.03733923647165206,
+   "f_stamina_x_extension": -0.04838513814794433,
+   "f_course_fit_score": 0.727323508231806
+  },
+  "per_col_n": {
+   "f_style_course_fit": 1771,
+   "f_dist_vs_optimal": 1747,
+   "f_speed_x_shortening": 1520,
+   "f_stamina_x_extension": 1471,
+   "f_course_fit_score": 1762
+  },
+  "rho_with_debut": 0.5841607155118684,
+  "rho_without_debut": 0.4258586459569985,
+  "n_with_debut": 753,
+  "n_without_debut": 1020
+ },
+ "gate_0b": {
+  "tau_bar": 0.5540828314783937,
+  "pass": true,
+  "pct": {
+   "5": 0.0931693645633745,
+   "25": 0.38333333333333336,
+   "50": 0.5555555555555556,
+   "75": 0.7362637362637363,
+   "95": 1.0
+  },
+  "frac_top_changed": 0.5623237450648618,
+  "per_col_tau": {
+   "f_style_course_fit": 0.884475890608964,
+   "f_dist_vs_optimal": -0.06297932435079985,
+   "f_speed_x_shortening": 0.5170445737301979,
+   "f_stamina_x_extension": 0.6152302880607057,
+   "f_course_fit_score": 0.9113535402699627
+  }
+ },
+ "status": "PASS"
+}
