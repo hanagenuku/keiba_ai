@@ -478,3 +478,89 @@ ICC（レース平均の分散比）**0.9604**、**全馬が同値のレース�
 **すでに「今日の条件」の列**である。条件は**交互作用でしか効かない**。
 木は元から交互作用を作れる状態にあり、2026-09-02（道悪×型を明示的に手渡して −0.0008）で
 一度その壁に当たっている。**Phase 3 は AUC を出口にしないこと。**
+
+---
+
+## 🔴 9. 2026-09-18 の発見: 「適性」と呼んでいる列の大半は**条件付き能力**である
+
+Betting Policy 研究（能力×適性→馬券変換）の前提確認として、
+`f_course_fukusho` などが本当に「今回条件への適合度」なのかを確かめた。
+**そうではなかった。** これは単なる命名の問題ではなく、
+「能力と適性を別軸として掛け合わせる」という設計全体の前提に関わる。
+
+### 何が問題か
+
+`calc_course_aptitude_features()`（`src/features/engine.py:1924-2040`）と
+`calc_features_for_xgb()` の距離・コース系は、**すべて同じ形**をしている:
+
+```python
+# engine.py:1924-2040 の実体
+if rc == today_racecourse and sf == today_surface: same_course.append(is_top3)
+if prof.get('turn')           == today.get('turn'):           same_turn.append(is_top3)
+if prof.get('straight_class') == today.get('straight_class'): straight_match.append(is_top3)
+if prof.get('has_uphill')     == today.get('has_uphill'):     uphill_match.append(is_top3)
+def _rate(lst): return _bayes_rate(lst, prior=0.33, k=3)
+
+# engine.py:2270-2300 の実体
+same_zone   = [r for r in hist if _dz(r['distance']) == dz_]        # 距離帯4区分
+same_course = [r for r in hist if r['racecourse']==rc and r['surface']==surf]
+feats['f_dist_fukusho']   = _bayes_rate([1 if place<=3 else 0 ...], prior=0.33, k=3)
+feats['f_course_fukusho'] = _bayes_rate([...],                      prior=0.33, k=3)
+```
+
+つまり **「過去走を今回条件で絞り込んだうえでの3着内率」**。
+これは「その条件でどれだけ強いか」であって、
+**「その馬の平常の力に対して、今回条件でどれだけ上振れ／下振れするか」ではない。**
+絞り込みで測っているのは、能力そのものを部分集合で見た量である。
+
+### 独立した3つの裏付け
+
+| # | 事実 | 出典 |
+|---|---|---|
+| 1 | Phase 2 の F8「コース・距離適性」ブロックの構成列に **`f_recent_fukusho`（条件と無関係な近走好走率）が乗っている** | `noryoku/RESULTS_PHASE2.md` |
+| 2 | `f_same_course_rate` は `f_course_fukusho` と **ビット単位で同一**（164,915行・最大差 0） | Phase 1b（2026-09-16） |
+| 3 | コース系20列に**専用の学習枠**を与えた2段階モデルは **悪化**（Stage A 109列 0.7548 → +Stage B 0.7523） | 2026-08-04 |
+
+②-A の市場残差の持ち越しも同じ絵を描いている。
+**能力軸は持ち越すが、適性を名乗る軸は持ち越さない**:
+
+    f_pl_rating（能力）                ρ = 0.83
+    f_same_turn_rate                  ρ = 0.59
+    f_recent_fukusho                  ρ = 0.42
+    f_dist_fukusho                    ρ = 0.35
+    f_course_fukusho                  ρ = 0.33
+    f_uphill_match                    ρ = 0.28
+    cl_f_dist_fukusho_vs_field        ρ = 0.13
+
+### ⚠ F8 の「F1 と相関 0.00」を「独立した適性軸」と読まないこと
+
+Phase 2 の8ブロックは**直交回転**で作られている。因子スコア間の相関が 0.00 なのは
+**回転の性質であって、データが示した独立性ではない**。
+これを独立の根拠に使うのは、2026-09-17 に `f_last1_rank` で踏んだ
+「直交化した成分の単独AUCで固有情報の有無を判定する」誤りと同型（North Star #8）。
+
+### 本当に「適性」の形をしている列（3種類しかない）
+
+| 型 | 列 | 何が違うか |
+|---|---|---|
+| **差分型** | `f_tight_vs_spacious` / `f_dist_vs_optimal` / `f_dist_change` | その馬の**平常値との差**を取っている＝能力水準が消える |
+| **掛け合わせ型** | `f_style_course_fit` / `f_speed_x_shortening` / `f_stamina_x_extension` / `f_course_fit_score` | 馬の型 × 今回条件の要求 |
+| ~~レース定数型~~ | `f_dirt_turf_start` `f_course_hill_diff` `f_course_corner_tight` `f_pace_prob_fast` `f_pace_prob_slow` `f_course_stamina_demand` `f_course_speed_demand` | 🔴 **レース内で全馬同値**。**適性順位を作れない**ので単独では使えない |
+
+### 除外が必要なもの
+
+| 列 | 理由 |
+|---|---|
+| 馬場適性4列（`f_track_cond` `f_heavy_track_rate` `cl_f_heavy_track_rank` `cl_f_heavy_track_vs_field`） | `f_track_cond` は**推論時つねに 0.0**（既知のパリティ違反）。学習データで作った規則が予測時に再現できない |
+| `f_course_fukusho` 系 | 上記のとおり条件付き能力 |
+
+### 用語の扱い（今後）
+
+🔑 **`f_course_fukusho` / `f_dist_fukusho` / `f_same_turn_rate` / `f_uphill_match` /
+`f_same_course_rate` を「適性」と呼ばない。** 呼ぶなら **「条件付き能力」**。
+SHAP の表示カテゴリ名（「コース適性」「距離適性」）は説明表示用の人が付けた名前で、
+中身の保証はない（§0 に既記）。
+
+🔑 この発見は **Betting Policy 研究の Gate 0 が存在する理由**そのもの。
+Gate 0 は「現在の特徴量で、能力と独立した適性軸を作れるか」を**研究に入る前に**測る
+（`betting/CRITERIA.md`）。
