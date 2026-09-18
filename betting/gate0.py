@@ -81,12 +81,32 @@ def t_score(xs):
     return np.mean(parts, axis=0), used
 
 
-def desc_rank(score, horse_num):
-    """降順順位（1 = 最大）。タイブレークは馬番の昇順（🔴 着順は使わない）。"""
-    order = sorted(range(len(score)), key=lambda i: (-score[i], horse_num[i]))
-    rk = np.empty(len(score), dtype=float)
-    for pos, i in enumerate(order):
-        rk[i] = pos + 1
+def desc_rank(score, horse_num=None):
+    """降順順位（1 = 最大）。**同値は平均順位**（tie-aware）。
+
+    🔴 2026-09-18・対照群A が捕まえた計測器の欠陥の修正。
+      当初は「同値は馬番の昇順で強制的に一意化する」としていたが、
+      これだと **T が同値の馬では順位が必ず馬番順になる**。能力側も
+      初出走馬（θ=0）の同値を馬番順で割るため、両者に**共通の馬番成分**が入り、
+      T をシャッフルしても ρ が 0 にならない（実測 +0.0176・帰無が0中心にならず
+      対照群A が落ちた）。合成例で機序を確認済み:
+          同値なし E[ρ]=+0.005 / t に4頭同値 E[ρ]=+0.090 / t が全頭同値 E[ρ]=+1.000
+      平均順位に直すと 0.005 / -0.002 / 未定義(NaN) になる。
+    ⚠ これは閾値・構成列・符号・期間・母集団の変更ではない。
+      「着順を絶対に使わない」という当初の意図は、恣意的なタイブレークを
+      置かない平均順位のほうがより厳密に満たす。
+    """
+    v = np.asarray(score, dtype=float)
+    order = np.argsort(-v, kind='stable')
+    n = len(v)
+    rk = np.empty(n, dtype=float)
+    i = 0
+    while i < n:
+        j = i
+        while j + 1 < n and v[order[j + 1]] == v[order[i]]:
+            j += 1
+        rk[order[i:j + 1]] = (i + j) / 2.0 + 1.0
+        i = j + 1
     return rk
 
 
@@ -99,15 +119,20 @@ def spearman(a, b):
 
 
 def kendall(a, b):
+    """Kendall tau-b（同値を正しく扱う）。全同値なら NaN。"""
     a, b = np.asarray(a, float), np.asarray(b, float)
     n = len(a)
     if n < 2:
         return np.nan
-    da = np.sign(a[:, None] - a[None, :])
-    db = np.sign(b[:, None] - b[None, :])
     iu = np.triu_indices(n, 1)
-    s = (da[iu] * db[iu]).sum()
-    return float(s / (n * (n - 1) / 2))
+    da = np.sign(a[:, None] - a[None, :])[iu]
+    db = np.sign(b[:, None] - b[None, :])[iu]
+    num = float((da * db).sum())
+    n_a = float((da != 0).sum())     # a で同値でない対の数
+    n_b = float((db != 0).sum())
+    if n_a <= 0 or n_b <= 0:
+        return np.nan
+    return num / np.sqrt(n_a * n_b)
 
 
 def _stable_seed(*parts):
