@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-19T16:28:48.646230+09:00",
+  "generated_at": "2026-09-19T18:12:10.850909+09:00",
   "date": "9月19日(土)",
   "type": "saturday",
   "venues": [
@@ -32942,7 +32942,7 @@
     ]
   },
   "data_quality": {
-    "odds_coverage": 0.956,
+    "odds_coverage": 1.0,
     "parse_failures": []
   }
 }
