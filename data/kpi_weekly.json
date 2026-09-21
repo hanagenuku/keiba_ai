@@ -206,5 +206,13 @@
     "ai_logloss": 0.2129,
     "mkt_logloss": 0.2123,
     "delta": 0.0007
+  },
+  {
+    "date": "2026-09-21",
+    "races": 12,
+    "horses": 157,
+    "ai_logloss": 0.2115,
+    "mkt_logloss": 0.2035,
+    "delta": 0.0081
   }
 ]
