@@ -129,6 +129,10 @@ def fetch_and_save_results(sess, hist_path, target_date):
     return all_results
 
 
+_DAY_TYPES = ('monday', 'tuesday', 'wednesday', 'thursday',
+              'friday', 'saturday', 'sunday')
+
+
 def _already_generated(app_path, mode_type, today_str):
     """latest.json が今日の same type で既に生成済みかどうかを確認する。"""
     if not os.path.exists(app_path):
@@ -256,14 +260,12 @@ def refresh_today(sess, hist_path, avg_bias, jst_now):
     これらは前日夜生成時点の記録のまま維持し、本関数はrace_predictions
     （UNIQUE制約で安全に上書きされる）とlatest.json（表示専用）のみを更新する。
     """
-    weekday = jst_now.weekday()  # 5=土 6=日
-    if weekday == 5:
-        day_type = 'saturday'
-    elif weekday == 6:
-        day_type = 'sunday'
-    else:
-        print(f'⚠ refreshモードは土日の実行を想定しています（weekday={weekday}）。スキップします。')
-        return
+    # 曜日で day_type を決める。latest.json の 'type' に入るだけで、表示日付は
+    # same_day=True のため jst_now そのもの（曜日に依存しない）。
+    # 🔴 2026-09-21: 従来は土日以外を即 return していたが、月曜開催（台風順延等）
+    #    で「当日のオッズを一度も取り込めない日」が発生した。開催が無ければ
+    #    fetch_races_on_date が0件を返して下で安全に抜けるので、曜日で弾かない。
+    day_type = _DAY_TYPES[jst_now.weekday()]
 
     target_date = jst_now.strftime('%Y%m%d')
     print(f'📅 再取得日: {target_date}（当日・直前オッズによる予想更新）')
@@ -297,6 +299,16 @@ def refresh_today(sess, hist_path, avg_bias, jst_now):
     if started or unknown:
         print(f'⏭ 発走済み {len(started)}R / 発走時刻不明 {len(unknown)}R は'
               f'予想を更新しません（確定オッズの混入を防ぐため）')
+
+    # 🔴 2026-09-21: 更新できるレースが1つも無いなら latest.json を触らない。
+    #   GitHub Actions の cron は数時間遅れて発火することがある（実測: 日曜14:00
+    #   予定の refresh が 18:42 JST に発火）。全レース発走済みの状態で走ると、
+    #   その間に生成された「翌日の予想」を当日の内容で上書きしてしまう
+    #   （2026-09-20 に実際に発生し、月曜予想が日曜に巻き戻った）。
+    if not upcoming:
+        print('⏭ 発走前のレースが0件のため latest.json は更新しません'
+              '（翌日予想の上書きを防ぐため）')
+        return
 
     # ── 当日の馬場状態を、先に終わったレースの結果から拾って反映する ──────
     # f_track_cond は学習時だけ本物の馬場が入り、推論時はつねに 0.0（良）
