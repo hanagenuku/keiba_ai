@@ -30,13 +30,54 @@ def _race(rid='r1', start_time='10:10'):
             'date': '2026-07-26', 'horses': [{'num': 1, 'name': 'テストウマ'}]}
 
 
-def test_refresh_today_skips_on_non_weekend(monkeypatch, tmp_path):
+def test_refresh_today_runs_on_weekday(monkeypatch, tmp_path):
+    """月曜など土日以外でも当日のレースを見に行く。
+
+    🔴 2026-09-21 の回帰テスト。従来は土日以外を曜日だけで即 return していたため、
+    台風順延で月曜開催になった日に「当日のオッズを一度も取り込めない」状態が
+    起きた。開催が無い日は fetch_races_on_date が0件を返して安全に抜けるので、
+    曜日で弾く必要はない（この assert は修正前のコードでは実際に落ちる）。
+    """
     calls = []
     monkeypatch.setattr(weekend, 'fetch_races_on_date',
-                        lambda *a, **k: calls.append('called') or ([], []))
-    jst_now = datetime(2026, 7, 27, 8, 0, tzinfo=JST)  # 月曜
+                        lambda *a, **k: calls.append(a[1]) or ([], []))
+    jst_now = datetime(2026, 9, 21, 8, 0, tzinfo=JST)  # 月曜
     weekend.refresh_today(object(), 'dummy_hist.db', None, jst_now)
-    assert calls == []
+    assert calls == ['20260921']
+
+
+def test_refresh_today_infers_weekday_day_type(monkeypatch, tmp_path):
+    """月曜は day_type='monday'。
+
+    latest.json の 'type' は _already_generated が翌日予想のスキップ判定に使う。
+    月曜を 'sunday' と名乗らせると、月曜夜の翌日予想が「本日生成済み」と誤判定
+    されるため、曜日をそのまま入れる。
+    """
+    app_path = tmp_path / 'latest.json'
+    monkeypatch.setattr(weekend, 'APP_PATH', str(app_path))
+    race = _race(start_time='23:59')
+    monkeypatch.setattr(weekend, 'fetch_races_on_date', lambda *a, **k: ([race], []))
+    monkeypatch.setattr(weekend, 'fetch_odds_map', lambda *a, **k: {})
+    monkeypatch.setattr(weekend, 'apply_odds_to_races', lambda *a, **k: 0)
+    monkeypatch.setattr(weekend, 'calc_all', lambda *a, **k: [])
+    monkeypatch.setattr(weekend, 'select_quality_races', lambda *a, **k: [])
+    monkeypatch.setattr(weekend, 'build_market_odds_from_races', lambda *a, **k: {})
+    monkeypatch.setattr(weekend, 'save_race_predictions',
+                        lambda *a, **k: (_ for _ in ()).throw(
+                            AssertionError('scored_all が空なら保存しない')))
+
+    captured = {}
+
+    def _fake_to_app_json(selected, races_all, bias_data, jst_now, day_type=None, **kw):
+        captured['day_type'] = day_type
+        captured['same_day'] = kw.get('same_day')
+        return {'ok': True}
+    monkeypatch.setattr(weekend, 'to_app_json', _fake_to_app_json)
+
+    jst_now = datetime(2026, 9, 21, 8, 0, tzinfo=JST)  # 月曜
+    weekend.refresh_today(object(), 'dummy_hist.db', None, jst_now)
+    assert captured['day_type'] == 'monday'
+    assert captured['same_day'] is True
 
 
 def test_refresh_today_skips_when_no_races(monkeypatch, tmp_path):
@@ -143,3 +184,32 @@ def test_main_supports_refresh_mode_choice():
     src = inspect.getsource(weekend.main)
     assert "'refresh'" in src
     assert 'refresh_today' in src
+
+
+def test_refresh_today_keeps_latest_json_when_all_races_started(monkeypatch, tmp_path):
+    """発走前のレースが0件なら latest.json を触らない。
+
+    🔴 2026-09-21 の回帰テスト。cron が数時間遅れて発火すると（実測: 日曜14:00
+    予定の refresh が 18:42 JST に発火）、全レース終了後に走って「翌日の予想」を
+    当日の内容で上書きしてしまう。2026-09-20 に実際に月曜予想が日曜へ巻き戻った。
+    """
+    app_path = tmp_path / 'latest.json'
+    app_path.write_text(json.dumps({'date': '9月21日(月)'}), encoding='utf-8')
+    monkeypatch.setattr(weekend, 'APP_PATH', str(app_path))
+
+    race = _race(start_time='10:10')
+    monkeypatch.setattr(weekend, 'fetch_races_on_date', lambda *a, **k: ([race], []))
+    monkeypatch.setattr(weekend, 'fetch_odds_map', lambda *a, **k: {})
+    monkeypatch.setattr(weekend, 'apply_odds_to_races', lambda *a, **k: 0)
+
+    def _fail(*a, **k):
+        raise AssertionError('発走前0件なら予想の再計算まで進んではいけない')
+    monkeypatch.setattr(weekend, 'calc_all', _fail)
+    monkeypatch.setattr(weekend, 'to_app_json', _fail)
+
+    # 発走時刻 10:10 に対して 18:42 実行 ＝ 全レース発走済み
+    jst_now = datetime(2026, 9, 20, 18, 42, tzinfo=JST)
+    weekend.refresh_today(object(), 'dummy_hist.db', None, jst_now)
+
+    with open(app_path, encoding='utf-8') as f:
+        assert json.load(f) == {'date': '9月21日(月)'}
