@@ -746,16 +746,34 @@ koukakukeiba.jugem.jp  kayochinkeiba.com  *.bloodline-trackbias.work
 
 ### 🚩 次のセッションがやること（2026-09-22 時点）
 
-#### 🔴 まず最初に: ネットワークポリシーが効いているか確かめる
+#### ✅ ネットワークポリシーは効いている（2026-09-22 に実測）
 
-2026-09-22 に Custom へ変更した（上記）。**新セッションの最初に WebFetch を1回撃って確認すること。**
+Custom への変更は**正しく適用された**。新セッションで WebFetch を3回撃って確認済み:
 
+| URL | 結果 |
+|---|---|
+| `koukakukeiba.jugem.jp/?eid=6567` | ✅ 到達（「9月22日競馬[予想レース]」を取得） |
+| `race.netkeiba.com/top/` | ✅ 到達（ただし**中身はJSで後から描画**され、静的HTMLからは開催日・競馬場が読めない） |
+| `www.jra.go.jp/keiba/` | ✅ 到達 |
+
+⚠ **前セッションの記録どおり「新しいセッションにしか適用されない」**。
+⚠ netkeiba のレース一覧は JS 描画なので、WebFetch の要約からは race_id を拾えない。
+   race_id が要るときは `db.netkeiba.com/race/{race_id}/` を直接叩く
+   （2026-08-24 E-1 で確認済みの経路）。
+⚠ **netkeiba は規約上「入手データは私的利用に限定」**。公開リポジトリに置かない
+   （`data/private/` を使う）。
+
+🔑 **この環境は毎回まっさらなので、毎セッション以下が必要**（実測 2026-09-22）:
 ```
-WebFetch https://koukakukeiba.jugem.jp/?eid=6567
-WebFetch https://race.netkeiba.com/race/shutuba.html?race_id=<任意>
+pip install numpy pandas xgboost scikit-learn scipy beautifulsoup4 requests lxml
+# LFS実体（data/*.db と data/*.pkl の8個）は media.githubusercontent.com から取る
+curl -sL -o data/<name> \
+  "https://media.githubusercontent.com/media/hanagenuku/keiba_ai/main/data/<name>"
 ```
-通らなければ、①チェックボックス（デフォルトリストも含める）②環境が2つあるのでどちらを編集したか
-③保存されているか、をユーザーに確認してもらう。
+`data/*.pkl` は **8個すべてが LFS ポインタ**（`horse_course_dict` `horse_dist_dict`
+`horse_venue_dist_dict` `jockey_stats_dict` `member_level_cache` `pl_rating`
+`post_zone_bias` `trainer_stats_dict`）。取らないと `init_engine()` が
+`UnpicklingError: invalid load key, 'v'` で落ちる。
 
 #### 未決の判断が1件ある（Betting Policy Step 1）
 
