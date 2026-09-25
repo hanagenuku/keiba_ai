@@ -94,14 +94,28 @@ def _is_index_table(rows):
 def _pairs_from_block(num_row, idx_row):
     """['1R','⑧','④',...] と ['指','91','70',...] → [(馬番, 指数), ...]
 
-    空欄（出走頭数に満たないぶん）は落とす。壊れていれば None を返す。
+    末尾の空欄（出走頭数に満たないぶんの詰め物）は落とす。壊れていれば None。
+
+    🔴 **行の途中の空セルは却下する**（2026-09-25 に実データで発見）
+       記事が1頭ぶんを丸ごと飛ばしている場合があり、実測で 9,147レース中2件:
+         5R 馬番 ['5R','①','⑮','⑨','⑬', '' ,'⑭',...]
+         5R 指数 ['指','74','67','66','63', '' ,'62',...]   ← 63 と 62 の間が空
+       どちらも16頭立てで**馬番16 が記事に無く**、空セルは順位5番目にあった。
+       黙って飛ばすと ①それ以降の馬の順位が1つ上にずれる
+       ②history.db と馬番集合が合わない（「DBにだけ多い」として検出された）。
+       事前登録カードの中止条件に触れる形なので、**そのレースを採用しない**。
+       2件/9,147＝0.02% なので失う量は無視できる。
     """
     if not num_row or not idx_row or idx_row[0] != '指':
         return None
     out = []
+    seen_blank = False
     for raw_n, raw_v in zip(num_row[1:], idx_row[1:]):
         if not raw_n and not raw_v:
-            continue          # 頭数ぶんで打ち切られた末尾の空セル
+            seen_blank = True
+            continue          # 末尾の詰め物ならこの後に中身は来ない
+        if seen_blank:
+            return None       # 空セルの後に中身が来た＝行の途中が欠けている
         n = _circled_to_int(raw_n)
         v = unicodedata.normalize('NFKC', (raw_v or '').strip())
         if n is None or not v.isdigit():
@@ -115,16 +129,27 @@ def _pairs_from_block(num_row, idx_row):
 
 
 def _blocks(rows):
-    """['1R', ...] / ['指', ...] の2行1組を {レース番号: [(馬番, 指数)]} に。"""
-    out = {}
+    """['1R', ...] / ['指', ...] の2行1組を {レース番号: [(馬番, 指数)]} に。
+
+    Returns
+    -------
+    (found, bad)
+      found {レース番号: [(馬番, 指数), ...]}
+      bad   {レース番号}  2行1組が見つかったのに中身を読めなかったレース。
+            **黙って落とさない**ため呼び出し側へ返す（異常を無音にしない）。
+    """
+    out, bad = {}, set()
     for i in range(1, len(rows) - 1):
         m = _RACE_LABEL_RE.match((rows[i] or [''])[0])
         if not m:
             continue
+        rn = int(m.group(1))
         pairs = _pairs_from_block(rows[i], rows[i + 1])
-        if pairs is not None:
-            out[int(m.group(1))] = pairs
-    return out
+        if pairs is None:
+            bad.add(rn)
+        else:
+            out[rn] = pairs
+    return out, bad
 
 
 def parse_index_tables(html):
@@ -139,20 +164,24 @@ def parse_index_tables(html):
     from bs4 import BeautifulSoup
     soup = BeautifulSoup(html, 'html.parser')
 
-    summary, repeats = {}, {}
+    summary, repeats, unreadable = {}, {}, set()
     for table in soup.find_all('table'):
         rows = _table_rows(table)
         if not _is_index_table(rows):
             continue
-        found = _blocks(rows)
-        if len(found) > 1:
+        found, bad = _blocks(rows)
+        unreadable |= bad
+        if len(found) + len(bad) > 1:
             summary.update(found)      # 12レースぶんの一覧
         else:
             repeats.update(found)      # 各レースの再掲
 
     races, rejected = {}, []
-    for rn in sorted(set(summary) | set(repeats)):
+    for rn in sorted(set(summary) | set(repeats) | unreadable):
         a, b = summary.get(rn), repeats.get(rn)
+        if rn in unreadable:
+            rejected.append((rn, '行の途中が欠けている（記事が1頭ぶん飛ばしている）'))
+            continue
         if a is None or b is None:
             rejected.append((rn, '一覧と再掲のどちらかが無い'))
             continue
