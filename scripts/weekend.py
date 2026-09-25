@@ -326,6 +326,30 @@ def refresh_today(sess, hist_path, avg_bias, jst_now):
         except Exception as e:
             print(f'⚠ 馬場状態の取得に失敗（既定の「良」のまま続行）: {e}')
 
+    # ── web由来の情報を当日ぶん取り、発走前レースに貼る ────────────────
+    # 🔑 これは上流の特徴量（going.py と同じ形）。予想の出力を後から書き換える
+    #    後付け補正ではない。後付け層は5件すべて撤回されている。
+    # ⚠ 台帳（data/source_registry.json）で採用済みの情報源が無ければ
+    #    サイトを叩かず何もしない。既定は採用0件。
+    # ⚠ COLLECT_WEB_SIGNALS=0 で無効化できる。失敗しても予想は止めない。
+    if os.environ.get('COLLECT_WEB_SIGNALS', '1') != '0':
+        try:
+            from scripts.collect_web_signals import collect_for_date
+            from src.features.web_signals import attach_for_adopted
+            r = collect_for_date(ROOT, target_date)
+            if r.get('skipped_reason') is None:
+                print(f'   web由来の情報: {r["fetched"]}本 / {r["rows"]}頭'
+                      + (f'  失敗 {r["failed"]}' if r['failed'] else ''))
+            n_ws = 0
+            for race in upcoming:
+                attach_for_adopted(race, ROOT)
+                if race.get('web_signals'):
+                    n_ws += 1
+            if n_ws:
+                print(f'   web由来の指数を反映: {n_ws}R / 発走前 {len(upcoming)}R')
+        except Exception as e:
+            print(f'⚠ web由来の情報の取得に失敗（無しのまま続行）: {e}')
+
     print('💾 発走前レースの予測を race_predictions に更新保存中...')
     # snapshot: 08時台の従来runは 'refresh'（既存の比較コードとの互換）。
     # それ以降の追加runは 'refresh_HH' で別枠に残し、どの時点が一番当たるかを
