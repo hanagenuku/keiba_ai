@@ -128,6 +128,45 @@ class TestCrossCheckRejects(unittest.TestCase):
         self.assertEqual(len(races2), 11, '他のレースは巻き込まれない')
 
 
+class TestMidRowGap(unittest.TestCase):
+    """🔴 記事が行の途中で1頭ぶん飛ばしている場合（2026-09-25 に実データで発見）。
+
+    実物（2025-04-13 阪神 5R）:
+        馬番 ['5R','①','⑮','⑨','⑬', '' ,'⑭','④',...]
+        指数 ['指','74','67','66','63', '' ,'62','61',...]   ← 63 と 62 の間が空
+
+    黙って飛ばすと ①それ以降の馬の順位が1つ上にずれる
+    ②history.db と馬番集合が合わない（9,147レース中2件で「DBにだけ多い」として検出）。
+    → **そのレースを採用せず、理由を残す。**
+    """
+
+    def test_race_with_mid_row_gap_is_rejected_with_reason(self):
+        rows, meta = parse_article(_load('kayochin_midgap.html'), '2025-04-13', 'hanshin')
+        self.assertEqual(meta['n_races'], 11, '欠けた1レースだけが落ちる')
+        self.assertEqual([rn for rn, _ in meta['rejected']], [5])
+        self.assertIn('行の途中', meta['rejected'][0][1], '理由が残っていない（無音にしない）')
+        self.assertFalse(any(r['race_num'] == 5 for r in rows))
+
+    def test_other_races_are_unaffected(self):
+        rows, _ = parse_article(_load('kayochin_midgap.html'), '2025-04-13', 'hanshin')
+        per = {}
+        for r in rows:
+            per.setdefault(r['race_num'], []).append(r)
+        self.assertEqual(sorted(per), [1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12])
+        for rn, rs in per.items():
+            self.assertEqual([r['index_rank'] for r in rs],
+                             list(range(1, len(rs) + 1)), f'{rn}R の順位が連番でない')
+
+    def test_trailing_blanks_are_still_normal_padding(self):
+        """末尾の詰め物は従来どおり許す（全レースが却下されたら直し過ぎ）。"""
+        for name, date in (('kayochin_2026.html', '2026-09-20'),
+                           ('kayochin_2023.html', '2023-09-30')):
+            with self.subTest(name):
+                _rows, meta = parse_article(_load(name), date, 'nakayama')
+                self.assertEqual(meta['n_races'], 12)
+                self.assertEqual(meta['rejected'], [])
+
+
 class TestUrl(unittest.TestCase):
     def test_article_url(self):
         self.assertEqual(article_url('2026-09-20', 'nakayama'),
