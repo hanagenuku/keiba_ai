@@ -4,7 +4,9 @@
     "🔴 ここに status='adopted' と書くだけでは本番に届かない。",
     "   src/utils/source_registry.py が results ファイルと measured の実数を要求し、",
     "   欠けていれば警告して採用を無効化する（後付け補正層を5回撤回した教訓）。",
-    "access は robots/利用規約の判定。egress が通ることと取得してよいことは別。"
+    "access は robots/利用規約の判定。egress が通ることと取得してよいことは別。",
+    "status='closed_unmeasured' は「測っていないが、測定予算を使う価値が無いと分かった」。",
+    "   'rejected'（測って不採用）と混同しないこと。根拠は websig/RECON_2026-09-25.md。"
   ],
   "version": 2,
   "updated_at": "2026-09-25",
@@ -28,10 +30,18 @@
       "measured": {
         "measured_at": "2026-09-25",
         "delta_auc_mean": 0.00227,
-        "delta_auc_windows": [0.00333, 0.00247, 0.00100],
+        "delta_auc_windows": [
+          0.00333,
+          0.00247,
+          0.001
+        ],
         "delta_auc_mean_subset": 0.00384,
-        "control_random_rank": -0.00010,
-        "solo_auc": [0.7698, 0.7853, 0.7991],
+        "control_random_rank": -0.0001,
+        "solo_auc": [
+          0.7698,
+          0.7853,
+          0.7991
+        ],
         "fukusho_roi_base": 79.7,
         "fukusho_roi_arm": 79.1,
         "failed_criterion": "③ Brier が3窓とも同方向にならない（2/3）",
@@ -46,32 +56,38 @@
       "label": "bloodline-trackbias（トラックバイアス予想）",
       "url": "https://www.bloodline-trackbias.work",
       "access": "allowed",
-      "access_note": "robots に Claude の名指しなし。Atom <published> で公開時刻が構造化（2026-09-23）",
+      "access_note": "robots は /api/ /draft/ /preview のみ Disallow・Claude の名指しなし。⚠ apex は Connection reset、**www が正**（はてなブログの独自ドメイン）。sitemap_index から月別89本・2019-05 まで遡れる（history.db 全期間をカバー）",
       "data_scope": "private",
       "collector": null,
-      "status": "untested",
+      "status": "closed_unmeasured",
       "card": null,
       "results": null,
       "measured": null,
       "feature_cols": [],
       "prior": "low",
-      "prior_note": "馬場バイアスは4回否定済み（2026-08-06 / 08-26 / 08-27 / 09-15）。前日20:00公開は土曜19:06生成に間に合わない"
+      "prior_note": "馬場バイアスは4回否定済み（2026-08-06 / 08-26 / 08-27 / 09-15）。⚠ 前日19:00/20:00 公開が19:06生成に間に合わない件は、2026-09-25 に作った朝8時 refresh の経路で拾えるので**もう障害ではない**（記述を訂正）。⚠ 想定馬場状態・想定時計は going.py の穴（R1前・前日夜）を埋める唯一の候補だが、その上限も 2026-08-27 に測ってあり軸が動くのは2.5%のレースだけ",
+      "closed_at": "2026-09-25",
+      "closed_reason": "粒度が会場×馬場の1日4セル（レース単位ではない・2026-09-25 に訂正）。レース内で一定の属性は構造的に0に潰れる（2026-09-15 実測）。馬番と掛ければ f_bias そのもので、馬場バイアスは4回否定済み。天井も測ってあり三連複 +0.35% に対し必要 +33.3% で約100倍足りない（2026-08-17）。値が条件付きレンジなので、リークなしではレンジ中央値まで潰れる",
+      "recon": "websig/RECON_2026-09-25.md"
     },
     {
       "source": "koukakukeiba-jugem",
       "label": "koukakukeiba.jugem.jp（調教タイム）",
       "url": "https://koukakukeiba.jugem.jp",
       "access": "allowed",
-      "access_note": "実質全許可。⚠ EUC-JP。⚠ 朝イチオッズ分析カテゴリは市場の言い換えなので①の対象外",
+      "access_note": "実質全許可（Crawl-delay 10・Claude の名指しなし）。⚠ EUC-JP。🔴 ただし『臨時サイト』で一覧は直近3日ぶんだけ。月別アーカイブも古い eid も 404 で過去分が1本も取れない。本サイト koukaku.joywork.jp は同じブログ（同一 eid・同じ3ヶ月）",
       "data_scope": "private",
       "collector": null,
-      "status": "untested",
+      "status": "closed_unmeasured",
       "card": null,
       "results": null,
       "measured": null,
       "feature_cols": [],
       "prior": "medium",
-      "prior_note": "調教は丸ごと欠けている唯一の次元（2026-08-16）。⚠ タイム付きは注目馬1頭/会場のみで残りは人が選んだ印"
+      "prior_note": "調教は丸ごと欠けている唯一の次元（2026-08-16）。⚠ タイム付きは実測で注目馬 **1頭/開催日**（『1頭/会場』は 2026-09-25 に訂正）。残りは人が選んだ印。⚠ 朝イチオッズ分析カテゴリは市場の言い換えなので①の対象外。⚠ 重賞の外厩情報は全出走馬の構造化テーブルだが重賞のみ＋過去分不可＋OPはAIの上乗せが負",
+      "closed_at": "2026-09-25",
+      "closed_reason": "過去分ゼロ＋タイムは1頭/開催日（N=390 まで約3.7年・N=2,000 まで約19年）。1レース1頭なのでレース内順位は常に1・z は 0 で正規化が成立しない。N=390 の SE 2.1pt は信号ライン +2pt より大きい（North Star #11）。印のみの側（14〜29頭/日）は websig と同型で、websig は345倍の標本・全馬・連続量でも回収率 79.7→79.1 で悪化して閉じた",
+      "recon": "websig/RECON_2026-09-25.md"
     },
     {
       "source": "netkeiba",
@@ -144,7 +160,10 @@
       "data_scope": "private",
       "collector": null,
       "status": "unusable",
-      "card": null, "results": null, "measured": null, "feature_cols": []
+      "card": null,
+      "results": null,
+      "measured": null,
+      "feature_cols": []
     },
     {
       "source": "sponichi",
@@ -155,7 +174,10 @@
       "data_scope": "private",
       "collector": null,
       "status": "unusable",
-      "card": null, "results": null, "measured": null, "feature_cols": []
+      "card": null,
+      "results": null,
+      "measured": null,
+      "feature_cols": []
     },
     {
       "source": "keibabook",
@@ -166,7 +188,10 @@
       "data_scope": "private",
       "collector": null,
       "status": "unusable",
-      "card": null, "results": null, "measured": null, "feature_cols": []
+      "card": null,
+      "results": null,
+      "measured": null,
+      "feature_cols": []
     },
     {
       "source": "umasiru",

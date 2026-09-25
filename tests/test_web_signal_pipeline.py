@@ -196,6 +196,7 @@ class TestCollectionAlsoRespectsTheLedger(unittest.TestCase):
         from scripts.collect_web_signals import NON_COLLECTABLE_STATUS
         self.assertIn('rejected', NON_COLLECTABLE_STATUS)
         self.assertIn('unusable', NON_COLLECTABLE_STATUS)
+        self.assertIn('closed_unmeasured', NON_COLLECTABLE_STATUS)
         self.assertNotIn('untested', NON_COLLECTABLE_STATUS)
         self.assertNotIn('measuring', NON_COLLECTABLE_STATUS)
         self.assertNotIn('adopted', NON_COLLECTABLE_STATUS)

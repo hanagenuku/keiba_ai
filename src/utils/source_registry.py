@@ -125,6 +125,7 @@ def source_status(base_dir='.'):
             'fukusho_roi_base': m.get('fukusho_roi_base'),
             'measured_at': m.get('measured_at'),
             'results': e.get('results'),
+            'closed_reason': e.get('closed_reason'),
         })
     return {
         'updated_at': reg.get('updated_at'),

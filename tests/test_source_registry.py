@@ -16,6 +16,8 @@ from src.features.web_signals import (  # noqa: E402
     attach_web_signals, calc_web_signal_features, feature_cols_for, _ranks_and_z)
 from src.utils import source_registry as sr  # noqa: E402
 
+BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 
 def _write_registry(base, sources):
     os.makedirs(os.path.join(base, 'data'), exist_ok=True)
@@ -206,3 +208,64 @@ class TestAttachAndFeatures(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class TestClosedUnmeasuredIsDistinctFromRejected(unittest.TestCase):
+    """🔑 「測って不採用」と「測らずに閉じた」を台帳の上で混同させない。
+
+    2026-09-18 の P3-02 で確定した規律:
+    測っていないものについて書いてよいのは「測定予算を使う価値が無いと分かった」まで。
+    「効かないと分かった」とは書かない。台帳の status もそれを分けて持つ。
+    """
+
+    def setUp(self):
+        from src.utils import source_registry as sr
+        sr.reset_warnings()
+
+    def _rows(self):
+        from src.utils.source_registry import source_status
+        return {r['source']: r for r in source_status(BASE)['sources']}
+
+    def test_closed_sources_carry_a_reason_and_a_recon_record(self):
+        import json
+        with open(os.path.join(BASE, 'data', 'source_registry.json'),
+                  encoding='utf-8') as f:
+            reg = json.load(f)
+        closed = [e for e in reg['sources']
+                  if e.get('status') == 'closed_unmeasured']
+        self.assertGreaterEqual(len(closed), 1)
+        for e in closed:
+            self.assertTrue(e.get('closed_reason'),
+                            f"{e['source']}: closed_unmeasured なのに理由が無い")
+            self.assertTrue(e.get('closed_at'), f"{e['source']}: closed_at が無い")
+            rec = e.get('recon')
+            self.assertTrue(rec, f"{e['source']}: 調査記録へのリンクが無い")
+            self.assertTrue(os.path.exists(os.path.join(BASE, rec)),
+                            f"{e['source']}: recon={rec} が実在しない")
+            # 測っていないので実測値を持たない。持っていたら rejected であるべき
+            self.assertIsNone(e.get('measured'),
+                              f"{e['source']}: 測っていないのに measured がある")
+            self.assertIsNone(e.get('results'),
+                              f"{e['source']}: 測っていないのに results がある")
+
+    def test_closed_source_never_reaches_features(self):
+        from src.utils.source_registry import adopted_sources
+        rows = self._rows()
+        closed = [s for s, r in rows.items() if r['status'] == 'closed_unmeasured']
+        self.assertTrue(closed)
+        for s in closed:
+            self.assertNotIn(s, adopted_sources(BASE))
+
+    def test_closed_reason_is_exposed_to_the_app(self):
+        rows = self._rows()
+        for s, r in rows.items():
+            if r['status'] == 'closed_unmeasured':
+                self.assertTrue(r.get('closed_reason'),
+                                f'{s}: 画面に理由が出ない')
+
+    def test_app_renders_the_closed_status_and_its_reason(self):
+        with open(os.path.join(BASE, 'index.html'), encoding='utf-8') as f:
+            html = f.read()
+        self.assertIn('closed_unmeasured:', html)
+        self.assertIn('測らずに閉じた', html)
+        self.assertIn('closed_reason', html)
