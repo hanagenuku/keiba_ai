@@ -2426,6 +2426,50 @@ function renderStats(S) {
   }
   h += '</div>';
 
+  // ── 情報源の台帳 ─────────────────────────────────────────────────────
+  // 「どの情報源をどう測って、いま何が本番に届いているか」を出す。
+  // 🔑 出すのは**測った数字とステータスだけ**。見込みや予測値は出さない
+  //    （AI xx% バッジ / ROI予測150% と同じ事故を繰り返さないため）。
+  const ws = S.web_sources || {};
+  h += '<div class="stat-card"><div class="stat-title">🌐 情報源の台帳</div>';
+  if ((ws.sources || []).length) {
+    const LBL = {
+      adopted: ['採用', '#27ae60'], rejected: ['不採用', '#c0392b'],
+      untested: ['未測定', '#e67e22'], measuring: ['測定中', '#2980b9'],
+      unusable: ['取得不可', 'var(--sub)'],
+      blocked_pending_user: ['判断待ち', '#8e44ad'],
+    };
+    const ACC = {
+      allowed: '', robots_denied: 'robots が Claude を拒否',
+      unreachable: '到達不能', tos_restricted: '規約で制限',
+    };
+    h += `<div style="font-size:11px;color:var(--sub);margin-bottom:8px">`
+      + `更新 ${ws.updated_at || '-'}　ネットワーク ${ws.network_policy || '-'}　`
+      + `<strong style="color:${ws.n_adopted ? '#27ae60' : 'var(--sub)'}">`
+      + `本番に届いている情報源 ${ws.n_adopted}件</strong></div>`;
+    for (const r of ws.sources) {
+      const [lt, lc] = LBL[r.status] || [r.status, 'var(--sub)'];
+      h += `<div class="stat-row"><span>${r.label}`;
+      if (ACC[r.access]) {
+        h += `<span style="font-size:10px;color:var(--sub)"> ${ACC[r.access]}</span>`;
+      }
+      h += `</span><span class="stat-val" style="color:${lc}">${lt}</span></div>`;
+      if (r.delta_auc_mean !== null && r.delta_auc_mean !== undefined) {
+        const dr = (r.fukusho_roi_arm !== null && r.fukusho_roi_arm !== undefined)
+          ? `　複勝回収 ${r.fukusho_roi_base}% → ${r.fukusho_roi_arm}%` : '';
+        h += `<div style="font-size:10px;color:var(--sub);margin:-2px 0 6px 8px">`
+          + `実測 ΔAUC ${r.delta_auc_mean > 0 ? '+' : ''}${r.delta_auc_mean}${dr}`
+          + `${r.measured_at ? `（${r.measured_at}）` : ''}</div>`;
+      }
+    }
+    h += '<div style="font-size:10px;color:var(--sub);margin-top:8px">'
+      + '⚠ 採用と書くだけでは本番に届きません。事前登録カードと結果ファイル、'
+      + '実測値が揃って初めて特徴量になります（未測定のものを予想に混ぜないため）</div>';
+  } else {
+    h += '<div style="color:var(--sub);font-size:12px">台帳なし</div>';
+  }
+  h += '</div>';
+
   // ── AIの盲点パターン ─────────────────────────────────────────────────
   const up = S.upset_patterns || {};
   h += '<div class="stat-card"><div class="stat-title">🔍 AI上位3頭の当たり方</div>';

@@ -33,6 +33,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      # gh run list と download-artifact(run-id) が web-signals の artifact を読むため
+      actions: read
 
     steps:
       - uses: actions/checkout@v4
@@ -49,6 +51,60 @@ jobs:
 
       - name: Install dependencies
         run: pip install -r requirements.txt
+
+      # web由来の情報（data/private/web_signals.db）は公開リポジトリに置けないので
+      # collect-web-signals.yml の artifact から復元する。
+      # ⚠ 台帳で採用済みの情報源が0件なら build_training_data は DB を開かないので、
+      #   復元できなくても学習は成立する。よってここは continue-on-error でよい。
+      #   ただし**採用済みがあるのに復元できていないと静かに列が欠ける**ので、
+      #   次のステップで検査して失敗させる。
+      - name: Find last web-signals run
+        id: ws
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          RID=$(gh run list --workflow collect-web-signals.yml --status success \
+                  --limit 1 --json databaseId --jq '.[0].databaseId // ""' \
+                  -R "${{ github.repository }}" || echo "")
+          echo "run_id=$RID" >> "$GITHUB_OUTPUT"
+
+      - name: Restore web signals DB
+        if: steps.ws.outputs.run_id != ''
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: web-signals-db
+          path: data/private
+          run-id: ${{ steps.ws.outputs.run_id }}
+          github-token: ${{ github.token }}
+
+      - name: Verify adopted sources have their data
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os, sys
+          sys.path.insert(0, '.')
+          from src.utils.source_registry import adopted_sources
+          adopted = [e['source'] for e in adopted_sources('.')]
+          if not adopted:
+              print('採用済みの情報源は0件。web由来の列は作られない（既定）')
+              raise SystemExit(0)
+          db = os.path.join('data', 'private', 'web_signals.db')
+          if not os.path.exists(db):
+              print(f'::error::採用済み {adopted} があるのに {db} が無い。'
+                    '学習データからweb由来の列が静かに欠ける')
+              raise SystemExit(1)
+          import sqlite3
+          c = sqlite3.connect(db)
+          for src in adopted:
+              n = c.execute('SELECT COUNT(*) FROM web_signals WHERE source=?',
+                            (src,)).fetchone()[0]
+              print(f'  {src}: {n} 頭')
+              if n == 0:
+                  print(f'::error::採用済み {src} のデータが0件')
+                  raise SystemExit(1)
+          PY
 
       - name: Run monthly retrain
         run: python scripts/monthly_retrain.py

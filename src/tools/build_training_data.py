@@ -182,6 +182,7 @@ def build_training_data(base_dir, output_csv='data/horse_features.csv',
         init_engine, calc_features_for_xgb, add_relative_features,
         build_member_level_cache,
     )
+    from src.features.web_signals import attach_for_adopted
 
     db_path  = os.path.join(base_dir, 'data', 'history.db')
     out_path = os.path.join(base_dir, output_csv)
@@ -285,6 +286,11 @@ def build_training_data(base_dir, output_csv='data/horse_features.csv',
             'pace_label':      race_row['pace_label'] or 'mid',
             'horses':          [],
         }
+
+        # web由来の情報を貼る（台帳で採用済みの情報源だけ・既定は0件で何もしない）。
+        # 🔑 推論側（scripts/weekend.py）と**同じ関数**を呼ぶ。別経路で貼ると
+        #    レース内正規化の母集団が変わり、学習/推論で静かに値がズレる。
+        attach_for_adopted(race, base_dir)
 
         horse_objs = []
         for hdb in horses_db:

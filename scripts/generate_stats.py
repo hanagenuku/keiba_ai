@@ -955,6 +955,15 @@ def generate_stats(base_dir=None):
             pass
     stats['results_status'] = rs
 
+    # ── 情報源の台帳（どの情報源をどう測って、いま何が本番に届いているか）──
+    # 🔑 出すのは**測った数字とステータスだけ**。予測値や見込みは出さない
+    #    （AI xx% バッジ・ROI予測150% と同じ事故を繰り返さないため）。
+    try:
+        from src.utils.source_registry import source_status
+        stats['web_sources'] = source_status(base_dir)
+    except Exception as e:
+        print(f'⚠ 情報源台帳の読み込みに失敗（スキップ）: {e}')
+
     # ── モデルKPI: AI vs 市場 log-loss ────────────────────────────────────
     kpi = calc_model_kpi(conn)
     if kpi:

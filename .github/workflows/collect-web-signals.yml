@@ -1,0 +1,166 @@
+name: Collect Web Signals
+
+# web由来の情報（いまは kayochinkeiba の能力指数）を集めて蓄積する。
+#
+# ■ なぜ artifact で持ち回るのか
+#   取得データは他所のものなので `data/private/`（.gitignore 済み）に置き、
+#   公開リポジトリにコミットしない（netkeiba と同じ扱い）。
+#   Actions のランナーは毎回まっさらなので、蓄積を続けるには
+#   前回の成功runの artifact を復元するしかない。
+#
+# ■ 🔴 2026-08-25 D-2① の事故をここで再発させない
+#   netkeiba 取得は `actions/download-artifact@v4` に名前だけ渡していたため
+#   **同じrunの artifact しか見ず毎回空振り**し、budget を守りながら
+#   毎回同じ556レースを取り直していた（ログの1行目は常に「取得済み 0」）。
+#   対策は2つ:
+#     1. 直近の成功runの run-id を明示して復元する
+#     2. **復元できたはずなのに0件だったらジョブを失敗させる**
+#        （黙って0から始まるのを繰り返さないため。件数を印字するだけでは
+#          誰もログを読まないので気づけない）
+#
+# ■ North Star #4
+#   件数と実時間の二重上限はスクリプト側が持つ。ここではジョブの
+#   timeout-minutes を上限+余裕に設定して、途中で切られても
+#   次回が続きから進む（DBは途中まで artifact に残る）。
+
+on:
+  workflow_dispatch:
+    inputs:
+      start:
+        description: '開始月 YYYY-MM'
+        required: false
+        default: '2023-01'
+        type: string
+      end:
+        description: '終了月 YYYY-MM'
+        required: false
+        default: ''
+        type: string
+      budget:
+        description: '1回に取る記事数の上限'
+        required: false
+        default: '120'
+        type: string
+  schedule:
+    # 日曜 23:10 UTC = 月曜 08:10 JST。週末ぶんの差分を取る
+    # （ジッタで数時間ずれても困らない時間帯にする）
+    - cron: '10 23 * * 0'
+
+concurrency:
+  group: collect-web-signals
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install deps
+        run: pip install requests beautifulsoup4 lxml
+
+      - name: Find last successful run
+        id: last
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # 直近の成功runのIDを取る。無ければ空（初回）
+          RID=$(gh run list --workflow collect-web-signals.yml --status success \
+                  --limit 1 --json databaseId --jq '.[0].databaseId // ""' \
+                  -R "${{ github.repository }}" || echo "")
+          echo "run_id=$RID" >> "$GITHUB_OUTPUT"
+          if [ -n "$RID" ]; then
+            echo "前回の成功run: $RID から復元を試みる"
+          else
+            echo "前回の成功runが無い（初回）"
+          fi
+
+      - name: Restore accumulated DB
+        if: steps.last.outputs.run_id != ''
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: web-signals-db
+          path: data/private
+          run-id: ${{ steps.last.outputs.run_id }}
+          github-token: ${{ github.token }}
+
+      - name: Verify restore made progress
+        run: |
+          set -euo pipefail
+          DB=data/private/web_signals.db
+          RID='${{ steps.last.outputs.run_id }}'
+          if [ -z "$RID" ]; then
+            echo "初回なので復元の検査はしない"
+            exit 0
+          fi
+          if [ ! -f "$DB" ]; then
+            echo "::error::前回の成功run($RID)があるのに $DB を復元できなかった。"
+            echo "::error::このまま走らせると毎回同じ記事を取り直す（2026-08-25 D-2①）。"
+            exit 1
+          fi
+          N=$(python3 -c "import sqlite3;print(sqlite3.connect('$DB').execute(\"SELECT COUNT(*) FROM web_fetch_log WHERE status='ok'\").fetchone()[0])")
+          echo "復元できた取得済みURL: $N 件"
+          if [ "$N" -eq 0 ]; then
+            echo "::error::復元したDBの取得済みが0件。復元が壊れている可能性が高い。"
+            exit 1
+          fi
+
+      - name: Collect
+        run: |
+          set -euo pipefail
+          END='${{ inputs.end }}'
+          if [ -z "$END" ]; then END=$(date -u +%Y-%m); fi
+          python scripts/collect_web_signals.py \
+            --start '${{ inputs.start || '2023-01' }}' \
+            --end "$END" \
+            --budget '${{ inputs.budget || '120' }}' \
+            --time-budget 1800
+
+      - name: Report accumulated state
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os, sqlite3, sys
+          sys.path.insert(0, '.')
+          from scripts.collect_web_signals import NON_COLLECTABLE_STATUS, _status_of, SOURCE_NAME
+          st = _status_of('.', SOURCE_NAME)
+          db = 'data/private/web_signals.db'
+          if st in NON_COLLECTABLE_STATUS:
+              # 台帳が「集めない」と言っている状態。DBが無くても正常
+              print(f'{SOURCE_NAME} は status={st} なので収集対象外。何もしていない')
+              raise SystemExit(0)
+          if not os.path.exists(db):
+              print('::error::収集対象なのにDBが作られていない')
+              raise SystemExit(1)
+          c = sqlite3.connect(db)
+          n_sig = c.execute('SELECT COUNT(*) FROM web_signals').fetchone()[0]
+          n_ok = c.execute("SELECT COUNT(*) FROM web_fetch_log WHERE status='ok'").fetchone()[0]
+          n_bad = c.execute("SELECT COUNT(*) FROM web_fetch_log WHERE status<>'ok'").fetchone()[0]
+          rng = c.execute('SELECT MIN(date), MAX(date) FROM web_signals').fetchone()
+          print(f'累計 {n_sig} 頭 / 成功 {n_ok} 本 / 失敗 {n_bad} 本 / 期間 {rng[0]}〜{rng[1]}')
+          if n_sig == 0:
+              print('::error::1頭も入っていない')
+              raise SystemExit(1)
+          PY
+
+      # 🔴 data/private は .gitignore 済み。コミットせず artifact に置く
+      - name: Upload accumulated DB
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-signals-db
+          path: data/private/web_signals.db
+          retention-days: 90
+          # 台帳が「集めない」状態だとDBが存在しないことがあるので error にしない。
+          # 「集めるべきなのに無い」は前のステップが検査して失敗させている
+          if-no-files-found: warn

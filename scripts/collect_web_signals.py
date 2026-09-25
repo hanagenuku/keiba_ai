@@ -202,10 +202,36 @@ def _save(conn, url, date, venue, rows, meta, status):
     conn.commit()
 
 
+# 台帳がこの status を付けた情報源は収集しない。
+# 🔑 「不採用」「取得不可」と決めたものを毎週取りに行かない
+#    （相手のサーバに無駄な負荷をかけないため）。
+# ⚠ 台帳に**載っていない**情報源は止めない。未登録は「決定していない」だけで、
+#   「集めないと決めた」ではない。測る前はデータが無いと測れないので
+#   untested / measuring も集める。
+NON_COLLECTABLE_STATUS = ('rejected', 'unusable', 'blocked_pending_user')
+
+
+def _status_of(base_dir, source):
+    from src.utils.source_registry import load_registry
+    for e in load_registry(base_dir).get('sources', []):
+        if e.get('source') == source:
+            return e.get('status')
+    return None
+
+
 def collect(base_dir='.', start_ym='202301', end_ym='202609',
             budget=DEFAULT_BUDGET, time_budget_sec=DEFAULT_TIME_BUDGET_SEC,
-            interval_sec=DEFAULT_INTERVAL_SEC, dry_run=False):
+            interval_sec=DEFAULT_INTERVAL_SEC, dry_run=False, force=False):
     t0 = time.time()
+
+    # 台帳が「集めてよい」と言っていなければ何もしない（--force で上書きできる）
+    st = _status_of(base_dir, SOURCE_NAME)
+    if not force and st in NON_COLLECTABLE_STATUS:
+        print(f'⏭ {SOURCE_NAME} は台帳の status={st} なので収集しない'
+              f'（{"/".join(NON_COLLECTABLE_STATUS)} は集めない）')
+        print('   別の問いのために集め直すなら --force')
+        return {'total': 0, 'done': 0, 'todo': 0, 'fetched': 0, 'rows': 0,
+                'failed': 0, 'left': 0, 'skipped_reason': f'status={st}'}
     db_path = os.path.join(base_dir, DB_REL)
     cache_dir = os.path.join(base_dir, CACHE_REL)
     sess = _session()
@@ -281,6 +307,65 @@ def collect(base_dir='.', start_ym='202301', end_ym='202609',
             'fetched': fetched, 'rows': rows_total, 'failed': failed, 'left': left}
 
 
+def collect_for_date(base_dir, target_date, budget=6, interval_sec=1.0):
+    """予想を作る当日（または対象日）の記事だけを取る。推論経路から呼ぶ。
+
+    🔑 過去分の一括収集（`collect`）と**同じパーサ・同じDB**を通す。
+       推論用に別のパース経路を作ると、学習と推論で値がズレる
+       （2026-09-15 のペースモデルで実際に起きた形）。
+
+    ⚠ 台帳で採用済みの情報源が無ければ**何もしない**（サイトを叩かない）。
+    ⚠ budget は既定6本（1日3会場＋余裕）。North Star #4。
+
+    戻り値: {'fetched':, 'rows':, 'failed':, 'skipped_reason':}
+    """
+    from src.utils.source_registry import adopted_sources
+    if not any(e.get('source') == SOURCE_NAME for e in adopted_sources(base_dir)):
+        return {'fetched': 0, 'rows': 0, 'failed': 0,
+                'skipped_reason': 'not_adopted'}
+
+    ym = target_date.replace('-', '')[:6]
+    db_path = os.path.join(base_dir, DB_REL)
+    cache_dir = os.path.join(base_dir, CACHE_REL)
+    sess = _session()
+    articles = [a for a in list_articles(sess, ym, ym, cache_dir)
+                if a[0] == target_date]
+    if not articles:
+        return {'fetched': 0, 'rows': 0, 'failed': 0,
+                'skipped_reason': 'no_article_for_date'}
+
+    done = _done_urls(db_path)
+    todo = [a for a in articles if a[2] not in done][:budget]
+    if not todo:
+        return {'fetched': 0, 'rows': 0, 'failed': 0,
+                'skipped_reason': 'already_collected'}
+
+    conn = init_db(db_path)
+    fetched = rows_total = failed = 0
+    try:
+        for date, venue, url in todo:
+            try:
+                html = _get(sess, url)
+                rows, meta = parse_article(html, date, venue)
+            except Exception as e:
+                failed += 1
+                _save(conn, url, date, venue, [], {},
+                      f'fetch_or_parse_error: {type(e).__name__}')
+                time.sleep(interval_sec)
+                continue
+            status = 'ok' if rows else 'no_races'
+            if not rows:
+                failed += 1
+            _save(conn, url, date, venue, rows, meta, status)
+            fetched += 1
+            rows_total += len(rows)
+            time.sleep(interval_sec)
+    finally:
+        conn.close()
+    return {'fetched': fetched, 'rows': rows_total, 'failed': failed,
+            'skipped_reason': None}
+
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('--base-dir', default='.')
@@ -290,9 +375,11 @@ def main():
     p.add_argument('--time-budget', type=int, default=DEFAULT_TIME_BUDGET_SEC)
     p.add_argument('--interval', type=float, default=DEFAULT_INTERVAL_SEC)
     p.add_argument('--dry-run', action='store_true')
+    p.add_argument('--force', action='store_true',
+                   help='台帳の status を無視して集める（別の問いのための再収集）')
     a = p.parse_args()
     collect(a.base_dir, a.start.replace('-', ''), a.end.replace('-', ''),
-            a.budget, a.time_budget, a.interval, a.dry_run)
+            a.budget, a.time_budget, a.interval, a.dry_run, a.force)
 
 
 if __name__ == '__main__':

@@ -53,6 +53,22 @@ def _check_xgb_feature_coverage(xfeats, feature_cols):
 _XGB_INFERENCE_ERRORS_WARNED = set()  # 一度警告した例外の組み合わせは再度出さない
 
 
+_WEB_SIGNAL_ERRORS_WARNED = set()
+
+
+def _warn_web_signal_failure(err):
+    """web由来特徴量の生成が失敗したことを1度だけ警告する。
+
+    採用済み情報源が0件なら何も起きないが、採用後に台帳やDBが壊れたときに
+    **無音で列が消える**のが一番危ない（2026-07-16 の事故と同型）。
+    列が落ちても予想自体は止めない代わりに、必ず可視化する。
+    """
+    key = f'{type(err).__name__}: {err}'
+    if key not in _WEB_SIGNAL_ERRORS_WARNED:
+        _WEB_SIGNAL_ERRORS_WARNED.add(key)
+        print(f'⚠ [web由来特徴量] 生成に失敗したので列を落として続行: {key}')
+
+
 def _warn_xgb_inference_fallback(horse_name, err):
     """XGB推論が例外で失敗しルールベースへフォールバックしたことを警告する。
 
@@ -2575,6 +2591,15 @@ def calc_features_for_xgb(h, race):
         # 学習時も同じ値になるので分布はズレない。
         feats['f_pl_rating']   = 0.0
         feats['f_pl_rating_n'] = 0
+
+    # web 由来の情報（台帳で採用済みの情報源だけ・既定は0件＝列を作らない）。
+    # ⚠ 後付け補正ではなく上流の特徴量。学習も推論もこの1箇所を通るので
+    #   レース内正規化の値が構造的に一致する（going.py と同じ形）。
+    try:
+        from src.features.web_signals import calc_web_signal_features
+        feats.update(calc_web_signal_features(h, race, _BASE_DIR or '.'))
+    except Exception as _e:
+        _warn_web_signal_failure(_e)
 
     return feats
 
