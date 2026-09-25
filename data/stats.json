@@ -1330,8 +1330,158 @@
         "races": 11
       }
     ],
-    "workflow_run_at": "2026-09-24T09:42:31Z",
+    "workflow_run_at": "2026-09-25T08:08:07Z",
     "workflow_result": "success"
+  },
+  "web_sources": {
+    "updated_at": "2026-09-25",
+    "network_policy": "Full",
+    "n_adopted": 0,
+    "sources": [
+      {
+        "source": "kayochinkeiba",
+        "label": "かよちん競馬（能力指数）",
+        "status": "rejected",
+        "access": "allowed",
+        "access_note": "robots は /wp-admin/ のみ Disallow・Crawl-delay なし（2026-09-23 実読）",
+        "prior": null,
+        "delta_auc_mean": 0.00227,
+        "fukusho_roi_arm": 79.1,
+        "fukusho_roi_base": 79.7,
+        "measured_at": "2026-09-25",
+        "results": "websig/RESULTS.md"
+      },
+      {
+        "source": "bloodline-trackbias",
+        "label": "bloodline-trackbias（トラックバイアス予想）",
+        "status": "untested",
+        "access": "allowed",
+        "access_note": "robots に Claude の名指しなし。Atom <published> で公開時刻が構造化（2026-09-23）",
+        "prior": "low",
+        "delta_auc_mean": null,
+        "fukusho_roi_arm": null,
+        "fukusho_roi_base": null,
+        "measured_at": null,
+        "results": null
+      },
+      {
+        "source": "koukakukeiba-jugem",
+        "label": "koukakukeiba.jugem.jp（調教タイム）",
+        "status": "untested",
+        "access": "allowed",
+        "access_note": "実質全許可。⚠ EUC-JP。⚠ 朝イチオッズ分析カテゴリは市場の言い換えなので①の対象外",
+        "prior": "medium",
+        "delta_auc_mean": null,
+        "fukusho_roi_arm": null,
+        "fukusho_roi_base": null,
+        "measured_at": null,
+        "results": null
+      },
+      {
+        "source": "netkeiba",
+        "label": "netkeiba（実オッズ・過去分）",
+        "status": "rejected",
+        "access": "tos_restricted",
+        "access_note": "規約で入手データは私的利用に限定（2026-08-16 本文実読）。公開リポジトリに置けない",
+        "prior": null,
+        "delta_auc_mean": 0.0043,
+        "fukusho_roi_arm": null,
+        "fukusho_roi_base": null,
+        "measured_at": "2026-08-25",
+        "results": null
+      },
+      {
+        "source": "jbis",
+        "label": "JBIS（血統 sire / 調教師所属）",
+        "status": "blocked_pending_user",
+        "access": "tos_restricted",
+        "access_note": "🔴 利用規約 第8条2項『加工・編集することなくあるがままに利用』＝特徴量化を正面から禁じていると読める。5項で公開も禁止。Crawl-delay: 600（144頭/日・9,466頭で約66日）",
+        "prior": null,
+        "delta_auc_mean": null,
+        "fukusho_roi_arm": null,
+        "fukusho_roi_base": null,
+        "measured_at": null,
+        "results": null
+      },
+      {
+        "source": "tospo-keiba",
+        "label": "東スポ競馬",
+        "status": "unusable",
+        "access": "robots_denied",
+        "access_note": "🔴 2026-09-25 訂正: robots が ClaudeBot / anthropic-ai を名指しで Disallow: /。2026-09-23 に『許可リストの書き方の問題で直せる可能性』と書いたのは誤り。Full で到達できるが取得しない",
+        "prior": null,
+        "delta_auc_mean": null,
+        "fukusho_roi_arm": null,
+        "fukusho_roi_base": null,
+        "measured_at": null,
+        "results": null
+      },
+      {
+        "source": "keibalab",
+        "label": "競馬ラボ",
+        "status": "unusable",
+        "access": "unreachable",
+        "access_note": "🔴 2026-09-25 確定: Full でも Connection reset by peer。proxy の CONNECT は成功しているので site 側。2026-09-23 の『site側か relay側か切り分けられていない』を解消",
+        "prior": null,
+        "delta_auc_mean": null,
+        "fukusho_roi_arm": null,
+        "fukusho_roi_base": null,
+        "measured_at": null,
+        "results": null
+      },
+      {
+        "source": "nikkansports",
+        "label": "日刊スポーツ",
+        "status": "unusable",
+        "access": "robots_denied",
+        "access_note": "robots が anthropic-ai / Claude-Web を名指しで Disallow（2026-09-23・2026-09-25 に再確認）",
+        "prior": null,
+        "delta_auc_mean": null,
+        "fukusho_roi_arm": null,
+        "fukusho_roi_base": null,
+        "measured_at": null,
+        "results": null
+      },
+      {
+        "source": "sponichi",
+        "label": "スポニチ",
+        "status": "unusable",
+        "access": "robots_denied",
+        "access_note": "robots が ClaudeBot / Claude-User / Claude-Web / anthropic-ai を名指しで Disallow（2026-09-23・2026-09-25 に再確認）",
+        "prior": null,
+        "delta_auc_mean": null,
+        "fukusho_roi_arm": null,
+        "fukusho_roi_base": null,
+        "measured_at": null,
+        "results": null
+      },
+      {
+        "source": "keibabook",
+        "label": "競馬ブック",
+        "status": "unusable",
+        "access": "robots_denied",
+        "access_note": "robots が User-agent: * / Disallow: /（全面禁止。2026-09-25 に再確認）",
+        "prior": null,
+        "delta_auc_mean": null,
+        "fukusho_roi_arm": null,
+        "fukusho_roi_base": null,
+        "measured_at": null,
+        "results": null
+      },
+      {
+        "source": "umasiru",
+        "label": "うましる（コース情報）",
+        "status": "untested",
+        "access": "allowed",
+        "access_note": "✅ 2026-09-25 に新規: Full で到達可・robots は /wp-admin/ のみ。2026-08-04 は egress で403だった",
+        "prior": "low",
+        "delta_auc_mean": null,
+        "fukusho_roi_arm": null,
+        "fukusho_roi_base": null,
+        "measured_at": null,
+        "results": null
+      }
+    ]
   },
   "model_kpi": {
     "total_races": 854,
@@ -2559,5 +2709,5 @@
       "top3_rate": 16.4
     }
   },
-  "generated_at": "2026-09-25 01:12"
+  "generated_at": "2026-09-25 09:59"
 }
