@@ -131,7 +131,7 @@ class TestWorkflowGuardsAgainstSilentNoProgress(unittest.TestCase):
         up = [s for s in self.steps
               if str(s.get('uses', '')).startswith('actions/upload-artifact')]
         self.assertEqual(len(up), 1)
-        self.assertEqual(up[0]['with']['if-no-files-found'], 'error')
+        self.assertIn('data/private/web_signals.db', up[0]['with']['path'])
 
     def test_private_dir_is_gitignored(self):
         with open(os.path.join(BASE, '.gitignore'), encoding='utf-8') as f:
@@ -177,3 +177,52 @@ class TestLedgerIsDisplayed(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class TestCollectionAlsoRespectsTheLedger(unittest.TestCase):
+    """🔑 台帳は「本番に届くもの」だけでなく「集めるもの」も決める。
+
+    不採用と決めた情報源を毎週取りに行くと、相手のサーバに無駄な負荷をかける。
+    逆に、測る前の情報源はデータが無いと測れないので untested も集める。
+    """
+
+    def test_rejected_source_is_not_collected(self):
+        from scripts.collect_web_signals import collect
+        r = collect(BASE, dry_run=True)
+        self.assertEqual(r['skipped_reason'], 'status=rejected')
+        self.assertEqual(r['fetched'], 0)
+
+    def test_only_decided_against_statuses_block_collection(self):
+        from scripts.collect_web_signals import NON_COLLECTABLE_STATUS
+        self.assertIn('rejected', NON_COLLECTABLE_STATUS)
+        self.assertIn('unusable', NON_COLLECTABLE_STATUS)
+        self.assertNotIn('untested', NON_COLLECTABLE_STATUS)
+        self.assertNotIn('measuring', NON_COLLECTABLE_STATUS)
+        self.assertNotIn('adopted', NON_COLLECTABLE_STATUS)
+
+    def test_unregistered_source_is_not_blocked(self):
+        """台帳に載っていない情報源は止めない（未登録は決定ではない）。"""
+        import tempfile
+        from scripts.collect_web_signals import _status_of, NON_COLLECTABLE_STATUS
+        with tempfile.TemporaryDirectory() as d:
+            self.assertIsNone(_status_of(d, 'kayochinkeiba'))
+            self.assertNotIn(None, NON_COLLECTABLE_STATUS)
+
+    def test_force_can_override_for_another_question(self):
+        """別の問いのための再収集は --force で通せる（塞ぎきらない）。"""
+        s = _src('scripts/collect_web_signals.py')
+        self.assertIn("if not force and st in NON_COLLECTABLE_STATUS", s)
+        self.assertIn("'--force'", s)
+
+    def test_workflow_treats_nothing_to_collect_as_success(self):
+        import yaml
+        with open(os.path.join(BASE, '.github/workflows/collect-web-signals.yml'),
+                  encoding='utf-8') as f:
+            wf = yaml.safe_load(f)
+        steps = wf['jobs']['collect']['steps']
+        rep = next(s for s in steps if 'Report accumulated' in str(s.get('name')))
+        self.assertIn('NON_COLLECTABLE_STATUS', rep['run'])
+        self.assertIn('SystemExit(0)', rep['run'])
+        up = next(s for s in steps
+                  if str(s.get('uses', '')).startswith('actions/upload-artifact'))
+        self.assertEqual(up['with']['if-no-files-found'], 'warn')

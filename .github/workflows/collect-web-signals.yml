@@ -131,10 +131,18 @@ jobs:
         run: |
           set -euo pipefail
           python3 - <<'PY'
-          import sqlite3, os
+          import os, sqlite3, sys
+          sys.path.insert(0, '.')
+          from scripts.collect_web_signals import NON_COLLECTABLE_STATUS, _status_of, SOURCE_NAME
+          st = _status_of('.', SOURCE_NAME)
           db = 'data/private/web_signals.db'
+          if st in NON_COLLECTABLE_STATUS:
+              # 台帳が「集めない」と言っている状態。DBが無くても正常
+              print(f'{SOURCE_NAME} は status={st} なので収集対象外。何もしていない')
+              raise SystemExit(0)
           if not os.path.exists(db):
-              raise SystemExit('::error::DBが作られていない')
+              print('::error::収集対象なのにDBが作られていない')
+              raise SystemExit(1)
           c = sqlite3.connect(db)
           n_sig = c.execute('SELECT COUNT(*) FROM web_signals').fetchone()[0]
           n_ok = c.execute("SELECT COUNT(*) FROM web_fetch_log WHERE status='ok'").fetchone()[0]
@@ -142,7 +150,8 @@ jobs:
           rng = c.execute('SELECT MIN(date), MAX(date) FROM web_signals').fetchone()
           print(f'累計 {n_sig} 頭 / 成功 {n_ok} 本 / 失敗 {n_bad} 本 / 期間 {rng[0]}〜{rng[1]}')
           if n_sig == 0:
-              raise SystemExit('::error::1頭も入っていない')
+              print('::error::1頭も入っていない')
+              raise SystemExit(1)
           PY
 
       # 🔴 data/private は .gitignore 済み。コミットせず artifact に置く
@@ -152,4 +161,6 @@ jobs:
           name: web-signals-db
           path: data/private/web_signals.db
           retention-days: 90
-          if-no-files-found: error
+          # 台帳が「集めない」状態だとDBが存在しないことがあるので error にしない。
+          # 「集めるべきなのに無い」は前のステップが検査して失敗させている
+          if-no-files-found: warn
