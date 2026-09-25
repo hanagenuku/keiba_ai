@@ -208,7 +208,8 @@ def _save(conn, url, date, venue, rows, meta, status):
 # ⚠ 台帳に**載っていない**情報源は止めない。未登録は「決定していない」だけで、
 #   「集めないと決めた」ではない。測る前はデータが無いと測れないので
 #   untested / measuring も集める。
-NON_COLLECTABLE_STATUS = ('rejected', 'unusable', 'blocked_pending_user')
+NON_COLLECTABLE_STATUS = ('rejected', 'unusable', 'blocked_pending_user',
+                          'closed_unmeasured')
 
 
 def _status_of(base_dir, source):

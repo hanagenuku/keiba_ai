@@ -2437,6 +2437,7 @@ function renderStats(S) {
       adopted: ['採用', '#27ae60'], rejected: ['不採用', '#c0392b'],
       untested: ['未測定', '#e67e22'], measuring: ['測定中', '#2980b9'],
       unusable: ['取得不可', 'var(--sub)'],
+      closed_unmeasured: ['測らずに閉じた', '#7f8c8d'],
       blocked_pending_user: ['判断待ち', '#8e44ad'],
     };
     const ACC = {
@@ -2460,6 +2461,11 @@ function renderStats(S) {
         h += `<div style="font-size:10px;color:var(--sub);margin:-2px 0 6px 8px">`
           + `実測 ΔAUC ${r.delta_auc_mean > 0 ? '+' : ''}${r.delta_auc_mean}${dr}`
           + `${r.measured_at ? `（${r.measured_at}）` : ''}</div>`;
+      }
+      if (r.status === 'closed_unmeasured' && r.closed_reason) {
+        // 🔑 「測っていない」ことと「測って効かなかった」ことを画面でも混同させない。
+        h += `<div style="font-size:10px;color:var(--sub);margin:-2px 0 6px 8px">`
+          + `測定せず閉じた理由: ${r.closed_reason}</div>`;
       }
     }
     h += '<div style="font-size:10px;color:var(--sub);margin-top:8px">'
