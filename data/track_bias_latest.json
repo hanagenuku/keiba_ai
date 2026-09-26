@@ -1,35 +1,35 @@
 {
-  "inner_outer": 0.43,
-  "pace_bias": 0.43,
-  "track_speed": -1.22,
+  "inner_outer": 0.48,
+  "pace_bias": 0.02,
+  "track_speed": -1.21,
   "summary": "時計遅め",
   "by_course": {
-    "中山": {
-      "inner_outer": 0.51,
-      "pace_bias": 0.3,
-      "track_speed": -1.86,
-      "summary": "時計遅め",
-      "style_dist": {
-        "先行": 11,
-        "追込": 8,
-        "差し": 10,
-        "逃げ": 7
-      },
-      "race_count": 12
-    },
     "阪神": {
-      "inner_outer": 0.34,
-      "pace_bias": 0.57,
-      "track_speed": -0.57,
+      "inner_outer": 0.67,
+      "pace_bias": 0.39,
+      "track_speed": -0.63,
       "summary": "時計遅め",
       "style_dist": {
-        "先行": 13,
-        "差し": 10,
-        "追込": 5,
-        "逃げ": 5
+        "逃げ": 6,
+        "先行": 11,
+        "追込": 10,
+        "差し": 6
+      },
+      "race_count": 11
+    },
+    "中山": {
+      "inner_outer": 0.29,
+      "pace_bias": -0.34,
+      "track_speed": -1.78,
+      "summary": "時計遅め",
+      "style_dist": {
+        "逃げ": 6,
+        "差し": 16,
+        "追込": 4,
+        "先行": 7
       },
       "race_count": 11
     }
   },
-  "date": "2026-09-20"
+  "date": "2026-09-26"
 }
