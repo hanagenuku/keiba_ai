@@ -1330,7 +1330,7 @@
         "races": 11
       }
     ],
-    "workflow_run_at": "2026-09-25T08:08:07Z",
+    "workflow_run_at": "2026-09-25T23:41:49Z",
     "workflow_result": "success"
   },
   "web_sources": {
@@ -1349,33 +1349,36 @@
         "fukusho_roi_arm": 79.1,
         "fukusho_roi_base": 79.7,
         "measured_at": "2026-09-25",
-        "results": "websig/RESULTS.md"
+        "results": "websig/RESULTS.md",
+        "closed_reason": null
       },
       {
         "source": "bloodline-trackbias",
         "label": "bloodline-trackbias（トラックバイアス予想）",
-        "status": "untested",
+        "status": "closed_unmeasured",
         "access": "allowed",
-        "access_note": "robots に Claude の名指しなし。Atom <published> で公開時刻が構造化（2026-09-23）",
+        "access_note": "robots は /api/ /draft/ /preview のみ Disallow・Claude の名指しなし。⚠ apex は Connection reset、**www が正**（はてなブログの独自ドメイン）。sitemap_index から月別89本・2019-05 まで遡れる（history.db 全期間をカバー）",
         "prior": "low",
         "delta_auc_mean": null,
         "fukusho_roi_arm": null,
         "fukusho_roi_base": null,
         "measured_at": null,
-        "results": null
+        "results": null,
+        "closed_reason": "粒度が会場×馬場の1日4セル（レース単位ではない・2026-09-25 に訂正）。レース内で一定の属性は構造的に0に潰れる（2026-09-15 実測）。馬番と掛ければ f_bias そのもので、馬場バイアスは4回否定済み。天井も測ってあり三連複 +0.35% に対し必要 +33.3% で約100倍足りない（2026-08-17）。値が条件付きレンジなので、リークなしではレンジ中央値まで潰れる"
       },
       {
         "source": "koukakukeiba-jugem",
         "label": "koukakukeiba.jugem.jp（調教タイム）",
-        "status": "untested",
+        "status": "closed_unmeasured",
         "access": "allowed",
-        "access_note": "実質全許可。⚠ EUC-JP。⚠ 朝イチオッズ分析カテゴリは市場の言い換えなので①の対象外",
+        "access_note": "実質全許可（Crawl-delay 10・Claude の名指しなし）。⚠ EUC-JP。🔴 ただし『臨時サイト』で一覧は直近3日ぶんだけ。月別アーカイブも古い eid も 404 で過去分が1本も取れない。本サイト koukaku.joywork.jp は同じブログ（同一 eid・同じ3ヶ月）",
         "prior": "medium",
         "delta_auc_mean": null,
         "fukusho_roi_arm": null,
         "fukusho_roi_base": null,
         "measured_at": null,
-        "results": null
+        "results": null,
+        "closed_reason": "過去分ゼロ＋タイムは1頭/開催日（N=390 まで約3.7年・N=2,000 まで約19年）。1レース1頭なのでレース内順位は常に1・z は 0 で正規化が成立しない。N=390 の SE 2.1pt は信号ライン +2pt より大きい（North Star #11）。印のみの側（14〜29頭/日）は websig と同型で、websig は345倍の標本・全馬・連続量でも回収率 79.7→79.1 で悪化して閉じた"
       },
       {
         "source": "netkeiba",
@@ -1388,7 +1391,8 @@
         "fukusho_roi_arm": null,
         "fukusho_roi_base": null,
         "measured_at": "2026-08-25",
-        "results": null
+        "results": null,
+        "closed_reason": null
       },
       {
         "source": "jbis",
@@ -1401,7 +1405,8 @@
         "fukusho_roi_arm": null,
         "fukusho_roi_base": null,
         "measured_at": null,
-        "results": null
+        "results": null,
+        "closed_reason": null
       },
       {
         "source": "tospo-keiba",
@@ -1414,7 +1419,8 @@
         "fukusho_roi_arm": null,
         "fukusho_roi_base": null,
         "measured_at": null,
-        "results": null
+        "results": null,
+        "closed_reason": null
       },
       {
         "source": "keibalab",
@@ -1427,7 +1433,8 @@
         "fukusho_roi_arm": null,
         "fukusho_roi_base": null,
         "measured_at": null,
-        "results": null
+        "results": null,
+        "closed_reason": null
       },
       {
         "source": "nikkansports",
@@ -1440,7 +1447,8 @@
         "fukusho_roi_arm": null,
         "fukusho_roi_base": null,
         "measured_at": null,
-        "results": null
+        "results": null,
+        "closed_reason": null
       },
       {
         "source": "sponichi",
@@ -1453,7 +1461,8 @@
         "fukusho_roi_arm": null,
         "fukusho_roi_base": null,
         "measured_at": null,
-        "results": null
+        "results": null,
+        "closed_reason": null
       },
       {
         "source": "keibabook",
@@ -1466,7 +1475,8 @@
         "fukusho_roi_arm": null,
         "fukusho_roi_base": null,
         "measured_at": null,
-        "results": null
+        "results": null,
+        "closed_reason": null
       },
       {
         "source": "umasiru",
@@ -1479,7 +1489,8 @@
         "fukusho_roi_arm": null,
         "fukusho_roi_base": null,
         "measured_at": null,
-        "results": null
+        "results": null,
+        "closed_reason": null
       }
     ]
   },
@@ -2709,5 +2720,5 @@
       "top3_rate": 16.4
     }
   },
-  "generated_at": "2026-09-25 09:59"
+  "generated_at": "2026-09-26 01:26"
 }
