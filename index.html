@@ -66,6 +66,8 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
 .htbl th{font-weight:700;padding:4px 3px;text-align:center;border-bottom:2px solid #ddd;font-size:10px;color:#fff;background:var(--g1)}
 .htbl th.col-name{text-align:left;background:#2d6a4f}
 .htbl th.col-rl{background:#e67e22}
+.htbl th.col-fit{background:#2e86c1}
+.htbl td.col-fit{color:#1b4f72}
 .htbl th.col-mk{background:#555;width:26px}
 .htbl td{padding:5px 3px;border-bottom:1px solid #f0ece4;vertical-align:middle;text-align:center}
 .htbl td.col-name{text-align:left;font-weight:600;max-width:75px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -106,6 +108,7 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
 .htbl.h-odds th.col-odds, .htbl.h-odds td.col-odds {display:none}
 .htbl.h-mk   th.col-mk,   .htbl.h-mk   td.col-mk   {display:none}
 .htbl.h-solo th.col-solo, .htbl.h-solo td.col-solo {display:none}
+.htbl.h-fit  th.col-fit,  .htbl.h-fit  td.col-fit  {display:none}
 .htbl.h-val  th.col-val,  .htbl.h-val  td.col-val  {display:none}
 .colbar{display:flex;gap:4px;flex-wrap:wrap;padding:0 0 6px}
 .colbar button{font-size:10px;padding:2px 8px;border-radius:10px;border:1px solid var(--border);
@@ -141,6 +144,12 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
 .bhorse{font-size:12px;font-weight:600;flex:1}
 .best{font-size:10px;color:var(--sub)}
 .bamt{font-size:13px;font-weight:800;color:var(--g1);margin-left:auto;flex-shrink:0}
+.cwv{margin-top:10px;padding:9px 12px;background:rgba(41,128,185,0.06);border-left:3px solid #2980b9;border-radius:0 8px 8px 0;font-size:12px;color:#333;line-height:1.7}
+.cwv .cwv-h{font-weight:800;color:#1b4f72;margin-bottom:4px}
+.cwv .cwv-warn{color:#b9770e;font-size:11px;margin-top:5px;line-height:1.5}
+.cwv .cwv-src{font-size:10px;color:#777;margin-top:4px;word-break:break-all}
+.cwv .cwv-up{color:#1e8449;font-weight:700}
+.cwv .cwv-dn{color:#922b21;font-weight:700}
 .cmt{margin-top:10px;padding:9px 12px;background:rgba(10,46,26,0.05);border-left:3px solid var(--g2);border-radius:0 8px 8px 0;font-size:12px;color:#444;line-height:1.7;white-space:pre-line}
 /* 三連複フォーメーション */
 .formation-box{background:rgba(26,92,58,0.05);border:1px solid rgba(26,92,58,0.2);border-radius:8px;padding:10px 14px;margin:8px 0}
@@ -911,7 +920,7 @@ function _top3Strip(race, key) {
 }
 
 // ── 表示列チューザ ────────────────────────────────────────────────────────
-const COLS = [['pop','人'], ['odds','ｵｯｽﾞ'], ['mk','特記'], ['solo','AI単'], ['val','EV']];
+const COLS = [['pop','人'], ['odds','ｵｯｽﾞ'], ['mk','特記'], ['solo','AI単'], ['fit','適性'], ['val','EV']];
 function _hiddenCols() {
   try { return JSON.parse(localStorage.getItem('keiba_hidden_cols') || '[]'); }
   catch (e) { return []; }
@@ -928,6 +937,60 @@ function _colBar() {
     '<button class="' + (hid.includes(k) ? '' : 'on') + '" onclick="event.stopPropagation();toggleCol(\'' + k + '\')">'
     + lbl + '</button>').join('') + '</div>';
 }
+// ── Claude の web 見解（10R/11R のみ）──────────────────────────────────
+// 🔴 ここはAIの確率・順位・買い目を**一切書き換えない**別建ての枠。
+//    出力を後から書き換える層はこのプロジェクトで5件すべて撤回されているので、
+//    同じ形にしない（src/features/claude_web.py の冒頭参照）。
+function _esc(t) { return String(t == null ? '' : t).replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c])); }
+
+function _claudeViewHtml(race) {
+  const v = race.claude_view;
+  if (!v) return '';
+  const nameOf = n => {
+    const h = (race.horses || []).find(x => x.n === n);
+    return h ? h.name : '';
+  };
+  let h = '<div class="cwv"><div class="cwv-h">🌐 Claude の web 見解（AIの予想とは別建て）</div>';
+  if (v.going) {
+    const g = v.going;
+    h += '<div>馬場: ' + _esc([g.surface, g.state].filter(Boolean).join(' '))
+       + (g.expected ? '（想定 ' + _esc(g.expected) + '）' : '') + '</div>';
+  }
+  if ((v.order || []).length) {
+    h += '<div>序列: ' + v.order.map(n =>
+      '<span>' + (v.marks && v.marks[n] ? _esc(v.marks[n]) : '') + '#' + n + ' ' + _esc(nameOf(n)) + '</span>'
+    ).join(' ＞ ') + '</div>';
+  }
+  const hn = v.horse_notes || {};
+  const keys = Object.keys(hn);
+  if (keys.length) {
+    h += '<div style="margin-top:4px">';
+    keys.forEach(k => {
+      const o = hn[k];
+      const cls = o.direction === 'up' ? 'cwv-up' : (o.direction === 'down' ? 'cwv-dn' : '');
+      const arrow = o.direction === 'up' ? '↑' : (o.direction === 'down' ? '↓' : '・');
+      h += '<div><span class="' + cls + '">' + arrow + '#' + k + ' ' + _esc(nameOf(Number(k)))
+         + '</span> ' + _esc(o.note) + '</div>';
+    });
+    h += '</div>';
+  }
+  if (v.summary) h += '<div style="margin-top:4px">' + _esc(v.summary) + '</div>';
+  // 過大評価を防ぐ注記は常時表示する（ROI予測150%・AI xx%バッジと同じ事故を繰り返さない）
+  h += '<div class="cwv-warn">⚠ 参考情報です。買い目・軸・推奨はAIの「AI+市」列のままで、'
+     + 'この見解では変わりません。実測では web の能力指数はAIより市場に近く'
+     + '（指数~市場 +0.825 / AI~市場 +0.627・2026-09-27・23レース）、'
+     + '別AIが web で印を組み替えた案は市場人気順より精度が下でした（2026-09-26・N=1）。</div>';
+  if (v.coverage != null && v.coverage < 0.999 && (v.order || []).length) {
+    h += '<div class="cwv-warn">⚠ 序列が付いたのは全馬の ' + Math.round(v.coverage * 100) + '% です。</div>';
+  }
+  if ((v.dropped || []).length) {
+    h += '<div class="cwv-warn">⚠ 読めなかった項目: ' + v.dropped.map(_esc).join(' / ') + '</div>';
+  }
+  h += '<div class="cwv-src">取得 ' + _esc(v.collected_at || '-') + ' ／ 出典: '
+     + (v.sources || []).map(_esc).join(' , ') + '</div>';
+  return h + '</div>';
+}
+
 function _tblClass() {
   return 'htbl ' + _hiddenCols().map(k => 'h-' + k).join(' ');
 }
@@ -1463,13 +1526,20 @@ function render() {
       // 残差学習モデル運用時のみ付与されるため、無いレースでは列ごと出さない。
       const _hasSolo = (race.horses||[]).some(h => h.solo_rank != null);
       const _soloTh = _hasSolo
-        ? '<th class="col-solo" style="width:26px" title="市場（オッズ）を土台から外した、AI単独の評価順位。RLは市場を土台にAIが補正した順位で、買い目・軸はRLを使います。AI単は参考表示です（実測では当てる力はRLに劣ります）">AI単</th>'
+        ? '<th class="col-solo" style="width:26px" title="AI単体＝市場（オッズ）を土台から外した、AIだけの評価順位（ability_margin）。⚠ 買い目・軸は右の「AI+市」を使います。実測では当てる力はAI単体のほうが劣ります（素のAIの推しは複勝率33.9%・回収77.5%で、避けた1番人気75.9%と区別できない。2026-08-29）">AI単</th>'
+        : '';
+      // 適性列＝コース・馬場適性の順位（Gate 0 で事前登録した適性軸5列のレース内z平均）。
+      // 🔴 効果の67〜81%が市場評価の言い換えで、回収率は測った36マスすべて100%未満
+      //    （Step 1・2026-09-22）。参考表示に留め、買い目には使わない。
+      const _hasFit = (race.horses||[]).some(h => h.fit_rank != null);
+      const _fitTh = _hasFit
+        ? '<th class="col-fit" style="width:26px" title="コース・馬場適性の順位。今回の条件（コース形状・距離・馬場）にどれだけ向くかだけを見た順位で、能力の高さは含みません。⚠ 参考表示です。この軸で3着内率は動きますが、効果の67〜81%は市場評価の言い換えで、回収率は測った36マスすべて100%未満でした（2026-09-22）">適性</th>'
         : '';
       html += _colBar();
       // 結果が出ていれば「着」列を先頭に足す（レース前は列ごと出さない）
       const _res = _resultsFor(race);
       const _finTh = _res ? '<th class="col-fin">着</th>' : '';
-      html += '<table class="'+_tblClass()+'">'+'<tr>'+_finTh+'<th class="col-um" title="タップで ◎○▲△✕ を切り替え。端末内だけに保存されます">印</th><th style="width:20px">番</th><th class="col-name">馬名</th><th class="col-pop" style="width:22px">人</th><th class="col-odds" style="width:34px">ｵｯｽﾞ</th><th class="col-mk">特記</th><th class="col-rl" style="width:24px">RL</th>'+_soloTh+'<th style="width:32px" title="当日のオッズを直接使わないAI確率をIsotonicで較正した絶対確率（確認期24,993頭でECE 0.0080）。⚠ レース内合計は100%になりません。⚠ 少頭数では高め・多頭数では低めに出ます（5-9頭で-8.7pt / 17頭以上で+4.3pt）。順位付け・買い目には別の確率を使っています">AI勝率</th><th style="width:32px" title="同じくIsotonic較正済みの3着内率。70%までの全帯で予測と実測のズレが±1.6pt以内。⚠ 70%超は−7.5pt、少頭数レースは−8.7pt ずれるので額面どおり読まないこと">AI複勝</th><th class="col-val" style="width:40px" title="EV=1.2 になるのに必要な単勝オッズ（＝1.2÷AI勝率）。🔴 実オッズがこれを超えても『買い』ではありません。超える馬だけを買った実測回収率は73.7%で、全部買う73.1%と変わりません（2026-09-11・単勝8,703頭）">必要ｵｯｽﾞ</th></tr>';
+      html += '<table class="'+_tblClass()+'">'+'<tr>'+_finTh+'<th class="col-um" title="タップで ◎○▲△✕ を切り替え。端末内だけに保存されます">印</th><th style="width:20px">番</th><th class="col-name">馬名</th><th class="col-pop" style="width:22px">人</th><th class="col-odds" style="width:34px">ｵｯｽﾞ</th><th class="col-mk">特記</th>'+_soloTh+_fitTh+'<th class="col-rl" style="width:30px" title="AI+市＝市場（オッズ）を土台にAIが補正した順位。⚠ 買い目・軸・推奨レースの判定はこの列を使います。◎が付いている馬がこの列の1位です">AI+市</th>'+'<th style="width:32px" title="当日のオッズを直接使わないAI確率をIsotonicで較正した絶対確率（確認期24,993頭でECE 0.0080）。⚠ レース内合計は100%になりません。⚠ 少頭数では高め・多頭数では低めに出ます（5-9頭で-8.7pt / 17頭以上で+4.3pt）。順位付け・買い目には別の確率を使っています">AI勝率</th><th style="width:32px" title="同じくIsotonic較正済みの3着内率。70%までの全帯で予測と実測のズレが±1.6pt以内。⚠ 70%超は−7.5pt、少頭数レースは−8.7pt ずれるので額面どおり読まないこと">AI複勝</th><th class="col-val" style="width:40px" title="EV=1.2 になるのに必要な単勝オッズ（＝1.2÷AI勝率）。🔴 実オッズがこれを超えても『買い』ではありません。超える馬だけを買った実測回収率は73.7%で、全部買う73.1%と変わりません（2026-09-11・単勝8,703頭）">必要ｵｯｽﾞ</th></tr>';
       for (const h of (race.horses||[])) {
         const isH = race.honmei && h.n === race.honmei.n;
         const rl = (!h.rl_rank || h.rl_rank >= 99) ? '-' : h.rl_rank;
@@ -1584,6 +1654,22 @@ function render() {
           _soloTd = '<td class="col-solo" style="color:#666">'+cell+'</td>';
         }
 
+        // 適性セル。AI+市 と大きくズレる馬だけ差を小さく添える。
+        let _fitTd = '';
+        if (_hasFit) {
+          const f = h.fit_rank;
+          let cell = '-';
+          if (f != null) {
+            cell = String(f);
+            if (rlNum != null) {
+              const d = rlNum - f;   // 正 = 能力順位より今回の条件が向いている
+              if (d >= 3)       cell += '<span style="color:#2e86c1;font-size:9px" title="能力順位より今回の条件が向いている">◎'+d+'</span>';
+              else if (d <= -3) cell += '<span style="color:#95a5a6;font-size:9px" title="能力の割に今回の条件が向かない">▽'+Math.abs(d)+'</span>';
+            }
+          }
+          _fitTd = '<td class="col-fit">'+cell+'</td>';
+        }
+
         const _um = getUserMark(_umRid, h.n);
         const _umCell = '<td class="col-um"><span class="umark'+(_um?' umark-on':'')
           + '" data-rid="'+_umRid+'" onclick="cycleUserMark(\''+_umRid+'\','+h.n+',this)">'
@@ -1599,7 +1685,7 @@ function render() {
                    : _r.place === 2 ? 'rgba(127,140,141,0.14)' : 'rgba(160,82,45,0.12)';
           _rowCls = ' style="background:'+bg+'"';
         }
-        html += '<tr'+_rowCls+'>'+_finTd+_umCell+'<td>'+(isH?'◎':'')+h.n+'</td><td class="col-name">'+h.name+surgeBadge+'</td><td class="col-pop">'+pop+'</td><td class="col-odds">'+odds+'</td><td class="col-mk">'+mkBadge(h.mark)+'</td><td class="col-rl">'+rl+gapBadge+mxBadge+breakdownBadge+'</td>'+_soloTd+'<td>'+tan+'</td><td class="'+(hi?'phi':'plo')+'">'+fuku+'</td><td class="'+valClass+'">'+valCell+'</td></tr>';
+        html += '<tr'+_rowCls+'>'+_finTd+_umCell+'<td>'+(isH?'◎':'')+h.n+'</td><td class="col-name">'+h.name+surgeBadge+'</td><td class="col-pop">'+pop+'</td><td class="col-odds">'+odds+'</td><td class="col-mk">'+mkBadge(h.mark)+'</td>'+_soloTd+_fitTd+'<td class="col-rl">'+rl+gapBadge+mxBadge+breakdownBadge+'</td>'+'<td>'+tan+'</td><td class="'+(hi?'phi':'plo')+'">'+fuku+'</td><td class="'+valClass+'">'+valCell+'</td></tr>';
       }
       html += '</table>';
       if (race.race_id) {
@@ -1819,6 +1905,7 @@ function render() {
       if (race.rec && race.formation && !hasGumbel) {
         html += formationHtml(race.formation);
       }
+      html += _claudeViewHtml(race);
       html += '<div class="cmt">'+(race.cmt||'').replace(/</g,'&lt;')+'</div></div></div>';
     }
     html += '</div>';

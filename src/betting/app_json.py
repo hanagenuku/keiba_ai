@@ -236,6 +236,11 @@ def _build_horses_list(scored, top1, by_odds, odds_lookup=None, base_dir=None):
             # _build_solo_ranks のdocstring（当てる力では rl_rank に劣る）。
             # 非残差モデル時はNone → アプリ側で列ごと非表示にする。
             'solo_rank': solo_ranks.get(h['num']),
+            # コース・馬場適性の順位（Gate 0 で事前登録した適性軸5列のレース内z平均）。
+            # 🔴 表示専用。買い目・軸・レース選択には使わない。効果の67〜81%が
+            #    市場評価の言い換えで、回収率は36マスすべて100%未満（Step 1・2026-09-22）。
+            #    詳細は src/features/aptitude.py の冒頭。計算できなければ None → 列ごと非表示。
+            'fit_rank': h.get('fit_rank'),
             # ── EV用の絶対確率（Isotonic較正済み・当日の現在オッズを使わない）──
             # 画面の「AI勝率」「AI複勝」列と「必要オッズ」列はこれを使う。
             # ⚠ レース内合計は 1.0 / 3.0 にならない。それで正しい（_build_ev_probs 参照）。
@@ -614,6 +619,24 @@ def _display_date_from_races(races_all):
     return None
 
 
+def _build_claude_view(race, scored, notes):
+    """Claude の web 見解をレース entry に載せる形にする。無ければ None。
+
+    🔴 この関数は scored の中身を**書き換えない**（読み取りのみ）。
+       確率・スコア・買い目・推奨フラグに触れないことが、この層の存在条件。
+    """
+    if not notes:
+        return None
+    try:
+        from src.features.claude_web import build_claude_view
+        horses = [{'num': h['num']} for h in scored]
+        return build_claude_view(race.get('id', ''), race.get('race_num'),
+                                 horses, notes, (race.get('id') or '')[:8])
+    except Exception as e:
+        print(f'⚠ web見解の組み立てに失敗（このレースは web見解なし）: {e}')
+        return None
+
+
 def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', market_odds_map=None, base_dir=None,
                 odds_updated_count=None, parse_failures=None, same_day=False):
     """厳選レース＋全レース情報をアプリ用 JSON 形式で返す。
@@ -645,6 +668,16 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
     all_venues   = sorted({r['racecourse'] for r in races_all},
                           key=lambda v: VENUE_ORDER.get(v, 99))
     market_odds_map = market_odds_map or {}
+
+    # Claude が当日朝に web から集めた見解（10R/11R のみ・**確率と買い目には触れない**）。
+    # 無ければ None のまま進む＝既定の挙動は一切変わらない。詳細は
+    # src/features/claude_web.py の冒頭（5件撤回された後付け層と構造的に違う点）。
+    try:
+        from src.features.claude_web import load_findings as _load_cw
+        _claude_findings = _load_cw(base_dir) if base_dir else None
+    except Exception as _e:
+        print(f'⚠ web見解の読み込みに失敗（web見解なしで続行）: {_e}')
+        _claude_findings = None
     races_by_venue = {}
     selected_ids = {c['race']['id'] for c in selected}
     total_inv = 0
@@ -748,6 +781,7 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
             'value_horses': _vh_list,
             'bet_reason':   _bet_reason,
             'cmt': auto_comment(c, bias_data),
+            'claude_view': _build_claude_view(race, scored, _claude_findings),
         }
         races_by_venue[rc].append(_entry)
 
@@ -871,6 +905,7 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
             'ai_pair_bets': _build_ai_pair_bets(scored),
             'formation':   _formation2,
             'cmt':         auto_comment(c_ref, bias_data) + ('\n' + maiden_note if maiden_note else ''),
+            'claude_view': _build_claude_view(race, scored, _claude_findings),
         }
         races_by_venue[rc].append(_entry2)
 
