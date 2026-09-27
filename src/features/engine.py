@@ -33,6 +33,22 @@ _MEMBER_LEVEL_CACHE = {}    # race_id → float (前走メンバーレベルキ�
 _XGB_MISSING_FEATS_WARNED = set()  # 一度警告した欠落列の組み合わせは再度出さない
 
 
+_FIT_RANK_ERRORS_WARNED = set()
+
+
+def _warn_fit_rank_failure(err):
+    """適性順位の計算が落ちたことを1回だけ警告する（予想自体は止めない）。
+
+    無警告フォールバックは 2026-07-16 の xgb_ensemble_model.pkl 事故（例外が
+    握りつぶされ、XGB予測を使わない予想が出続けた）と同型なので、必ず声を出す。
+    """
+    key = f'{type(err).__name__}: {err}'
+    if key in _FIT_RANK_ERRORS_WARNED:
+        return
+    _FIT_RANK_ERRORS_WARNED.add(key)
+    print(f'⚠ 適性順位(fit_rank)の計算に失敗しました（表示のみに影響）: {key}')
+
+
 def _check_xgb_feature_coverage(xfeats, feature_cols):
     """xfeats に feature_cols の列が全て揃っているか確認し、欠落があれば警告する。
 
@@ -279,11 +295,12 @@ def init_engine(base_dir,
     global _W, _horse_dist_dict, _horse_course_dict, _horse_venue_dist_dict, _post_zone_bias
     global _jockey_dict, _trainer_dict, _hist_db_path, _SPEED_INDEX_CALC, _MEMBER_LEVEL_CACHE
     global _KEIBA_DB_PATH, _BASE_DIR, _XGB_MISSING_FEATS_WARNED, _XGB_INFERENCE_ERRORS_WARNED
-    global _SHAP_BREAKDOWN_ERRORS_WARNED
+    global _SHAP_BREAKDOWN_ERRORS_WARNED, _FIT_RANK_ERRORS_WARNED
     _BASE_DIR      = base_dir
     _XGB_MISSING_FEATS_WARNED    = set()  # モデル/特徴量再ロード時に警告抑制状態をリセット
     _XGB_INFERENCE_ERRORS_WARNED = set()
     _SHAP_BREAKDOWN_ERRORS_WARNED = set()
+    _FIT_RANK_ERRORS_WARNED       = set()
     _hist_db_path  = os.path.join(base_dir, 'data', 'history.db')
     _KEIBA_DB_PATH = os.path.join(base_dir, 'data', 'keiba.db')
 
@@ -3260,5 +3277,22 @@ def calc_all(race, bias_data=None):
     # RL順位をwin_prob（AI確率）の順位に統一（rl_rawは旧加重スコアで逆転が起きるため）
     for i, h in enumerate(sorted(out, key=lambda h: h['win_prob'], reverse=True)):
         h['rl_rank'] = i + 1
+
+    # ── コース・馬場適性の順位（画面の参考列専用・買い目には一切使わない）──
+    # Gate 0（2026-09-18）で事前登録・通過した適性軸5列のレース内 z 平均。
+    # 🔴 Step 1（2026-09-22）で「3着内率への効果の67〜81%は市場評価の言い換え」
+    #    「回収率は36マスすべて100%未満」と実測済み。順位付け・軸・レース選択には
+    #    使わず、rl_rank / cal_prob / total / bets は一切変更しない。
+    _fit_ranks = {}
+    if use_xgb:
+        try:
+            from src.features.aptitude import calc_fit_ranks
+            _fit_ranks = calc_fit_ranks([_h['num'] for _h, _, _, _ in horse_data],
+                                        [_xf for _, _, _, _xf in horse_data])
+        except Exception as _e:
+            _warn_fit_rank_failure(_e)
+            _fit_ranks = {}
+    for h in out:
+        h['fit_rank'] = _fit_ranks.get(h.get('num'))
 
     return out

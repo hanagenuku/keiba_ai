@@ -143,7 +143,8 @@ console.log('■ #6 表示列チューザ');
 t('既定は全列オン', () => {
   delete store['keiba_hidden_cols'];
   assert.strictEqual(_tblClass().trim(), 'htbl');
-  assert.strictEqual((_colBar().match(/class="on"/g) || []).length, 5);
+  // 列は pop / odds / mk / solo / fit / val の6つ（2026-09-28 に fit=適性 を追加）
+  assert.strictEqual((_colBar().match(/class="on"/g) || []).length, 6);
 });
 
 t('隠した列がクラスになる', () => {
@@ -155,14 +156,36 @@ t('隠した列がクラスになる', () => {
 
 t('CSS が th/td の両方を隠す', () => {
   const css = html.replace(/\s+/g, ' ');
-  for (const k of ['pop', 'odds', 'mk', 'solo', 'val']) {
+  for (const k of ['pop', 'odds', 'mk', 'solo', 'fit', 'val']) {
     assert.ok(css.includes('.htbl.h-' + k + ' th.col-' + k), 'th 側が無い: ' + k);
     assert.ok(css.includes('.htbl.h-' + k + ' td.col-' + k), 'td 側が無い: ' + k);
   }
 });
 
-t('AI単を隠してもRL列は残る（別クラスになっていること）', () => {
-  assert.ok(html.includes('class="col-solo"'), 'AI単が col-rl のままだとRLごと消える');
+t('AI単を隠しても AI+市 列は残る（別クラスになっていること）', () => {
+  assert.ok(html.includes('class="col-solo"'), 'AI単が col-rl のままだと AI+市 ごと消える');
+  assert.ok(html.includes('class="col-fit"'), '適性が col-rl のままだと AI+市 ごと消える');
+});
+
+t('🔴 列のラベルが実態と一致していること（2026-09-28 の訂正）', () => {
+  // 旧ラベル `RL` は win_prob（＝market を含む total）の順位だったので「AI単体」ではない。
+  // 旧 `CL` は _W の騎手＋距離の加重平均で「コース・馬場適性」ではなかった。
+  assert.ok(html.includes('>AI+市</th>'), 'RL列が AI+市 に直っていない');
+  assert.ok(!/>RL<\/th>/.test(html), '実態と違う RL ラベルが残っている');
+  assert.ok(html.includes('>適性</th>'), '適性列が無い');
+  assert.ok(html.includes('>AI単</th>'), 'AI単列が無い');
+});
+
+t('🔴 買い目・軸は AI+市（rl_rank）のままであることを画面側でも明示している', () => {
+  assert.ok(/買い目・軸[^<]*AI\+市|AI\+市[^<]*買い目・軸/.test(html),
+    'どの列が買い目の根拠かツールチップに書かれていない');
+});
+
+t('🔴 Claude の web 見解が確率・買い目を書き換えない枠として描かれる', () => {
+  assert.ok(html.includes('_claudeViewHtml'), 'web見解の描画関数が無い');
+  assert.ok(/Claude の web 見解/.test(html), '見出しが無い');
+  // 過大評価を防ぐ注記を常時出す（ROI予測150% / AI xx%バッジと同じ事故を繰り返さない）
+  assert.ok(/買い目・軸・推奨はAIの「AI\+市」列のまま/.test(html), '注記が無い');
 });
 
 t('🔴 印・番・馬名・AI勝率・AI複勝は隠せない（常時表示）', () => {
