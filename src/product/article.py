@@ -76,18 +76,31 @@ def _bets_md(tickets):
     body = '\n'.join(lines)
     if tickets.get('downgrade_reason'):
         body = '⚠ ' + tickets['downgrade_reason'] + '。\n\n' + body
+    # §11「この予想なら、なぜこの券種なのか」まで書く
+    reasons = tickets.get('bet_type_reasons') or []
+    if reasons:
+        body += '\n\n**なぜこの券種か**\n\n' + '\n\n'.join(reasons)
+
+    # 🔴 §10「資金配分は、オッズと資金に応じて各自調整 とする」。
+    #    比率は目安・金額は換算例として出し、断定形にしない。
+    # 券種が1つなら配る先が無いので比率・換算例は出さない（自明な表を載せない）。
     ratio = tickets.get('allocation_ratio') or {}
-    if ratio:
+    if len(ratio) >= 2:
         rt = ' / '.join(f'{k} {int(v * 100)}%' for k, v in ratio.items())
-        body += f'\n\n配分：{rt}'
-    ex = tickets.get('allocation_examples') or {}
-    if ex:
-        body += '\n\n金額の目安：'
-        for amt in sorted(ex):
-            detail = '・'.join(f'{k} {v}円' for k, v in ex[amt].items())
-            body += f'\n- {amt}円なら　{detail}'
-    body += ('\n\n※券種は2種類以内に抑えています。'
-             'オッズや資金に応じて点数を減らすのは自由です。')
+        body += f'\n\n**配分の目安（比率）**：{rt}'
+        ex = tickets.get('allocation_examples') or {}
+        if ex:
+            body += '\n\n比率を円に直した換算例（推奨額ではありません）：'
+            for amt in sorted(ex):
+                detail = '・'.join(f'{k} {v}円' for k, v in ex[amt].items())
+                body += f'\n- 合計{amt}円で買う場合　{detail}'
+        note = tickets.get('allocation_note')
+        if note:
+            body += '\n\n' + note
+    elif ratio:
+        body += ('\n\n金額はオッズと手持ち資金に応じて各自調整してください'
+                 '（券種が1つなので配分はありません）。')
+    body += '\n\n※券種は2種類以内に抑えています。点数を減らすのは自由です。'
     return body
 
 

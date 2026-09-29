@@ -282,6 +282,101 @@ class TestTickets:
             assert sum(detail.values()) == amt
 
 
+# ---------------------------------------------------------------------------
+# §10 資金配分は各自調整 / §11 なぜこの券種か
+# ---------------------------------------------------------------------------
+
+class TestAllocationIsNotAsserted:
+    """§10「資金配分は、オッズと資金に応じて各自調整 とする」を文面で守る。"""
+
+    def _horses(self):
+        return marks.assign_marks([
+            {'n': 1, 'name': 'A', 'rl_rank': 1, 'pop': 3, 'solo_rank': 1, 'odds': 5.0},
+            {'n': 2, 'name': 'B', 'rl_rank': 2, 'pop': 2, 'solo_rank': 2, 'odds': 7.0},
+            {'n': 3, 'name': 'C', 'rl_rank': 3, 'pop': 4, 'solo_rank': 3, 'odds': 9.0},
+        ])
+
+    def test_note_is_attached_when_allocation_exists(self):
+        t = tickets.build_tickets({'conf': 70}, self._horses())
+        assert t['allocation_ratio']
+        assert t['allocation_note'] == tickets.ALLOCATION_NOTE
+        assert '各自調整' in t['allocation_note']
+
+    def test_note_absent_when_skipping(self):
+        t = tickets.build_tickets({'conf': 30}, self._horses())
+        assert t['allocation_note'] is None
+        assert t['bet_type_reasons'] == []
+
+    def test_article_frames_amounts_as_conversion_not_recommendation(self):
+        """円の表は「換算例」であって推奨額ではない、と本文に書く。"""
+        md = article._bets_md(tickets.build_tickets({'conf': 70}, self._horses()))
+        assert '換算例' in md
+        assert '推奨額ではありません' in md
+        assert '各自調整' in md
+        # 断定形（旧文面）が復活していないこと
+        assert '金額の目安' not in md
+
+    def test_allocation_note_does_not_claim_edge_from_allocation(self):
+        note = tickets.ALLOCATION_NOTE
+        assert '期待値は動きません' in note
+        for bad in ('勝てる', '儲か', '必ず'):
+            assert bad not in note
+
+
+class TestBetTypeReason:
+    """§11「この予想なら、なぜこの券種なのか」まで説明する。"""
+
+    def _horses(self):
+        return marks.assign_marks([
+            {'n': 1, 'name': 'A', 'rl_rank': 1, 'pop': 3, 'solo_rank': 1, 'odds': 5.0},
+            {'n': 2, 'name': 'B', 'rl_rank': 2, 'pop': 2, 'solo_rank': 2, 'odds': 7.0},
+            {'n': 3, 'name': 'C', 'rl_rank': 3, 'pop': 4, 'solo_rank': 3, 'odds': 9.0},
+        ])
+
+    def test_strong_explains_both_types(self):
+        t = tickets.build_tickets({'conf': 70}, self._horses())
+        joined = '\n'.join(t['bet_type_reasons'])
+        assert '複勝を本線' in joined
+        assert 'ワイドは押さえ' in joined
+        assert '馬連' in joined and '三連複' in joined   # 除外した券種の理由も書く
+
+    def test_light_explains_why_only_one_type(self):
+        t = tickets.build_tickets({'conf': 60}, self._horses())
+        joined = '\n'.join(t['bet_type_reasons'])
+        assert '複勝を本線' in joined
+        assert '今回は複勝だけ' in joined
+        assert 'ワイドは押さえ' not in joined
+
+    def test_skip_explains_nothing(self):
+        """買っていない券種の理由は書かない。"""
+        assert tickets.bet_type_reason({'verdict': 'skip', 'bets': []}) == []
+
+    def test_reasons_never_claim_over_100_percent(self):
+        """§8・§20 引用する回収率はすべて100%未満。誇張しない。"""
+        t = tickets.build_tickets({'conf': 70}, self._horses())
+        joined = '\n'.join(t['bet_type_reasons'])
+        assert '100%を下回っています' in joined
+        for bad in ('必ず', '儲か', '確実'):
+            assert bad not in joined
+
+    def test_reasons_have_no_forbidden_expressions(self):
+        """取得経路の無い情報（調教・パドック等）を混ぜていない。"""
+        t = tickets.build_tickets({'conf': 70}, self._horses())
+        for r in t['bet_type_reasons'] + [tickets.ALLOCATION_NOTE]:
+            assert commentary.find_forbidden(r) is None
+
+    def test_article_contains_reason_section(self):
+        md = article._bets_md(tickets.build_tickets({'conf': 70}, self._horses()))
+        assert 'なぜこの券種か' in md
+
+    def test_single_bet_type_shows_no_allocation_table(self):
+        """券種1つなら自明な比率表を載せず、各自調整だけを書く。"""
+        md = article._bets_md(tickets.build_tickets({'conf': 60}, self._horses()))
+        assert '各自調整' in md
+        assert '換算例' not in md
+        assert '配分の目安' not in md
+
+
 class TestArticleNeverShowsBrokenOdds:
     def test_unusable_odds_render_as_dash(self):
         """1.0倍未満（＝未取得）は「—」。50.0倍のような正常値は壊さない。"""
