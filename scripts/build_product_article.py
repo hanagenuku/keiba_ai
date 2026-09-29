@@ -84,6 +84,22 @@ def main(argv=None):
         print('⚠ history.db の実体が無いため、過去走に基づく記述は省略されます',
               file=sys.stderr)
 
+    if args.publish:
+        # 🔴 公開記録は後から直せない。保存する前に2つだけ確かめる。
+        # ① 発走が終わったレースを「公開」として残さない（記録自体が嘘になる）
+        try:
+            archive.assert_publishable(target_date)
+        except archive.StalePublication as e:
+            print(f'🔴 公開を中止: {e}', file=sys.stderr)
+            return 1
+        # ② 過去走を引けない状態で保存すると、見解が薄いまま永久に固定される
+        if conn is None:
+            print('🔴 公開を中止: history.db の実体が無い。過去走に基づく見解が'
+                  '欠けたまま永久保存されるため、実体を取得してから公開すること'
+                  '（CLAUDE.md の media.githubusercontent.com 経由の手順）',
+                  file=sys.stderr)
+            return 1
+
     sections = []
     published = []
     skipped = []
