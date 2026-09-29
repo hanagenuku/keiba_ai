@@ -15,7 +15,9 @@ import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.product import archive, article, commentary, facts, marks, tickets  # noqa: E402
+from src.product import (  # noqa: E402
+    archive, article, commentary, facts, marks, scope, tickets,
+)
 
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LATEST = os.path.join(BASE, 'data', 'latest.json')
@@ -382,3 +384,44 @@ class TestThresholdsAreNotInvented:
             and bool(r.get('rec')) != (r['conf'] >= tickets.CONF_STRONG)
         ]
         assert not mism, f'rec と conf>={tickets.CONF_STRONG} が食い違う: {mism}'
+
+
+class TestScope:
+    """対象範囲（ユーザー指示: 各競馬場9R〜11R ＋ 自信のある平場）。"""
+
+    def test_main_races_are_always_in_scope_even_with_low_conf(self):
+        # 2026-09-27 中山11R スプリンターズSは conf 54 だが 9〜11R なので対象。
+        for num in scope.MAIN_RACE_NUMS:
+            ok, why = scope.in_scope({'r': num, 'conf': 10})
+            assert ok, f'{num}R が対象外になった: {why}'
+
+    def test_flat_race_needs_confidence(self):
+        assert not scope.in_scope({'r': 6, 'conf': scope.FLAT_MIN_CONF - 1})[0]
+        assert scope.in_scope({'r': 6, 'conf': scope.FLAT_MIN_CONF})[0]
+
+    def test_flat_race_without_conf_is_out(self):
+        ok, why = scope.in_scope({'r': 6, 'conf': None})
+        assert not ok
+        assert '信頼度' in why
+
+    def test_flat_threshold_is_not_invented(self):
+        """新しい閾値を作らず tickets.CONF_STRONG（本番 rec の境界）を流用する。"""
+        assert scope.FLAT_MIN_CONF == tickets.CONF_STRONG
+
+    def test_select_races_keeps_order(self):
+        races = [
+            {'r': 1, 'conf': 30},
+            {'r': 9, 'conf': 30},
+            {'r': 3, 'conf': 99},
+            {'r': 11, 'conf': None},
+        ]
+        assert [r['r'] for r in scope.select_races(races)] == [9, 3, 11]
+
+    def test_scope_on_real_data_matches_the_spec(self, real_races):
+        """実データで「9〜11R は全部入る」「平場は rec 相当だけ」を確認する。"""
+        for r in real_races:
+            ok, _ = scope.in_scope(r)
+            if int(r['r']) in scope.MAIN_RACE_NUMS:
+                assert ok
+            elif ok:
+                assert r.get('conf') >= scope.FLAT_MIN_CONF

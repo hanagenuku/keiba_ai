@@ -19,7 +19,9 @@ from datetime import datetime
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.product import archive, article, facts as facts_mod, marks, tickets  # noqa: E402
+from src.product import (  # noqa: E402
+    archive, article, facts as facts_mod, marks, scope, tickets,
+)
 
 
 def _load_latest(base_dir):
@@ -65,6 +67,8 @@ def main(argv=None):
     ap.add_argument('--publish', action='store_true',
                     help='公開スナップショットを prediction_archive/ に保存する')
     ap.add_argument('--races', default='', help='例: 中山9,阪神9')
+    ap.add_argument('--all-races', action='store_true',
+                    help='対象範囲（9R〜11R＋自信のある平場）を無視して全レース出す')
     ap.add_argument('--only-recommended', action='store_true',
                     help='見送りにならないレースだけ')
     ap.add_argument('--out', default='', help='記事の出力先ファイル')
@@ -83,10 +87,18 @@ def main(argv=None):
     sections = []
     published = []
     skipped = []
+    out_of_scope = []
     for race in _iter_races(data, wanted):
         horses = race.get('horses') or []
         if not horses:
             continue
+        # 対象範囲（ユーザー指示: 各競馬場9R〜11R ＋ 自信のある平場）。
+        # --races で明示指定された場合と --all-races では適用しない。
+        if not wanted and not args.all_races:
+            ok, why = scope.in_scope(race)
+            if not ok:
+                out_of_scope.append(f"{race['_venue']}{race.get('r')}R({why})")
+                continue
         verdict = tickets.verdict(race.get('conf'))
         if args.only_recommended and verdict == 'skip':
             skipped.append(f"{race['_venue']}{race.get('r')}R")
@@ -139,6 +151,9 @@ def main(argv=None):
         print(f'公開スナップショット {len(published)} 件を保存しました', file=sys.stderr)
     if skipped:
         print(f'見送り: {", ".join(skipped)}', file=sys.stderr)
+    if out_of_scope:
+        print(f'対象外 {len(out_of_scope)}件: {", ".join(out_of_scope)}',
+              file=sys.stderr)
     return 0
 
 
