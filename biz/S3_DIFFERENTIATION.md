@@ -284,6 +284,10 @@ gachikeiba / umaneta / oumasan / umabi / dulbea / umalog ほか10サイト以上
 `src/` の他ディレクトリ・`data/`・`index.html` に差分ゼロ）。
 ⚠ 追加した文にも `commentary.find_forbidden()` を当ててテストで固定した
 （券種の説明に調教・パドック等の持っていない情報を混ぜない）。
+✅ 記事に載せた**文面そのもの**（`allocation_note` / `bet_type_reasons`）を
+`archive._FROZEN_KEYS` に追加した（`schema_version` 1→2）。
+D-4（全記録公開）が示したいのは「公開後に変えていない」ことなので、
+凍結する対象は数字だけでなく**読者が実際に読んだ文**である必要がある。
 ⚠ **誇張しない方向のテストも入れた**: 配分の注記と券種の理由に
 「勝てる」「儲か」「必ず」「確実」が現れないことを固定（§20）。
 

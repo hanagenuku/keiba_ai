@@ -376,6 +376,18 @@ class TestBetTypeReason:
         assert '換算例' not in md
         assert '配分の目安' not in md
 
+    def test_published_text_is_frozen_in_archive(self):
+        """記事に載せた文面もアーカイブで凍結する（§18 後から変えない）。"""
+        assert 'allocation_note' in archive._FROZEN_KEYS
+        assert 'bet_type_reasons' in archive._FROZEN_KEYS
+        t = tickets.build_tickets({'conf': 70}, self._horses())
+        snap = archive.build_snapshot(
+            {'race_id': '20260927_06_09', 'r': 9, 'name': 'テスト',
+             'dist': '1600m芝', 'conf': 70, '_venue': '中山'},
+            self._horses(), [], t, [], {}, 'レース見解')
+        assert snap['allocation_note'] == tickets.ALLOCATION_NOTE
+        assert snap['bet_type_reasons'] == t['bet_type_reasons']
+
 
 class TestArticleNeverShowsBrokenOdds:
     def test_unusable_odds_render_as_dash(self):
