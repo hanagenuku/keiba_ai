@@ -540,3 +540,89 @@ class TestScope:
                 assert ok
             elif ok:
                 assert r.get('conf') >= scope.FLAT_MIN_CONF
+
+
+# ---------------------------------------------------------------------------
+# 「履歴が読めない」を「初出走」と書かない（2026-09-30）
+# ---------------------------------------------------------------------------
+
+class TestUnknownHistoryIsNotDebut:
+    """🔴 商品に嘘を書かないためのガード（§20）。
+
+    `build_facts()` は history.db を引けたときだけ `n_past_runs` を作る。
+    LFS 実体が無い等で `conn=None` だと facts が空のまま全馬に渡るため、
+    キー欠落を 0 と同じに扱うと **キャリアのある馬にまで「初出走」と書く**。
+    """
+
+    HORSE = {'n': 1, 'name': 'テスト', 'rl_rank': 1, 'solo_rank': 1, 'pop': 1}
+    RACE = {'dist': '1600m芝'}
+
+    def test_empty_facts_does_not_claim_debut(self):
+        text = commentary.horse_comment(self.HORSE, {}, self.RACE)
+        assert '初出走' not in text
+        assert '前走' not in text
+
+    def test_measured_zero_runs_still_claims_debut(self):
+        """実際に引いて0走だったときは従来どおり書く（黙らせてはいない）。"""
+        text = commentary.horse_comment(self.HORSE, {'n_past_runs': 0}, self.RACE)
+        assert '初出走' in text
+
+    def test_real_data_debut_claims_match_measured_runs(self, real_races):
+        """実データ・実 history.db で、初出走と書く馬が実測0走の馬に一致する。"""
+        conn = facts.open_history(BASE)
+        if conn is None:
+            pytest.skip('history.db の実体が無い（LFS未取得）')
+        race = dict(real_races[0])
+        for h in race.get('horses') or []:
+            f = facts.build_facts(h, race, '2026-09-27', conn)
+            text = commentary.horse_comment(h, f, race)
+            assert ('初出走' in text) == (f.get('n_past_runs') == 0)
+
+
+# ---------------------------------------------------------------------------
+# 発走後のレースを「公開」として保存しない（2026-09-30）
+# ---------------------------------------------------------------------------
+
+class TestStalePublicationIsRefused:
+    """アーカイブの価値は「発走前に公開したものが残っている」ことに尽きる。
+
+    結果が出た後に保存すると `published_at` が発走日より後になり、記録自体が嘘になる。
+    """
+
+    def test_past_date_raises(self):
+        with pytest.raises(archive.StalePublication):
+            archive.assert_publishable(
+                '2026-09-27', now=archive.datetime(2026, 9, 30, tzinfo=archive.JST))
+
+    def test_same_day_is_allowed(self):
+        archive.assert_publishable(
+            '2026-09-27', now=archive.datetime(2026, 9, 27, 8, tzinfo=archive.JST))
+
+    def test_future_date_is_allowed(self):
+        """前日夜に翌日ぶんを生成する運用があるので未来日は通す。"""
+        archive.assert_publishable(
+            '2026-09-27', now=archive.datetime(2026, 9, 26, 19, tzinfo=archive.JST))
+
+    def test_guard_is_date_only_and_says_so(self):
+        """時刻までは見ない（latest.json に発走時刻が無い）。その射程を明記してある。"""
+        assert '時刻は見ていない' in archive.assert_publishable.__doc__
+
+    def test_cli_refuses_to_publish_stale_and_writes_nothing(self):
+        """CLI が実際に中止し、1件も保存しないこと。"""
+        import subprocess
+        with tempfile.TemporaryDirectory() as d:
+            os.makedirs(os.path.join(d, 'data'))
+            with open(LATEST, encoding='utf-8') as f:
+                raw = f.read()
+            with open(os.path.join(d, 'data', 'latest.json'), 'w',
+                      encoding='utf-8') as f:
+                f.write(raw)  # 日付は 2026-09-27（既に発走済み）
+            r = subprocess.run(
+                [sys.executable, os.path.join(BASE, 'scripts',
+                                              'build_product_article.py'),
+                 '--base-dir', d, '--publish',
+                 '--out', os.path.join(d, 'out.md')],
+                capture_output=True, text=True)
+            assert r.returncode == 1
+            assert '公開を中止' in r.stderr
+            assert not os.path.exists(os.path.join(d, archive.ARCHIVE_DIRNAME))

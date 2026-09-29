@@ -100,7 +100,14 @@ def horse_comment(horse, facts, race):
         elif abs(gap) <= 1:
             parts.append('能力と今回条件への適性が一致しており、扱いやすい。')
 
-    if facts.get('n_past_runs', 0) == 0:
+    # 🔴 「履歴を読めていない」と「本当に初出走」を区別する。
+    #    `build_facts()` は history.db を引けたときだけ `n_past_runs` を作る。
+    #    キーが無い状態（LFS実体が無い等で conn=None だった）を 0 と同じに扱うと、
+    #    キャリアのある馬にまで「初出走」と書いてしまう＝商品に嘘が載る（§20）。
+    n_past = facts.get('n_past_runs')
+    if n_past is None:
+        return _join(parts)
+    if n_past == 0:
         parts.append('初出走のため、過去の実績から書けることはない。')
         return _join(parts)
 

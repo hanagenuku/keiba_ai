@@ -25,6 +25,32 @@ class AlreadyPublished(Exception):
     """同じ race_id が既に保存されている。予想の書き換えを防ぐために送出する。"""
 
 
+class StalePublication(Exception):
+    """発走日が過ぎたレースを「公開」として保存しようとした。"""
+
+
+def assert_publishable(date_str, now=None):
+    """対象日が今日（JST）より前なら送出する。
+
+    🔴 このアーカイブの価値は「**発走前に**公開したものがそのまま残っている」ことに
+    尽きる。結果が出た後のレースを保存すると `published_at` が発走日より後になり、
+    記録そのものが嘘になる（§20）。1件目からそれをやると全部が無意味になるので、
+    構造的に止める。
+
+    ⚠ 射程は日付までで、時刻は見ていない。`latest.json` のレースに発走時刻が
+    入っていないため（実測: `post_time` は常に None）、「15:45 のレースを 17:00 に
+    公開した」は検出できない。**日をまたいだ後追いだけを止める**ガードである。
+    """
+    now = now or datetime.now(JST)
+    today = now.strftime('%Y-%m-%d')
+    if str(date_str)[:10] < today:
+        raise StalePublication(
+            f'対象日 {date_str} は今日（{today}）より前。発走が終わったレースを'
+            '公開記録として保存しない（published_at が発走日より後になり記録が嘘になる）。'
+            '公開は開催日の発走前に行うこと'
+        )
+
+
 def archive_dir(base_dir, date_str):
     return os.path.join(base_dir, ARCHIVE_DIRNAME, date_str)
 
