@@ -94,9 +94,9 @@ def _bets_md(tickets):
             for amt in sorted(ex):
                 detail = '・'.join(f'{k} {v}円' for k, v in ex[amt].items())
                 body += f'\n- 合計{amt}円で買う場合　{detail}'
-        note = tickets.get('allocation_note')
-        if note:
-            body += '\n\n' + note
+        # レースごとは短縮版。期待値が動かない理由の全文は記事末尾に1回だけ出す。
+        if tickets.get('allocation_note'):
+            body += '\n\n' + _tk.ALLOCATION_NOTE_SHORT
     elif ratio:
         body += ('\n\n金額はオッズと手持ち資金に応じて各自調整してください'
                  '（券種が1つなので配分はありません）。')

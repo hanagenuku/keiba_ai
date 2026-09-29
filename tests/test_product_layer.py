@@ -316,6 +316,14 @@ class TestAllocationIsNotAsserted:
         # 断定形（旧文面）が復活していないこと
         assert '金額の目安' not in md
 
+    def test_full_reason_appears_once_per_article_not_per_race(self):
+        """期待値が動かない理由の全文は記事末尾に1回だけ（7回くり返さない）。"""
+        md = article._bets_md(tickets.build_tickets({'conf': 70}, self._horses()))
+        assert tickets.ALLOCATION_NOTE_SHORT in md
+        assert '加重平均' not in md                       # レースごとには出さない
+        assert '加重平均' in commentary.disclaimer()       # 記事末尾には出す
+        assert '各自調整' in commentary.disclaimer()
+
     def test_allocation_note_does_not_claim_edge_from_allocation(self):
         note = tickets.ALLOCATION_NOTE
         assert '期待値は動きません' in note
