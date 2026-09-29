@@ -17,7 +17,8 @@ from datetime import datetime, timedelta, timezone
 JST = timezone(timedelta(hours=9))
 ARCHIVE_DIRNAME = 'prediction_archive'
 
-SCHEMA_VERSION = 1
+# 2: allocation_note / bet_type_reasons を追加（2026-09-29・§10・§11）
+SCHEMA_VERSION = 2
 
 
 class AlreadyPublished(Exception):
@@ -75,6 +76,11 @@ def build_snapshot(race, horses, marks_rows, tickets, dangers,
         'bets': tickets.get('bets'),
         'allocation_ratio': tickets.get('allocation_ratio'),
         'allocation_examples': tickets.get('allocation_examples'),
+        # 記事に載せた文面もそのまま残す（§10 各自調整・§11 なぜこの券種か）。
+        # 「公開したものを後から変えていない」を示すのが目的なので、
+        # 数字だけでなく**読者が読んだ文**を凍結する。
+        'allocation_note': tickets.get('allocation_note'),
+        'bet_type_reasons': tickets.get('bet_type_reasons'),
         'input_fingerprint': input_fingerprint(race, horses),
         'result': None,
     }
@@ -111,7 +117,8 @@ def load_snapshot(base_dir, date_str, race_id):
 _FROZEN_KEYS = (
     'published_at', 'race_id', 'conf', 'stars', 'verdict', 'skip_reason',
     'ranks', 'danger_favorites', 'horse_comments', 'race_comment',
-    'bets', 'allocation_ratio', 'allocation_examples', 'input_fingerprint',
+    'bets', 'allocation_ratio', 'allocation_examples',
+    'allocation_note', 'bet_type_reasons', 'input_fingerprint',
 )
 
 

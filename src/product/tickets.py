@@ -37,11 +37,86 @@ MAX_BET_TYPES = 2  # §8 1レース2券種以内
 # 🔴 有料商品に 0.0倍 を載せない。土曜夜の日曜予想は毎週 odds_coverage=0.0 になる
 MIN_VALID_ODDS = 1.0
 
-# 配分（比率）。複勝を厚く、ワイドは押さえ
+# 配分（比率）。複勝を厚く、ワイドは押さえ。
+# 🔴 これは**指示ではなく目安**。§10 は「資金配分は、オッズと資金に応じて各自調整 とする」
+#    と定めており、PHASE4_DESIGN.md §4 も「比率で示す・金額は換算例」としている。
+#    比率を断定形で出すと、期待値を動かせない操作（下記）を効くもののように見せてしまう。
 ALLOC_STRONG = {'複勝': 0.70, 'ワイド': 0.30}
 ALLOC_LIGHT = {'複勝': 1.00}
 
+# 金額は「比率を円に直したときの換算例」であって推奨額ではない。
 AMOUNT_EXAMPLES = (1000, 3000, 5000)
+
+# 配分に必ず添える注記。記事・アーカイブの両方へこの文のまま載せる。
+# 🔴 2026-08-18③: 総期待値 = 各EVの加重平均。全EV<1ならどう配分しても<1。
+#    配分は分散を変えるだけで期待値を1ミリも動かさない（算数で決着している）。
+ALLOCATION_NOTE = (
+    '配分は目安です。資金配分で期待値は動きません'
+    '（全体の期待値は各買い目の期待値の加重平均になるため、'
+    'どう振り分けても平均より上には行きません）。'
+    '比率を示しているのは当たり外れの振れ幅を抑えるためで、'
+    'オッズと手持ち資金に応じて各自調整してください。'
+)
+
+# レースごとに載せる短縮版。理由の全文（上）は記事末尾の注意事項に1回だけ出す。
+# 🔴 同じ段落を1記事に7回以上くり返すと読み飛ばされる。短縮版でも
+#    「目安であること」と「各自調整」は落とさない（そこが §10 の要件）。
+ALLOCATION_NOTE_SHORT = (
+    '配分は目安です。オッズと手持ち資金に応じて各自調整してください。'
+)
+
+
+# 券種を選んだ理由（§11「この予想なら、なぜこの券種なのか」まで説明する）。
+#
+# 🔴 出どころは全部「過去データで買い方を総当たりした測定」で、こちらの成績ではない。
+#    どの数字も100%を超えていない。券種を選べば控除率を超えられる、とは書かない。
+REASON_FUKUSHO = (
+    '複勝を本線にしているのは、過去データで買い方を総当たりしたときに'
+    '**上位の高配当を3本抜いても順位が崩れなかったのが複勝だけ**だったためです'
+    '（3本抜きでの下落は複勝 −1.4pt に対しワイド −8.5pt）。'
+    '控除率も20%で、対象にしている券種のなかで最も低いです。'
+)
+REASON_WIDE = (
+    'ワイドは押さえです。控除率が22.5%で複勝より不利なぶん、'
+    '◎から○▲への数点に留めています。'
+)
+REASON_LIGHT_ONLY = (
+    '今回は複勝だけです。このレースはレース信頼度が相手を広げる帯に届いていないため、'
+    '点数を増やしていません。'
+)
+REASON_EXCLUDED = (
+    '馬連・三連複・三連単は入れていません。同じ過去データで総当たりした結果、'
+    '馬連は70.2%、三連複は最高配当1本を除くと58.9%で、'
+    '控除率が22.5〜25%と複勝より不利でした。'
+)
+REASON_CAVEAT = (
+    'なお、ここに挙げた回収率はいずれも100%を下回っています。'
+    '券種の選び方で控除率を超えられるとは考えていません。'
+    '複勝を選んでいるのは「勝てるから」ではなく'
+    '「測った数字が偶然の高配当に左右されにくいから」です。'
+)
+
+
+def bet_type_reason(tickets):
+    """この買い目でその券種になった理由を文のリストで返す（§11）。
+
+    見送りなら空リスト（買っていないものの理由は書かない）。
+    """
+    if tickets.get('verdict') == 'skip':
+        return []
+    kinds = {b['type'] for b in tickets.get('bets', [])}
+    if not kinds:
+        return []
+    out = []
+    if '複勝' in kinds:
+        out.append(REASON_FUKUSHO)
+    if 'ワイド' in kinds:
+        out.append(REASON_WIDE)
+    elif kinds == {'複勝'}:
+        out.append(REASON_LIGHT_ONLY)
+    out.append(REASON_EXCLUDED)
+    out.append(REASON_CAVEAT)
+    return out
 
 
 def usable_odds(horse):
@@ -127,6 +202,8 @@ def build_tickets(race, horses):
         'bets': [],
         'allocation_ratio': {},
         'allocation_examples': {},
+        'allocation_note': None,
+        'bet_type_reasons': [],
         'skip_reason': None,
     }
 
@@ -207,6 +284,8 @@ def build_tickets(race, horses):
     result['allocation_examples'] = {
         amt: allocate(amt, ratios) for amt in AMOUNT_EXAMPLES
     }
+    result['allocation_note'] = ALLOCATION_NOTE
+    result['bet_type_reasons'] = bet_type_reason(result)
     return result
 
 
