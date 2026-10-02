@@ -71,6 +71,13 @@ jobs:
       - name: Update Plackett-Luce ratings
         run: python scripts/build_pl_ratings.py || true
 
+      # 公開済みの予想（prediction_archive/）に確定結果を追記する。
+      # 予想部分は1バイトも変えない（attach_result が凍結キーを検算する）。
+      # 結果がまだ取れていないレースは何も書かない（空の結果で埋めない）。
+      # ⚠ 公開実績が0件のうちは何もしない no-op。結果取得は止めない（|| true）。
+      - name: Attach results to published predictions (非ブロッキング)
+        run: python scripts/attach_product_results.py --base-dir . || true
+
       - name: Generate stats
         run: python scripts/generate_stats.py
 
@@ -95,7 +102,7 @@ jobs:
           # 実行中(数分〜十数分かかる)に他の変更がmainにpushされるとコンフリクトして
           # 失敗する既知の問題があった（2026-07-24調査で判明）。
           BACKUP_DIR=$(mktemp -d)
-          git status --porcelain -- data/ | cut -c4- | while IFS= read -r f; do
+          git status --porcelain -- data/ prediction_archive/ | cut -c4- | while IFS= read -r f; do
             [ -f "$f" ] || continue
             mkdir -p "$BACKUP_DIR/$(dirname "$f")"
             cp "$f" "$BACKUP_DIR/$f"
@@ -108,6 +115,9 @@ jobs:
             git reset --hard origin/main
             cp -a "$BACKUP_DIR"/. ./
             git add data/
+            # 複数パスを1回の git add に並べると、片方が存在しないだけで
+            # 全体が失敗して何も追加されない（2026-07-24に実測）。分けて呼ぶ。
+            if [ -d prediction_archive ]; then git add prediction_archive/; fi
             if git diff --cached --quiet; then
               echo "変更なし（既に反映済み）"
               PUSHED=1
