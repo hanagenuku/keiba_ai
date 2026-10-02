@@ -626,3 +626,192 @@ class TestStalePublicationIsRefused:
             assert r.returncode == 1
             assert '公開を中止' in r.stderr
             assert not os.path.exists(os.path.join(d, archive.ARCHIVE_DIRNAME))
+
+
+# ---------------------------------------------------------------------------
+# 公開済みの予想に結果を追記する（§12 の「結果」）
+#
+# 🔴 的中判定は払戻表（race_dividends）が正。着順から自分で判定しない。
+#    実データの反例: 2026-09-27 中山9R は7頭立てで複勝が2着までしか発売されず、
+#    3着（馬番2）に複勝配当が無い。一方ワイドは同じレースで3着内の2頭組が
+#    成立している。この非対称を手書きの規則で再現しようとすると必ず誤判定する。
+# ---------------------------------------------------------------------------
+
+from src.product import results as results_mod  # noqa: E402
+from src.utils import db as db_mod  # noqa: E402
+
+
+def _make_result_dbs(base_dir, placings, dividends, race_id, date='2026-09-27'):
+    """本番と同じ経路・同じスキーマで着順と払戻を用意する。
+
+    払戻は `src/utils/db.py::save_dividends_db`（本番の書き込み口）を通すので、
+    combo の正規化もテスト側で手打ちしない。
+    """
+    os.makedirs(os.path.join(base_dir, 'data'), exist_ok=True)
+    hp = os.path.join(base_dir, 'data', 'history.db')
+    conn = sqlite3.connect(hp)
+    conn.execute('CREATE TABLE horse_history ('
+                 'race_id TEXT, horse_num INTEGER, place INTEGER, '
+                 'fukusho_payout INTEGER)')
+    for num, place in placings.items():
+        conn.execute('INSERT INTO horse_history (race_id,horse_num,place,'
+                     'fukusho_payout) VALUES (?,?,?,?)',
+                     (race_id, num, place, None))
+    conn.commit()
+    conn.close()
+    db_mod.init_db(base_dir)
+    if dividends is not None:
+        db_mod.save_dividends_db(
+            [{'race_id': race_id, 'date': date, 'dividends': dividends}],
+            base_dir=base_dir)
+    return hp
+
+
+def _publish(base_dir, race_id, bets, date='2026-09-27', ranks=None):
+    snap = archive.build_snapshot(
+        {'race_id': race_id, 'r': 9, 'name': 'テスト', 'dist': '1600m芝',
+         'conf': 70, '_venue': '中山'},
+        [{'n': 1, 'rl_rank': 1, 'solo_rank': 1, 'pop': 1, 'odds': 2.0,
+          'fuku_pct': 60}],
+        ranks if ranks is not None else [{'num': 2, 'name': 'A', 'mark': '◎'}],
+        {'stars': 4, 'verdict': 'strong', 'bets': bets,
+         'allocation_ratio': {}, 'allocation_examples': {}},
+        [], {}, 'レース見解')
+    archive.save_snapshot(base_dir, date, snap)
+
+
+# 2026-09-27 中山9R の実データ（7頭立て・複勝は2着まで）
+_REAL_PLACINGS = {1: 4, 2: 3, 3: 1, 4: 5, 5: 6, 6: 7, 7: 2}
+_REAL_DIVS = {
+    'fukusho': [{'num': 3, 'payout': 180}, {'num': 7, 'payout': 110}],
+    'wide': [{'nums': [2, 3], 'payout': 390}, {'nums': [2, 7], 'payout': 170},
+             {'nums': [3, 7], 'payout': 180}],
+}
+
+
+class TestAttachResults:
+    RID = '20260927_06_09'
+
+    def test_small_field_third_place_fukusho_is_not_a_hit(self, tmp_path):
+        """🔴 7頭立ての3着。複勝は発売されていないので的中にしない。
+
+        着順だけで「3着内だから複勝的中」と判定すると、ここで嘘の的中が記録される。
+        """
+        d = str(tmp_path)
+        _make_result_dbs(d, _REAL_PLACINGS, _REAL_DIVS, self.RID)
+        _publish(d, self.RID, [
+            {'type': '複勝', 'axis': 2, 'combos': [[2]]},
+            {'type': 'ワイド', 'axis': 2, 'combos': [[2, 3]]},
+        ])
+        hist, keiba = results_mod.open_history(d), results_mod.open_keiba(d)
+        results_mod.attach_for_date(d, '2026-09-27', hist, keiba)
+        r = archive.load_snapshot(d, '2026-09-27', self.RID)['result']
+        fuku = [b for b in r['bets'] if b['type'] == '複勝'][0]
+        wide = [b for b in r['bets'] if b['type'] == 'ワイド'][0]
+        assert r['placings']['2'] == 3          # 3着である
+        assert fuku['hit'] is False             # それでも複勝は的中ではない
+        assert fuku['payout_per_100'] is None
+        assert wide['hit'] is True              # ワイドは3着内の2頭組で成立
+        assert wide['payout_per_100'] == 390
+
+    def test_hit_and_payout_come_from_dividends(self, tmp_path):
+        d = str(tmp_path)
+        _make_result_dbs(d, _REAL_PLACINGS, _REAL_DIVS, self.RID)
+        _publish(d, self.RID, [{'type': '複勝', 'axis': 7, 'combos': [[7]]}])
+        results_mod.attach_for_date(d, '2026-09-27', results_mod.open_history(d),
+                                    results_mod.open_keiba(d))
+        r = archive.load_snapshot(d, '2026-09-27', self.RID)['result']
+        assert r['bets'][0] == {'type': '複勝', 'combo': [7], 'hit': True,
+                                'payout_per_100': 110, 'payout_known': True}
+        assert r['top3'] == [3, 7, 2]
+        assert r['cross_check'] == 'ok'
+
+    def test_prediction_is_untouched(self, tmp_path):
+        d = str(tmp_path)
+        _make_result_dbs(d, _REAL_PLACINGS, _REAL_DIVS, self.RID)
+        _publish(d, self.RID, [{'type': '複勝', 'axis': 7, 'combos': [[7]]}])
+        before = archive.load_snapshot(d, '2026-09-27', self.RID)
+        results_mod.attach_for_date(d, '2026-09-27', results_mod.open_history(d),
+                                    results_mod.open_keiba(d))
+        after = archive.load_snapshot(d, '2026-09-27', self.RID)
+        for k in archive._FROZEN_KEYS:
+            assert before.get(k) == after.get(k), f'{k} が変わった'
+
+    def test_missing_dividends_writes_nothing(self, tmp_path):
+        """払戻が未取得なら結果を書かない（全部外れとして記録しない）。"""
+        d = str(tmp_path)
+        _make_result_dbs(d, _REAL_PLACINGS, None, self.RID)
+        _publish(d, self.RID, [{'type': '複勝', 'axis': 7, 'combos': [[7]]}])
+        out = results_mod.attach_for_date(d, '2026-09-27',
+                                         results_mod.open_history(d),
+                                         results_mod.open_keiba(d))
+        assert out == {'attached': 0, 'already': 0, 'pending': 1, 'mismatch': []}
+        assert archive.load_snapshot(d, '2026-09-27', self.RID)['result'] is None
+
+    def test_rerun_is_idempotent(self, tmp_path):
+        d = str(tmp_path)
+        _make_result_dbs(d, _REAL_PLACINGS, _REAL_DIVS, self.RID)
+        _publish(d, self.RID, [{'type': '複勝', 'axis': 7, 'combos': [[7]]}])
+        hist, keiba = results_mod.open_history(d), results_mod.open_keiba(d)
+        first = results_mod.attach_for_date(d, '2026-09-27', hist, keiba)
+        snap1 = archive.load_snapshot(d, '2026-09-27', self.RID)
+        second = results_mod.attach_for_date(d, '2026-09-27', hist, keiba)
+        snap2 = archive.load_snapshot(d, '2026-09-27', self.RID)
+        assert first['attached'] == 1 and second['attached'] == 0
+        assert second['already'] == 1
+        assert snap1 == snap2          # 2回目で1バイトも変わらない
+
+    def test_cross_check_detects_disagreement(self, tmp_path):
+        """着順（history.db）と払戻（keiba.db）が食い違えば mismatch と記録する。"""
+        d = str(tmp_path)
+        wrong = dict(_REAL_PLACINGS)
+        wrong[1], wrong[2] = 3, 4      # 3着を別の馬にすり替える
+        _make_result_dbs(d, wrong, _REAL_DIVS, self.RID)
+        _publish(d, self.RID, [{'type': '複勝', 'axis': 7, 'combos': [[7]]}])
+        out = results_mod.attach_for_date(d, '2026-09-27',
+                                         results_mod.open_history(d),
+                                         results_mod.open_keiba(d))
+        assert out['mismatch'] == [self.RID]
+        r = archive.load_snapshot(d, '2026-09-27', self.RID)['result']
+        assert r['cross_check'] == 'mismatch'
+
+    def test_result_has_no_roi(self, tmp_path):
+        """回収率は保存しない（記事の金額は換算例なので賭け金の仮定が要る）。"""
+        d = str(tmp_path)
+        _make_result_dbs(d, _REAL_PLACINGS, _REAL_DIVS, self.RID)
+        _publish(d, self.RID, [{'type': '複勝', 'axis': 7, 'combos': [[7]]}])
+        results_mod.attach_for_date(d, '2026-09-27', results_mod.open_history(d),
+                                    results_mod.open_keiba(d))
+        blob = json.dumps(archive.load_snapshot(d, '2026-09-27',
+                                                self.RID)['result'],
+                          ensure_ascii=False)
+        for word in ('roi', 'ROI', '回収', 'recovered', 'invested'):
+            assert word not in blob, f'結果に {word} が入っている'
+
+    def test_marks_and_dangers_get_their_placings(self, tmp_path):
+        d = str(tmp_path)
+        _make_result_dbs(d, _REAL_PLACINGS, _REAL_DIVS, self.RID)
+        snap = archive.build_snapshot(
+            {'race_id': self.RID, 'r': 9, 'conf': 70, '_venue': '中山'},
+            [{'n': 7, 'rl_rank': 1}],
+            [{'num': 7, 'name': 'A', 'mark': '◎'}, {'num': 1, 'name': 'B', 'mark': ''}],
+            {'stars': 4, 'verdict': 'strong', 'bets': [], 'allocation_ratio': {},
+             'allocation_examples': {}},
+            [{'num': 1, 'name': 'B', 'pop': 1}], {}, '見解')
+        archive.save_snapshot(d, '2026-09-27', snap)
+        results_mod.attach_for_date(d, '2026-09-27', results_mod.open_history(d),
+                                    results_mod.open_keiba(d))
+        r = archive.load_snapshot(d, '2026-09-27', self.RID)['result']
+        assert r['marks'] == [{'mark': '◎', 'num': 7, 'place': 2}]
+        assert r['danger_favorites'] == [{'num': 1, 'place': 4}]
+
+    def test_cli_is_noop_on_empty_archive(self, tmp_path):
+        """公開実績0件でも失敗しない（ワークフローに入れても無害）。"""
+        import subprocess
+        r = subprocess.run(
+            [sys.executable, os.path.join(BASE, 'scripts',
+                                          'attach_product_results.py'),
+             '--base-dir', str(tmp_path)],
+            capture_output=True, text=True)
+        assert r.returncode == 0, r.stderr
+        assert 'prediction_archive' in r.stderr
