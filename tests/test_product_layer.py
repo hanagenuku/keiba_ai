@@ -490,15 +490,32 @@ class TestThresholdsAreNotInvented:
         from src.betting import ev_filter
         assert tickets.CONF_LIGHT == int(round(ev_filter.MIN_AXIS_FUKU_PROB * 100))
 
-    def test_conf_strong_matches_rec_flag_on_real_data(self, real_races):
-        """conf >= CONF_STRONG が latest.json の rec と一致すること。"""
-        mism = [
-            (r['_venue'], r.get('r'), r.get('conf'), r.get('rec'))
-            for r in real_races
-            if r.get('conf') is not None
-            and bool(r.get('rec')) != (r['conf'] >= tickets.CONF_STRONG)
-        ]
-        assert not mism, f'rec と conf>={tickets.CONF_STRONG} が食い違う: {mism}'
+    def test_recommended_races_always_clear_conf_light(self, real_races):
+        """本番が推奨した（rec=True）レースは必ず CONF_LIGHT 以上。
+
+        これが `rec` と conf の**真の関係**。`rec` は
+        「軸の3着内確率 >= MIN_AXIS_FUKU_PROB を満たすレースのうち
+        その日の上位 max_races 本」（`ev_filter.select_quality_races`）なので、
+        下限は CONF_LIGHT と一致するが、上限側は閾値ではない。
+        """
+        bad = [(r['_venue'], r.get('r'), r.get('conf'))
+               for r in real_races
+               if r.get('rec') and r.get('conf') is not None
+               and r['conf'] < tickets.CONF_LIGHT]
+        assert not bad, f'rec=True なのに conf<{tickets.CONF_LIGHT}: {bad}'
+
+    def test_conf_strong_is_not_claimed_to_be_the_rec_boundary(self):
+        """🔴 「CONF_STRONG は rec の境界」と書き戻さないための歯止め。
+
+        2026-09-27 の1日だけ一致していたのを根拠にそう書いていたが、
+        10/03 は食い違い4件・10/04 は3件で**偶然だった**。
+        `rec` は当日の上位N本なので、固定の conf 値と一致しようがない。
+        """
+        for name in ('tickets.py', 'scope.py'):
+            src = open(os.path.join(BASE, 'src', 'product', name),
+                       encoding='utf-8').read()
+            assert '2026-10-05 訂正' in src, f'{name} から訂正の記録が消えている'
+            assert 'rec=True）の境界そのもの。2026-09-27' not in src
 
 
 class TestScope:
