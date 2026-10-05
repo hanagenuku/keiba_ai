@@ -104,8 +104,14 @@ def _bets_md(tickets):
     return body
 
 
-def build_race_section(race, horses, facts_by_num, *, paid=True):
-    """1レースぶんの本文を返す。"""
+def build_race_section(race, horses, facts_by_num, *, paid=True,
+                       n_comment_marks=3):
+    """1レースぶんの本文を返す。
+
+    `n_comment_marks` は**根拠の文章を書く印の数**（1=◎のみ / 2=◎○ / 3=◎○▲）。
+    印そのもの・比較表・買い目は減らない（§9 のフォーマットは崩さない）。
+    既定は 3 で、従来の出力と完全に同じ。
+    """
     marked = _marks.assign_marks(horses)
     rows = _marks.rank_table(marked)
     dangers = _marks.danger_favorites(marked)
@@ -125,7 +131,11 @@ def build_race_section(race, horses, facts_by_num, *, paid=True):
 
     # 本命・対抗・単穴の理由
     order = [(_marks.MARKS[0], '本命'), (_marks.MARKS[1], '対抗'), (_marks.MARKS[2], '単穴')]
-    for mark, label in order:
+    try:
+        n_comment = max(1, min(len(order), int(n_comment_marks)))
+    except (TypeError, ValueError):
+        n_comment = len(order)
+    for mark, label in order[:n_comment]:
         h = next((x for x in marked if x.get('product_mark') == mark), None)
         if h is None:
             continue

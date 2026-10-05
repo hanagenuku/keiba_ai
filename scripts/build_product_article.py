@@ -9,6 +9,7 @@
     python3 scripts/build_product_article.py --free           # 無料版
     python3 scripts/build_product_article.py --publish        # スナップショットも保存
     python3 scripts/build_product_article.py --races 中山9,阪神9
+    python3 scripts/build_product_article.py --comment-marks 2   # 根拠は◎○だけ
 """
 
 import argparse
@@ -72,6 +73,8 @@ def main(argv=None):
     ap.add_argument('--only-recommended', action='store_true',
                     help='見送りにならないレースだけ')
     ap.add_argument('--out', default='', help='記事の出力先ファイル')
+    ap.add_argument('--comment-marks', type=int, default=3, choices=(1, 2, 3),
+                    help='根拠の文章を書く印の数（1=◎ / 2=◎○ / 3=◎○▲。既定3）')
     args = ap.parse_args(argv)
 
     base_dir = args.base_dir
@@ -127,7 +130,8 @@ def main(argv=None):
                     h, race, target_date, conn)
 
         sec = article.build_race_section(race, horses, facts_by_num,
-                                         paid=not args.free)
+                                         paid=not args.free,
+                                         n_comment_marks=args.comment_marks)
         sections.append(sec)
 
         if args.publish:

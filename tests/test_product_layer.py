@@ -815,3 +815,92 @@ class TestAttachResults:
             capture_output=True, text=True)
         assert r.returncode == 0, r.stderr
         assert 'prediction_archive' in r.stderr
+
+
+# ---------------------------------------------------------------------------
+# 根拠の文章を書く印の数は選べる（ユーザー指示 2026-10-05: ◎と○のみでよい）
+#
+# 🔴 減らすのは**文章だけ**。印・比較表・買い目・危険な人気馬は §9 のフォーマット
+#    どおり残す（商品として「印を並べるだけ」にしないという制約がある）。
+# ---------------------------------------------------------------------------
+
+class TestCommentMarkCount:
+    def _sec(self, race, n):
+        return article.build_race_section(race, race['horses'], {},
+                                          paid=True, n_comment_marks=n)
+
+    def _race_with_three_marks(self, real_races):
+        want = {marks.MARKS[0], marks.MARKS[1], marks.MARKS[2]}
+        for race in real_races:
+            if not race.get('horses'):
+                continue
+            got = {h.get('product_mark') for h in marks.assign_marks(race['horses'])}
+            if want <= got:
+                return race
+        pytest.skip('◎○▲ が揃うレースが latest.json に無い')
+
+    def test_default_is_unchanged_and_writes_three(self, real_races):
+        race = self._race_with_three_marks(real_races)
+        md = self._sec(race, 3)['markdown']
+        for mark, label in ((marks.MARKS[0], '本命'), (marks.MARKS[1], '対抗'),
+                            (marks.MARKS[2], '単穴')):
+            assert f'### {mark} {label}' in md
+        # 既定値を渡さない従来の呼び方と完全に同じ出力であること
+        plain = article.build_race_section(race, race['horses'], {}, paid=True)
+        assert plain['markdown'] == md
+
+    def test_two_drops_only_the_third_comment(self, real_races):
+        race = self._race_with_three_marks(real_races)
+        md = self._sec(race, 2)['markdown']
+        assert f'### {marks.MARKS[0]} 本命' in md
+        assert f'### {marks.MARKS[1]} 対抗' in md
+        assert f'### {marks.MARKS[2]} 単穴' not in md
+
+    def test_marks_table_and_bets_are_not_reduced(self, real_races):
+        race = self._race_with_three_marks(real_races)
+        full = self._sec(race, 3)
+        trimmed = self._sec(race, 2)
+        assert full['rows'] == trimmed['rows']
+        assert full['tickets'] == trimmed['tickets']
+        assert full['dangers'] == trimmed['dangers']
+        md = trimmed['markdown']
+        for section in ('### 印', '### 能力・適性・市場の比較', '### 最終結論',
+                        '### 買い目'):
+            assert section in md
+        third = next(r for r in trimmed['rows'] if r['mark'] == marks.MARKS[2])
+        assert f"{marks.MARKS[2]} {third['num']}" in md
+
+    def test_out_of_range_falls_back_to_all(self, real_races):
+        race = self._race_with_three_marks(real_races)
+        for bad in (0, -1, 9, None, 'x'):
+            md = self._sec(race, bad)['markdown']
+            assert f'### {marks.MARKS[0]} 本命' in md
+
+    def test_trimmed_article_has_no_forbidden_expressions(self, real_races):
+        for race in real_races:
+            if not race.get('horses'):
+                continue
+            md = self._sec(race, 2)['markdown']
+            assert commentary.find_forbidden(md) is None
+
+    def test_cli_option_trims_the_third_comment(self):
+        """CLI を実際に起動して確認する（配線漏れを見逃さないため）。"""
+        import subprocess
+        with tempfile.TemporaryDirectory() as d:
+            os.makedirs(os.path.join(d, 'data'))
+            with open(LATEST, encoding='utf-8') as f:
+                raw = f.read()
+            with open(os.path.join(d, 'data', 'latest.json'), 'w',
+                      encoding='utf-8') as f:
+                f.write(raw)
+            out = os.path.join(d, 'out.md')
+            r = subprocess.run(
+                [sys.executable, os.path.join(BASE, 'scripts',
+                                              'build_product_article.py'),
+                 '--base-dir', d, '--comment-marks', '2', '--out', out],
+                capture_output=True, text=True)
+            assert r.returncode == 0, r.stderr
+            text = open(out, encoding='utf-8').read()
+            assert f'### {marks.MARKS[0]} 本命' in text
+            assert f'### {marks.MARKS[2]} 単穴' not in text
+            assert '### 買い目' in text
