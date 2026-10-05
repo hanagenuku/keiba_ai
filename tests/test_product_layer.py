@@ -904,3 +904,121 @@ class TestCommentMarkCount:
             assert f'### {marks.MARKS[0]} 本命' in text
             assert f'### {marks.MARKS[2]} 単穴' not in text
             assert '### 買い目' in text
+
+
+# ---------------------------------------------------------------------------
+# 記事を Google ドキュメントに変換するための HTML 化
+#
+# 🔴 汎用 Markdown ではなく、`article.py` が実際に出す構造だけを対象にする。
+#    週ごとに手で HTML を組むと見出しが段落になったり表が崩れるので、
+#    変換を1箇所に固定してここで押さえる。
+# ---------------------------------------------------------------------------
+
+sys.path.insert(0, os.path.join(BASE, 'scripts'))
+import md_to_html as mdh  # noqa: E402
+
+
+class TestMarkdownToHtml:
+    def test_headings_become_h1_h2_h3(self):
+        out = mdh.md_to_html('# 題\n\n## レース\n\n### 印\n')
+        assert '<h1>題</h1>' in out
+        assert '<h2>レース</h2>' in out
+        assert '<h3>印</h3>' in out
+
+    def test_table_becomes_table_with_header_row(self):
+        md = '| 印 | 馬番 |\n|---|---:|\n| ◎ | 6 |\n'
+        out = mdh.md_to_html(md)
+        assert '<table' in out and '</table>' in out
+        assert '<th>印</th>' in out
+        assert '<td>6</td>' in out
+        assert '|---|' not in out
+
+    def test_bold_and_italic(self):
+        out = mdh.md_to_html('**強調**と*斜体*。\n')
+        assert '<b>強調</b>' in out
+        assert '<i>斜体</i>' in out
+
+    def test_bullets_become_ul(self):
+        out = mdh.md_to_html('- 一つ\n- 二つ\n')
+        assert out.count('<li>') == 2
+        assert '<ul>' in out
+
+    def test_html_is_escaped(self):
+        out = mdh.md_to_html('a < b & c > d\n')
+        assert '&lt;' in out and '&amp;' in out
+        assert '<p>a &lt; b &amp; c &gt; d</p>' in out
+
+    def test_real_article_leaves_no_raw_markdown(self, real_races):
+        """実データの記事を変換して、記法が生のまま残らないこと。"""
+        secs = []
+        for race in real_races[:6]:
+            if not race.get('horses'):
+                continue
+            secs.append(article.build_race_section(
+                race, race['horses'], {}, paid=True, n_comment_marks=2))
+        if not secs:
+            pytest.skip('レースが無い')
+        md = article.build_article('2026-01-01', secs, paid=True)
+        out = mdh.md_to_html(md)
+        for leftover in ('|---', '**', '### ', '## '):
+            assert leftover not in out, f'生の記法が残っている: {leftover}'
+        assert '<table' in out and '<h2>' in out and '<h3>' in out
+
+
+# ---------------------------------------------------------------------------
+# 対象日は race_id の先頭8桁から取る
+#
+# 🔴 2026-10-05 にリハーサルで発覚した実害: 日曜の記事に土曜の日付が載っていた。
+#    `date` は `10月4日(日)`（年が無い表示用）、`generated_at` は前夜（土 17:57 に
+#    日曜ぶんを生成）なので、どちらからも対象日は決まらない。
+#    公開記録ではこのズレが `assert_publishable` の誤判定にもなる。
+# ---------------------------------------------------------------------------
+
+import build_product_article as bpa  # noqa: E402
+
+
+class TestTargetDate:
+    def test_race_id_wins_over_generated_at_and_display_date(self):
+        data = {
+            'date': '10月4日(日)',
+            'generated_at': '2026-10-03T17:57:03.773859+09:00',
+            'races': {'東京': [{'race_id': '20261004_05_01'}],
+                      '京都': [{'race_id': '20261004_08_01'}]},
+        }
+        assert bpa._target_date(data) == '2026-10-04'
+
+    def test_majority_wins_when_race_ids_disagree(self):
+        data = {'races': {'A': [{'race_id': '20261004_05_01'},
+                                {'race_id': '20261004_05_02'}],
+                          'B': [{'race_id': '20261003_08_01'}]}}
+        assert bpa._target_date(data) == '2026-10-04'
+
+    def test_falls_back_when_no_race_id(self):
+        data = {'generated_at': '2026-10-03T17:57:00+09:00', 'races': {}}
+        assert bpa._target_date(data) == '2026-10-03'
+
+    def test_display_date_string_without_year_is_not_used(self):
+        """`10月4日(日)` は10文字以上あるが年が無い。日付として使わない。"""
+        data = {'date': '10月4日(日)', 'races': {'A': [{'race_id': '20261004_05_01'}]}}
+        got = bpa._target_date(data)
+        assert got == '2026-10-04'
+        assert not got.startswith('10月')
+
+    def test_real_latest_json_matches_its_race_ids(self, real_races):
+        with open(LATEST, encoding='utf-8') as f:
+            data = json.load(f)
+        got = bpa._target_date(data)
+        rid = next(r['race_id'] for r in real_races if r.get('race_id'))
+        assert got == f'{rid[:4]}-{rid[4:6]}-{rid[6:8]}'
+
+    def test_article_title_uses_the_race_date(self, real_races):
+        """記事の見出しの日付が race_id と一致すること（読者に見える値）。"""
+        secs = [article.build_race_section(real_races[0],
+                                           real_races[0]['horses'], {},
+                                           paid=True, n_comment_marks=2)]
+        with open(LATEST, encoding='utf-8') as f:
+            data = json.load(f)
+        text = article.build_article(bpa._target_date(data), secs, paid=True)
+        rid = next(r['race_id'] for r in real_races if r.get('race_id'))
+        assert text.splitlines()[0].startswith(
+            f'# {rid[:4]}-{rid[4:6]}-{rid[6:8]} ')
