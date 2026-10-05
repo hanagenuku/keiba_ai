@@ -9,12 +9,15 @@
     python3 scripts/build_product_article.py --free           # 無料版
     python3 scripts/build_product_article.py --publish        # スナップショットも保存
     python3 scripts/build_product_article.py --races 中山9,阪神9
+    python3 scripts/build_product_article.py --comment-marks 2   # 根拠は◎○だけ
 """
 
 import argparse
 import json
 import os
+import re
 import sys
+from collections import Counter
 from datetime import datetime
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -31,7 +34,27 @@ def _load_latest(base_dir):
 
 
 def _target_date(data):
-    """対象日を 'YYYY-MM-DD' で返す。履歴のリーク防止に使う。"""
+    """対象日を 'YYYY-MM-DD' で返す。履歴のリーク防止と公開記録の日付に使う。
+
+    🔴 `race_id` の先頭8桁だけが信用できる。
+       `date` は `10月4日(日)` という**表示用の文字列**（年が無い）で、
+       `generated_at` は**前夜**（土曜 17:57 に日曜ぶんを作る）なので、
+       どちらを使っても日曜の記事に土曜の日付が載る。
+       2026-10-05 に実データで確認: generated_at 2026-10-03 / race_id 20261004。
+       公開記録ではこのズレが `assert_publishable` の誤判定にもなる。
+    """
+    dates = []
+    races = data.get('races') or {}
+    seq = ([r for rs in races.values() for r in rs]
+           if isinstance(races, dict) else list(races))
+    for r in seq:
+        m = re.match(r'^(\d{4})(\d{2})(\d{2})', str((r or {}).get('race_id') or ''))
+        if m:
+            dates.append('-'.join(m.groups()))
+    if dates:
+        return Counter(dates).most_common(1)[0][0]
+
+    # race_id が取れない場合のみ従来の推定に落ちる（年が無い `date` は使えない）
     for key in ('date', 'display_date'):
         v = data.get(key)
         if v and len(str(v)) >= 10:
@@ -72,6 +95,8 @@ def main(argv=None):
     ap.add_argument('--only-recommended', action='store_true',
                     help='見送りにならないレースだけ')
     ap.add_argument('--out', default='', help='記事の出力先ファイル')
+    ap.add_argument('--comment-marks', type=int, default=3, choices=(1, 2, 3),
+                    help='根拠の文章を書く印の数（1=◎ / 2=◎○ / 3=◎○▲。既定3）')
     args = ap.parse_args(argv)
 
     base_dir = args.base_dir
@@ -127,7 +152,8 @@ def main(argv=None):
                     h, race, target_date, conn)
 
         sec = article.build_race_section(race, horses, facts_by_num,
-                                         paid=not args.free)
+                                         paid=not args.free,
+                                         n_comment_marks=args.comment_marks)
         sections.append(sec)
 
         if args.publish:

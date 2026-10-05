@@ -490,15 +490,32 @@ class TestThresholdsAreNotInvented:
         from src.betting import ev_filter
         assert tickets.CONF_LIGHT == int(round(ev_filter.MIN_AXIS_FUKU_PROB * 100))
 
-    def test_conf_strong_matches_rec_flag_on_real_data(self, real_races):
-        """conf >= CONF_STRONG が latest.json の rec と一致すること。"""
-        mism = [
-            (r['_venue'], r.get('r'), r.get('conf'), r.get('rec'))
-            for r in real_races
-            if r.get('conf') is not None
-            and bool(r.get('rec')) != (r['conf'] >= tickets.CONF_STRONG)
-        ]
-        assert not mism, f'rec と conf>={tickets.CONF_STRONG} が食い違う: {mism}'
+    def test_recommended_races_always_clear_conf_light(self, real_races):
+        """本番が推奨した（rec=True）レースは必ず CONF_LIGHT 以上。
+
+        これが `rec` と conf の**真の関係**。`rec` は
+        「軸の3着内確率 >= MIN_AXIS_FUKU_PROB を満たすレースのうち
+        その日の上位 max_races 本」（`ev_filter.select_quality_races`）なので、
+        下限は CONF_LIGHT と一致するが、上限側は閾値ではない。
+        """
+        bad = [(r['_venue'], r.get('r'), r.get('conf'))
+               for r in real_races
+               if r.get('rec') and r.get('conf') is not None
+               and r['conf'] < tickets.CONF_LIGHT]
+        assert not bad, f'rec=True なのに conf<{tickets.CONF_LIGHT}: {bad}'
+
+    def test_conf_strong_is_not_claimed_to_be_the_rec_boundary(self):
+        """🔴 「CONF_STRONG は rec の境界」と書き戻さないための歯止め。
+
+        2026-09-27 の1日だけ一致していたのを根拠にそう書いていたが、
+        10/03 は食い違い4件・10/04 は3件で**偶然だった**。
+        `rec` は当日の上位N本なので、固定の conf 値と一致しようがない。
+        """
+        for name in ('tickets.py', 'scope.py'):
+            src = open(os.path.join(BASE, 'src', 'product', name),
+                       encoding='utf-8').read()
+            assert '2026-10-05 訂正' in src, f'{name} から訂正の記録が消えている'
+            assert 'rec=True）の境界そのもの。2026-09-27' not in src
 
 
 class TestScope:
@@ -815,3 +832,223 @@ class TestAttachResults:
             capture_output=True, text=True)
         assert r.returncode == 0, r.stderr
         assert 'prediction_archive' in r.stderr
+
+
+# ---------------------------------------------------------------------------
+# 根拠の文章を書く印の数は選べる（ユーザー指示 2026-10-05: ◎と○のみでよい）
+#
+# 🔴 減らすのは**文章だけ**。印・比較表・買い目・危険な人気馬は §9 のフォーマット
+#    どおり残す（商品として「印を並べるだけ」にしないという制約がある）。
+# ---------------------------------------------------------------------------
+
+class TestCommentMarkCount:
+    def _sec(self, race, n):
+        return article.build_race_section(race, race['horses'], {},
+                                          paid=True, n_comment_marks=n)
+
+    def _race_with_three_marks(self, real_races):
+        want = {marks.MARKS[0], marks.MARKS[1], marks.MARKS[2]}
+        for race in real_races:
+            if not race.get('horses'):
+                continue
+            got = {h.get('product_mark') for h in marks.assign_marks(race['horses'])}
+            if want <= got:
+                return race
+        pytest.skip('◎○▲ が揃うレースが latest.json に無い')
+
+    def test_default_is_unchanged_and_writes_three(self, real_races):
+        race = self._race_with_three_marks(real_races)
+        md = self._sec(race, 3)['markdown']
+        for mark, label in ((marks.MARKS[0], '本命'), (marks.MARKS[1], '対抗'),
+                            (marks.MARKS[2], '単穴')):
+            assert f'### {mark} {label}' in md
+        # 既定値を渡さない従来の呼び方と完全に同じ出力であること
+        plain = article.build_race_section(race, race['horses'], {}, paid=True)
+        assert plain['markdown'] == md
+
+    def test_two_drops_only_the_third_comment(self, real_races):
+        race = self._race_with_three_marks(real_races)
+        md = self._sec(race, 2)['markdown']
+        assert f'### {marks.MARKS[0]} 本命' in md
+        assert f'### {marks.MARKS[1]} 対抗' in md
+        assert f'### {marks.MARKS[2]} 単穴' not in md
+
+    def test_marks_table_and_bets_are_not_reduced(self, real_races):
+        race = self._race_with_three_marks(real_races)
+        full = self._sec(race, 3)
+        trimmed = self._sec(race, 2)
+        assert full['rows'] == trimmed['rows']
+        assert full['tickets'] == trimmed['tickets']
+        assert full['dangers'] == trimmed['dangers']
+        md = trimmed['markdown']
+        for section in ('### 印', '### 能力・適性・市場の比較', '### 最終結論',
+                        '### 買い目'):
+            assert section in md
+        third = next(r for r in trimmed['rows'] if r['mark'] == marks.MARKS[2])
+        assert f"{marks.MARKS[2]} {third['num']}" in md
+
+    def test_out_of_range_falls_back_to_all(self, real_races):
+        race = self._race_with_three_marks(real_races)
+        for bad in (0, -1, 9, None, 'x'):
+            md = self._sec(race, bad)['markdown']
+            assert f'### {marks.MARKS[0]} 本命' in md
+
+    def test_trimmed_article_has_no_forbidden_expressions(self, real_races):
+        for race in real_races:
+            if not race.get('horses'):
+                continue
+            md = self._sec(race, 2)['markdown']
+            assert commentary.find_forbidden(md) is None
+
+    def test_cli_option_trims_the_third_comment(self):
+        """CLI を実際に起動して確認する（配線漏れを見逃さないため）。"""
+        import subprocess
+        with tempfile.TemporaryDirectory() as d:
+            os.makedirs(os.path.join(d, 'data'))
+            with open(LATEST, encoding='utf-8') as f:
+                raw = f.read()
+            with open(os.path.join(d, 'data', 'latest.json'), 'w',
+                      encoding='utf-8') as f:
+                f.write(raw)
+            out = os.path.join(d, 'out.md')
+            r = subprocess.run(
+                [sys.executable, os.path.join(BASE, 'scripts',
+                                              'build_product_article.py'),
+                 '--base-dir', d, '--comment-marks', '2', '--out', out],
+                capture_output=True, text=True)
+            assert r.returncode == 0, r.stderr
+            text = open(out, encoding='utf-8').read()
+            assert f'### {marks.MARKS[0]} 本命' in text
+            assert f'### {marks.MARKS[2]} 単穴' not in text
+            assert '### 買い目' in text
+
+
+# ---------------------------------------------------------------------------
+# 記事を Google ドキュメントに変換するための HTML 化
+#
+# 🔴 汎用 Markdown ではなく、`article.py` が実際に出す構造だけを対象にする。
+#    週ごとに手で HTML を組むと見出しが段落になったり表が崩れるので、
+#    変換を1箇所に固定してここで押さえる。
+# ---------------------------------------------------------------------------
+
+sys.path.insert(0, os.path.join(BASE, 'scripts'))
+import md_to_html as mdh  # noqa: E402
+
+
+class TestMarkdownToHtml:
+    def test_headings_become_h1_h2_h3(self):
+        out = mdh.md_to_html('# 題\n\n## レース\n\n### 印\n')
+        assert '<h1>題</h1>' in out
+        assert '<h2>レース</h2>' in out
+        assert '<h3>印</h3>' in out
+
+    def test_table_becomes_table_with_header_row(self):
+        md = '| 印 | 馬番 |\n|---|---:|\n| ◎ | 6 |\n'
+        out = mdh.md_to_html(md)
+        assert '<table' in out and '</table>' in out
+        assert '<th>印</th>' in out
+        assert '<td>6</td>' in out
+        assert '|---|' not in out
+
+    def test_header_row_is_wrapped_in_thead(self):
+        """🔴 `<thead>` が無いと Drive が空の見出し行を1行足す（実機で確認）。"""
+        out = mdh.md_to_html('| 印 | 馬番 |\n|---|---:|\n| ◎ | 6 |\n')
+        assert '<thead><tr><th>印</th>' in out
+        assert '<tbody>' in out and '</tbody>' in out
+
+    def test_horizontal_rule_is_dropped(self):
+        """🔴 `<hr>` の直後が見出しだと Drive が `-----見出し` に潰す（実機で確認）。"""
+        out = mdh.md_to_html('---\n\n## 京都9R\n')
+        assert '<hr' not in out
+        assert '<h2>京都9R</h2>' in out
+        assert '-----' not in out
+
+    def test_bold_and_italic(self):
+        out = mdh.md_to_html('**強調**と*斜体*。\n')
+        assert '<b>強調</b>' in out
+        assert '<i>斜体</i>' in out
+
+    def test_bullets_become_ul(self):
+        out = mdh.md_to_html('- 一つ\n- 二つ\n')
+        assert out.count('<li>') == 2
+        assert '<ul>' in out
+
+    def test_html_is_escaped(self):
+        out = mdh.md_to_html('a < b & c > d\n')
+        assert '&lt;' in out and '&amp;' in out
+        assert '<p>a &lt; b &amp; c &gt; d</p>' in out
+
+    def test_real_article_leaves_no_raw_markdown(self, real_races):
+        """実データの記事を変換して、記法が生のまま残らないこと。"""
+        secs = []
+        for race in real_races[:6]:
+            if not race.get('horses'):
+                continue
+            secs.append(article.build_race_section(
+                race, race['horses'], {}, paid=True, n_comment_marks=2))
+        if not secs:
+            pytest.skip('レースが無い')
+        md = article.build_article('2026-01-01', secs, paid=True)
+        out = mdh.md_to_html(md)
+        for leftover in ('|---', '**', '### ', '## '):
+            assert leftover not in out, f'生の記法が残っている: {leftover}'
+        assert '<table' in out and '<h2>' in out and '<h3>' in out
+
+
+# ---------------------------------------------------------------------------
+# 対象日は race_id の先頭8桁から取る
+#
+# 🔴 2026-10-05 にリハーサルで発覚した実害: 日曜の記事に土曜の日付が載っていた。
+#    `date` は `10月4日(日)`（年が無い表示用）、`generated_at` は前夜（土 17:57 に
+#    日曜ぶんを生成）なので、どちらからも対象日は決まらない。
+#    公開記録ではこのズレが `assert_publishable` の誤判定にもなる。
+# ---------------------------------------------------------------------------
+
+import build_product_article as bpa  # noqa: E402
+
+
+class TestTargetDate:
+    def test_race_id_wins_over_generated_at_and_display_date(self):
+        data = {
+            'date': '10月4日(日)',
+            'generated_at': '2026-10-03T17:57:03.773859+09:00',
+            'races': {'東京': [{'race_id': '20261004_05_01'}],
+                      '京都': [{'race_id': '20261004_08_01'}]},
+        }
+        assert bpa._target_date(data) == '2026-10-04'
+
+    def test_majority_wins_when_race_ids_disagree(self):
+        data = {'races': {'A': [{'race_id': '20261004_05_01'},
+                                {'race_id': '20261004_05_02'}],
+                          'B': [{'race_id': '20261003_08_01'}]}}
+        assert bpa._target_date(data) == '2026-10-04'
+
+    def test_falls_back_when_no_race_id(self):
+        data = {'generated_at': '2026-10-03T17:57:00+09:00', 'races': {}}
+        assert bpa._target_date(data) == '2026-10-03'
+
+    def test_display_date_string_without_year_is_not_used(self):
+        """`10月4日(日)` は10文字以上あるが年が無い。日付として使わない。"""
+        data = {'date': '10月4日(日)', 'races': {'A': [{'race_id': '20261004_05_01'}]}}
+        got = bpa._target_date(data)
+        assert got == '2026-10-04'
+        assert not got.startswith('10月')
+
+    def test_real_latest_json_matches_its_race_ids(self, real_races):
+        with open(LATEST, encoding='utf-8') as f:
+            data = json.load(f)
+        got = bpa._target_date(data)
+        rid = next(r['race_id'] for r in real_races if r.get('race_id'))
+        assert got == f'{rid[:4]}-{rid[4:6]}-{rid[6:8]}'
+
+    def test_article_title_uses_the_race_date(self, real_races):
+        """記事の見出しの日付が race_id と一致すること（読者に見える値）。"""
+        secs = [article.build_race_section(real_races[0],
+                                           real_races[0]['horses'], {},
+                                           paid=True, n_comment_marks=2)]
+        with open(LATEST, encoding='utf-8') as f:
+            data = json.load(f)
+        text = article.build_article(bpa._target_date(data), secs, paid=True)
+        rid = next(r['race_id'] for r in real_races if r.get('race_id'))
+        assert text.splitlines()[0].startswith(
+            f'# {rid[:4]}-{rid[4:6]}-{rid[6:8]} ')
