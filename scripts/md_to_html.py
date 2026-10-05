@@ -2,7 +2,7 @@
 """記事の Markdown を Google ドキュメント変換用の HTML にする。
 
 🔴 汎用の Markdown 実装ではない。`src/product/article.py` が実際に出す構造だけを
-   対象にする（見出し h1-h3 / 表 / 箇条書き / 太字 / 斜体 / 水平線 / 段落）。
+   対象にする（見出し h1-h3 / 表 / 箇条書き / 太字 / 斜体 / 段落。水平線は落とす）。
    Drive の `create_file` に `contentMimeType: "text/html"` で渡すと、Google が
    `<h1>`〜`<h3>`・`<table>`・`<ul>`・`<b>`・`<i>` をネイティブの書式に変換する。
 
@@ -42,12 +42,19 @@ def _split_row(line):
 
 
 def _table_html(rows):
-    """1行目を見出し行として扱う（article.py の表は必ず見出し付き）。"""
-    out = ['<table border="1">']
-    for i, cells in enumerate(rows):
-        tag = 'th' if i == 0 else 'td'
+    """1行目を見出し行として扱う（article.py の表は必ず見出し付き）。
+
+    🔴 `<thead>` で包む。包まずに `<tr><th>` だけを置くと、Drive の変換が
+       **空の見出し行を1行足して**こちらの見出しをデータ行に落とす
+       （2026-10-05 に実際の Google ドキュメントで確認）。
+    """
+    head, body = rows[0], rows[1:]
+    out = ['<table border="1">', '<thead><tr>' + ''.join(
+        f'<th>{_inline(c)}</th>' for c in head) + '</tr></thead>', '<tbody>']
+    for cells in body:
         out.append('<tr>' + ''.join(
-            f'<{tag}>{_inline(c)}</{tag}>' for c in cells) + '</tr>')
+            f'<td>{_inline(c)}</td>' for c in cells) + '</tr>')
+    out.append('</tbody>')
     out.append('</table>')
     return '\n'.join(out)
 
@@ -64,9 +71,12 @@ def md_to_html(text):
             i += 1
             continue
 
-        # 水平線
+        # 水平線は落とす。
+        # 🔴 `<hr>` の直後が見出しだと、Drive の変換が見出しの前に `-----` を
+        #    くっつけて `## -----京都9R…` という行にしてしまう
+        #    （2026-10-05 に実際の Google ドキュメントで確認）。
+        #    区切りは見出し（h2）が担っているので、水平線は不要。
         if re.fullmatch(r'-{3,}', line.strip()):
-            out.append('<hr>')
             i += 1
             continue
 

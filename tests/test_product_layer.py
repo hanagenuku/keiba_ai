@@ -933,6 +933,19 @@ class TestMarkdownToHtml:
         assert '<td>6</td>' in out
         assert '|---|' not in out
 
+    def test_header_row_is_wrapped_in_thead(self):
+        """🔴 `<thead>` が無いと Drive が空の見出し行を1行足す（実機で確認）。"""
+        out = mdh.md_to_html('| 印 | 馬番 |\n|---|---:|\n| ◎ | 6 |\n')
+        assert '<thead><tr><th>印</th>' in out
+        assert '<tbody>' in out and '</tbody>' in out
+
+    def test_horizontal_rule_is_dropped(self):
+        """🔴 `<hr>` の直後が見出しだと Drive が `-----見出し` に潰す（実機で確認）。"""
+        out = mdh.md_to_html('---\n\n## 京都9R\n')
+        assert '<hr' not in out
+        assert '<h2>京都9R</h2>' in out
+        assert '-----' not in out
+
     def test_bold_and_italic(self):
         out = mdh.md_to_html('**強調**と*斜体*。\n')
         assert '<b>強調</b>' in out
