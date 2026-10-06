@@ -481,9 +481,11 @@ class TestDisclaimer:
 
 
 class TestThresholdsAreNotInvented:
-    """商品の閾値が「本番で既に使われている値」と一致していること。
+    """商品の閾値が、決めたとおりの値から動いていないこと。
 
-    🔴 ここが食い違うと、商品側で勝手に閾値を最適化したのと同じになる。
+    - CONF_LIGHT は本番の `ev_filter.MIN_AXIS_FUKU_PROB` と一致していること
+    - CONF_STRONG は**商品側で選んだ固定値 66**（2026-10-06 ユーザー決定）
+    🔴 ここが動くと、結果を見てから閾値を最適化したのと同じになる。
     """
 
     def test_conf_light_matches_production_gate(self):
@@ -517,6 +519,24 @@ class TestThresholdsAreNotInvented:
             assert '2026-10-05 訂正' in src, f'{name} から訂正の記録が消えている'
             assert 'rec=True）の境界そのもの。2026-09-27' not in src
 
+    def test_conf_strong_is_a_fixed_value_not_tied_to_rec(self):
+        """🟢 2026-10-06 ユーザー決定「固定の数値でよい。上位6本という選び方はしない」。
+
+        商品の対象範囲は**固定の conf 値**で決める。本番の `rec`
+        （その日の上位 max_races 本）に差し替えないための歯止め。
+        値を動かすのも、`rec` を見る形に変えるのも、どちらもここで落ちる。
+        """
+        assert tickets.CONF_STRONG == 66
+        for name in ('tickets.py', 'scope.py'):
+            src = open(os.path.join(BASE, 'src', 'product', name),
+                       encoding='utf-8').read()
+            assert '2026-10-06' in src, f'{name} に固定値の決定が記録されていない'
+        # 対象範囲の判定が rec を読み始めると「その日の上位N本」に戻ってしまう
+        scope_src = open(os.path.join(BASE, 'src', 'product', 'scope.py'),
+                         encoding='utf-8').read()
+        assert "get('rec')" not in scope_src and 'get("rec")' not in scope_src, \
+            'scope.py が rec を参照している（固定の閾値で決める方針に反する）'
+
 
 class TestScope:
     """対象範囲（ユーザー指示: 各競馬場9R〜11R ＋ 自信のある平場）。"""
@@ -537,7 +557,7 @@ class TestScope:
         assert '信頼度' in why
 
     def test_flat_threshold_is_not_invented(self):
-        """新しい閾値を作らず tickets.CONF_STRONG（本番 rec の境界）を流用する。"""
+        """平場の閾値をここで別に作らず tickets.CONF_STRONG（固定値66）を使う。"""
         assert scope.FLAT_MIN_CONF == tickets.CONF_STRONG
 
     def test_select_races_keeps_order(self):
