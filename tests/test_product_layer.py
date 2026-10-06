@@ -519,6 +519,20 @@ class TestThresholdsAreNotInvented:
             assert '2026-10-05 訂正' in src, f'{name} から訂正の記録が消えている'
             assert 'rec=True）の境界そのもの。2026-09-27' not in src
 
+    def test_odds_gate_reason_is_not_about_expected_value(self):
+        """🔴 オッズ無しの見送り理由に「妙味（＝期待値）」を使わない。
+
+        `EV = AI確率 × オッズ` で買い目を選ぶのは 2026-07-05 / 07-30 / 08-31 に
+        3回否定済み（EV>=1.0 で回収57.9% < 買わない側75.0%）。商品は EV で
+        選んでいないので、EV を理由に見送ると自分の記録と矛盾する。
+        2026-10-06 にユーザーが指摘して訂正した。書き戻しの歯止め。
+        """
+        src = open(os.path.join(BASE, 'src', 'product', 'tickets.py'),
+                   encoding='utf-8').read()
+        assert 'オッズが無い状態では妙味の判断ができない' not in src
+        # 見送り自体は残っていること（ゲートを外したわけではない）
+        assert 'オッズが取得できていないため見送り' in src
+
     def test_conf_strong_is_a_fixed_value_not_tied_to_rec(self):
         """🟢 2026-10-06 ユーザー決定「固定の数値でよい。上位6本という選び方はしない」。
 
