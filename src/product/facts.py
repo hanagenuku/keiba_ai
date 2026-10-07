@@ -11,6 +11,7 @@
 import os
 import re
 import sqlite3
+from collections import Counter
 from datetime import datetime
 
 # 見解に使う過去走の本数。5走を超えると市場も同じ履歴を見ており差が出ない
@@ -150,9 +151,17 @@ def build_facts(horse, race, target_date, conn):
         }
 
     # --- 脚質（直近で最も多いもの） ---------------------------------------
+    # 🔴 2026-10-07 修正。`max(set(styles), key=styles.count)` は同数のときに
+    #    set の反復順（＝PYTHONHASHSEED でプロセスごとに変わる）で勝者が決まるため、
+    #    **同じ入力で記事の文章が変わっていた**（実データで3回走らせて2通り出た。
+    #    「脚質は差し」と「脚質は先行」が同じ馬で入れ替わる）。商品に出す事実が
+    #    実行ごとに変わるのは許容できない。同数なら**直近の走りの脚質**を採る
+    #    （`runs` は `ORDER BY h.date DESC` なので先に現れる方が新しい）。
     styles = [r['running_style'] for r in runs if r.get('running_style')]
     if styles:
-        facts['style'] = max(set(styles), key=styles.count)
+        counts = Counter(styles)
+        top = max(counts.values())
+        facts['style'] = next(st for st in styles if counts[st] == top)
 
     # --- 道悪実績 ---------------------------------------------------------
     heavy = [r for r in runs if r.get('track_condition') in ('稍重', '重', '不良')]

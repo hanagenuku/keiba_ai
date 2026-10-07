@@ -267,3 +267,44 @@ class TestArticleDisplayDefects:
         txt = commentary.race_comment(race, horses, t, [])
         assert txt.count('レース信頼度') == 1, txt
         assert txt.rstrip().endswith('。'), txt
+
+
+class TestStyleIsDeterministic:
+    """🔴 同じ入力で記事の文章が変わらないこと（2026-10-07 に実データで発覚）。
+
+    `facts.build_facts` の脚質が `max(set(styles), key=styles.count)` だったため、
+    同数のときに set の反復順（＝PYTHONHASHSEED でプロセスごとに変わる）で
+    勝者が決まり、**同じ馬が「脚質は差し」と「脚質は先行」で入れ替わっていた**
+    （実データで3回走らせて2通り出た）。商品に出す事実が実行ごとに変わるのは不可。
+    """
+
+    def test_tie_is_broken_by_the_most_recent_run(self, tmp_path):
+        import sqlite3 as sq
+        from src.product import facts as facts_mod
+        from tests.test_product_layer import _make_history
+
+        db = str(tmp_path / 'h.db')
+        # 差し2回・先行2回の同数。直近（2026-09-01）は「差し」
+        _make_history(db, [
+            {'race_id': 'A', 'date': '2026-09-01', 'horse_name': 'ウマ',
+             'place': 3, 'running_style': '差し'},
+            {'race_id': 'B', 'date': '2026-08-01', 'horse_name': 'ウマ',
+             'place': 4, 'running_style': '先行'},
+            {'race_id': 'C', 'date': '2026-07-01', 'horse_name': 'ウマ',
+             'place': 5, 'running_style': '差し'},
+            {'race_id': 'D', 'date': '2026-06-01', 'horse_name': 'ウマ',
+             'place': 6, 'running_style': '先行'},
+        ])
+        conn = sq.connect(f'file:{db}?mode=ro', uri=True)
+        conn.row_factory = sq.Row
+        f = facts_mod.build_facts({'name': 'ウマ'},
+                                  {'dist': '1800mダート', '_venue': '中山'},
+                                  '2026-10-01', conn)
+        assert f['style'] == '差し', f.get('style')
+
+    def test_source_does_not_iterate_a_set(self):
+        src = open(os.path.join(BASE, 'src', 'product', 'facts.py'),
+                   encoding='utf-8').read()
+        code = '\n'.join(ln for ln in src.splitlines()
+                         if not ln.lstrip().startswith('#'))
+        assert 'max(set(' not in code
