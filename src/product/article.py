@@ -7,6 +7,7 @@
 from . import commentary as _cm
 from . import marks as _marks
 from . import tickets as _tk
+from . import web_block as _wb
 
 
 def _stars(n):
@@ -58,7 +59,10 @@ def _marks_line(rows):
             lines.append(f"{m} {r['num']}{r['name']}")
     subs = by_mark.get(_marks.SUB_MARK, [])
     if subs:
-        lines.append(_marks.SUB_MARK + ' ' + ''.join(str(r['num']) for r in subs))
+        # 🔴 2026-10-07 修正。区切りなしで連結していたため、14番と7番が「147」と
+        #    1頭の馬番のように見えていた（実データで確認）。馬名まで出して確定させる。
+        lines.append(_marks.SUB_MARK + ' '
+                     + '・'.join(f"{r['num']}{r['name']}" for r in subs))
     return '\n'.join(lines)
 
 
@@ -105,12 +109,17 @@ def _bets_md(tickets):
 
 
 def build_race_section(race, horses, facts_by_num, *, paid=True,
-                       n_comment_marks=3):
+                       n_comment_marks=3, web_view=None):
     """1レースぶんの本文を返す。
 
     `n_comment_marks` は**根拠の文章を書く印の数**（1=◎のみ / 2=◎○ / 3=◎○▲）。
     印そのもの・比較表・買い目は減らない（§9 のフォーマットは崩さない）。
     既定は 3 で、従来の出力と完全に同じ。
+
+    `web_view` は当日朝に web から集めた見解
+    （`src.features.claude_web.build_claude_view()` の戻り値）。
+    🔴 **印・比較表・買い目の計算に一切渡さない。** 記事の末尾に別枠で足すだけ。
+    `None` なら出力は従来と完全に同じ。
     """
     marked = _marks.assign_marks(horses)
     rows = _marks.rank_table(marked)
@@ -181,6 +190,12 @@ def build_race_section(race, horses, facts_by_num, *, paid=True,
         parts.append('')
         parts.append(_bets_md(tickets))
         parts.append('')
+
+        # 🔴 web見解は**全部の算出が終わった後**に足す。上の marked / rows /
+        #    tickets / dangers はこの時点で確定済みで、web_view を一度も見ていない。
+        web_md = _wb.build_web_block(web_view, marked)
+        if web_md:
+            parts += web_md
     else:
         parts.append('*買い目・全頭評価・他レースは有料版で公開しています。*')
         parts.append('')
@@ -194,7 +209,7 @@ def build_race_section(race, horses, facts_by_num, *, paid=True,
     }
 
 
-def build_article(day_label, sections, *, paid=True, has_web_notes=False):
+def build_article(day_label, sections, *, paid=True, has_web_info=False):
     """1日ぶんの記事。"""
     kind = '有料版' if paid else '無料版'
     head = [f'# {day_label} AI競馬分析　{kind}', '']
@@ -206,6 +221,6 @@ def build_article(day_label, sections, *, paid=True, has_web_notes=False):
     head.append('---')
     head.append('')
     body = ('\n---\n\n').join(s['markdown'] for s in sections)
-    tail = ['', '---', '', '### データ出典', '', _cm.sources_note(has_web_notes),
+    tail = ['', '---', '', '### データ出典', '', _cm.sources_note(has_web_info),
             '', '### 注意事項', '', _cm.disclaimer()]
     return '\n'.join(head) + body + '\n'.join(tail) + '\n'

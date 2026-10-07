@@ -248,6 +248,14 @@ def _clean_cmt(cmt):
     return ('。'.join(kept) + '。') if kept else ''
 
 
+def _ensure_period(text):
+    """文末に句点が無ければ足す。見解を連結したときに文が繋がって読めなくなるため。"""
+    t = (text or '').strip()
+    if t and t[-1] not in '。！？':
+        t += '。'
+    return t
+
+
 def race_comment(race, horses, tickets, dangers):
     """レース全体の見解。AI が既に出している `cmt` を使い、判断だけ足す。"""
     parts = []
@@ -256,11 +264,15 @@ def race_comment(race, horses, tickets, dangers):
         parts.append(cmt)
 
     conf = race.get('conf')
-    if conf is not None:
+    skip_reason = tickets.get('skip_reason') or ''
+    # 🔴 2026-10-07 修正。見送り理由が既に信頼度を名指ししている場合、
+    #    「レース信頼度は52。レース信頼度が低い（52）ため見送り。」と二重になっていた。
+    if conf is not None and not (tickets.get('verdict') == 'skip'
+                                 and 'レース信頼度' in skip_reason):
         parts.append(f'レース信頼度は{conf}。')
 
     if tickets.get('verdict') == 'skip':
-        parts.append(tickets.get('skip_reason') or '今回は見送り。')
+        parts.append(_ensure_period(skip_reason or '今回は見送り。'))
     elif tickets.get('verdict') == 'light':
         parts.append('軸は取れるが相手を広げる根拠までは無い帯。'
                      '点数を絞って対応したい。')
@@ -288,11 +300,11 @@ def disclaimer():
     )
 
 
-def sources_note(has_web_notes=False):
+def sources_note(has_web_info=False):
     """出典の明示（§12）。Web情報を使っていない場合はそう書く。"""
     base = ('データ出典：JRA公式（出馬表・レース結果）。'
             '各馬の記述は過去走の実データ（着順・上がり3F・距離・コース・脚質・'
             '馬場状態・人気）から機械的に抽出したものです。')
-    if has_web_notes:
+    if has_web_info:
         return base + '\nWebから取得した情報は本文中に出典を明記しています。'
     return base + '\n本記事では陣営コメント・調教・パドックの情報は使用していません。'

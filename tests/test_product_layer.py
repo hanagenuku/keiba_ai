@@ -474,7 +474,7 @@ class TestDisclaimer:
         assert '自己責任' in text
 
     def test_sources_note_states_what_is_not_used(self):
-        note = commentary.sources_note(has_web_notes=False)
+        note = commentary.sources_note(has_web_info=False)
         assert 'JRA公式' in note
         # 使っていないことを明示する文なので、ここでは禁止語チェックを通さない
         assert '使用していません' in note
@@ -1006,6 +1006,19 @@ class TestMarkdownToHtml:
         out = mdh.md_to_html('- 一つ\n- 二つ\n')
         assert out.count('<li>') == 2
         assert '<ul>' in out
+
+    def test_renders_source_links(self):
+        """web見解の `[出典](url)` を生のまま出さない（2026-10-07 追加）。"""
+        out = mdh.md_to_html(
+            '出典：[1](https://a.example/x?y=1&z=2) / [出典](https://b.example/p)')
+        assert '<a href="https://a.example/x?y=1&amp;z=2">1</a>' in out
+        assert '<a href="https://b.example/p">出典</a>' in out
+        assert '[1](' not in out
+        assert '&amp;amp;' not in out      # & を二重にエスケープしない
+
+    def test_does_not_linkify_non_http_schemes(self):
+        out = mdh.md_to_html('[x](javascript:alert(1))')
+        assert '<a ' not in out
 
     def test_html_is_escaped(self):
         out = mdh.md_to_html('a < b & c > d\n')

@@ -22,6 +22,7 @@ from datetime import datetime
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from src.features import claude_web  # noqa: E402
 from src.product import (  # noqa: E402
     archive, article, facts as facts_mod, marks, scope, tickets,
 )
@@ -95,6 +96,8 @@ def main(argv=None):
     ap.add_argument('--only-recommended', action='store_true',
                     help='見送りにならないレースだけ')
     ap.add_argument('--out', default='', help='記事の出力先ファイル')
+    ap.add_argument('--no-web', action='store_true',
+                    help='data/claude_web_findings.json があっても web見解を載せない')
     ap.add_argument('--comment-marks', type=int, default=3, choices=(1, 2, 3),
                     help='根拠の文章を書く印の数（1=◎ / 2=◎○ / 3=◎○▲。既定3）')
     args = ap.parse_args(argv)
@@ -103,6 +106,20 @@ def main(argv=None):
     data = _load_latest(base_dir)
     target_date = _target_date(data)
     wanted = {s.strip() for s in args.races.split(',') if s.strip()} or None
+
+    # 当日朝に Claude が web から集めた見解（無ければ None）。
+    # ⚠ 変数名は `web_findings`。記録専用の別層（src/utils 配下）が予想の経路に
+    #    入らないことを守る grep ガード
+    #    （tests の TestItIsNotWiredIntoPrediction）が substring で
+    #    当たるため、そちらと同じ語を使うと「ガードを弱めて通す」方向の変更を誘発する。
+    #    claude_web.py の docstring が同じ理由でファイル名を分けている。
+    # 🔴 印・買い目の計算には渡さない。記事の末尾に別枠で足すだけ。
+    #    日付が対象日と違う entry は build_claude_view 側で必ず落ちる
+    #    （前の開催の見解を今日の記事に出さないため）。
+    web_findings = None if args.no_web else claude_web.load_findings(base_dir)
+    if web_findings:
+        print(f'🌐 web見解を読み込みました（date={web_findings.get("date")}・'
+              f'{len(web_findings.get("races") or {})}レース）', file=sys.stderr)
 
     conn = facts_mod.open_history(base_dir)
     if conn is None:
@@ -126,6 +143,7 @@ def main(argv=None):
             return 1
 
     sections = []
+    n_web = 0
     published = []
     skipped = []
     out_of_scope = []
@@ -151,9 +169,20 @@ def main(argv=None):
                 facts_by_num[h.get('n')] = facts_mod.build_facts(
                     h, race, target_date, conn)
 
+        # ⚠ `claude_web` はスクレイパー側の形（馬番キーが `num`）を前提にしている。
+        #    `latest.json` の馬は `n` なので、ここで馬番だけを渡し替える
+        #    （claude_web の契約を商品側の都合で書き換えないため）。
+        web_view = claude_web.build_claude_view(
+            race.get('race_id'), race.get('r'),
+            [{'num': h.get('n')} for h in horses], web_findings,
+            race_date=target_date.replace('-', '')) if web_findings else None
+        if web_view:
+            n_web += 1
+
         sec = article.build_race_section(race, horses, facts_by_num,
                                          paid=not args.free,
-                                         n_comment_marks=args.comment_marks)
+                                         n_comment_marks=args.comment_marks,
+                                         web_view=web_view)
         sections.append(sec)
 
         if args.publish:
@@ -180,7 +209,8 @@ def main(argv=None):
         return 1
 
     label = target_date
-    text = article.build_article(label, sections, paid=not args.free)
+    text = article.build_article(label, sections, paid=not args.free,
+                                 has_web_info=n_web > 0)
 
     if args.out:
         with open(args.out, 'w', encoding='utf-8') as f:
@@ -193,6 +223,8 @@ def main(argv=None):
         print(f'公開スナップショット {len(published)} 件を保存しました', file=sys.stderr)
     if skipped:
         print(f'見送り: {", ".join(skipped)}', file=sys.stderr)
+    if web_findings is not None:
+        print(f'web見解を載せたレース: {n_web}件', file=sys.stderr)
     if out_of_scope:
         print(f'対象外 {len(out_of_scope)}件: {", ".join(out_of_scope)}',
               file=sys.stderr)
