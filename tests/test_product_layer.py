@@ -474,7 +474,7 @@ class TestDisclaimer:
         assert '自己責任' in text
 
     def test_sources_note_states_what_is_not_used(self):
-        note = commentary.sources_note(has_web_notes=False)
+        note = commentary.sources_note(has_web_info=False)
         assert 'JRA公式' in note
         # 使っていないことを明示する文なので、ここでは禁止語チェックを通さない
         assert '使用していません' in note
