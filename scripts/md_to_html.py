@@ -20,6 +20,9 @@ import sys
 _BOLD = re.compile(r'\*\*(.+?)\*\*')
 _ITALIC = re.compile(r'(?<!\*)\*([^*\n]+)\*(?!\*)')
 _CODE = re.compile(r'`([^`\n]+)`')
+# 出典リンク。web見解の節（src/product/web_block.py）が `[出典](https://...)` を出す。
+# http(s) 以外は書き換えない（javascript: 等をリンクにしない）。
+_LINK = re.compile(r'\[([^\]\n]+)\]\((https?://[^)\s]+)\)')
 _TABLE_SEP = re.compile(r'^\|[\s:\-|]+\|$')
 
 
@@ -29,6 +32,15 @@ def _inline(text):
     out = _BOLD.sub(r'<b>\1</b>', out)
     out = _ITALIC.sub(r'<i>\1</i>', out)
     out = _CODE.sub(r'<code>\1</code>', out)
+    # 🔴 リンクは最後に処理する。これが無いと Drive のドキュメントに
+    #    `[出典](https://…)` が生のまま出る（出典が読めないわけではないが汚い）。
+    #    ⚠ URL は上の html.escape(quote=False) で既に & が実体参照化されている。
+    #      ここで escape し直すと `&amp;amp;` と二重になるので、属性を壊す
+    #      引用符だけを潰す。
+    out = _LINK.sub(
+        lambda m: '<a href="{}">{}</a>'.format(
+            m.group(2).replace('"', '&quot;').replace("'", '&#39;'),
+            m.group(1)), out)
     return out
 
 
