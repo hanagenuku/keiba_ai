@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "date": "20261010",
+  "collected_at": "2026-10-10T09:07:10+09:00",
+  "races": {
+    "20261010_05_11": {
+      "venue": "東京",
+      "race_num": 11,
+      "going": {
+        "surface": "芝",
+        "state": "良",
+        "expected": "やや硬め"
+      },
+      "horses": {
+        "1": {
+          "note": "栗東ウッド 6F88秒6-上がり1F12秒0（3頭併せ・馬なり）。評価C",
+          "sources": [
+            "https://umasiru.com/archives/21846"
+          ],
+          "direction": "down"
+        },
+        "2": {
+          "note": "美浦ウッド 6F83秒2-上がり1F11秒8（インナーパッションと併せ・馬なり）。評価C。レーン騎手は新馬戦後に「ポテンシャルの高い馬」と評価",
+          "sources": [
+            "https://umasiru.com/archives/21846",
+            "https://www.keibanomiryoku.com/%E3%82%B5%E3%82%A6%E3%82%B8%E3%82%A2%E3%83%A9%E3%83%93%E3%82%A2%E3%83%AD%E3%82%A4%E3%83%A4%E3%83%AB%E3%82%AB%E3%83%83%E3%83%97"
+          ]
+        },
+        "3": {
+          "note": "美浦ウッド 6F83秒2-上がり1F11秒1（サトノワーグナーと併せ・馬なり）。最高評価S",
+          "sources": [
+            "https://umasiru.com/archives/21846"
+          ],
+          "direction": "up"
+        },
+        "4": {
+          "note": "美浦ウッド 5F68秒3-上がり1F11秒3（単走・ゴール前で仕掛け）。評価A",
+          "sources": [
+            "https://umasiru.com/archives/21846"
+          ]
+        },
+        "5": {
+          "note": "美浦ウッド 5F68秒7-上がり1F11秒3（3頭併せ・ゴール前で仕掛け）。評価A。ルメール騎手は「子供っぽい面があるので、まだ伸びしろがありますね」とコメント",
+          "sources": [
+            "https://umasiru.com/archives/21846",
+            "https://www.keibanomiryoku.com/%E3%82%B5%E3%82%A6%E3%82%B8%E3%82%A2%E3%83%A9%E3%83%93%E3%82%A2%E3%83%AD%E3%82%A4%E3%83%A4%E3%83%AB%E3%82%AB%E3%83%83%E3%83%97"
+          ]
+        },
+        "6": {
+          "note": "美浦ウッド 5F67秒1-上がり1F11秒4（ミカッテヨンデイイと併せ・馬なり）。最高評価S",
+          "sources": [
+            "https://umasiru.com/archives/21846"
+          ],
+          "direction": "up"
+        },
+        "7": {
+          "note": "美浦ウッド 5F68秒9-上がり1F12秒2（単走・強めの追い切り）。評価B",
+          "sources": [
+            "https://umasiru.com/archives/21846"
+          ]
+        },
+        "8": {
+          "note": "美浦ウッド 5F65秒9-上がり1F11秒4（マダックスと併せ・強めの追い切り）。評価A",
+          "sources": [
+            "https://umasiru.com/archives/21846"
+          ]
+        },
+        "9": {
+          "note": "美浦ウッド 6F84秒2-上がり1F11秒4（馬なり）。評価B",
+          "sources": [
+            "https://umasiru.com/archives/21846"
+          ]
+        },
+        "10": {
+          "note": "美浦ウッド 6F82秒4-上がり1F11秒8（ライーリーアースと併せ・強めの追い切り）。評価A",
+          "sources": [
+            "https://umasiru.com/archives/21846"
+          ]
+        },
+        "11": {
+          "note": "栗東坂路 全体54秒3-上がり1F12秒7（単走・馬なり）。評価B",
+          "sources": [
+            "https://umasiru.com/archives/21846"
+          ]
+        }
+      },
+      "summary": "東京芝は金曜昼時点で良。土曜は「馬場が少し硬めかもしれない」との想定で、枠は内〜フラット・直線はやや内〜フラット・前後は展開次第〜差し、想定時計は標準なら−2.7秒前後（硬めなら−3.5〜−2.9秒）。追い切りの最高評価Sは3サトノハクマイと6ベルウッドディープ。",
+      "sources": [
+        "https://www.bloodline-trackbias.work/entry/2026/10/09/190000",
+        "https://umasiru.com/archives/21846",
+        "https://www.keibanomiryoku.com/%E3%82%B5%E3%82%A6%E3%82%B8%E3%82%A2%E3%83%A9%E3%83%93%E3%82%A2%E3%83%AD%E3%82%A4%E3%83%A4%E3%83%AB%E3%82%AB%E3%83%83%E3%83%97"
+      ]
+    },
+    "20261010_05_10": {
+      "venue": "東京",
+      "race_num": 10,
+      "going": {
+        "surface": "ダート",
+        "state": "良",
+        "expected": "乾燥（含水率2％台）"
+      },
+      "summary": "東京ダートは金曜昼時点で良、含水率2％台で土曜はさらに乾燥する見込み。枠・直線ともフラット、前後は展開次第〜差し、想定時計は−1.0〜−0.5秒位。このレースの調教・陣営コメントは web から取れなかった。",
+      "sources": [
+        "https://www.bloodline-trackbias.work/entry/2026/10/09/190000"
+      ]
+    },
+    "20261010_08_10": {
+      "venue": "京都",
+      "race_num": 10,
+      "going": {
+        "surface": "芝",
+        "state": "良",
+        "expected": "硬さは標準"
+      },
+      "summary": "京都芝は金曜昼時点で良。今週は雨がほとんど降らず「馬場の硬さは標準位」との想定で、枠は内〜フラット・直線はやや内〜フラット・前後は展開次第〜差し、想定時計は−3.5〜−3.0秒位。このレースの調教・陣営コメントは web から取れなかった。",
+      "sources": [
+        "https://www.bloodline-trackbias.work/entry/2026/10/09/190000"
+      ]
+    },
+    "20261010_08_11": {
+      "venue": "京都",
+      "race_num": 11,
+      "going": {
+        "surface": "ダート",
+        "state": "良",
+        "expected": "乾燥（含水率4〜5％台）"
+      },
+      "summary": "京都ダートは金曜昼時点で良、含水率4〜5％台で土曜はさらに乾燥する見込み。枠・直線ともフラット、前後は展開次第、想定時計は−1.0〜−0.5秒位。3勝クラスのため調教評価の記事が web に無く、調教・陣営コメントは取れなかった。",
+      "sources": [
+        "https://www.bloodline-trackbias.work/entry/2026/10/09/190000"
+      ]
+    }
+  }
+}
