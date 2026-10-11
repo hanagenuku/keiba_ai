@@ -1,97 +1,129 @@
 {
   "schema_version": 1,
-  "date": "20261010",
-  "collected_at": "2026-10-10T09:07:10+09:00",
+  "date": "20261011",
+  "collected_at": "2026-10-11T09:04:18+09:00",
   "races": {
-    "20261010_05_11": {
+    "20261011_05_11": {
       "venue": "東京",
       "race_num": 11,
       "going": {
         "surface": "芝",
         "state": "良",
-        "expected": "やや硬め"
+        "expected": "前日より硬くなる可能性"
       },
       "horses": {
         "1": {
-          "note": "栗東ウッド 6F88秒6-上がり1F12秒0（3頭併せ・馬なり）。評価C",
+          "note": "美浦ウッド（良）6F84秒5-上がり11秒6（馬なり）。評価B",
           "sources": [
-            "https://umasiru.com/archives/21846"
+            "https://umasiru.com/archives/21848"
+          ]
+        },
+        "2": {
+          "note": "栗東坂路（良）全体55秒6-上がり12秒1（末強め）。評価C",
+          "sources": [
+            "https://umasiru.com/archives/21848"
           ],
           "direction": "down"
         },
-        "2": {
-          "note": "美浦ウッド 6F83秒2-上がり1F11秒8（インナーパッションと併せ・馬なり）。評価C。レーン騎手は新馬戦後に「ポテンシャルの高い馬」と評価",
-          "sources": [
-            "https://umasiru.com/archives/21846",
-            "https://www.keibanomiryoku.com/%E3%82%B5%E3%82%A6%E3%82%B8%E3%82%A2%E3%83%A9%E3%83%93%E3%82%A2%E3%83%AD%E3%82%A4%E3%83%A4%E3%83%AB%E3%82%AB%E3%83%83%E3%83%97"
-          ]
-        },
         "3": {
-          "note": "美浦ウッド 6F83秒2-上がり1F11秒1（サトノワーグナーと併せ・馬なり）。最高評価S",
+          "note": "栗東坂路（良）全体56秒0-上がり11秒8（馬なり）。評価B",
           "sources": [
-            "https://umasiru.com/archives/21846"
-          ],
-          "direction": "up"
+            "https://umasiru.com/archives/21848"
+          ]
         },
         "4": {
-          "note": "美浦ウッド 5F68秒3-上がり1F11秒3（単走・ゴール前で仕掛け）。評価A",
+          "note": "栗東坂路（良）全体56秒0-上がり13秒0（馬なり）。評価C",
           "sources": [
-            "https://umasiru.com/archives/21846"
-          ]
+            "https://umasiru.com/archives/21848"
+          ],
+          "direction": "down"
         },
         "5": {
-          "note": "美浦ウッド 5F68秒7-上がり1F11秒3（3頭併せ・ゴール前で仕掛け）。評価A。ルメール騎手は「子供っぽい面があるので、まだ伸びしろがありますね」とコメント",
+          "note": "美浦ウッド（良）6F81秒6-上がり11秒6（強め）。評価C",
           "sources": [
-            "https://umasiru.com/archives/21846",
-            "https://www.keibanomiryoku.com/%E3%82%B5%E3%82%A6%E3%82%B8%E3%82%A2%E3%83%A9%E3%83%93%E3%82%A2%E3%83%AD%E3%82%A4%E3%83%A4%E3%83%AB%E3%82%AB%E3%83%83%E3%83%97"
-          ]
+            "https://umasiru.com/archives/21848"
+          ],
+          "direction": "down"
         },
         "6": {
-          "note": "美浦ウッド 5F67秒1-上がり1F11秒4（ミカッテヨンデイイと併せ・馬なり）。最高評価S",
+          "note": "栗東坂路（良）全体53秒9-上がり12秒5（馬なり）。評価E＝映像がなく判断できないとされている",
           "sources": [
-            "https://umasiru.com/archives/21846"
+            "https://umasiru.com/archives/21848"
           ],
-          "direction": "up"
+          "direction": "down"
         },
         "7": {
-          "note": "美浦ウッド 5F68秒9-上がり1F12秒2（単走・強めの追い切り）。評価B",
+          "note": "美浦ウッド（良）5F67秒7-上がり11秒6（ゴール前仕掛け）。評価B",
           "sources": [
-            "https://umasiru.com/archives/21846"
+            "https://umasiru.com/archives/21848"
           ]
         },
         "8": {
-          "note": "美浦ウッド 5F65秒9-上がり1F11秒4（マダックスと併せ・強めの追い切り）。評価A",
+          "note": "栗東坂路（良）全体54秒4-上がり12秒0（馬なり）。評価A",
           "sources": [
-            "https://umasiru.com/archives/21846"
-          ]
+            "https://umasiru.com/archives/21848"
+          ],
+          "direction": "up"
         },
         "9": {
-          "note": "美浦ウッド 6F84秒2-上がり1F11秒4（馬なり）。評価B",
+          "note": "栗東坂路（良）全体53秒9-上がり12秒0（末強め）。評価B",
           "sources": [
-            "https://umasiru.com/archives/21846"
+            "https://umasiru.com/archives/21848"
           ]
         },
         "10": {
-          "note": "美浦ウッド 6F82秒4-上がり1F11秒8（ライーリーアースと併せ・強めの追い切り）。評価A",
+          "note": "栗東ウッド（良）4F53秒6-上がり11秒9（馬なり）。評価B",
           "sources": [
-            "https://umasiru.com/archives/21846"
+            "https://umasiru.com/archives/21848"
           ]
         },
         "11": {
-          "note": "栗東坂路 全体54秒3-上がり1F12秒7（単走・馬なり）。評価B",
+          "note": "栗東坂路（良）全体51秒5-上がり12秒2（馬なり）。評価A。終いの2Fが2秒台前半と鋭く瞬発力を評価",
           "sources": [
-            "https://umasiru.com/archives/21846"
+            "https://umasiru.com/archives/21848"
+          ],
+          "direction": "up"
+        },
+        "12": {
+          "note": "美浦ウッド（良）6F82秒2-上がり11秒4（馬なり）。評価B",
+          "sources": [
+            "https://umasiru.com/archives/21848"
           ]
+        },
+        "13": {
+          "note": "美浦ウッド（良）5F66秒8-上がり12秒4（馬なり）。評価A",
+          "sources": [
+            "https://umasiru.com/archives/21848"
+          ],
+          "direction": "up"
+        },
+        "14": {
+          "note": "栗東ウッド（良）6F80秒9-上がり12秒1（馬なり）。評価B",
+          "sources": [
+            "https://umasiru.com/archives/21848"
+          ]
+        },
+        "15": {
+          "note": "美浦ウッド（良）5F67秒8-上がり11秒2（馬なり）。評価B",
+          "sources": [
+            "https://umasiru.com/archives/21848"
+          ]
+        },
+        "16": {
+          "note": "栗東坂路（良）全体53秒9-上がり12秒4（馬なり）。評価A。僚馬に楽に先着し、直線で右手前に替えてからの動きに前向きさ",
+          "sources": [
+            "https://umasiru.com/archives/21848"
+          ],
+          "direction": "up"
         }
       },
-      "summary": "東京芝は金曜昼時点で良。土曜は「馬場が少し硬めかもしれない」との想定で、枠は内〜フラット・直線はやや内〜フラット・前後は展開次第〜差し、想定時計は標準なら−2.7秒前後（硬めなら−3.5〜−2.9秒）。追い切りの最高評価Sは3サトノハクマイと6ベルウッドディープ。",
+      "summary": "東京芝は土曜夜時点で良。日曜は晴れ予報で前日より硬くなる可能性があり、枠は内〜フラット・直線はやや内〜フラット・前後は展開次第〜差し、想定時計は−3.0〜−2.5秒位（土曜の実測は−2.7秒位・前日は差し有利だった）。🔴 追い切り最高評価Sのヴォンフレ（とA評価のテリオスララ）は取消で不在。出走馬の最上位はA評価の8ルージュソリテール・11ラヴァンダ・13ワタシマツワ・16カムニャック。",
       "sources": [
-        "https://www.bloodline-trackbias.work/entry/2026/10/09/190000",
-        "https://umasiru.com/archives/21846",
-        "https://www.keibanomiryoku.com/%E3%82%B5%E3%82%A6%E3%82%B8%E3%82%A2%E3%83%A9%E3%83%93%E3%82%A2%E3%83%AD%E3%82%A4%E3%83%A4%E3%83%AB%E3%82%AB%E3%83%83%E3%83%97"
+        "https://www.bloodline-trackbias.work/entry/2026/10/10/200000",
+        "https://umasiru.com/archives/21848"
       ]
     },
-    "20261010_05_10": {
+    "20261011_05_10": {
       "venue": "東京",
       "race_num": 10,
       "going": {
@@ -99,35 +131,35 @@
         "state": "良",
         "expected": "乾燥（含水率2％台）"
       },
-      "summary": "東京ダートは金曜昼時点で良、含水率2％台で土曜はさらに乾燥する見込み。枠・直線ともフラット、前後は展開次第〜差し、想定時計は−1.0〜−0.5秒位。このレースの調教・陣営コメントは web から取れなかった。",
+      "summary": "東京ダートは土曜夜時点で良、含水率2％台で日曜はさらに乾燥する見込み。枠・直線ともフラット、前後は展開次第〜差し、想定時計は−1.3〜−0.7秒位（土曜の実測は−1.0秒位）。このレースの調教・陣営コメントは web から取れなかった。",
       "sources": [
-        "https://www.bloodline-trackbias.work/entry/2026/10/09/190000"
+        "https://www.bloodline-trackbias.work/entry/2026/10/10/200000"
       ]
     },
-    "20261010_08_10": {
+    "20261011_08_10": {
       "venue": "京都",
       "race_num": 10,
       "going": {
         "surface": "芝",
         "state": "良",
-        "expected": "硬さは標準"
+        "expected": "硬さは標準程度"
       },
-      "summary": "京都芝は金曜昼時点で良。今週は雨がほとんど降らず「馬場の硬さは標準位」との想定で、枠は内〜フラット・直線はやや内〜フラット・前後は展開次第〜差し、想定時計は−3.5〜−3.0秒位。このレースの調教・陣営コメントは web から取れなかった。",
+      "summary": "京都芝は土曜夜時点で良。馬場へのダメージは目立たず硬さは標準程度との想定で、枠は内〜フラット・直線はやや内〜フラット・前後は展開次第〜差し（外回りは差し有利の可能性）、想定時計は−3.5秒前後（土曜の実測は−3.5秒位で、前日はバイアスが出なかった）。このレースの調教・陣営コメントは web から取れなかった。",
       "sources": [
-        "https://www.bloodline-trackbias.work/entry/2026/10/09/190000"
+        "https://www.bloodline-trackbias.work/entry/2026/10/10/200000"
       ]
     },
-    "20261010_08_11": {
+    "20261011_08_11": {
       "venue": "京都",
       "race_num": 11,
       "going": {
         "surface": "ダート",
         "state": "良",
-        "expected": "乾燥（含水率4〜5％台）"
+        "expected": "乾燥（含水率3〜4％台）"
       },
-      "summary": "京都ダートは金曜昼時点で良、含水率4〜5％台で土曜はさらに乾燥する見込み。枠・直線ともフラット、前後は展開次第、想定時計は−1.0〜−0.5秒位。3勝クラスのため調教評価の記事が web に無く、調教・陣営コメントは取れなかった。",
+      "summary": "京都ダートは土曜夜時点で良、含水率3〜4％台で日曜はさらに乾燥する見込み。枠・直線ともフラット、前後は展開次第（今開催は良馬場だとバイアスが出にくい傾向）、想定時計は−1.6〜−0.8秒位（土曜の実測は−1.4秒位）。オープン特別だが追い切り評価の記事が web に無く、調教・陣営コメントは取れなかった。",
       "sources": [
-        "https://www.bloodline-trackbias.work/entry/2026/10/09/190000"
+        "https://www.bloodline-trackbias.work/entry/2026/10/10/200000"
       ]
     }
   }
