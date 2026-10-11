@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-10-10 18:49",
+  "updated_at": "2026-10-11 18:46",
   "entries": [
     {
       "race_id": "20260725_04_01",
@@ -19408,6 +19408,627 @@
           "prev_jockey": "武藤 雅"
         }
       }
+    },
+    {
+      "race_id": "20261011_05_01",
+      "date": "2026-10-11",
+      "venue": "東京",
+      "surface": "ダート",
+      "distance": 1600,
+      "track_condition": "良",
+      "condition_key": "東京_ダート_mile_良",
+      "tags": [
+        "jockey_switch_win"
+      ],
+      "details": {
+        "jockey_switch_win": {
+          "horse_num": 6,
+          "new_jockey": "西村 淳也",
+          "prev_jockey": "小沢 大仁"
+        }
+      }
+    },
+    {
+      "race_id": "20261011_05_02",
+      "date": "2026-10-11",
+      "venue": "東京",
+      "surface": "芝",
+      "distance": 1600,
+      "track_condition": "良",
+      "condition_key": "東京_芝_mile_良",
+      "tags": [
+        "position_bias",
+        "style_miss",
+        "class_miss",
+        "dist_short_win",
+        "mare_upset"
+      ],
+      "details": {
+        "position_bias": {
+          "bias": "outer",
+          "outer_count": 2
+        },
+        "style_miss": {
+          "horse_num": 11,
+          "style": "追込",
+          "rl_rank": 6
+        },
+        "dist_short_win": {
+          "horse_num": 11,
+          "prev": 1800,
+          "current": 1600,
+          "diff": -200
+        },
+        "mare_upset": {
+          "horse_num": 11,
+          "rl_rank": 6
+        },
+        "class_miss": {
+          "horse_num": 11,
+          "prev_class": "新馬",
+          "current_class": "未勝利",
+          "type": "promotion"
+        }
+      }
+    },
+    {
+      "race_id": "20261011_08_01",
+      "date": "2026-10-11",
+      "venue": "京都",
+      "surface": "ダート",
+      "distance": 1200,
+      "track_condition": "良",
+      "condition_key": "京都_ダート_short_良",
+      "tags": [
+        "dist_short_win",
+        "escape_win",
+        "style_miss"
+      ],
+      "details": {
+        "escape_win": {
+          "winner_num": 1
+        },
+        "style_miss": {
+          "horse_num": 1,
+          "style": "逃げ",
+          "rl_rank": 10
+        },
+        "dist_short_win": {
+          "horse_num": 1,
+          "prev": 1400,
+          "current": 1200,
+          "diff": -200
+        }
+      }
+    },
+    {
+      "race_id": "20261011_08_02",
+      "date": "2026-10-11",
+      "venue": "京都",
+      "surface": "芝",
+      "distance": 2000,
+      "track_condition": "良",
+      "condition_key": "京都_芝_middle_良",
+      "tags": [
+        "dist_ext_win",
+        "position_bias",
+        "jockey_switch_win"
+      ],
+      "details": {
+        "position_bias": {
+          "bias": "inner",
+          "inner_count": 2
+        },
+        "dist_ext_win": {
+          "horse_num": 8,
+          "prev": 1800,
+          "current": 2000,
+          "diff": 200
+        },
+        "jockey_switch_win": {
+          "horse_num": 8,
+          "new_jockey": "松山 弘平",
+          "prev_jockey": "津村 明秀"
+        }
+      }
+    },
+    {
+      "race_id": "20261011_05_03",
+      "date": "2026-10-11",
+      "venue": "東京",
+      "surface": "芝",
+      "distance": 2000,
+      "track_condition": "良",
+      "condition_key": "東京_芝_middle_良",
+      "tags": [
+        "dist_ext_win",
+        "jockey_switch_win"
+      ],
+      "details": {
+        "dist_ext_win": {
+          "horse_num": 7,
+          "prev": 1800,
+          "current": 2000,
+          "diff": 200
+        },
+        "jockey_switch_win": {
+          "horse_num": 7,
+          "new_jockey": "M.ミシェル",
+          "prev_jockey": "木幡 巧也"
+        }
+      }
+    },
+    {
+      "race_id": "20261011_05_04",
+      "date": "2026-10-11",
+      "venue": "東京",
+      "surface": "ダート",
+      "distance": 1600,
+      "track_condition": "良",
+      "condition_key": "東京_ダート_mile_良",
+      "tags": [
+        "mare_upset",
+        "style_miss"
+      ],
+      "details": {
+        "style_miss": {
+          "horse_num": 8,
+          "style": "先行",
+          "rl_rank": 6
+        },
+        "mare_upset": {
+          "horse_num": 8,
+          "rl_rank": 6
+        }
+      }
+    },
+    {
+      "race_id": "20261011_05_05",
+      "date": "2026-10-11",
+      "venue": "東京",
+      "surface": "芝",
+      "distance": 2000,
+      "track_condition": "良",
+      "condition_key": "東京_芝_middle_良",
+      "tags": [
+        "position_bias",
+        "style_miss"
+      ],
+      "details": {
+        "position_bias": {
+          "bias": "outer",
+          "outer_count": 2
+        },
+        "style_miss": {
+          "horse_num": 9,
+          "style": "追込",
+          "rl_rank": 6
+        }
+      }
+    },
+    {
+      "race_id": "20261011_05_06",
+      "date": "2026-10-11",
+      "venue": "東京",
+      "surface": "ダート",
+      "distance": 1400,
+      "track_condition": "良",
+      "condition_key": "東京_ダート_short_良",
+      "tags": [
+        "jockey_switch_win",
+        "mare_upset",
+        "style_miss"
+      ],
+      "details": {
+        "style_miss": {
+          "horse_num": 5,
+          "style": "差し",
+          "rl_rank": 8
+        },
+        "mare_upset": {
+          "horse_num": 5,
+          "rl_rank": 8
+        },
+        "jockey_switch_win": {
+          "horse_num": 5,
+          "new_jockey": "丹内 祐次",
+          "prev_jockey": "鮫島 克駿"
+        }
+      }
+    },
+    {
+      "race_id": "20261011_05_07",
+      "date": "2026-10-11",
+      "venue": "東京",
+      "surface": "ダート",
+      "distance": 1600,
+      "track_condition": "良",
+      "condition_key": "東京_ダート_mile_良",
+      "tags": [
+        "dist_short_win",
+        "position_bias",
+        "jockey_switch_win"
+      ],
+      "details": {
+        "position_bias": {
+          "bias": "outer",
+          "outer_count": 2
+        },
+        "dist_short_win": {
+          "horse_num": 12,
+          "prev": 1800,
+          "current": 1600,
+          "diff": -200
+        },
+        "jockey_switch_win": {
+          "horse_num": 12,
+          "new_jockey": "岩田 康誠",
+          "prev_jockey": "斎藤 新"
+        }
+      }
+    },
+    {
+      "race_id": "20261011_05_08",
+      "date": "2026-10-11",
+      "venue": "東京",
+      "surface": "芝",
+      "distance": 2400,
+      "track_condition": "良",
+      "condition_key": "東京_芝_long_良",
+      "tags": [
+        "young_upset",
+        "dist_ext_win",
+        "jockey_switch_win",
+        "style_miss"
+      ],
+      "details": {
+        "style_miss": {
+          "horse_num": 10,
+          "style": "追込",
+          "rl_rank": 6
+        },
+        "dist_ext_win": {
+          "horse_num": 13,
+          "prev": 2200,
+          "current": 2400,
+          "diff": 200
+        },
+        "young_upset": {
+          "horse_num": 10,
+          "rl_rank": 6
+        },
+        "jockey_switch_win": {
+          "horse_num": 13,
+          "new_jockey": "西村 淳也",
+          "prev_jockey": "坂井 瑠星"
+        }
+      }
+    },
+    {
+      "race_id": "20261011_05_09",
+      "date": "2026-10-11",
+      "venue": "東京",
+      "surface": "芝",
+      "distance": 1600,
+      "track_condition": "良",
+      "condition_key": "東京_芝_mile_良",
+      "tags": [
+        "position_bias",
+        "jockey_switch_win"
+      ],
+      "details": {
+        "position_bias": {
+          "bias": "outer",
+          "outer_count": 2
+        },
+        "jockey_switch_win": {
+          "horse_num": 11,
+          "new_jockey": "横山 武史",
+          "prev_jockey": "荻野 極"
+        }
+      }
+    },
+    {
+      "race_id": "20261011_05_10",
+      "date": "2026-10-11",
+      "venue": "東京",
+      "surface": "ダート",
+      "distance": 1400,
+      "track_condition": "良",
+      "condition_key": "東京_ダート_short_良",
+      "tags": [
+        "dist_short_win",
+        "position_bias",
+        "jockey_switch_win",
+        "style_miss"
+      ],
+      "details": {
+        "position_bias": {
+          "bias": "outer",
+          "outer_count": 2
+        },
+        "style_miss": {
+          "horse_num": 12,
+          "style": "先行",
+          "rl_rank": 15
+        },
+        "dist_short_win": {
+          "horse_num": 12,
+          "prev": 1600,
+          "current": 1400,
+          "diff": -200
+        },
+        "jockey_switch_win": {
+          "horse_num": 12,
+          "new_jockey": "原 優介",
+          "prev_jockey": "F.ゴンサルベス"
+        }
+      }
+    },
+    {
+      "race_id": "20261011_05_11",
+      "date": "2026-10-11",
+      "venue": "東京",
+      "surface": "芝",
+      "distance": 1800,
+      "track_condition": "良",
+      "condition_key": "東京_芝_mile_良",
+      "tags": [
+        "dist_ext_win",
+        "position_bias"
+      ],
+      "details": {
+        "position_bias": {
+          "bias": "outer",
+          "outer_count": 3
+        },
+        "dist_ext_win": {
+          "horse_num": 15,
+          "prev": 1600,
+          "current": 1800,
+          "diff": 200
+        }
+      }
+    },
+    {
+      "race_id": "20261011_05_12",
+      "date": "2026-10-11",
+      "venue": "東京",
+      "surface": "ダート",
+      "distance": 1300,
+      "track_condition": "良",
+      "condition_key": "東京_ダート_short_良",
+      "tags": [
+        "jockey_switch_win",
+        "mare_upset",
+        "style_miss"
+      ],
+      "details": {
+        "style_miss": {
+          "horse_num": 10,
+          "style": "追込",
+          "rl_rank": 9
+        },
+        "mare_upset": {
+          "horse_num": 10,
+          "rl_rank": 9
+        },
+        "jockey_switch_win": {
+          "horse_num": 10,
+          "new_jockey": "吉村 誠之助",
+          "prev_jockey": "大野 拓弥"
+        }
+      }
+    },
+    {
+      "race_id": "20261011_08_03",
+      "date": "2026-10-11",
+      "venue": "京都",
+      "surface": "ダート",
+      "distance": 1400,
+      "track_condition": "良",
+      "condition_key": "京都_ダート_short_良",
+      "tags": [
+        "position_bias",
+        "mare_upset",
+        "style_miss"
+      ],
+      "details": {
+        "position_bias": {
+          "bias": "inner",
+          "inner_count": 2
+        },
+        "style_miss": {
+          "horse_num": 4,
+          "style": "逃げ",
+          "rl_rank": 12
+        },
+        "mare_upset": {
+          "horse_num": 4,
+          "rl_rank": 12
+        }
+      }
+    },
+    {
+      "race_id": "20261011_08_05",
+      "date": "2026-10-11",
+      "venue": "京都",
+      "surface": "芝",
+      "distance": 2000,
+      "track_condition": "良",
+      "condition_key": "京都_芝_middle_良",
+      "tags": [
+        "position_bias",
+        "style_miss"
+      ],
+      "details": {
+        "position_bias": {
+          "bias": "outer",
+          "outer_count": 2
+        },
+        "style_miss": {
+          "horse_num": 11,
+          "style": "逃げ",
+          "rl_rank": 8
+        }
+      }
+    },
+    {
+      "race_id": "20261011_08_06",
+      "date": "2026-10-11",
+      "venue": "京都",
+      "surface": "ダート",
+      "distance": 1800,
+      "track_condition": "良",
+      "condition_key": "京都_ダート_mile_良",
+      "tags": [
+        "class_miss",
+        "young_upset",
+        "style_miss"
+      ],
+      "details": {
+        "style_miss": {
+          "horse_num": 16,
+          "style": "逃げ",
+          "rl_rank": 6
+        },
+        "young_upset": {
+          "horse_num": 16,
+          "rl_rank": 6
+        },
+        "class_miss": {
+          "horse_num": 16,
+          "prev_class": "未勝利",
+          "current_class": "1勝",
+          "type": "promotion"
+        }
+      }
+    },
+    {
+      "race_id": "20261011_08_07",
+      "date": "2026-10-11",
+      "venue": "京都",
+      "surface": "芝",
+      "distance": 1800,
+      "track_condition": "良",
+      "condition_key": "京都_芝_mile_良",
+      "tags": [
+        "dist_short_win",
+        "position_bias"
+      ],
+      "details": {
+        "position_bias": {
+          "bias": "outer",
+          "outer_count": 2
+        },
+        "dist_short_win": {
+          "horse_num": 9,
+          "prev": 2000,
+          "current": 1800,
+          "diff": -200
+        }
+      }
+    },
+    {
+      "race_id": "20261011_08_08",
+      "date": "2026-10-11",
+      "venue": "京都",
+      "surface": "ダート",
+      "distance": 1800,
+      "track_condition": "良",
+      "condition_key": "京都_ダート_mile_良",
+      "tags": [
+        "dist_short_win",
+        "jockey_switch_win",
+        "mare_upset",
+        "style_miss"
+      ],
+      "details": {
+        "style_miss": {
+          "horse_num": 4,
+          "style": "追込",
+          "rl_rank": 13
+        },
+        "dist_short_win": {
+          "horse_num": 7,
+          "prev": 2000,
+          "current": 1800,
+          "diff": -200
+        },
+        "mare_upset": {
+          "horse_num": 4,
+          "rl_rank": 13
+        },
+        "jockey_switch_win": {
+          "horse_num": 7,
+          "new_jockey": "◇ 今村 聖奈",
+          "prev_jockey": "小崎 綾也"
+        }
+      }
+    },
+    {
+      "race_id": "20261011_08_11",
+      "date": "2026-10-11",
+      "venue": "京都",
+      "surface": "ダート",
+      "distance": 1800,
+      "track_condition": "良",
+      "condition_key": "京都_ダート_mile_良",
+      "tags": [
+        "jockey_switch_win",
+        "position_bias",
+        "mare_upset",
+        "style_miss"
+      ],
+      "details": {
+        "position_bias": {
+          "bias": "inner",
+          "inner_count": 2
+        },
+        "style_miss": {
+          "horse_num": 3,
+          "style": "先行",
+          "rl_rank": 6
+        },
+        "mare_upset": {
+          "horse_num": 3,
+          "rl_rank": 6
+        },
+        "jockey_switch_win": {
+          "horse_num": 8,
+          "new_jockey": "古川 吉洋",
+          "prev_jockey": "幸 英明"
+        }
+      }
+    },
+    {
+      "race_id": "20261011_08_12",
+      "date": "2026-10-11",
+      "venue": "京都",
+      "surface": "芝",
+      "distance": 1600,
+      "track_condition": "良",
+      "condition_key": "京都_芝_mile_良",
+      "tags": [
+        "young_upset",
+        "position_bias",
+        "style_miss"
+      ],
+      "details": {
+        "position_bias": {
+          "bias": "inner",
+          "inner_count": 3
+        },
+        "style_miss": {
+          "horse_num": 1,
+          "style": "追込",
+          "rl_rank": 11
+        },
+        "young_upset": {
+          "horse_num": 1,
+          "rl_rank": 11
+        }
+      }
     }
   ],
   "corrections": {
@@ -19439,7 +20060,7 @@
       "active_adjustments": []
     },
     "新潟_芝_short_良": {
-      "factor": 1.0899,
+      "factor": 1.0918,
       "n": 20,
       "top_tags": [
         {
@@ -19468,13 +20089,13 @@
           "tag": "mare_upset",
           "count": 12,
           "local_rate": 0.6,
-          "base_rate": 0.386
+          "base_rate": 0.384
         },
         {
           "tag": "dist_ext_win",
           "count": 7,
           "local_rate": 0.35,
-          "base_rate": 0.26
+          "base_rate": 0.258
         }
       ]
     },
@@ -19506,7 +20127,7 @@
       "active_adjustments": []
     },
     "中京_芝_short_良": {
-      "factor": 1.0,
+      "factor": 1.0302,
       "n": 24,
       "top_tags": [
         {
@@ -19530,10 +20151,17 @@
           "count": 7
         }
       ],
-      "active_adjustments": []
+      "active_adjustments": [
+        {
+          "tag": "mare_upset",
+          "count": 12,
+          "local_rate": 0.5,
+          "base_rate": 0.384
+        }
+      ]
     },
     "中京_芝_middle_良": {
-      "factor": 1.0689,
+      "factor": 1.0704,
       "n": 25,
       "top_tags": [
         {
@@ -19562,12 +20190,12 @@
           "tag": "dist_ext_win",
           "count": 11,
           "local_rate": 0.44,
-          "base_rate": 0.26
+          "base_rate": 0.258
         }
       ]
     },
     "中京_ダート_mile_良": {
-      "factor": 1.0806,
+      "factor": 1.0801,
       "n": 21,
       "top_tags": [
         {
