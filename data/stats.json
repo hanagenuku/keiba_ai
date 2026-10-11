@@ -1357,7 +1357,7 @@
         "races": 8
       }
     ],
-    "workflow_run_at": "2026-10-11T00:02:05Z",
+    "workflow_run_at": "2026-10-11T01:49:13Z",
     "workflow_result": "success"
   },
   "web_sources": {
@@ -2815,5 +2815,5 @@
       "top3_rate": 16.6
     }
   },
-  "generated_at": "2026-10-11 01:49"
+  "generated_at": "2026-10-11 09:23"
 }
