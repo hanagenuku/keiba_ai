@@ -81,11 +81,26 @@ class TestScraperPairSymmetry:
 
     @pytest.mark.parametrize('fn', ['_try_fetch_shutuba', '_try_fetch_result'])
     def test_single_race_fetch_swallows_network_errors(self, fn):
-        # 近傍±60スキャン中に1回通信が切れただけで、そのvenueの残りが
+        # 近傍スキャン中に1回通信が切れただけで、そのvenueの残りが
         # 失われるのを防ぐ。結果側は元からtry、出走表側は2026-08-09に追加。
         src = self._src(fn)
         assert 'try:' in src and 'except Exception' in src, (
             f'{fn} が通信例外を握っていない（対の関数と非対称）')
+
+    @pytest.mark.parametrize('fn', ['fetch_races_on_date', 'fetch_results'])
+    def test_per_race_scan_is_symmetric(self, fn):
+        """レース単位の近傍走査も出走表側・結果側で同じ強さにする。
+
+        🔴 2026-10-10: 結果側だけ ±60・予算なし・再試行なしのままで、
+        京都 R2/R4/R7/R12 の4レースが落ちて history.db に永久に残らなかった
+        （出走表側は 2026-09-12 に ±128＋予算へ広げていた）。
+        """
+        src = self._src(fn)
+        assert 'SUFFIX_SCAN_HALF_RANGE' in src, f'{fn} の走査範囲が対の関数と違う'
+        assert "scan_budget['remaining'] <= 0" in src, (
+            f'{fn} の走査に予算が無い（North Star #4）')
+        assert '_retry_missing_page' in src, (
+            f'{fn} にレース単位の再試行が無い（一過性の失敗で1レース落ちる）')
 
     def test_result_loop_logs_every_skip(self):
         # 出走表側は取りこぼしを必ずログに出す。結果側も同じ粒度にする。
