@@ -98,6 +98,19 @@ def _clean_marks(raw, valid_nums):
     return out, dropped
 
 
+def _has_going(going):
+    """`going` が記事・画面に出せる中身を持っているか。
+
+    判定は `src/product/web_block.py::_going_line` と同じ条件（state か expected の
+    どちらかがある）に揃えてある。片方だけ厳しくすると「通したのに何も出ない」
+    （または「落としたのに出せた」）というズレが生まれる。
+    """
+    if not isinstance(going, dict):
+        return False
+    return bool(str(going.get('state') or '').strip()
+                or str(going.get('expected') or '').strip())
+
+
 def build_claude_view(race_id, race_num, horses, notes, race_date=None):
     """1レース分の Claude 見解を組み立てる。対象外・情報なし・古い場合は None。
 
@@ -175,7 +188,19 @@ def build_claude_view(race_id, race_num, horses, notes, race_date=None):
             'sources': [s for s in (v.get('sources') or []) if isinstance(s, str)],
         }
 
-    if not order and not marks and not horse_notes:
+    going = entry.get('going') if isinstance(entry.get('going'), dict) else None
+    summary = str(entry.get('summary') or '').strip() or None
+
+    # 🔴 2026-10-10〜12 の実運用で3日連続で踏んだ欠陥の修正。
+    #   以前は `order` / `marks` / `horses` のどれも無いと即 None を返していたため、
+    #   **馬場・トラックバイアスだけ集まったレースが丸ごと落ちていた**
+    #   （10/12 東京11R オクトーバーS(L)。Listed の追い切りを無料で出す媒体が無く、
+    #     馬メモは1件も取れなかったが going は取れていた）。
+    #   docstring の「何が入ってよいか」は 1.馬場・トラックバイアス を**筆頭**に挙げており、
+    #   それ単独で通らないのは設計と実装の食い違い。
+    #   ⚠ 載せる側（`src/product/web_block.py`）は body が空なら `[]` を返すので、
+    #     ここを通しても「見出しだけの空セクション」は出ない。
+    if not order and not marks and not horse_notes and not _has_going(going) and not summary:
         return None
 
     web_ranks = {num: i + 1 for i, num in enumerate(order)}
@@ -184,8 +209,8 @@ def build_claude_view(race_id, race_num, horses, notes, race_date=None):
         'marks': marks,
         'web_ranks': web_ranks,
         'horse_notes': horse_notes,
-        'going': entry.get('going') if isinstance(entry.get('going'), dict) else None,
-        'summary': str(entry.get('summary') or '').strip() or None,
+        'going': going,
+        'summary': summary,
         'sources': sources,
         'collected_at': notes.get('collected_at'),
         # 全馬ぶん序列が付いたか。欠けたまま「序列」と名乗らせない

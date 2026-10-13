@@ -93,8 +93,53 @@ def test_undefined_mark_is_dropped():
 
 
 def test_empty_entry_yields_none():
-    n = _notes(entry={'order': [], 'marks': {}, 'horses': {}})
+    """序列も印も馬メモも馬場も一言も無ければ通さない。"""
+    n = _notes(entry={'order': [], 'marks': {}, 'horses': {},
+                      'going': {}, 'summary': ''})
     assert build_claude_view(RID, 11, HORSES, n, '20260927') is None
+
+
+def test_going_only_entry_is_kept():
+    """🔴 馬場・トラックバイアスだけのレースを落とさない（2026-10-10〜12 の欠陥②）。
+
+    修正前は `order` / `marks` / `horses` が全て空だと即 None を返していたため、
+    追い切り情報が無く馬場だけ取れたレース（10/12 東京11R オクトーバーS(L)）が
+    3日連続で記事から丸ごと消えていた。
+    """
+    n = _notes(entry={'order': [], 'marks': {}, 'horses': {},
+                      'going': {'surface': '芝', 'state': '良', 'expected': 'やや硬め'},
+                      'summary': ''})
+    v = build_claude_view(RID, 11, HORSES, n, '20260927')
+    assert v is not None
+    assert v['going']['state'] == '良'
+    assert v['order'] == [] and v['marks'] == {} and v['horse_notes'] == {}
+
+
+def test_summary_only_entry_is_kept():
+    n = _notes(entry={'order': [], 'marks': {}, 'horses': {},
+                      'going': {}, 'summary': '内が伸びる'})
+    v = build_claude_view(RID, 11, HORSES, n, '20260927')
+    assert v is not None and v['summary'] == '内が伸びる'
+
+
+def test_going_without_state_or_expected_is_not_content():
+    """中身の無い `going` では通さない（空セクションを作らないため）。"""
+    n = _notes(entry={'order': [], 'marks': {}, 'horses': {},
+                      'going': {'surface': '芝'}, 'summary': ''})
+    assert build_claude_view(RID, 11, HORSES, n, '20260927') is None
+
+
+def test_going_only_view_renders_a_block_and_changes_nothing():
+    """通した馬場だけの見解が、実際に記事の行になる（通ったのに何も出ない、を防ぐ）。"""
+    from src.product.web_block import build_web_block
+    n = _notes(entry={'order': [], 'marks': {}, 'horses': {},
+                      'going': {'surface': '芝', 'state': '良', 'expected': 'やや硬め'},
+                      'summary': ''})
+    v = build_claude_view(RID, 11, HORSES, n, '20260927')
+    lines = build_web_block(v, [{'n': 9, 'name': 'テスト'}])
+    assert lines, '馬場だけの見解が記事に出ていない'
+    body = '\n'.join(lines)
+    assert '芝の馬場' in body and '良' in body and 'やや硬め' in body
 
 
 def test_load_findings_missing_file(tmp_path):

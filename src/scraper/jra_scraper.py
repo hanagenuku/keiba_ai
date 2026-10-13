@@ -199,7 +199,7 @@ def _try_fetch_shutuba(sess, base, r, date_str, sx):
     """指定suffixで出走表ページを取得。(resp, soup) を返す。パラメータエラーの場合はNone, None。
 
     ⚠ 対になる `_try_fetch_result` は通信例外を握って None を返すのに、
-    こちらは素通ししていた（2026-08-09の監査で発覚）。近傍±60スキャンで
+    こちらは素通ししていた（2026-08-09の監査で発覚）。近傍スキャンで
     1回でも通信が切れると、そのvenueの残りレースが丸ごと失われる。
     結果側と同じく「取れなければ None」に揃える。
     """
@@ -260,6 +260,39 @@ SUFFIX_SCAN_HALF_RANGE = 128
 # ⚠ 実行全体での走査リクエスト上限（North Star #4）。1レース最大256件なので
 #    3レースぶん。これが無いとJRA不調時に全レースが全域走査してタイムアウトする。
 SUFFIX_SCAN_BUDGET_DEFAULT = 800
+# 走査が空振りしたレースを、確度の高い suffix だけ待って叩き直す待ち時間（秒）。
+# 🔴 2026-10-12 の実運用: 朝に「見つからない」と記録した 東京10R・京都10R が、
+#    同日 11:08 の再実行と夜の結果取得では**両方取れた**（＝ページは実在した）。
+#    つまり走査の空振りは「ページが無い」ことの証拠にならない。一過性を疑う。
+# ⚠ 全域(256件)の再走査はしない（North Star #4。予算を食い潰してその回のデータを
+#    丸ごと失う 2026-07-18 のタイムアウト事故を繰り返さないため）。1レースあたりの
+#    追加リクエストは len(RACE_RETRY_WAITS) × 候補数（最大2）＝ 最大4件に収める。
+RACE_RETRY_WAITS = (5, 10)
+
+
+def _retry_missing_page(fetch_one, candidates, label, waits=RACE_RETRY_WAITS):
+    """suffix 走査で見つからなかったページを、候補 suffix だけ待って再試行する。
+
+    `find_r01_shutuba`（2026-08-09②）・`find_r01_result`（2026-08-02）には
+    会場単位の再試行が入っているが、**レース単位には無かった**。そのため
+    1レースだけ一過性に落ちると、そのレースは記事と history.db から消えていた。
+
+    Args:
+        fetch_one:  `sx -> soup or None` の呼び出し。
+        candidates: 試す suffix（計算値・単純式など確度の高いものだけ）。
+        label:      ログ用の見出し（例 'R10'）。
+
+    Returns:
+        (soup, sx)。見つからなければ (None, None)。
+    """
+    for i, wait in enumerate(waits, 1):
+        time.sleep(wait)
+        for sx in candidates:
+            soup = fetch_one(sx)
+            if soup is not None:
+                print(f'  {label}: 再試行{i}回目で取得 suffix={sx}')
+                return soup, sx
+    return None, None
 
 
 def _fill_pedigree(sess, horses, hist_db_path, budget=None):
@@ -570,9 +603,10 @@ def fetch_races_on_date(sess, target_date, hist_db_path):
         odds_base = _to_odds_base(base)
         odds_r01 = find_r01_odds(odds_base, date_str, sess)
         print(f'  オッズR01: {odds_r01:02X}' if odds_r01 is not None else '  オッズR01: 未発見')
-        page_missing, got_nums = [], []
+        page_missing, got_nums = {}, []
         for r in range(1, 13):
             sx = calc_suffix(r01, r)
+            scan_cut = False
             _, soup = _try_fetch_shutuba(sess, base, r, date_str, sx)
 
             # R10以降：suffixが合わない場合は単純式(r-1)*181でも試みる
@@ -596,6 +630,7 @@ def fetch_races_on_date(sess, target_date, hist_db_path):
                 for delta in range(1, SUFFIX_SCAN_HALF_RANGE + 1):
                     if scan_budget['remaining'] <= 0:
                         print(f'  R{r:02d}: suffix走査の予算切れ（±{delta - 1} まで）')
+                        scan_cut = True
                         break
                     for sign, cand in [(+delta, (base_s + delta) % 256),
                                        (-delta, (base_s - delta) % 256)]:
@@ -613,10 +648,23 @@ def fetch_races_on_date(sess, target_date, hist_db_path):
                     print(f'  R{r:02d}: suffix補正 {found_delta:+d} → {sx}')
 
             if soup is None:
+                # 🔴 走査が空振りしても「ページが無い」とは言えない（2026-10-12 実測）。
+                #    一過性を疑って、確度の高い suffix だけ待って叩き直す。
+                cands = [calc_suffix(r01, r)]
+                sx_simple = f'{(r01 + (r - 1) * 181) % 256:02X}'
+                if sx_simple not in cands:
+                    cands.append(sx_simple)
+                soup, sx_retry = _retry_missing_page(
+                    lambda c: _try_fetch_shutuba(sess, base, r, date_str, c)[1],
+                    cands, f'R{r:02d}')
+                if soup is not None:
+                    sx = sx_retry
+
+            if soup is None:
                 # ここでは失敗と決めつけない（12レース未満の開催がある）。
                 # venueのループが終わってから「後続レースが取れているか」で判定する。
                 print(f'  R{r:02d}: suffix={sx} → パラメータエラー/ページなし')
-                page_missing.append(r)
+                page_missing[r] = 'budget' if scan_cut else 'scanned'
                 continue
 
             race = _parse_shutuba(soup, rc, r, date_str, pc, hist_db_path)
@@ -665,11 +713,19 @@ def fetch_races_on_date(sess, target_date, hist_db_path):
         #    Rn が取れず Rn+1 以降が取れている ＝ そのレースは実在するのに落ちた。
         #    末尾（後続が1つも無い）は12レース未満の開催なので記録しない。
         last_ok = max(got_nums) if got_nums else 0
-        for r in page_missing:
+        for r, why in sorted(page_missing.items()):
             if r < last_ok:
-                print(f'  🔴 R{r:02d}: カード途中の欠番（R{last_ok:02d}は取れている）→ 取得失敗として記録')
-                failures.append({'racecourse': rc, 'race_num': r,
-                                 'reason': 'ページなし(カード途中の欠番)'})
+                # 🔴 2026-10-12 までは理由を 'ページなし(カード途中の欠番)' と
+                #    記録していたが、これは**誤った断定**だった。同日の朝に
+                #    「欠番」と記録した 東京10R・京都10R は、11:08 の再実行と
+                #    夜の結果取得では両方取れている（＝番組に実在するレース）。
+                #    真の欠番（10/12 東京R4・10/11 京都R4）と走査の空振りは
+                #    **1回の実行の中では区別できない**ので、観測した事実
+                #    （カードの途中が抜けた・走査では見つからなかった）だけを書く。
+                reason = ('カード途中・suffix走査の予算切れ' if why == 'budget'
+                          else 'カード途中・suffix走査で発見できず')
+                print(f'  🔴 R{r:02d}: {reason}（R{last_ok:02d}は取れている）→ 取得失敗として記録')
+                failures.append({'racecourse': rc, 'race_num': r, 'reason': reason})
 
     print(f'\n📋 出走表取得完了: {len(all_races)}レース'
           + (f'（取得失敗 {len(failures)}件）' if failures else ''))
@@ -1494,6 +1550,14 @@ def fetch_results(sess, target_date, calendar=None, hist_db_path=None):
     print(f'📡 {target_date} 結果取得中...')
     all_results = []
     pedigree_budget = {'remaining': PEDIGREE_FETCH_BUDGET_DEFAULT}
+    # 🔴 2026-10-10 の夜の結果取得で 京都 R2/R4/R7/R12 の4レースが落ち、
+    #    history.db にその4レースが永久に入らなかった（JRAの結果一覧は直近しか
+    #    載らないので遡れる保証が無い）。結果側の近傍走査は ±60・予算なしで、
+    #    出走表側（±128・予算あり・2026-09-12 に広げた）より**弱いまま**だった。
+    #    走査を出走表側と同じ全域に揃え、同時に North Star #4 の予算を入れる
+    #    （予算が無いままの全域走査はタイムアウトのリスクを倍にするため、
+    #     広げるのと予算を入れるのは同じ変更でやる）。
+    scan_budget = {'remaining': SUFFIX_SCAN_BUDGET_DEFAULT}
 
     # Step1: 結果一覧(pw01sli00/AF)から sde_base を取得
     bases = {}
@@ -1556,10 +1620,14 @@ def fetch_results(sess, target_date, calendar=None, hist_db_path=None):
             if soup is None:
                 base_s = int(sx, 16)
                 found_delta = None
-                for delta in range(1, 61):
+                for delta in range(1, SUFFIX_SCAN_HALF_RANGE + 1):
+                    if scan_budget['remaining'] <= 0:
+                        print(f'  R{r:02d}: 結果suffix走査の予算切れ（±{delta - 1} まで）')
+                        break
                     for _sign, cand in [(+delta, (base_s + delta) % 256),
                                         (-delta, (base_s - delta) % 256)]:
                         sx_c = f'{cand:02X}'
+                        scan_budget['remaining'] -= 1
                         soup_c = _try_fetch_result(sess, base_result, r, target_date, sx_c)
                         if soup_c is not None:
                             soup = soup_c
@@ -1570,6 +1638,19 @@ def fetch_results(sess, target_date, calendar=None, hist_db_path=None):
                         break
                 if found_delta is not None:
                     print(f'  R{r:02d}: 結果suffix補正 {found_delta:+d} → {sx}')
+
+            if soup is None:
+                # 🔴 出走表側と同じく、走査の空振りは「ページが無い」証拠にならない。
+                #    確度の高い suffix だけ待って叩き直す（最大4件）。
+                cands = [calc_suffix(r01, r)]
+                sx_simple = f'{(r01 + (r - 1) * 181) % 256:02X}'
+                if sx_simple not in cands:
+                    cands.append(sx_simple)
+                soup, sx_retry = _retry_missing_page(
+                    lambda c: _try_fetch_result(sess, base_result, r, target_date, c),
+                    cands, f'R{r:02d}')
+                if soup is not None:
+                    sx = sx_retry
 
             # ⚠ 出走表側(fetch_races_on_date)は同じ分岐で必ず理由をログに出すが、
             #   結果側はここが無言の continue だった。2026-08-09の日曜結果で
