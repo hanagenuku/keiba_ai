@@ -78,6 +78,13 @@ jobs:
       - name: Attach results to published predictions (非ブロッキング)
         run: python scripts/attach_product_results.py --base-dir . || true
 
+      # 「危険な人気馬」の台帳に確定した着順・複勝払戻を追記する。
+      # 🔴 結果がまだ取れていないレースは何も書かない（空の結果で埋めない）。
+      # ⚠ ここでは記録しない（18:40 時点では全レース発走済みで、後出しの警告に
+      #   なってしまう）。記録は weekend.yml（予想を作る側）だけが行う。
+      - name: Attach results to danger favorites (非ブロッキング)
+        run: python scripts/record_danger_favorites.py --base-dir . --attach-results || true
+
       - name: Generate stats
         run: python scripts/generate_stats.py
 

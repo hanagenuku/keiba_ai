@@ -104,6 +104,20 @@ jobs:
       - name: Attach results to published predictions (非ブロッキング)
         run: python scripts/attach_product_results.py --base-dir . || true
 
+      # 「危険な人気馬」の警告を台帳（data/danger_favorites.json）に残す。
+      # 商品の2本柱の片方なのに、当たり外れを残す仕組みが無かった
+      # （2026-10-10〜12 の「4戦4敗」は手作業で突き合わせた数字だった）。
+      # 🔴 判定条件は再実装していない（marks.danger_favorites を呼ぶ）。
+      # 🔴 一度記録した警告は上書きしない（朝に出した警告をそのまま残す）。
+      # ⚠ refresh は当日何度も走るので、発走後に条件を満たした馬が混ざりうる。
+      #   結果追記のときに post_time と比べて before_post を立てる（集計で除く）。
+      - name: Record danger favorites (非ブロッキング)
+        run: python scripts/record_danger_favorites.py --base-dir . || true
+
+      # 台帳に確定した着順・複勝払戻を追記する（結果が無いレースは何も書かない）。
+      - name: Attach results to danger favorites (非ブロッキング)
+        run: python scripts/record_danger_favorites.py --base-dir . --attach-results || true
+
       - name: Generate stats
         run: python scripts/generate_stats.py
 
