@@ -1,6 +1,6 @@
 {
  "schema_version": 1,
- "updated_at": "2026-10-14T08:00:36.628434+09:00",
+ "updated_at": "2026-10-14T10:40:17.704783+09:00",
  "entries": [
   {
    "date": "2026-10-10",
@@ -298,6 +298,37 @@
    },
    "backfilled": true,
    "backfill_source": "data/latest.json@ea2dd6e（当日朝の生成分・記事はこのスナップショットから作った）"
+  },
+  {
+   "date": "2026-10-12",
+   "race_id": "20261012_08_07",
+   "venue": "京都",
+   "race_num": 7,
+   "race_name": "3歳以上1勝クラス",
+   "num": 11,
+   "name": "カイラーサ",
+   "pop": 1,
+   "solo_rank": 14,
+   "rl_rank": 3,
+   "odds": 3.6,
+   "conf": 44,
+   "verdict": "skip",
+   "in_scope": false,
+   "scope_reason": "平場でレース信頼度44（66未満）",
+   "snapshot": "2026-10-12T11:08:50.547565+09:00",
+   "odds_coverage": 1.0,
+   "recorded_at": "2026-10-14T10:40:17.667362+09:00",
+   "result": {
+    "place": 15,
+    "top3": false,
+    "n_finishers": 16,
+    "fukusho_payout": null,
+    "fukusho_sold": true,
+    "post_time": null,
+    "before_post": null,
+    "attached_at": "2026-10-14T10:40:17.704783+09:00",
+    "source": "history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）"
+   }
   },
   {
    "date": "2026-10-12",
