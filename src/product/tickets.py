@@ -2,17 +2,42 @@
 
 根拠は `biz/PHASE4_DESIGN.md` §3・§4。要点だけ再掲する。
 
-🔴 複勝を基本にする理由は「数字が高いから」ではない。2026-08-18③ で高自信レースの
+🟢 **2026-10-15 にユーザーが構成を変更した。**
+「読者は連系の少しおおきな当たりを好む。固めと中穴がバランスよく入る馬券を選ぶ。
+さらに全券種を記載する」という指示を受け、複勝＋ワイドの2券種から
+**単勝・複勝・馬連・ワイド・三連複・三連単（流し／2頭軸／マルチ／フォーメーション）
+を全部並べる**形に変えた。
+
+🔴 **着手前に伝えた懸念をここに残す（数字が良くなる変更ではない）。**
+- 控除率は券種ごとに違い、**広げるほど不利になる**
+  （単勝・複勝 20% / 馬連・ワイド 22.5% / 三連複 25% / 三連単 27.5%）。
+- 2026-08-03 に396レースで買い方を総当たりした実測は
+  馬連 70.2% / ワイド 71.4% / 三連複は最高配当1本を除くと 58.9% で、
+  **複勝（最良 93.4%・N=3,560）より低い**。
+- 2026-08-24 の馬連検証では **AIで相手を選ぶより素直に人気順で選ぶほうが良かった**
+  （60.5% vs 71.4%）。
+- 2026-09-19/21 の本番実績でも「軸は当たるのに相手を広げると落ちる」形が2日とも出た
+  （土 軸単勝 96.5% → ワイド 44.2% / 馬連 53.6% / 三連複 43.1%。
+  月 120.0% → 58.3% / 79.3% / 32.0%。⚠ N=12〜23 なので証拠にはならない）。
+→ **それでもユーザーの判断で広げる。** 記事には上の事実をそのまま書く
+  （`REASON_*` を参照）。回収率が上がるとは書かない。
+
+🔴 複勝を配分の中心に置く理由は「数字が高いから」ではない。2026-08-18③ で高自信レースの
 券種を総当たりしたとき、**上位3本の配当を抜いても崩れないのは複勝だけ**
 （複勝 −1.4pt / ワイド −8.5pt）。ワイドは控除率 22.5% で複勝 20% より不利。
 単勝は RL1 が 86.0% で 1番人気 86.1% と区別がつかない。
 
-🔴 三連単・三連複・馬連は標準構成に入れない。2026-08-03 に総当たりして
-馬連 70.2% / ワイド 71.4% / 三連複は万馬券1本を除くと 58.9%。
-
 🔴 傾斜配分で期待値は動かない（総期待値 = 各EVの加重平均。全EV<1ならどう配分しても<1）。
 配分を示すのは分散を抑えるためであって、「配分で勝てる」とは書かない。
+
+🔴 **中穴の定義を商品側で発明しない。** 固め／中穴の境界は本番の
+`src/betting/axis_bets.py`（2026-08-08 導入・実測でオッズ帯を比べて決めた値）を
+そのまま import する。7〜30倍を使う根拠もそこに実測表がある。
 """
+
+from itertools import combinations
+
+from src.betting.axis_bets import ANA_ODDS_MAX, ANA_ODDS_MIN
 
 from . import marks as _marks
 
@@ -42,23 +67,54 @@ from . import marks as _marks
 #  CONF_LIGHT  = 55 : `ev_filter.MIN_AXIS_FUKU_PROB = 0.55` と同じ。
 #                     本番が「そもそも買い目を出すか」を判定している閾値で、
 #                     根拠は 2026-08-08②（軸の複勝確率が下位半分の帯はROIが一貫して悪い）
-CONF_STRONG = 66   # これ以上: 複勝 + ワイド
-CONF_LIGHT = 55    # これ以上: 複勝のみ
+CONF_STRONG = 66   # これ以上: 全券種（三連単まで）
+CONF_LIGHT = 55    # これ以上: 単勝・複勝・馬連・ワイド・三連複（三連単は出さない）
 # CONF_LIGHT 未満: 見送り
 
-MAX_BET_TYPES = 2  # §8 1レース2券種以内
+# 1レースに並べる買い目の行数の上限。
+# 🟢 2026-10-15 にユーザーが「全券種を記載する」と決めたので 2 → 9 に変えた。
+#    内訳は 単勝・複勝・馬連・ワイド・三連複・三連複(2頭軸)・
+#    三連単・三連単マルチ・三連単フォーメーション の9行。
+# ⚠ これは「9券種を買え」ではない。読者が選べるように**並べる**上限。
+#    記事には点数と100円均等での総額も必ず出す（§10 各自調整）。
+MAX_BET_TYPES = 9
 
 # 単勝オッズの下限。JRAの単勝は 1.0 倍未満が存在しないので、それ未満は「未取得」
 # （2026-07-27⑧ でエンジン側にも同じ下限を入れてある）。
 # 🔴 有料商品に 0.0倍 を載せない。土曜夜の日曜予想は毎週 odds_coverage=0.0 になる
 MIN_VALID_ODDS = 1.0
 
-# 配分（比率）。複勝を厚く、ワイドは押さえ。
+# ── 相手（ヒモ）の構成 ────────────────────────────────────────────────────
+# 🟢 2026-10-15 ユーザー指示「固めと中穴がバランスよく入る馬券を選ぶ」。
+#
+# 固め = 単勝 ANA_ODDS_MIN(7.0) 倍未満 ／ 中穴 = 7.0〜30.0倍。
+# 🔴 境界は本番 `axis_bets` から import している（商品側で発明しない）。
+#    そこに実測表がある: ワイド1点の回収率／高配当1本抜きで
+#    3〜7倍 71.8%/67.9% ・ **7〜30倍 102.5%/87.4%** ・ 15〜50倍 57.9%/51.5%。
+#    ⚠ 102.5% は1本抜きで87.4%まで落ちるので「7〜30倍なら勝てる」ではない。
+#    言えるのは「**30倍超の大穴よりはっきり良い帯である**」まで。
+# 🔴 30倍超（大穴）は相手に入れない。上の実測で明確に悪い側。
+#
+# 相手の総数はユーザー例（①－②③④⑤⑥ ＝ 相手5頭）に合わせた。
+# ⚠ その内訳（固め3＋中穴2）は**こちらが決めた比率**で、実測の裏付けは無い。
+#    「バランスよく」を機械的に表せる最小の形として置いている。
+PARTNERS_STRONG = 5
+PARTNERS_LIGHT = 3
+SOLID_SHARE_STRONG = 3
+ANA_SHARE_STRONG = 2
+SOLID_SHARE_LIGHT = 2
+ANA_SHARE_LIGHT = 1
+
+# 配分（比率）。複勝を最も厚く、連系はそれぞれ押さえ。
 # 🔴 これは**指示ではなく目安**。§10 は「資金配分は、オッズと資金に応じて各自調整 とする」
 #    と定めており、PHASE4_DESIGN.md §4 も「比率で示す・金額は換算例」としている。
 #    比率を断定形で出すと、期待値を動かせない操作（下記）を効くもののように見せてしまう。
-ALLOC_STRONG = {'複勝': 0.70, 'ワイド': 0.30}
-ALLOC_LIGHT = {'複勝': 1.00}
+# ⚠ 連系を厚くしていないのは、控除率が高い側へ資金を寄せる根拠が無いため。
+#    読者が連系を厚くしたいなら各自調整してよい（そう書いてある）。
+ALLOC_STRONG = {'複勝': 0.25, 'ワイド': 0.15, '馬連': 0.15,
+                '三連複': 0.20, '三連単': 0.15, '単勝': 0.10}
+ALLOC_LIGHT = {'複勝': 0.40, 'ワイド': 0.20, '馬連': 0.15,
+               '三連複': 0.15, '単勝': 0.10}
 
 # 金額は「比率を円に直したときの換算例」であって推奨額ではない。
 AMOUNT_EXAMPLES = (1000, 3000, 5000)
@@ -86,30 +142,75 @@ ALLOCATION_NOTE_SHORT = (
 #
 # 🔴 出どころは全部「過去データで買い方を総当たりした測定」で、こちらの成績ではない。
 #    どの数字も100%を超えていない。券種を選べば控除率を超えられる、とは書かない。
+REASON_SPREAD = (
+    '券種を広げているのは、連系で少し大きな当たりを取りたいという読者の好みに'
+    '合わせた構成です。**広げたから当たりやすくなる、という意味ではありません。**'
+    '控除率は券種ごとに違い、単勝・複勝20%、馬連・ワイド22.5%、三連複25%、'
+    '三連単27.5%と、点数を広げるほど不利な側へ寄ります。'
+)
+# 🔴 ここに 102.5% という生の数字は書かない。高配当1本で作られた数字を
+#    有料記事の見出しに置くと、こちら自身が禁じている誇大表示になる
+#    （North Star・biz/PHASE4_DESIGN.md §20）。帯の比較には**高配当1本を抜いた後**の
+#    数字（すべて100%未満）を使い、順序だけを示す。
+REASON_BALANCE = (
+    f'相手は**固め（単勝{ANA_ODDS_MIN:.0f}倍未満）と中穴（{ANA_ODDS_MIN:.0f}〜'
+    f'{ANA_ODDS_MAX:.0f}倍）を混ぜて**選んでいます。'
+    f'{ANA_ODDS_MAX:.0f}倍を超える大穴は相手に入れません。'
+    f'過去データでオッズ帯ごとにワイド1点の回収率を比べ、'
+    f'高配当1本を除いた後の数字で並べると'
+    f'3〜7倍 67.9%、7〜30倍 87.4%、15〜50倍 51.5% で、'
+    f'7〜30倍の帯がいちばん落ち込みませんでした（どれも100%未満です）。'
+    f'言えるのは「大穴まで広げるよりはこの帯のほうが安定している」までです。'
+)
 REASON_FUKUSHO = (
-    '複勝を本線にしているのは、過去データで買い方を総当たりしたときに'
+    '複勝に配分を最も厚く置いているのは、過去データで買い方を総当たりしたときに'
     '**上位の高配当を3本抜いても順位が崩れなかったのが複勝だけ**だったためです'
     '（3本抜きでの下落は複勝 −1.4pt に対しワイド −8.5pt）。'
-    '控除率も20%で、対象にしている券種のなかで最も低いです。'
+    '控除率も20%で、扱っている券種のなかで最も低いです。'
 )
 REASON_WIDE = (
     'ワイドは押さえです。控除率が22.5%で複勝より不利なぶん、'
-    '◎から○▲への数点に留めています。'
+    '◎から固め1頭・中穴1頭への2点に絞っています。'
+)
+REASON_QUINELLA = (
+    '馬連は◎から相手全頭への流しです。同じ過去データでの実測は70.2%でした。'
+    '⚠ さらに、2026-08-24 に馬連の買い方を比べたときは'
+    '**AIで相手を選ぶより素直に人気順で選ぶほうが良い**という結果でした'
+    '（60.5% vs 71.4%）。相手の選び方そのものに優位は確認できていません。'
+)
+REASON_TRIO = (
+    '三連複は◎からの流しと、◎＋相手筆頭の2頭軸の2通りを並べています。'
+    '控除率は25%です。実測で6点流しが一度だけ収支トントンに見えたことがありますが、'
+    '**万馬券1本（¥97,560）を除くと58.9%**まで落ち、期間を前後に割っても'
+    '崩れました。高配当1本に乗っていただけの数字として扱っています。'
+)
+REASON_TRIFECTA = (
+    '三連単は1着固定の流し・2頭軸マルチ・フォーメーションの3通りです。'
+    '控除率は27.5%で、扱っている券種のなかで最も高くなります。'
+    '三連単そのものの回収率はこちらで測っていません'
+    '（実配当が揃っているのが2026-06以降しかなく、大規模な検証ができていません）。'
+    '**測っていないものを「良い」とは書けない**ので、点数と組み方だけを出します。'
+)
+REASON_WIN = (
+    '単勝は◎1点です。◎（AI＋市場の1位）の単勝回収率は86.0%でしたが、'
+    'これは素直に1番人気を買った86.1%と**区別がつきません**。'
+    '単勝を載せているのは券種を全部並べるためで、ここに優位は確認できていません。'
 )
 REASON_LIGHT_ONLY = (
-    '今回は複勝だけです。このレースはレース信頼度が相手を広げる帯に届いていないため、'
-    '点数を増やしていません。'
+    '今回は三連単を出していません。このレースはレース信頼度が'
+    '最上位の帯に届いていないため、点数の多い券種を増やしていません。'
 )
-REASON_EXCLUDED = (
-    '馬連・三連複・三連単は入れていません。同じ過去データで総当たりした結果、'
-    '馬連は70.2%、三連複は最高配当1本を除くと58.9%で、'
-    '控除率が22.5〜25%と複勝より不利でした。'
+REASON_NARROW_FIELD = (
+    '⚠ 相手に取れる頭数が少ないため、点数の多い券種は組めた分だけになっています。'
 )
 REASON_CAVEAT = (
     'なお、ここに挙げた回収率はいずれも100%を下回っています。'
     '券種の選び方で控除率を超えられるとは考えていません。'
-    '複勝を選んでいるのは「勝てるから」ではなく'
+    '複勝に配分を厚くしているのは「勝てるから」ではなく'
     '「測った数字が偶然の高配当に左右されにくいから」です。'
+    'また、本番の実績では「軸は当たるのに相手を広げると落ちる」形も出ています'
+    '（2026-09-19 軸の単勝96.5%に対しワイド44.2%・馬連53.6%・三連複43.1%。'
+    '⚠ 12〜23レースしかないので、こちらも証拠にはなりません）。'
 )
 
 
@@ -120,17 +221,24 @@ def bet_type_reason(tickets):
     """
     if tickets.get('verdict') == 'skip':
         return []
-    kinds = {b['type'] for b in tickets.get('bets', [])}
+    kinds = {b.get('group') or b['type'] for b in tickets.get('bets', [])}
     if not kinds:
         return []
-    out = []
-    if '複勝' in kinds:
-        out.append(REASON_FUKUSHO)
+    out = [REASON_SPREAD, REASON_BALANCE, REASON_FUKUSHO]
     if 'ワイド' in kinds:
         out.append(REASON_WIDE)
-    elif kinds == {'複勝'}:
+    if '馬連' in kinds:
+        out.append(REASON_QUINELLA)
+    if '三連複' in kinds:
+        out.append(REASON_TRIO)
+    if '三連単' in kinds:
+        out.append(REASON_TRIFECTA)
+    else:
         out.append(REASON_LIGHT_ONLY)
-    out.append(REASON_EXCLUDED)
+    if '単勝' in kinds:
+        out.append(REASON_WIN)
+    if tickets.get('narrow_field'):
+        out.append(REASON_NARROW_FIELD)
     out.append(REASON_CAVEAT)
     return out
 
@@ -174,26 +282,197 @@ def verdict(conf):
     return 'skip'
 
 
-def _round_unit(amount, unit=100):
-    return int(max(unit, round(amount / unit) * unit))
+def allocate(total, ratios, unit=100):
+    """比率 → 100円単位の金額。合計は必ず total に一致する。
 
-
-def allocate(total, ratios):
-    """比率 → 100円単位の金額。端数は最も比率の大きい券種に寄せる。"""
+    🔴 各券種を独立に四捨五入すると、券種が増えたときに
+       **比率の大小が金額で逆転する**（1,000円・6券種で複勝100円 < ワイド200円 に
+       なった）。最大剰余法で配ることで順序を保つ。
+    """
     if not ratios:
         return {}
-    out = {k: _round_unit(total * v) for k, v in ratios.items()}
-    diff = total - sum(out.values())
-    if diff:
-        top = max(ratios, key=lambda k: ratios[k])
-        out[top] = max(100, out[top] + diff)
+    units = int(total // unit)
+    keys = sorted(ratios, key=lambda k: -ratios[k])
+    if units < len(keys):
+        # 全券種に1単位も配れない。比率の大きい順に配れる分だけ配る
+        return {k: unit for k in keys[:units]} if units else {}
+    base = {}
+    rem = []
+    for k in keys:
+        exact = total * ratios[k] / unit
+        floor = max(1, int(exact))
+        base[k] = floor
+        rem.append((exact - int(exact), ratios[k], k))
+    left = units - sum(base.values())
+    rem.sort(key=lambda t: (-t[0], -t[1], t[2]))
+    i = 0
+    while left > 0 and rem:
+        base[rem[i % len(rem)][2]] += 1
+        left -= 1
+        i += 1
+    while left < 0:
+        # 配りすぎ（最低1単位の下駄で起きうる）。比率の小さい側から削る
+        for _, _, k in reversed(rem):
+            if left == 0:
+                break
+            if base[k] > 1:
+                base[k] -= 1
+                left += 1
+        else:
+            break
+    return {k: base[k] * unit for k in keys}
+
+
+def _partner_candidates(horses, axis_num):
+    """相手候補を (rl_rank, 馬番, 単勝オッズ) の昇順で返す。
+
+    オッズが取れていない馬・rl_rank が不明な馬は相手にしない
+    （記事に「—倍」の馬を連系の相手として載せないため）。
+    """
+    out = []
+    for h in horses:
+        n = h.get('n')
+        if n is None or n == axis_num:
+            continue
+        o = usable_odds(h)
+        if o is None:
+            continue
+        r = h.get('rl_rank')
+        if not isinstance(r, int) or not (0 < r < 99):
+            continue
+        out.append((r, int(n), o))
+    out.sort()
     return out
+
+
+def split_partners(horses, axis_num, n_solid, n_ana):
+    """相手を「固め」「中穴」に分けて選ぶ。
+
+    返り値は (相手全体, 固め, 中穴)。相手全体は rl_rank 昇順。
+    片方の枠が埋まらなければもう片方で埋め、総数（n_solid + n_ana）を保つ。
+    """
+    cands = _partner_candidates(horses, axis_num)
+    total = n_solid + n_ana
+    solid = [n for _, n, o in cands if o < ANA_ODDS_MIN]
+    ana = [n for _, n, o in cands if ANA_ODDS_MIN <= o <= ANA_ODDS_MAX]
+    got_solid = solid[:n_solid]
+    got_ana = ana[:n_ana]
+    short = total - len(got_solid) - len(got_ana)
+    if short > 0:
+        got_solid += solid[len(got_solid):len(got_solid) + short]
+    short = total - len(got_solid) - len(got_ana)
+    if short > 0:
+        got_ana += ana[len(got_ana):len(got_ana) + short]
+    order = {n: i for i, (_, n, _o) in enumerate(cands)}
+    partners = sorted(got_solid + got_ana, key=lambda n: order.get(n, 99))
+    return partners, got_solid, got_ana
+
+
+def _join(nums):
+    """馬番を馬券の書き方どおり**昇順**で並べる。
+
+    🔑 選ぶ順（rl_rank）と書く順は分ける。どの馬を2頭目の軸にするか・
+       フォーメーションの2着列に誰を置くかは rl_rank で決めるが、
+       **並び自体に意味が無い列は馬番の昇順で書く**（11 － 1・7・5・10・2 は読めない）。
+    """
+    return '・'.join(str(n) for n in sorted(nums))
+
+
+def _bet(type_, group, axis, combos, line, note=''):
+    return {
+        'type': type_, 'group': group, 'axis': axis,
+        'combos': [list(c) for c in combos], 'points': len(combos),
+        'line': line, 'note': note,
+    }
+
+
+def build_bet_lines(axis_num, partners, solid, ana, allow_trifecta):
+    """全券種の買い目を並べて返す。買える形にならない券種は出さない。"""
+    bets = [
+        _bet('単勝', '単勝', axis_num, [[axis_num]], f'単勝　{axis_num}',
+             '◎1点'),
+        _bet('複勝', '複勝', axis_num, [[axis_num]], f'複勝　{axis_num}',
+             '本線'),
+    ]
+    if not partners:
+        return bets
+
+    # 馬連: ◎から相手全頭
+    q = [[axis_num, p] for p in partners]
+    bets.append(_bet('馬連', '馬連', axis_num, q,
+                     f'馬連　{axis_num} － {_join(partners)}（{len(q)}点）',
+                     '◎から相手全頭'))
+
+    # ワイド: 固め筆頭 ＋ 中穴筆頭（どちらか無ければ相手の上位で埋める）
+    wide_nums = [n for n in (solid[0] if solid else None,
+                             ana[0] if ana else None) if n is not None]
+    if len(wide_nums) < 2:
+        for n in partners:
+            if n not in wide_nums:
+                wide_nums.append(n)
+            if len(wide_nums) == 2:
+                break
+    wide_nums = sorted(wide_nums, key=lambda n: partners.index(n))
+    w = [[axis_num, p] for p in wide_nums]
+    bets.append(_bet('ワイド', 'ワイド', axis_num, w,
+                     f'ワイド　{axis_num} － {_join(wide_nums)}（{len(w)}点）',
+                     '固め1頭＋中穴1頭'))
+
+    # 三連複: ◎からの流し
+    if len(partners) >= 2:
+        t = [[axis_num, a, b] for a, b in combinations(partners, 2)]
+        bets.append(_bet('三連複', '三連複', axis_num, t,
+                         f'三連複　{axis_num} － {_join(partners)}'
+                         f'（{len(t)}点）', '◎1頭軸流し'))
+    # 三連複: ◎＋相手筆頭の2頭軸
+    if len(partners) >= 3:
+        sub, rest = partners[0], partners[1:]
+        t2 = [[axis_num, sub, r] for r in rest]
+        bets.append(_bet('三連複(2頭軸)', '三連複', axis_num, t2,
+                         f'三連複(2頭軸)　{axis_num} － {sub} － {_join(rest)}'
+                         f'（{len(t2)}点）', '◎と相手筆頭の2頭軸'))
+
+    if not allow_trifecta:
+        return bets
+
+    # 三連単: 1着◎固定の流し
+    if len(partners) >= 2:
+        f = [[axis_num, a, b] for a in partners for b in partners if a != b]
+        bets.append(_bet('三連単', '三連単', axis_num, f,
+                         f'三連単　{axis_num} → {_join(partners)}'
+                         f'（{len(f)}点）', '◎1着固定'))
+    # 三連単マルチ: ◎と相手筆頭の2頭軸（着順を問わない）
+    if len(partners) >= 2:
+        sub, rest = partners[0], partners[1:]
+        m = []
+        for r in rest:
+            trio = (axis_num, sub, r)
+            m += [[a, b, c] for a in trio for b in trio for c in trio
+                  if len({a, b, c}) == 3]
+        bets.append(_bet('三連単マルチ', '三連単', axis_num, m,
+                         f'三連単マルチ　{axis_num}・{sub} － {_join(rest)}'
+                         f'（{len(m)}点）', '2頭軸マルチ'))
+    # 三連単フォーメーション: 1着◎ / 2着 相手上位2頭 / 3着 残り
+    if len(partners) >= 3:
+        second, third = partners[:2], partners[2:]
+        fm = [[axis_num, a, b] for a in second for b in third if a != b]
+        if fm:
+            bets.append(_bet('三連単フォーメーション', '三連単', axis_num, fm,
+                             f'三連単フォーメーション　{axis_num} → '
+                             f'{_join(second)} → {_join(third)}'
+                             f'（{len(fm)}点）', '1着◎固定'))
+    return bets
 
 
 def build_tickets(race, horses):
     """買い目・配分・見送り判断を返す。
 
-    入力は変更しない。券種は必ず MAX_BET_TYPES 以内。
+    入力は変更しない。並べる行数は必ず MAX_BET_TYPES 以内。
+
+    🟢 2026-10-15 ユーザー指示で全券種（単勝・複勝・馬連・ワイド・三連複・
+       三連単）を並べる形にした。相手は固めと中穴を混ぜて選ぶ。
+       ⚠ これは読者の好みに合わせた構成で、回収率が上がる根拠は無い
+       （モジュール冒頭の懸念を参照）。
 
     🔑 ◎ 自身が「危険な人気馬」に当たった場合は勝負度を1段下げる。
        これが §10「買わない」も予想として販売する、の実体。
@@ -216,6 +495,12 @@ def build_tickets(race, horses):
         'stars': confidence_stars(conf),
         'verdict': v,
         'bets': [],
+        'partners': [],
+        'solid_partners': [],
+        'ana_partners': [],
+        'narrow_field': False,
+        'total_points': 0,
+        'flat_unit_total': 0,
         'allocation_ratio': {},
         'allocation_examples': {},
         'allocation_note': None,
@@ -245,12 +530,15 @@ def build_tickets(race, horses):
     #    (3) 記事の数字が全部「—」になる（表のオッズ列・◎の見出し・市場人気）。
     #        2026-09-27 は refresh 遅延で odds_coverage=0.0 のまま推定オッズで組まれ、
     #        阪神R3 単勝#2 が est 10.0倍 / 実際 1.3倍だった。有料で売る物に出せない。
+    #    🔴 2026-10-15 追記: 連系を入れたので (3) はさらに重い。相手のオッズが
+    #        分からないと「固め」「中穴」の区別そのものが成立しない。
     if usable_odds(axis) is None:
         result['verdict'] = 'skip'
         result['skip_reason'] = (
             'オッズが取得できていないため見送り。'
             'このAIは市場評価を予想の土台に使っているため、'
-            'オッズが無い状態では印の精度が落ちる'
+            'オッズが無い状態では印の精度が落ちます。'
+            '固め・中穴の区別もオッズが無いと付けられません'
         )
         return result
 
@@ -287,33 +575,32 @@ def build_tickets(race, horses):
         )
 
     axis_num = axis.get('n')
-    partners = [h for h in horses
-                if h.get('product_mark') in (_marks.MARKS[1], _marks.MARKS[2])]
-    partner_nums = [h.get('n') for h in partners if h.get('n') is not None]
+    if v == 'strong':
+        n_solid, n_ana = SOLID_SHARE_STRONG, ANA_SHARE_STRONG
+        want = PARTNERS_STRONG
+    else:
+        n_solid, n_ana = SOLID_SHARE_LIGHT, ANA_SHARE_LIGHT
+        want = PARTNERS_LIGHT
 
-    bets = [{
-        'type': '複勝',
-        'axis': axis_num,
-        'combos': [[axis_num]],
-        'note': '本線',
-    }]
+    partners, solid, ana = split_partners(horses, axis_num, n_solid, n_ana)
+    result['partners'] = partners
+    result['solid_partners'] = solid
+    result['ana_partners'] = ana
+    result['narrow_field'] = len(partners) < want
 
-    if v == 'strong' and partner_nums:
-        bets.append({
-            'type': 'ワイド',
-            'axis': axis_num,
-            'combos': [[axis_num, p] for p in partner_nums],
-            'note': '押さえ（◎から○▲へ）',
-        })
-
+    bets = build_bet_lines(axis_num, partners, solid, ana,
+                           allow_trifecta=(v == 'strong'))
     result['bets'] = bets[:MAX_BET_TYPES]
+    result['total_points'] = sum(b['points'] for b in result['bets'])
+    # 全部を1点100円で買ったときの総額。点数が多いので必ず出す（§10 各自調整）
+    result['flat_unit_total'] = result['total_points'] * 100
 
-    ratios = dict(ALLOC_STRONG) if len(result['bets']) == 2 else dict(ALLOC_LIGHT)
-    # 実際に作られた券種だけを残す
-    kinds = {b['type'] for b in result['bets']}
-    ratios = {k: v2 for k, v2 in ratios.items() if k in kinds}
+    base = dict(ALLOC_STRONG) if v == 'strong' else dict(ALLOC_LIGHT)
+    # 実際に作られた券種（グループ）だけを残す
+    kinds = {b.get('group') or b['type'] for b in result['bets']}
+    ratios = {k: val for k, val in base.items() if k in kinds}
     total_ratio = sum(ratios.values()) or 1.0
-    ratios = {k: round(v2 / total_ratio, 2) for k, v2 in ratios.items()}
+    ratios = {k: round(val / total_ratio, 2) for k, val in ratios.items()}
     result['allocation_ratio'] = ratios
     result['allocation_examples'] = {
         amt: allocate(amt, ratios) for amt in AMOUNT_EXAMPLES
@@ -324,4 +611,10 @@ def build_tickets(race, horses):
 
 
 def bet_type_count(tickets):
+    """並べた買い目の行数（券種の数え方は group ではなく表示行）。"""
     return len({b['type'] for b in tickets.get('bets', [])})
+
+
+def bet_group_count(tickets):
+    """券種グループの数（三連複と三連複(2頭軸)は1つと数える）。"""
+    return len({b.get('group') or b['type'] for b in tickets.get('bets', [])})

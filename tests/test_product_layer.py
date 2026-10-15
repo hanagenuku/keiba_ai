@@ -221,17 +221,184 @@ class TestTickets:
             {'n': 3, 'name': 'C', 'rl_rank': 3, 'pop': 4, 'solo_rank': 3, 'odds': 9.0},
         ])
 
-    def test_at_most_two_bet_types(self):
+    def _wide_field(self, conf_axis_pop=3, axis_solo=1):
+        """固め3頭・中穴2頭・大穴1頭が取れる6〜7頭立て。"""
+        return marks.assign_marks([
+            {'n': 1, 'name': 'A', 'rl_rank': 1, 'pop': conf_axis_pop,
+             'solo_rank': axis_solo, 'odds': 3.2},
+            {'n': 2, 'name': 'B', 'rl_rank': 2, 'pop': 1, 'solo_rank': 3,
+             'odds': 2.8},
+            {'n': 3, 'name': 'C', 'rl_rank': 3, 'pop': 4, 'solo_rank': 2,
+             'odds': 6.5},
+            {'n': 4, 'name': 'D', 'rl_rank': 4, 'pop': 6, 'solo_rank': 5,
+             'odds': 12.0},
+            {'n': 5, 'name': 'E', 'rl_rank': 5, 'pop': 8, 'solo_rank': 4,
+             'odds': 22.0},
+            {'n': 6, 'name': 'F', 'rl_rank': 6, 'pop': 3, 'solo_rank': 6,
+             'odds': 5.0},
+            {'n': 7, 'name': 'G', 'rl_rank': 7, 'pop': 12, 'solo_rank': 9,
+             'odds': 60.0},
+        ])
+
+    def test_at_most_max_bet_lines(self):
+        """🟢 2026-10-15: 2券種固定をやめ、並べる行数の上限で縛る。"""
         for conf in (30, 50, 58, 66, 80):
-            t = tickets.build_tickets({'conf': conf}, self._horses())
+            t = tickets.build_tickets({'conf': conf}, self._wide_field())
             assert tickets.bet_type_count(t) <= tickets.MAX_BET_TYPES
 
-    def test_never_uses_high_takeout_types(self):
-        """三連単・三連複・馬連・単勝は標準構成に入れない。"""
-        banned = {'三連単', '三連複', '馬連', '馬単', '枠連', '単勝'}
-        for conf in (58, 66, 80):
-            t = tickets.build_tickets({'conf': conf}, self._horses())
-            assert not ({b['type'] for b in t['bets']} & banned)
+    def test_strong_lists_every_bet_type(self):
+        """🟢 2026-10-15 ユーザー指示「全券種を記載する」。"""
+        t = tickets.build_tickets({'conf': 70}, self._wide_field())
+        groups = {b['group'] for b in t['bets']}
+        assert groups == {'単勝', '複勝', '馬連', 'ワイド', '三連複', '三連単'}
+        lines = [b['type'] for b in t['bets']]
+        assert lines == ['単勝', '複勝', '馬連', 'ワイド', '三連複',
+                         '三連複(2頭軸)', '三連単', '三連単マルチ',
+                         '三連単フォーメーション']
+
+    def test_bet_lines_match_the_requested_format(self):
+        """ユーザー例の書式（①－②③④⑤⑥ / ①→②③ など）で出す。"""
+        t = tickets.build_tickets({'conf': 70}, self._wide_field())
+        by = {b['type']: b['line'] for b in t['bets']}
+        assert by['馬連'] == '馬連　1 － 2・3・4・5・6（5点）'
+        assert by['三連複'] == '三連複　1 － 2・3・4・5・6（10点）'
+        assert by['三連複(2頭軸)'] == '三連複(2頭軸)　1 － 2 － 3・4・5・6（4点）'
+        assert by['三連単'] == '三連単　1 → 2・3・4・5・6（20点）'
+        assert by['三連単マルチ'] == '三連単マルチ　1・2 － 3・4・5・6（24点）'
+        assert by['三連単フォーメーション'] == \
+            '三連単フォーメーション　1 → 2・3 → 4・5・6（6点）'
+
+    def test_displayed_numbers_are_sorted(self):
+        """🔑 並びに意味の無い列は馬番の昇順で書く（馬券の書き方）。
+
+        相手を選ぶ順は rl_rank だが、そのまま書くと
+        「11 － 1・7・5・10・2」のように読めない行になる（実データで確認）。
+        """
+        hs = marks.assign_marks([
+            {'n': 1, 'name': 'A', 'rl_rank': 1, 'pop': 2, 'solo_rank': 1,
+             'odds': 3.2},
+            {'n': 6, 'name': 'B', 'rl_rank': 2, 'pop': 1, 'solo_rank': 3,
+             'odds': 2.8},
+            {'n': 3, 'name': 'C', 'rl_rank': 3, 'pop': 4, 'solo_rank': 2,
+             'odds': 6.5},
+            {'n': 9, 'name': 'D', 'rl_rank': 4, 'pop': 6, 'solo_rank': 5,
+             'odds': 12.0},
+            {'n': 2, 'name': 'E', 'rl_rank': 5, 'pop': 8, 'solo_rank': 4,
+             'odds': 22.0},
+            {'n': 7, 'name': 'F', 'rl_rank': 6, 'pop': 3, 'solo_rank': 6,
+             'odds': 5.0},
+        ])
+        t = tickets.build_tickets({'conf': 70}, hs)
+        by = {b['type']: b['line'] for b in t['bets']}
+        assert by['馬連'] == '馬連　1 － 2・3・6・7・9（5点）'
+        # 2頭目の軸は rl_rank で決まる（馬番の昇順ではない）
+        assert by['三連複(2頭軸)'] == '三連複(2頭軸)　1 － 6 － 2・3・7・9（4点）'
+
+    def test_partners_mix_solid_and_longshot(self):
+        """🟢 「固めと中穴がバランスよく入る」。両方が相手に入ること。"""
+        t = tickets.build_tickets({'conf': 70}, self._wide_field())
+        assert t['solid_partners'] and t['ana_partners'], \
+            '固めだけ／中穴だけになっている'
+        assert len(t['partners']) == tickets.PARTNERS_STRONG
+        assert set(t['partners']) == set(t['solid_partners']) | set(t['ana_partners'])
+
+    def test_longshot_is_pulled_in_even_when_rl_order_is_all_solid(self):
+        """🔴 ここが「バランスよく」の本体。
+
+        相手を rl_rank の上位から順に取るだけだと、AI+市場の順位は市場に
+        引っ張られるので**上位が固めで埋まって中穴が1頭も入らない**。
+        中穴枠を別に確保していることをこのケースで固定する。
+        """
+        hs = marks.assign_marks([
+            {'n': 1, 'name': 'A', 'rl_rank': 1, 'pop': 1, 'solo_rank': 1,
+             'odds': 2.0},
+            {'n': 2, 'name': 'B', 'rl_rank': 2, 'pop': 2, 'solo_rank': 2,
+             'odds': 3.0},
+            {'n': 3, 'name': 'C', 'rl_rank': 3, 'pop': 3, 'solo_rank': 3,
+             'odds': 3.5},
+            {'n': 4, 'name': 'D', 'rl_rank': 4, 'pop': 4, 'solo_rank': 4,
+             'odds': 4.0},
+            {'n': 5, 'name': 'E', 'rl_rank': 5, 'pop': 5, 'solo_rank': 5,
+             'odds': 5.0},
+            {'n': 6, 'name': 'F', 'rl_rank': 6, 'pop': 6, 'solo_rank': 6,
+             'odds': 6.0},
+            {'n': 7, 'name': 'G', 'rl_rank': 7, 'pop': 7, 'solo_rank': 7,
+             'odds': 9.0},
+            {'n': 8, 'name': 'H', 'rl_rank': 8, 'pop': 8, 'solo_rank': 8,
+             'odds': 18.0},
+        ])
+        t = tickets.build_tickets({'conf': 70}, hs)
+        assert t['ana_partners'] == [7, 8], \
+            f'中穴枠が確保されていない: {t["partners"]}'
+        assert t['solid_partners'] == [2, 3, 4]
+        assert t['partners'] == [2, 3, 4, 7, 8]
+
+    def test_longshots_over_the_band_are_never_partners(self):
+        """30倍超（大穴）は相手に入れない。実測で明確に悪い側。
+
+        中穴枠が1頭ぶん埋まらない並びにしてある。上限を外すと
+        空いた中穴枠に60倍の馬が入るので、ここで落ちる。
+        """
+        hs = marks.assign_marks([
+            {'n': 1, 'name': 'A', 'rl_rank': 1, 'pop': 2, 'solo_rank': 1,
+             'odds': 3.2},
+            {'n': 2, 'name': 'B', 'rl_rank': 2, 'pop': 1, 'solo_rank': 2,
+             'odds': 2.8},
+            {'n': 3, 'name': 'C', 'rl_rank': 3, 'pop': 4, 'solo_rank': 3,
+             'odds': 6.5},
+            {'n': 4, 'name': 'D', 'rl_rank': 4, 'pop': 3, 'solo_rank': 4,
+             'odds': 5.0},
+            {'n': 5, 'name': 'E', 'rl_rank': 5, 'pop': 6, 'solo_rank': 5,
+             'odds': 12.0},
+            {'n': 6, 'name': 'F', 'rl_rank': 6, 'pop': 10, 'solo_rank': 6,
+             'odds': 60.0},
+            {'n': 7, 'name': 'G', 'rl_rank': 7, 'pop': 12, 'solo_rank': 7,
+             'odds': 80.0},
+        ])
+        t = tickets.build_tickets({'conf': 70}, hs)
+        assert t['ana_partners'] == [5]
+        assert 6 not in t['partners'] and 7 not in t['partners'], \
+            f'30倍超の馬が相手に入っている: {t["partners"]}'
+        # 枠が埋まらなかったことは記事側で断っている
+        assert t['narrow_field'] is True
+
+    def test_wide_is_one_solid_plus_one_longshot(self):
+        """ワイドは固め筆頭＋中穴筆頭の2点。"""
+        t = tickets.build_tickets({'conf': 70}, self._wide_field())
+        wide = [b for b in t['bets'] if b['type'] == 'ワイド'][0]
+        nums = [c[1] for c in wide['combos']]
+        assert len(nums) == 2
+        assert nums[0] in t['solid_partners']
+        assert nums[1] in t['ana_partners']
+
+    def test_band_thresholds_are_not_invented_here(self):
+        """固め／中穴の境界は本番 axis_bets の実測値をそのまま使う。"""
+        from src.betting import axis_bets
+        assert tickets.ANA_ODDS_MIN == axis_bets.ANA_ODDS_MIN
+        assert tickets.ANA_ODDS_MAX == axis_bets.ANA_ODDS_MAX
+        src = open(os.path.join(BASE, 'src', 'product', 'tickets.py'),
+                   encoding='utf-8').read()
+        assert 'from src.betting.axis_bets import' in src, \
+            '商品側で中穴の閾値を作り直している'
+
+    def test_partner_needs_usable_odds(self):
+        """オッズ未取得の馬は相手にしない（記事に「—倍」の相手を出さない）。"""
+        hs = marks.assign_marks([
+            {'n': 1, 'name': 'A', 'rl_rank': 1, 'pop': 3, 'solo_rank': 1,
+             'odds': 3.0},
+            {'n': 2, 'name': 'B', 'rl_rank': 2, 'pop': 2, 'solo_rank': 2,
+             'odds': 0},
+            {'n': 3, 'name': 'C', 'rl_rank': 3, 'pop': 4, 'solo_rank': 3,
+             'odds': 8.0},
+        ])
+        t = tickets.build_tickets({'conf': 70}, hs)
+        assert t['partners'] == [3]
+
+    def test_point_count_and_flat_total_are_reported(self):
+        """点数が多いので総点数と100円均等の総額を必ず持つ（§10 各自調整）。"""
+        t = tickets.build_tickets({'conf': 70}, self._wide_field())
+        assert t['total_points'] == sum(b['points'] for b in t['bets'])
+        assert t['flat_unit_total'] == t['total_points'] * 100
 
     def test_low_confidence_is_skip(self):
         t = tickets.build_tickets({'conf': 40}, self._horses())
@@ -243,15 +410,19 @@ class TestTickets:
         t = tickets.build_tickets({'conf': None}, self._horses())
         assert t['verdict'] == 'skip'
 
-    def test_strong_gets_two_types(self):
-        t = tickets.build_tickets({'conf': 70}, self._horses())
-        assert t['verdict'] == 'strong'
-        assert {b['type'] for b in t['bets']} == {'複勝', 'ワイド'}
-
-    def test_light_gets_one_type(self):
-        t = tickets.build_tickets({'conf': 60}, self._horses())
+    def test_light_has_no_trifecta(self):
+        """conf が最上位の帯に届かなければ三連単は出さない（点数を増やさない）。"""
+        t = tickets.build_tickets({'conf': 60}, self._wide_field())
         assert t['verdict'] == 'light'
-        assert {b['type'] for b in t['bets']} == {'複勝'}
+        groups = {b['group'] for b in t['bets']}
+        assert '三連単' not in groups
+        assert groups == {'単勝', '複勝', '馬連', 'ワイド', '三連複'}
+        assert len(t['partners']) == tickets.PARTNERS_LIGHT
+
+    def test_light_has_fewer_points_than_strong(self):
+        strong = tickets.build_tickets({'conf': 70}, self._wide_field())
+        light = tickets.build_tickets({'conf': 60}, self._wide_field())
+        assert light['total_points'] < strong['total_points']
 
     def test_axis_danger_favorite_is_downgraded(self):
         """◎が市場1番人気かつ素のAI下位なら1段下げる（§10 買わないも商品）。"""
@@ -277,9 +448,28 @@ class TestTickets:
         assert 'オッズ' in t['skip_reason']
 
     def test_allocation_sums_to_total(self):
-        t = tickets.build_tickets({'conf': 70}, self._horses())
+        for hs in (self._horses(), self._wide_field()):
+            for conf in (60, 70):
+                t = tickets.build_tickets({'conf': conf}, hs)
+                for amt, detail in t['allocation_examples'].items():
+                    assert sum(detail.values()) == amt, (conf, amt, detail)
+
+    def test_allocation_keeps_the_ratio_order(self):
+        """🔴 券種が増えても金額の大小が比率と逆転しない。
+
+        各券種を独立に四捨五入していたとき、1,000円・6券種で
+        複勝100円 < ワイド200円 になった（比率は 0.25 vs 0.15）。
+        最大剰余法に直した回帰テスト。
+        """
+        t = tickets.build_tickets({'conf': 70}, self._wide_field())
+        ratio = t['allocation_ratio']
         for amt, detail in t['allocation_examples'].items():
-            assert sum(detail.values()) == amt
+            top = max(ratio, key=lambda k: ratio[k])
+            assert detail[top] == max(detail.values()), (amt, detail)
+            for a in ratio:
+                for b in ratio:
+                    if ratio[a] > ratio[b]:
+                        assert detail[a] >= detail[b], (amt, a, b, detail)
 
 
 # ---------------------------------------------------------------------------
@@ -341,19 +531,51 @@ class TestBetTypeReason:
             {'n': 3, 'name': 'C', 'rl_rank': 3, 'pop': 4, 'solo_rank': 3, 'odds': 9.0},
         ])
 
-    def test_strong_explains_both_types(self):
+    def test_strong_explains_every_type(self):
         t = tickets.build_tickets({'conf': 70}, self._horses())
         joined = '\n'.join(t['bet_type_reasons'])
-        assert '複勝を本線' in joined
+        assert '複勝に配分を最も厚く' in joined
         assert 'ワイドは押さえ' in joined
-        assert '馬連' in joined and '三連複' in joined   # 除外した券種の理由も書く
+        for kind in ('馬連', '三連複', '三連単', '単勝'):
+            assert kind in joined, f'{kind} の理由が書かれていない'
 
-    def test_light_explains_why_only_one_type(self):
+    def test_reasons_state_that_spreading_is_a_preference_not_an_edge(self):
+        """🔴 「広げたから当たる」と読まれない文にする。
+
+        控除率は広げるほど不利（単複20% → 三連単27.5%）という事実を
+        同じ場所に書く。2026-10-15 にユーザーの好みで広げた構成なので、
+        根拠を取り違えられないようにする。
+        """
+        t = tickets.build_tickets({'conf': 70}, self._horses())
+        joined = '\n'.join(t['bet_type_reasons'])
+        assert '読者の好み' in joined
+        assert '当たりやすくなる、という意味ではありません' in joined
+        assert '27.5' in joined and '20%' in joined
+
+    def test_reasons_do_not_print_a_recovery_rate_over_100(self):
+        """🔴 100%を超える生の数字を有料記事に出さない（自ら禁じた誇大表示）。
+
+        7〜30倍の 102.5% も三連複の 100.1% も高配当1本で作られた数字で、
+        1本抜くと 87.4% / 58.9% に落ちる。帯の比較は1本抜き後の数字で書く。
+        """
+        import re
+        t = tickets.build_tickets({'conf': 70}, self._horses())
+        joined = '\n'.join(t['bet_type_reasons'])
+        nums = [float(x) for x in re.findall(r'([0-9]+(?:\.[0-9]+)?)%', joined)]
+        over = [n for n in nums if n > 100]
+        assert over == [], f'100%超の回収率が記事文面に出ている: {over}'
+
+    def test_trifecta_reason_admits_it_is_unmeasured(self):
+        """三連単は大規模に測っていない。測っていないものを良いと書かない。"""
+        t = tickets.build_tickets({'conf': 70}, self._horses())
+        joined = '\n'.join(t['bet_type_reasons'])
+        assert '測っていません' in joined
+
+    def test_light_explains_why_no_trifecta(self):
         t = tickets.build_tickets({'conf': 60}, self._horses())
         joined = '\n'.join(t['bet_type_reasons'])
-        assert '複勝を本線' in joined
-        assert '今回は複勝だけ' in joined
-        assert 'ワイドは押さえ' not in joined
+        assert '今回は三連単を出していません' in joined
+        assert '三連単は1着固定の流し' not in joined
 
     def test_skip_explains_nothing(self):
         """買っていない券種の理由は書かない。"""
@@ -378,11 +600,42 @@ class TestBetTypeReason:
         assert 'なぜこの券種か' in md
 
     def test_single_bet_type_shows_no_allocation_table(self):
-        """券種1つなら自明な比率表を載せず、各自調整だけを書く。"""
-        md = article._bets_md(tickets.build_tickets({'conf': 60}, self._horses()))
+        """券種1つなら自明な比率表を載せず、各自調整だけを書く。
+
+        2026-10-15 以降、通常の買い目は券種が複数になるので、
+        1券種しか作れなかった場合（相手が1頭も取れない等）を直接作って確認する。
+        """
+        md = article._bets_md({
+            'verdict': 'light',
+            'bets': [{'type': '複勝', 'group': '複勝', 'axis': 1,
+                      'combos': [[1]], 'points': 1, 'line': '複勝　1'}],
+            'total_points': 1, 'flat_unit_total': 100,
+            'allocation_ratio': {'複勝': 1.0}, 'allocation_examples': {},
+            'bet_type_reasons': [],
+        })
         assert '各自調整' in md
         assert '換算例' not in md
         assert '配分の目安' not in md
+
+    def test_article_shows_point_count_and_flat_total(self):
+        """🔴 点数が多いので「全部買うと幾らか」を記事に必ず出す。"""
+        md = article._bets_md(tickets.build_tickets({'conf': 70}, self._horses()))
+        assert '合計' in md and '点' in md
+        assert '1点100円で買うと' in md
+
+    def test_article_shows_which_partners_are_solid_or_longshot(self):
+        """固め・中穴の内訳を読者に見せる（2026-10-15 指示の実体）。"""
+        hs = marks.assign_marks([
+            {'n': 1, 'name': 'A', 'rl_rank': 1, 'pop': 3, 'solo_rank': 1,
+             'odds': 3.0},
+            {'n': 2, 'name': 'B', 'rl_rank': 2, 'pop': 2, 'solo_rank': 2,
+             'odds': 4.0},
+            {'n': 3, 'name': 'C', 'rl_rank': 3, 'pop': 6, 'solo_rank': 3,
+             'odds': 11.0},
+        ])
+        md = article._bets_md(tickets.build_tickets({'conf': 70}, hs))
+        assert '相手の内訳' in md
+        assert '固め 2' in md and '中穴 3' in md
 
     def test_published_text_is_frozen_in_archive(self):
         """記事に載せた文面もアーカイブで凍結する（§18 後から変えない）。"""
