@@ -637,6 +637,24 @@ class TestBetTypeReason:
         assert '相手の内訳' in md
         assert '固め 2' in md and '中穴 3' in md
 
+    def test_partner_breakdown_is_sorted(self):
+        """内訳も馬番の昇順で書く（実データで「中穴 7・4・10」と出ていた）。"""
+        hs = marks.assign_marks([
+            {'n': 5, 'name': 'A', 'rl_rank': 1, 'pop': 1, 'solo_rank': 1,
+             'odds': 2.5},
+            {'n': 9, 'name': 'B', 'rl_rank': 2, 'pop': 3, 'solo_rank': 2,
+             'odds': 6.0},
+            {'n': 2, 'name': 'C', 'rl_rank': 3, 'pop': 2, 'solo_rank': 3,
+             'odds': 5.0},
+            {'n': 7, 'name': 'D', 'rl_rank': 4, 'pop': 4, 'solo_rank': 4,
+             'odds': 9.0},
+            {'n': 10, 'name': 'E', 'rl_rank': 5, 'pop': 6, 'solo_rank': 5,
+             'odds': 20.0},
+        ])
+        md = article._bets_md(tickets.build_tickets({'conf': 70}, hs))
+        assert '固め 2・9' in md, md
+        assert '中穴 7・10' in md, md
+
     def test_published_text_is_frozen_in_archive(self):
         """記事に載せた文面もアーカイブで凍結する（§18 後から変えない）。"""
         assert 'allocation_note' in archive._FROZEN_KEYS
