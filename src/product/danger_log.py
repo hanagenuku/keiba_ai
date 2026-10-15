@@ -337,6 +337,13 @@ def summarize(base_dir, scope_only=False, include_late=False):
     top3 = [e for e in done if (e['result'] or {}).get('top3')]
     payouts = sorted(p for p in ((e['result'] or {}).get('fukusho_payout')
                                  for e in top3) if p)
+    # 🔴 ◎ 自身かどうかで分ける（2026-10-15）。実測で 11件のうち9件が
+    #    `rl_rank == 1` ＝ その記事が軸に推している馬だった。
+    #    `danger_favorites()` は `rl_rank` を見ないので構造的にこうなる。
+    #    毎回この内訳が見えないと、同じことに次も気づけない。
+    axis = [e for e in done if e.get('rl_rank') == 1]
+    other = [e for e in done if e.get('rl_rank') != 1]
+    _t3 = lambda g: sum(1 for e in g if (e['result'] or {}).get('top3'))
     return {
         'total': len(entries),
         'with_result': len(done),
@@ -346,4 +353,8 @@ def summarize(base_dir, scope_only=False, include_late=False):
         'places': sorted((e['result'] or {}).get('place') for e in done),
         'fukusho_payouts': payouts,
         'dates': sorted({str(e.get('date')) for e in entries}),
+        'axis_n': len(axis),
+        'axis_top3': _t3(axis),
+        'other_n': len(other),
+        'other_top3': _t3(other),
     }

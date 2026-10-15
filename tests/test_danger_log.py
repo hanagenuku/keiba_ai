@@ -388,3 +388,36 @@ def test_results_workflow_only_attaches():
     bare = [ln for ln in s.splitlines()
             if 'record_danger_favorites.py' in ln and '--attach-results' not in ln]
     assert not bare, f'結果取得のワークフローで記録している: {bare}'
+
+
+def test_summary_splits_by_whether_the_flagged_horse_is_the_axis(tmp_path):
+    """🔴 本番11件のうち9件が ◎ 自身だった（2026-10-15）。
+
+    `danger_favorites()` は `rl_rank` を見ないので、記事が軸に推している馬が
+    そのまま「危険な人気馬」になる。内訳が毎回見えないと次も気づけない。
+    """
+    d = str(tmp_path)
+    races = [
+        # ◎ 自身（rl_rank=1）が危険な人気馬 → 3着内に来る
+        {'race_id': RID, 'r': 10, 'conf': 70,
+         'horses': [_horse(15, 1, 6, rl=1)]},
+        # ◎ ではない（rl_rank=4）が危険な人気馬 → 着外
+        {'race_id': '20261011_05_01', 'r': 1, 'conf': 53,
+         'horses': [_horse(2, 1, 7, rl=4), _horse(9, 2, 1, rl=1)]},
+    ]
+    danger_log.record(d, _latest(races))
+    _dbs(d, {15: 1}, {'fukusho': [{'num': 15, 'payout': 170}]})
+    _add_placings(d, '20261011_05_01', {9: 1, 2: 8})
+    db_mod.save_race_schedule(
+        [{'race_id': '20261011_05_01', 'date': DATE, 'racecourse': '東京',
+          'race_num': 1, 'post_time': '10:05', 'n_horses': 2}], base_dir=d)
+    db_mod.save_dividends_db(
+        [{'race_id': '20261011_05_01', 'date': DATE,
+          'dividends': {'fukusho': [{'num': 9, 'payout': 150}]}}], base_dir=d)
+    _attach(d)
+    s = danger_log.summarize(d)
+    assert (s['axis_n'], s['axis_top3']) == (1, 1)
+    assert (s['other_n'], s['other_top3']) == (1, 0)
+    # 内訳の和が全体と一致する（取りこぼしを作らない）
+    assert s['axis_n'] + s['other_n'] == s['with_result']
+    assert s['axis_top3'] + s['other_top3'] == s['top3']

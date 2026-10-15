@@ -1370,3 +1370,116 @@ class TestTargetDate:
         rid = next(r['race_id'] for r in real_races if r.get('race_id'))
         assert text.splitlines()[0].startswith(
             f'# {rid[:4]}-{rid[4:6]}-{rid[6:8]} ')
+
+
+# ---------------------------------------------------------------------------
+# 根拠（2026-10-15 ユーザー指示「軸に選ぶ馬の根拠と危険な人気馬の根拠は
+# 読者が一番欲しい情報」）。盛らない形で書けていることを固定する。
+# ---------------------------------------------------------------------------
+
+class TestAxisAndDangerBasis:
+    """◎ と 危険な人気馬 の根拠。文面そのものを固定する。"""
+
+    def _danger_axis_race(self):
+        """◎ 自身が危険な人気馬に当たる形（本番11件中9件がこれだった）。"""
+        race = {'_venue': '京都', 'r': 9, 'name': 'テスト特別',
+                'dist': '芝1600m', 'conf': 70, 'cmt': ''}
+        horses = marks.assign_marks([
+            {'n': 1, 'name': 'A', 'rl_rank': 1, 'pop': 1, 'solo_rank': 7,
+             'fit_rank': 10, 'odds': 3.6},
+            {'n': 2, 'name': 'B', 'rl_rank': 2, 'pop': 2, 'solo_rank': 1,
+             'fit_rank': 2, 'odds': 4.2},
+            {'n': 3, 'name': 'C', 'rl_rank': 3, 'pop': 3, 'solo_rank': 2,
+             'fit_rank': 3, 'odds': 9.0},
+        ])
+        return race, horses
+
+    # --- ◎ の根拠 --------------------------------------------------------
+    def test_axis_section_states_why_it_is_the_axis(self):
+        race, horses = self._danger_axis_race()
+        md = article.build_race_section(race, horses, {}, paid=True)['markdown']
+        assert '◎にした根拠' in md
+        assert 'レース信頼度（このレースは70）' in md
+
+    def test_only_the_axis_gets_the_basis(self):
+        """○▲ に同じ根拠文を繰り返さない（◎ の根拠だから1回だけ）。"""
+        race, horses = self._danger_axis_race()
+        md = article.build_race_section(race, horses, {}, paid=True)['markdown']
+        assert md.count('◎にした根拠') == 1
+
+    def test_axis_basis_does_not_overstate(self):
+        """市場に勝っていない部分を隠さない。禁止語も出さない。"""
+        text = commentary.axis_basis(66)
+        assert '回収率が100%を超える根拠はありません' in text
+        assert '市場＋0.0004' in text
+        for word in ('勝てる', '儲か', '必ず', '確実'):
+            assert word not in text
+        assert commentary.find_forbidden(text) is None
+
+    def test_axis_basis_does_not_sell_conf_as_a_true_probability(self):
+        """conf は RL1 だけ ECE 0.1018 で過信。確率として売らない。"""
+        text = commentary.axis_basis(80)
+        assert '過信' in text
+        assert '実測0.566' in text
+
+    # --- 危険な人気馬の根拠 ----------------------------------------------
+    def test_danger_basis_says_half_still_come_in(self):
+        """🔴 実測は 51.4%。「来ない」と書いたら測っていないことを書いたことになる。"""
+        assert 'それでも半分以上は3着内に来ます' in commentary.DANGER_BASIS
+        assert '51.4%' in commentary.DANGER_BASIS
+        assert '242頭' in commentary.DANGER_BASIS
+        assert commentary.find_forbidden(commentary.DANGER_BASIS) is None
+
+    def test_danger_section_shows_the_three_ranks(self):
+        race, horses = self._danger_axis_race()
+        md = article.build_race_section(race, horses, {}, paid=True)['markdown']
+        assert '市場を見ないAI単独の評価は7位' in md
+        assert 'AI総合（市場込み）では1位' in md
+        assert '今回条件への適性は10位' in md
+
+    def test_danger_section_says_it_is_the_same_horse_as_the_axis(self):
+        """🔴 本番11件中9件が ◎ 自身。黙っていると本命と危険が同じ馬で並ぶ。"""
+        race, horses = self._danger_axis_race()
+        md = article.build_race_section(race, horses, {}, paid=True)['markdown']
+        assert 'この馬は本記事の◎と同じ馬です' in md
+
+    def test_danger_section_omits_the_axis_note_for_other_horses(self):
+        """◎ ではない危険な人気馬には「◎と同じ馬」と書かない。"""
+        race = {'_venue': '京都', 'r': 9, 'name': 'T', 'dist': '芝1600m',
+                'conf': 70, 'cmt': ''}
+        horses = marks.assign_marks([
+            {'n': 1, 'name': 'A', 'rl_rank': 1, 'pop': 3, 'solo_rank': 1,
+             'odds': 3.6},
+            {'n': 2, 'name': 'B', 'rl_rank': 4, 'pop': 1, 'solo_rank': 8,
+             'odds': 2.2},
+            {'n': 3, 'name': 'C', 'rl_rank': 2, 'pop': 2, 'solo_rank': 2,
+             'odds': 6.0},
+            {'n': 4, 'name': 'D', 'rl_rank': 3, 'pop': 4, 'solo_rank': 3,
+             'odds': 9.0},
+        ])
+        sec = article.build_race_section(race, horses, {}, paid=True)
+        assert [d['num'] for d in sec['dangers']] == [2]
+        assert 'この馬は本記事の◎と同じ馬です' not in sec['markdown']
+
+    def test_race_comment_does_not_repeat_the_axis_danger_three_times(self):
+        """◎ 自身の分は skip_reason / downgrade_reason が説明済み。"""
+        race, horses = self._danger_axis_race()
+        tk = tickets.build_tickets(race, horses)
+        assert tk.get('axis_is_danger_favorite') is True
+        text = commentary.race_comment(race, horses, tk, marks.danger_favorites(horses))
+        assert 'は市場が上位人気に推しているが' not in text
+
+    # --- アプリコメントの持ち込み ----------------------------------------
+    def test_cmt_drops_expected_value_claims(self):
+        """EV で買い目を選ぶ方向は3回否定済み。「期待値十分」を商品に出さない。"""
+        got = commentary._clean_cmt('馬場はフラット。中穴(3.6倍)で期待値十分。')
+        assert '馬場はフラット' in got
+        assert '期待値' not in got
+
+    def test_real_article_does_not_claim_expected_value(self, real_races):
+        for race in real_races:
+            horses = race.get('horses') or []
+            if not horses:
+                continue
+            md = article.build_race_section(race, horses, {}, paid=True)['markdown']
+            assert '期待値十分' not in md

@@ -182,6 +182,11 @@ def build_race_section(race, horses, facts_by_num, *, paid=True,
                      f"（単勝{_odds_text(h.get('odds') or h.get('tansho_odds'))}）")
         parts.append('')
         parts.append(body or '（書ける事実がありません）')
+        # 🔴 ◎ だけ「なぜ軸にしたか」を必ず書く（2026-10-15 ユーザー指示。
+        #    読者が最も欲しい情報は印そのものではなく根拠）。
+        if mark == _marks.MARKS[0]:
+            parts.append('')
+            parts.append(_cm.axis_basis(race.get('conf')))
         parts.append('')
 
     if paid:
@@ -196,17 +201,28 @@ def build_race_section(race, horses, facts_by_num, *, paid=True,
         if dangers:
             parts.append('### ⚠ 危険な人気馬')
             parts.append('')
+            _axis = _marks.axis_horse(marked)
+            _axis_num = _axis.get('n') if _axis else None
             for d in dangers:
+                bits = [f"市場を見ないAI単独の評価は{d['solo_rank']}位"]
+                _rl = d.get('rl_rank')
+                if isinstance(_rl, int) and _rl < 99:
+                    bits.append(f'AI総合（市場込み）では{_rl}位')
+                _fit = next((h.get('fit_rank') for h in marked
+                             if h.get('n') == d['num']), None)
+                if isinstance(_fit, int) and _fit < 99:
+                    bits.append(f'今回条件への適性は{_fit}位')
                 parts.append(
                     f"- **{d['num']}{d['name']}**（市場{d['pop']}番人気・"
-                    f"{_odds_text(d['odds'])}）：市場を見ないAIの評価は{d['solo_rank']}位。"
+                    f"{_odds_text(d['odds'])}）：" + '、'.join(bits) + '。'
                 )
+                # 🔴 ◎ 自身が当たることが多い（2026-10-15 実測で本番11件中9件）。
+                #    黙っていると「本命」と「危険」が同じ馬について並ぶだけになる。
+                if _axis_num is not None and d['num'] == _axis_num:
+                    parts.append('')
+                    parts.append(_cm.DANGER_IS_AXIS)
             parts.append('')
-            parts.append('市場が上位人気に推している馬のうち、AIが独自評価で下位に置いた馬です。'
-                         'この条件に当たった市場1番人気は、過去の検証で3着内率が'
-                         '68.5%から51.4%まで落ちました。')
-            parts.append('⚠ ただし「代わりにどの馬を買えばよいか」までは言えません'
-                         '（AIの推しに入れ替えても回収率は改善しませんでした）。')
+            parts.append(_cm.DANGER_BASIS)
             parts.append('')
 
         parts.append('### 最終結論')
