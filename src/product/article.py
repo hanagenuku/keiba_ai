@@ -89,10 +89,11 @@ def _bets_md(tickets):
     ana = tickets.get('ana_partners') or []
     if solid or ana:
         bits = []
+        # 馬番の昇順で書く（買い目の行と同じ規約。選んだ順そのままだと読めない）
         if solid:
-            bits.append('固め ' + '・'.join(str(n) for n in solid))
+            bits.append('固め ' + '・'.join(str(n) for n in sorted(solid)))
         if ana:
-            bits.append('中穴 ' + '・'.join(str(n) for n in ana))
+            bits.append('中穴 ' + '・'.join(str(n) for n in sorted(ana)))
         body += (f'\n\n相手の内訳：{" ／ ".join(bits)}'
                  f'（固めは単勝{_tk.ANA_ODDS_MIN:.0f}倍未満、'
                  f'中穴は{_tk.ANA_ODDS_MIN:.0f}〜{_tk.ANA_ODDS_MAX:.0f}倍）')
