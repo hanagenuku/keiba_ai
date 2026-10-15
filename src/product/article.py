@@ -71,13 +71,40 @@ def _bets_md(tickets):
         return '**今回は見送り。**\n\n' + (tickets.get('skip_reason') or '')
     lines = []
     for b in tickets.get('bets', []):
-        combos = b.get('combos') or []
-        if b['type'] == '複勝':
-            lines.append(f"複勝　{combos[0][0]}")
-        else:
-            partners = '・'.join(str(c[1]) for c in combos)
-            lines.append(f"{b['type']}　{b['axis']} － {partners}")
+        # 🟢 2026-10-15: 表示行は tickets 側で組み立てた `line` をそのまま出す。
+        #    券種ごとの書き分け（→ / － / 点数）を記事側に二重で持たせない。
+        line = b.get('line')
+        if not line:
+            combos = b.get('combos') or []
+            if b['type'] in ('単勝', '複勝'):
+                line = f"{b['type']}　{combos[0][0]}"
+            else:
+                partners = '・'.join(str(c[1]) for c in combos)
+                line = f"{b['type']}　{b['axis']} － {partners}"
+        lines.append(line)
     body = '\n'.join(lines)
+
+    # 🟢 固めと中穴がどれなのかを読者に見せる（2026-10-15 ユーザー指示の実体）。
+    solid = tickets.get('solid_partners') or []
+    ana = tickets.get('ana_partners') or []
+    if solid or ana:
+        bits = []
+        if solid:
+            bits.append('固め ' + '・'.join(str(n) for n in solid))
+        if ana:
+            bits.append('中穴 ' + '・'.join(str(n) for n in ana))
+        body += (f'\n\n相手の内訳：{" ／ ".join(bits)}'
+                 f'（固めは単勝{_tk.ANA_ODDS_MIN:.0f}倍未満、'
+                 f'中穴は{_tk.ANA_ODDS_MIN:.0f}〜{_tk.ANA_ODDS_MAX:.0f}倍）')
+
+    # 🔴 点数が多いので総額を必ず出す。読者が「全部買うと幾らか」を知らずに
+    #    券種だけ並べられるのは §10（各自調整）に反する。
+    pts = tickets.get('total_points')
+    if pts:
+        flat = tickets.get('flat_unit_total') or pts * 100
+        body += (f'\n\n**合計{pts}点**。全部を1点100円で買うと{flat:,}円です。'
+                 f'この中から好きな券種を選んでください（点数を減らすのは自由です）。')
+
     if tickets.get('downgrade_reason'):
         body = '⚠ ' + tickets['downgrade_reason'] + '。\n\n' + body
     # §11「この予想なら、なぜこの券種なのか」まで書く
@@ -104,7 +131,6 @@ def _bets_md(tickets):
     elif ratio:
         body += ('\n\n金額はオッズと手持ち資金に応じて各自調整してください'
                  '（券種が1つなので配分はありません）。')
-    body += '\n\n※券種は2種類以内に抑えています。点数を減らすのは自由です。'
     return body
 
 
