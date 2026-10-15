@@ -56,6 +56,9 @@ def main(argv=None):
               f' / 結果あり {s["with_result"]}件 / 結果待ち {s["pending"]}件'
               f' / 発走後の記録で除外 {s["excluded_late"]}件')
         print(f'3着内 {s["top3"]}/{s["with_result"]}')
+        # 🔴 ◎ 自身だった分を必ず分けて出す（2026-10-15 の実測で 9/11 が ◎ 自身）
+        print(f'  うち ◎と同じ馬（rl_rank=1） {s["axis_top3"]}/{s["axis_n"]}'
+              f' ／ ◎ではない {s["other_top3"]}/{s["other_n"]}')
         if s['places']:
             print(f'着順: {s["places"]}')
         if s['fukusho_payouts']:
