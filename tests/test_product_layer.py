@@ -1444,6 +1444,35 @@ class TestAxisAndDangerBasis:
         assert '84.2%' in commentary.DANGER_BASIS
         assert '100%には届きません' in commentary.DANGER_BASIS
 
+    def test_danger_basis_says_it_is_not_about_winning_either(self):
+        """🔴 2026-10-16: 1着でも測って不採用（`danger/RESULTS_WIN.md`）。
+
+        V0 の勝率は 23.0%（1番人気全体 32.2%）＝4頭に1頭は勝つ。
+        事前登録の合格線（「来ない」10%未満 / 「勝ちきれない」16%未満）に
+        N>=300 の条件は1つも届かなかった。読者が「1着には来ない印」と
+        誤読しないよう、勝率を必ず併記する。
+        """
+        assert '1着に来ないという意味でもありません' in commentary.DANGER_BASIS
+        assert '23.0%' in commentary.DANGER_BASIS      # 該当849頭の勝率
+        assert '32.2%' in commentary.DANGER_BASIS      # 1番人気全体の勝率
+        assert '4頭に1頭は勝っています' in commentary.DANGER_BASIS
+        assert commentary.find_forbidden(commentary.DANGER_BASIS) is None
+
+    def test_danger_basis_never_says_the_horse_will_not_win(self):
+        """🔴 測定が支持しない断定を商品に出さないための歯止め。"""
+        for banned in ('1着に来ません', '1着には来ません', '勝てません',
+                       '勝つことはありません', '1着はありません'):
+            assert banned not in commentary.DANGER_BASIS
+
+    def test_danger_thresholds_are_unchanged_after_two_measurements(self):
+        """🔴 3着内（6条件）と1着（6条件）で測って、どちらも不採用。
+
+        「もっと絞れば書ける」を測定が支持しなかったので閾値をいじる根拠が無い。
+        値が動いたら落とす（結果を見てから閾値を変えないため）。
+        """
+        assert marks.DANGER_MAX_POP == 1
+        assert marks.DANGER_MIN_SOLO == 6
+
     def test_article_does_not_call_them_dangerous_favorites(self):
         """🔴 カード §7 の事前決定。断定的な名前をやめ事実の提示に留める。
 
