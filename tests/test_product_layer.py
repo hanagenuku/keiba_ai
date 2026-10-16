@@ -1422,13 +1422,43 @@ class TestAxisAndDangerBasis:
         assert '過信' in text
         assert '実測0.566' in text
 
-    # --- 危険な人気馬の根拠 ----------------------------------------------
+    # --- この印（旧「危険な人気馬」）の根拠 ---------------------------------
     def test_danger_basis_says_half_still_come_in(self):
-        """🔴 実測は 51.4%。「来ない」と書いたら測っていないことを書いたことになる。"""
-        assert 'それでも半分以上は3着内に来ます' in commentary.DANGER_BASIS
+        """🔴 実測は 51.4% / 48.6%。「来ない」と書いたら測っていないことを書く。"""
+        assert 'それでも半分近くは3着内に来ます' in commentary.DANGER_BASIS
         assert '51.4%' in commentary.DANGER_BASIS
+        assert '48.6%' in commentary.DANGER_BASIS       # B期間6,077レースの実測
         assert '242頭' in commentary.DANGER_BASIS
+        assert '849頭' in commentary.DANGER_BASIS
         assert commentary.find_forbidden(commentary.DANGER_BASIS) is None
+
+    def test_danger_basis_does_not_claim_the_threshold_can_be_tightened(self):
+        """🔴 2026-10-16: 条件を厳しくしても書ける水準にならなかった（6条件とも不採用）。
+
+        「もっと絞れば危険と書ける」と読める文を商品に出さないための歯止め。
+        """
+        assert 'なりませんでした' in commentary.DANGER_BASIS
+
+    def test_danger_basis_states_the_filter_value_without_overclaiming(self):
+        """避ける価値 +1.6pt は実測。ただし100%未満であることを必ず併記する。"""
+        assert '84.2%' in commentary.DANGER_BASIS
+        assert '100%には届きません' in commentary.DANGER_BASIS
+
+    def test_article_does_not_call_them_dangerous_favorites(self):
+        """🔴 カード §7 の事前決定。断定的な名前をやめ事実の提示に留める。
+
+        3着内率 48.6%（半分近く来る）で「危険」と書く根拠が無いため、
+        見出しが「危険な人気馬」に戻ったら落とす。
+        """
+        race, horses = self._danger_axis_race()
+        md = article.build_race_section(race, horses, {}, paid=True)['markdown']
+        assert '危険な人気馬' not in md
+        assert '市場の支持ほどAIは評価していない馬' in md
+
+    def test_danger_is_axis_note_cites_the_large_sample(self):
+        """🔴 ◎自身が 88.2%（849頭中749頭）は B期間で測った構造。N=11 ではない。"""
+        assert '88.2%' in commentary.DANGER_IS_AXIS
+        assert '強い警告としては読めません' in commentary.DANGER_IS_AXIS
 
     def test_danger_section_shows_the_three_ranks(self):
         race, horses = self._danger_axis_race()
@@ -1438,13 +1468,13 @@ class TestAxisAndDangerBasis:
         assert '今回条件への適性は10位' in md
 
     def test_danger_section_says_it_is_the_same_horse_as_the_axis(self):
-        """🔴 本番11件中9件が ◎ 自身。黙っていると本命と危険が同じ馬で並ぶ。"""
+        """🔴 B期間849頭中749頭(88.2%)が ◎ 自身。黙っていると同じ馬で印が並ぶ。"""
         race, horses = self._danger_axis_race()
         md = article.build_race_section(race, horses, {}, paid=True)['markdown']
         assert 'この馬は本記事の◎と同じ馬です' in md
 
     def test_danger_section_omits_the_axis_note_for_other_horses(self):
-        """◎ ではない危険な人気馬には「◎と同じ馬」と書かない。"""
+        """◎ ではない馬には「◎と同じ馬」と書かない。"""
         race = {'_venue': '京都', 'r': 9, 'name': 'T', 'dist': '芝1600m',
                 'conf': 70, 'cmt': ''}
         horses = marks.assign_marks([

@@ -199,7 +199,11 @@ def build_race_section(race, horses, facts_by_num, *, paid=True,
             parts.append('')
 
         if dangers:
-            parts.append('### ⚠ 危険な人気馬')
+            # 🔴 2026-10-16: 「危険な人気馬」という断定的な見出しをやめた。
+            #    B期間6,077レースで測った3着内率は 48.6%（半分近く来る）で、
+            #    事前登録した6条件すべてが不採用（danger/RESULTS.md）。
+            #    カード §7 の事前決定どおり、事実の提示に留める名前にする。
+            parts.append('### ⚠ 市場の支持ほどAIは評価していない馬')
             parts.append('')
             _axis = _marks.axis_horse(marked)
             _axis_num = _axis.get('n') if _axis else None
