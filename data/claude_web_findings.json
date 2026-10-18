@@ -1,179 +1,187 @@
 {
   "schema_version": 1,
-  "date": "20261017",
-  "collected_at": "2026-10-17T09:09:39+09:00",
+  "date": "20261018",
+  "collected_at": "2026-10-18T09:05:18+09:00",
   "races": {
-    "20261017_05_10": {
+    "20261018_05_10": {
       "venue": "東京",
       "race_num": 10,
       "sources": [
-        "https://www.bloodline-trackbias.work/entry/2026/10/16/190000"
+        "https://www.bloodline-trackbias.work/entry/2026/10/17/200000"
       ],
       "going": {
         "surface": "ダート",
         "state": "良",
-        "expected": "良（含水率1〜2%台で非常に乾燥・土曜も晴れ予報）"
+        "expected": "良（含水率1%台で非常に乾燥・日曜はさらに乾く見込み）"
       },
-      "summary": "東京ダートは含水率1〜2%台で非常に乾燥。良馬場だと外枠有利・差し有利に振れる開催。 想定時計 -1.3〜-0.7秒／枠はフラット〜外（今開催は良馬場だと外枠有利になることがある）／直線フラット／前後は展開次第〜差し（良馬場だと差し有利が多い）"
+      "summary": "東京ダートは含水率1%台で非常に乾燥し、日曜はさらに乾く見込み。 想定時計 -1.3〜-0.8秒／枠はフラット〜外（良馬場では偶に外枠有利）／直線フラット／前後は展開次第〜差し（良馬場だと差し有利が多い）"
     },
-    "20261017_05_11": {
+    "20261018_05_11": {
       "venue": "東京",
       "race_num": 11,
       "sources": [
-        "https://www.bloodline-trackbias.work/entry/2026/10/16/190000",
-        "https://www.keibanomiryoku.com/article/fuji-stakes-2026-work-out.html"
+        "https://www.bloodline-trackbias.work/entry/2026/10/17/200000"
+      ],
+      "going": {
+        "surface": "ダート",
+        "state": "良",
+        "expected": "良（含水率1%台で非常に乾燥・日曜はさらに乾く見込み）"
+      },
+      "summary": "東京ダートは含水率1%台で非常に乾燥。良馬場では差しに振れることが多い開催。 想定時計 -1.3〜-0.8秒／枠はフラット〜外（良馬場では偶に外枠有利）／直線フラット／前後は展開次第〜差し（良馬場だと差し有利が多い）"
+    },
+    "20261018_08_10": {
+      "venue": "京都",
+      "race_num": 10,
+      "sources": [
+        "https://www.bloodline-trackbias.work/entry/2026/10/17/200000"
+      ],
+      "going": {
+        "surface": "ダート",
+        "state": "良",
+        "expected": "良（含水率2%台でパサパサに乾燥・日曜はさらに乾く見込み）"
+      },
+      "summary": "京都ダートは含水率2%台でパサパサ。今開催は全体にバイアスが出にくい。 想定時計 -1.6〜-1.1秒／枠は内〜フラット（良馬場では偶に内枠有利）／直線フラット／前後は展開次第（今開催はバイアスが出にくい傾向）"
+    },
+    "20261018_08_11": {
+      "venue": "京都",
+      "race_num": 11,
+      "sources": [
+        "https://www.bloodline-trackbias.work/entry/2026/10/17/200000",
+        "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
       ],
       "going": {
         "surface": "芝",
         "state": "良",
-        "expected": "良（府中は約2週間雨がなく硬め寄りの可能性）"
+        "expected": "良（水曜に5.5mmの雨・土曜のクッション値10.8／日曜は晴れ予報）"
       },
-      "summary": "東京芝は乾いて硬め寄り。速い上がりが出る形なら差し有利に振れる想定。追い切りは美浦勢（エコロアルバ・トロヴァトーレ・ファンダム）の評価が高い一方、陣営が明確に不安を口にした馬もいる。 想定時計 -2.5〜-2.0秒（硬めなら -3.5〜-2.7秒）／枠は内〜外（硬くなればロスの少ない内、向正面の内ラチにダメージが出れば外）／直線はやや内〜フラット／前後は展開次第〜差し（速い上がりが出れば差し有利）",
+      "summary": "京都芝は内ラチ沿いのダメージが出始めた段階。進行すれば外枠・外伸びに振れる。追い切りは栗東・美浦とも好評価が多く、はっきり不安を口にした陣営は1件。 🔴 内ラチ沿いに少しダメージが出てきており、進行次第でバイアスが出る可能性がある。想定時計 -3.2〜-2.9秒／枠はフラット〜外（ダメージが進行すると外枠有利になることもあり得る）／直線はフラット〜やや外／前後は展開次第〜差し（速い上がりが出るようだと差し有利）",
       "horses": {
-        "5": {
-          "note": "栗東坂路 最終 54.0-38.8-24.4-11.9（馬なり）/1週前 51.7-36.7-23.7-12.3。友道師「動きは良かったし、ジョッキーの感触も良かった」。ただ大江助手「爪に弱さがあり、しっかりケアして戻ってきました」",
+        "4": {
+          "note": "栗東坂路 最終 58.5-42.3-27.9-14.1（馬なり）。吉岡師「いい意味でうるささがあります」。坂井騎手「その通りの追い切りができて、動きもいつも通り」",
           "sources": [
-            "https://www.keibanomiryoku.com/article/fuji-stakes-2026-work-out.html"
+            "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
           ]
-        },
-        "10": {
-          "note": "美浦ウッド 最終 5F 67.2-52.0-37.8-11.2（G前仕掛け）ソーロブストの外0.4秒先行・同入。太田助手「順調に調整はできた。先週よりは（状態が）上がっている」",
-          "sources": [
-            "https://www.keibanomiryoku.com/article/fuji-stakes-2026-work-out.html"
-          ],
-          "direction": "up"
-        },
-        "7": {
-          "note": "石橋師「少しもたもたした感じで、動きに物足りなさはある」。最終は栗東Eダート稍重でゲートなり。師は「12日（月・坂路800m 55.2-40.0-25.3-12.0 強め）が実質的な追い切りで反応は良かった」",
-          "sources": [
-            "https://www.keibanomiryoku.com/article/fuji-stakes-2026-work-out.html"
-          ],
-          "direction": "down"
-        },
-        "14": {
-          "note": "美浦坂路 最終 52.5-38.1-24.3-11.6（一杯）ハイヤーマークを0.5秒追走・0.6秒先着。手塚久師「さすがの動き。調教だけ見ていたら、（また）重賞を勝てそうな感じがする」",
-          "sources": [
-            "https://www.keibanomiryoku.com/article/fuji-stakes-2026-work-out.html"
-          ],
-          "direction": "up"
         },
         "12": {
-          "note": "美浦坂路 最終 55.1-40.1-25.8-12.7（G前仕掛け）アトラステソーロに0.8秒先行・0.2秒遅れ。高木師「久々でも気がいいので問題ない。リズム良くハナを切れるかどうかが鍵」",
+          "note": "美浦坂路 最終 54.2-39.0-24.9-12.0（馬なり）/1週前ウッド 5F 65.2-50.2-36.3-11.3（馬なり）アドマイヤウルトラの内1.0秒追走・0.2秒先着。宮田師「加速が素晴らしかった。一発を狙うつもりでやっています」",
           "sources": [
-            "https://www.keibanomiryoku.com/article/fuji-stakes-2026-work-out.html"
-          ]
-        },
-        "13": {
-          "note": "栗東CW 1週前 6F 80.8-64.9-50.1-36.0-11.4（馬なり）0.1秒先着。清水久師「いい雰囲気。宝塚記念の後はダメージがあったので休養したが、すっかり良くなった」",
-          "sources": [
-            "https://www.keibanomiryoku.com/article/fuji-stakes-2026-work-out.html"
-          ],
-          "direction": "up"
-        },
-        "6": {
-          "note": "栗東CW 1週前 7F 99.6-67.4-52.8-37.1-11.1（一杯）クビ遅れ。上村師「今朝は予定通り。元々、ワンターンが得意。ただ、東京に実績がないのがね」",
-          "sources": [
-            "https://www.keibanomiryoku.com/article/fuji-stakes-2026-work-out.html"
-          ]
-        },
-        "4": {
-          "note": "美浦ウッド 最終 6F 85.6-69.5-53.8-38.4-11.3（馬なり）。鹿戸師「馬なりでラスト1ハロン11秒3が出たし、そのままのペースで1コーナーまで走れていた」",
-          "sources": [
-            "https://www.keibanomiryoku.com/article/fuji-stakes-2026-work-out.html"
-          ],
-          "direction": "up"
-        },
-        "1": {
-          "note": "美浦ウッド 最終 6F 82.4-65.7-51.2-37.1-11.8（馬なり）トーアケルキラの外0.5秒追走・0.2秒先着。戸崎騎手が自ら追い切り",
-          "sources": [
-            "https://www.keibanomiryoku.com/article/fuji-stakes-2026-work-out.html"
+            "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
           ],
           "direction": "up"
         },
         "11": {
-          "note": "栗東坂路 最終 53.4-38.4-25.4-12.3（末強め）。田代助手「前回（関屋記念・3着）も、しっかり脚を使っていましたね」",
+          "note": "栗東坂路 最終 54.9-39.8-25.0-12.3（馬なり）。杉山佳師「軽快に走れていた。動きは軽快だったし、仕上がっている」",
           "sources": [
-            "https://www.keibanomiryoku.com/article/fuji-stakes-2026-work-out.html"
-          ]
-        },
-        "8": {
-          "note": "栗東坂路 最終 53.8-38.1-24.3-11.9（末強め）/1週前CW 6F 81.3-65.5-50.8-36.1-11.3（一杯）0.3秒先着。北村助手「春からの状態で言えば、今回がベスト」",
-          "sources": [
-            "https://www.keibanomiryoku.com/article/fuji-stakes-2026-work-out.html"
+            "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
           ],
           "direction": "up"
         },
-        "2": {
-          "note": "栗東CW 最終は稍重で 6F 85.1-68.7-53.0-37.8-11.7（馬なり）。前川師「ちょうどいい仕上がりですよ」",
+        "1": {
+          "note": "栗東CW 最終 4F 51.5-36.7-11.2（馬なり）/1週前 7F 97.4-65.8-51.3-36.7-11.8（一杯）同入。杉山晴師「春よりも今の方が不安なく調整できている」。吉松助手「器用さがあって内回り2000mも大丈夫」",
           "sources": [
-            "https://www.keibanomiryoku.com/article/fuji-stakes-2026-work-out.html"
-          ]
+            "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+          ],
+          "direction": "up"
+        },
+        "14": {
+          "note": "美浦ウッド 最終 6F 83.9-66.9-51.4-36.8-11.3（馬なり）アールプロストの内0.2秒追走・0.1秒先着。伊藤大師「文句なしでした。今までで一番よかったと思います」",
+          "sources": [
+            "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+          ],
+          "direction": "up"
         },
         "9": {
-          "note": "栗東坂路 最終 52.6-38.6-25.0-12.5（一杯）。中竹師「しまいまでしっかりやって、との指示」",
+          "note": "栗東坂路 最終 54.1-38.4-25.0-12.6（末強め）。北出師「本当に良くなるのはこれからだと思うけど」。佐々木騎手「動きはシャープになったかなと思います」",
           "sources": [
-            "https://www.keibanomiryoku.com/article/fuji-stakes-2026-work-out.html"
+            "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
           ]
         },
-        "3": {
-          "note": "栗東坂路 最終 54.8-39.0-25.2-12.8（馬なり）。清水助手「先週しっかりやっているので今朝はテンションを上げないように」",
+        "5": {
+          "note": "栗東坂路 最終 56.6-41.0-25.8-12.2（馬なり）/1週前CW 7F 96.0-65.0-50.4-36.1-11.6（馬なり）。松下師「体が少し締まってきた感じ」",
           "sources": [
-            "https://www.keibanomiryoku.com/article/fuji-stakes-2026-work-out.html"
+            "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+          ]
+        },
+        "2": {
+          "note": "栗東坂路 最終 54.1-40.0-25.5-12.2（馬なり）。宮地師「ブレずにいい動きだった。テンションが高い子なので、そこを気をつけて調整している」",
+          "sources": [
+            "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+          ]
+        },
+        "13": {
+          "note": "美浦ウッド 最終 6F 84.8-68.3-53.1-38.6-11.7（馬なり）同入。田中博師「このままではマズいので何とかします」。飯塚助手「体に張りも出てきた」",
+          "sources": [
+            "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+          ],
+          "direction": "down"
+        },
+        "10": {
+          "note": "美浦ウッド 最終 6F 83.2-66.4-51.5-37.4-11.7（馬なり）ゼンダンタカの内0.2秒先行・0.1秒先着。高木助手「満足いく追い切りができた」。寺河助手「高いレベルで安定している」",
+          "sources": [
+            "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+          ],
+          "direction": "up"
+        },
+        "16": {
+          "note": "栗東CW 最終 5F 67.7-52.2-36.7-11.4（馬なり）/1週前 6F 83.9-67.5-52.4-36.8-11.2（直強め）。東田師「テンションが鍵。どんな競馬でもできる器用さがある」",
+          "sources": [
+            "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+          ]
+        },
+        "7": {
+          "note": "栗東坂路 最終 55.4-40.2-25.0-12.0（馬なり）/1週前はカズタンジャーを0.7秒追走・0.5秒先着。新谷師「中距離の方がイメージがいい」。田山騎手「今日追い切った感じは落ち着いていました」",
+          "sources": [
+            "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+          ]
+        },
+        "15": {
+          "note": "栗東CW 最終 4F 52.6-36.9-11.3（馬なり）/1週前 6F 83.0-66.4-50.7-35.8-11.4（馬なり）0.4秒先着。四位師「いい動きだった。枠はどこでもいいですよ」",
+          "sources": [
+            "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+          ],
+          "direction": "up"
+        },
+        "3": {
+          "note": "美浦ウッド 最終 4F 54.4-39.7-12.4（馬なり）。蛯名正師「今回は今までで一番、脚元にもダメージがなかった」。斎藤助手「前回よりさらに良くなってきている感じがあります」",
+          "sources": [
+            "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+          ],
+          "direction": "up"
+        },
+        "8": {
+          "note": "栗東坂路 最終 53.2-38.4-25.2-12.4（馬なり）/1週前CW 6F 81.9-65.9-50.9-36.1-11.2（馬なり）クビ先着。上村師「軽快だった。好調をキープできている。息の乱れもなく、平然と駆け上がってきた」",
+          "sources": [
+            "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+          ],
+          "direction": "up"
+        },
+        "6": {
+          "note": "美浦ウッド 最終 6F 84.8-69.0-54.5-39.6-12.1（馬なり）。鹿戸師「めちゃくちゃいい。確実に力をつけている」。荻野極騎手「折り合い良く、余力を残しながら」",
+          "sources": [
+            "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+          ],
+          "direction": "up"
+        },
+        "17": {
+          "note": "栗東CW 最終 6F 80.2-65.7-52.5-38.6-12.8（馬なり）。寺島師「しっかり時計は出ていたので、状態は良さそう。立ち回りが上手なので舞台も合いそう」",
+          "sources": [
+            "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
           ]
         }
       }
     },
-    "20261017_08_10": {
-      "venue": "京都",
-      "race_num": 10,
+    "20261018_04_11": {
+      "venue": "新潟",
+      "race_num": 11,
       "sources": [
-        "https://www.bloodline-trackbias.work/entry/2026/10/16/190000"
+        "https://www.bloodline-trackbias.work/entry/2026/10/17/200000"
       ],
       "going": {
         "surface": "芝",
         "state": "良",
-        "expected": "良（水曜に5.5mmの雨・金曜昼は良／土曜晴れ予報）"
+        "expected": "良（開幕週で例年以上に良好・水曜10mm/金曜1mmの雨／日曜は晴れ予報）"
       },
-      "summary": "京都芝は馬場が良好で内〜フラット想定。全体にバイアスは出にくい開催。 想定時計 -3.5〜-3.0秒／枠は内〜フラット（馬場が良好でロスの少ない内が有利になることもあり得る）／直線はやや内〜フラット／前後は展開次第〜差し（外回りで速い上がりが出れば差し有利）"
-    },
-    "20261017_08_11": {
-      "venue": "京都",
-      "race_num": 11,
-      "sources": [
-        "https://www.bloodline-trackbias.work/entry/2026/10/16/190000"
-      ],
-      "going": {
-        "surface": "ダート",
-        "state": "良",
-        "expected": "良（含水率2〜3%台でパサパサ・土曜はさらに乾く見込み）"
-      },
-      "summary": "京都は全体にバイアスが出にくい開催。ダートは含水率2〜3%台でパサパサ。 想定時計 -1.6〜-1.0秒／枠は内〜フラット（偶に内枠有利）／直線フラット／前後は展開次第（前後のバイアスも出にくい）"
-    },
-    "20261017_04_10": {
-      "venue": "新潟",
-      "race_num": 10,
-      "sources": [
-        "https://www.bloodline-trackbias.work/entry/2026/10/16/190000"
-      ],
-      "going": {
-        "surface": "ダート",
-        "state": "良",
-        "expected": "良〜やや重（含水率5〜6%台で水分が残る）"
-      },
-      "summary": "新潟は開幕週で雨量次第。ダートは含水率5〜6%台で水分が残り、道悪なら前有利に振れることがある。 想定時計は雨量次第で -1.5〜±0秒（1800mは向かい風予報で遅くなる可能性）／枠は内〜外（例年良馬場は7割バイアスなし）／直線フラット／前後は前〜展開次第（道悪なら前有利になることがある）"
-    },
-    "20261017_04_11": {
-      "venue": "新潟",
-      "race_num": 11,
-      "sources": [
-        "https://www.bloodline-trackbias.work/entry/2026/10/16/190000"
-      ],
-      "going": {
-        "surface": "芝",
-        "state": "良",
-        "expected": "良〜やや重（開幕週・金曜午後の雨量次第）"
-      },
-      "summary": "新潟は開幕週。金曜午後の雨量で良〜やや重が決まり、枠・直線とも想定の幅が広い。 想定時計は雨量次第で -2.0〜±0秒／枠は内〜外（例年の開幕週は6割がバイアスなし・内外2割ずつ）／直線はやや内〜やや外／前後は展開次第〜差し（例年良馬場で差し有利5割程度）"
+      "summary": "新潟は開幕週で例年以上に良好な芝。時計は速い方向で、差しに振れる可能性がある。 想定時計 -2.2〜-1.7秒で速い時計が出る可能性／枠はフラット（多少は内枠の好走が多くなるかもしれない）／直線フラット／前後は展開次第〜差し（土曜に速い上がりが出ており差し有利になる可能性がある）"
     }
   }
 }
