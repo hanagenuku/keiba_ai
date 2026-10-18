@@ -1,6 +1,6 @@
 {
  "schema_version": 1,
- "updated_at": "2026-10-18T09:04:04.031949+09:00",
+ "updated_at": "2026-10-18T09:51:47.288275+09:00",
  "entries": [
   {
    "date": "2026-10-10",
@@ -765,6 +765,27 @@
    "snapshot": "2026-10-18T08:52:39.004214+09:00",
    "odds_coverage": 0.976,
    "recorded_at": "2026-10-18T09:04:04.031629+09:00",
+   "result": null
+  },
+  {
+   "date": "2026-10-18",
+   "race_id": "20261018_04_11",
+   "venue": "新潟",
+   "race_num": 11,
+   "race_name": "新潟牝馬ステークス",
+   "num": 10,
+   "name": "ケリフレッドアスク",
+   "pop": 1,
+   "solo_rank": 7,
+   "rl_rank": 1,
+   "odds": 4.3,
+   "conf": 62,
+   "verdict": "light",
+   "in_scope": true,
+   "scope_reason": "11R（各競馬場9R〜11Rは対象）",
+   "snapshot": "2026-10-18T09:42:17.173695+09:00",
+   "odds_coverage": 1.0,
+   "recorded_at": "2026-10-18T09:51:47.288023+09:00",
    "result": null
   },
   {
