@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-18T09:42:17.173695+09:00",
+  "generated_at": "2026-10-18T16:23:22.909161+09:00",
   "date": "10月18日(日)",
   "type": "sunday",
   "venues": [
@@ -14,7 +14,7 @@
   "recommended_count": 6,
   "message": null,
   "stats": {
-    "invest": 8300,
+    "invest": 8500,
     "rec": 6
   },
   "races": {
@@ -31438,31 +31438,46 @@
         "name": "桂川ステークス",
         "dist": "1400mダート",
         "rec": false,
-        "conf": 60,
-        "chaos_level": "C",
-        "chaos_grade": "C",
+        "conf": 65,
+        "chaos_level": "A",
+        "chaos_grade": "A",
         "num_horses": 12,
-        "value_horses": [],
-        "bet_reason": "参考: 複勝+三連複F",
+        "value_horses": [
+          {
+            "horse_num": 1,
+            "horse_name": "ホワイトガーベラ",
+            "ev_direct": 5.173,
+            "cal_prob": 0.0101,
+            "market_prob": 0.0206
+          },
+          {
+            "horse_num": 9,
+            "horse_name": "キタノソワレ",
+            "ev_direct": 2.565,
+            "cal_prob": 0.068,
+            "market_prob": 0.0964
+          }
+        ],
+        "bet_reason": "参考: 馬連+三連複F",
         "honmei": {
-          "n": 12,
-          "name": "サンダーバース",
-          "odds": 4.9,
-          "score": 8.93,
-          "style": "追込"
+          "n": 5,
+          "name": "モーニングマジック",
+          "odds": 3.8,
+          "score": 9.32,
+          "style": "差し"
         },
         "horses": [
           {
             "n": 1,
             "name": "ホワイトガーベラ",
-            "odds": 37.9,
+            "odds": 239.5,
             "score": 0.5,
             "pop": 12,
             "ai_rank": 12,
             "style": "追込",
-            "tan_pct": 2.1,
+            "tan_pct": 2.2,
             "ren_pct": 4.3,
-            "fuku_pct": 7.4,
+            "fuku_pct": 7.5,
             "rl_rank": 12,
             "solo_rank": 12,
             "fit_rank": 11,
@@ -31470,8 +31485,8 @@
             "ev_fuku_pct": 4.2,
             "need_odds": 221.4,
             "cl_rank": 11,
-            "sim_ev": 0.806,
-            "prob_gap": 0.0003,
+            "sim_ev": 5.173,
+            "prob_gap": 0.0183,
             "cal_prob": 0.0101,
             "mark": "",
             "ability_margin": 0.761458,
@@ -31542,30 +31557,30 @@
               }
             ],
             "mx_flag": null,
-            "tansho_odds": 37.9,
-            "fukusho_odds": 11.3
+            "tansho_odds": 239.5,
+            "fukusho_odds": 38.8
           },
           {
             "n": 2,
             "name": "ハクサンアイリス",
-            "odds": 8.7,
-            "score": 5.6,
-            "pop": 6,
-            "ai_rank": 4,
+            "odds": 6.5,
+            "score": 6.0,
+            "pop": 5,
+            "ai_rank": 3,
             "style": "追込",
-            "tan_pct": 9.0,
-            "ren_pct": 18.0,
-            "fuku_pct": 28.7,
-            "rl_rank": 4,
+            "tan_pct": 10.4,
+            "ren_pct": 20.9,
+            "fuku_pct": 32.7,
+            "rl_rank": 3,
             "solo_rank": 2,
             "fit_rank": 5,
             "ev_tan_pct": 17.5,
             "ev_fuku_pct": 44.7,
             "need_odds": 6.9,
             "cl_rank": 2,
-            "sim_ev": 0.783,
-            "prob_gap": -0.0014,
-            "cal_prob": 0.2548,
+            "sim_ev": 0.678,
+            "prob_gap": -0.0178,
+            "cal_prob": 0.3082,
             "mark": "",
             "ability_margin": 3.061102,
             "ability_breakdown": [
@@ -31635,32 +31650,32 @@
               }
             ],
             "mx_flag": null,
-            "tansho_odds": 8.7,
-            "fukusho_odds": 2.5
+            "tansho_odds": 6.5,
+            "fukusho_odds": 2.1
           },
           {
             "n": 3,
             "name": "アスクアイルビゼア",
-            "odds": 12.3,
-            "score": 4.1,
-            "pop": 7,
-            "ai_rank": 6,
+            "odds": 11.7,
+            "score": 4.5,
+            "pop": 6,
+            "ai_rank": 5,
             "style": "差し",
-            "tan_pct": 6.0,
-            "ren_pct": 12.0,
-            "fuku_pct": 19.9,
-            "rl_rank": 6,
+            "tan_pct": 6.8,
+            "ren_pct": 13.6,
+            "fuku_pct": 22.3,
+            "rl_rank": 5,
             "solo_rank": 5,
             "fit_rank": 2,
             "ev_tan_pct": 7.9,
             "ev_fuku_pct": 27.1,
             "need_odds": 15.2,
             "cl_rank": 3,
-            "sim_ev": 0.738,
-            "prob_gap": -0.0046,
-            "cal_prob": 0.1216,
+            "sim_ev": 0.795,
+            "prob_gap": 0.0001,
+            "cal_prob": 0.1547,
             "mark": "",
-            "ability_margin": 2.66179,
+            "ability_margin": 2.661791,
             "ability_breakdown": [
               {
                 "category": "基準値",
@@ -31728,20 +31743,20 @@
               }
             ],
             "mx_flag": null,
-            "tansho_odds": 12.3,
-            "fukusho_odds": 3.6
+            "tansho_odds": 11.7,
+            "fukusho_odds": 3.3
           },
           {
             "n": 4,
             "name": "シゲルソロソロ",
-            "odds": 16.7,
-            "score": 2.6,
-            "pop": 10,
+            "odds": 24.0,
+            "score": 2.8,
+            "pop": 9,
             "ai_rank": 10,
             "style": "追込",
-            "tan_pct": 3.9,
-            "ren_pct": 7.7,
-            "fuku_pct": 13.1,
+            "tan_pct": 4.2,
+            "ren_pct": 8.3,
+            "fuku_pct": 14.1,
             "rl_rank": 10,
             "solo_rank": 9,
             "fit_rank": 10,
@@ -31749,9 +31764,9 @@
             "ev_fuku_pct": 20.3,
             "need_odds": 21.4,
             "cl_rank": 9,
-            "sim_ev": 0.643,
-            "prob_gap": -0.0091,
-            "cal_prob": 0.0152,
+            "sim_ev": 0.997,
+            "prob_gap": 0.0085,
+            "cal_prob": 0.024,
             "mark": "",
             "ability_margin": 2.342962,
             "ability_breakdown": [
@@ -31821,30 +31836,30 @@
               }
             ],
             "mx_flag": null,
-            "tansho_odds": 16.7,
-            "fukusho_odds": 4.6
+            "tansho_odds": 24.0,
+            "fukusho_odds": 5.1
           },
           {
             "n": 5,
             "name": "モーニングマジック",
-            "odds": 5.7,
-            "score": 8.4,
-            "pop": 2,
-            "ai_rank": 2,
+            "odds": 3.8,
+            "score": 9.3,
+            "pop": 1,
+            "ai_rank": 1,
             "style": "差し",
-            "tan_pct": 20.3,
-            "ren_pct": 40.6,
-            "fuku_pct": 54.9,
-            "rl_rank": 2,
+            "tan_pct": 26.8,
+            "ren_pct": 53.5,
+            "fuku_pct": 65.0,
+            "rl_rank": 1,
             "solo_rank": 1,
             "fit_rank": 1,
             "ev_tan_pct": 17.5,
             "ev_fuku_pct": 48.3,
             "need_odds": 6.9,
             "cl_rank": 1,
-            "sim_ev": 1.158,
-            "prob_gap": 0.0637,
-            "cal_prob": 0.584,
+            "sim_ev": 1.017,
+            "prob_gap": 0.0588,
+            "cal_prob": 0.8309,
             "mark": "高",
             "ability_margin": 3.219757,
             "ability_breakdown": [
@@ -31914,29 +31929,29 @@
               }
             ],
             "mx_flag": null,
-            "tansho_odds": 5.7,
-            "fukusho_odds": 2.3
+            "tansho_odds": 3.8,
+            "fukusho_odds": 1.6
           },
           {
             "n": 6,
             "name": "エムズマインド",
-            "odds": 13.7,
-            "score": 3.8,
+            "odds": 19.1,
+            "score": 3.7,
             "pop": 8,
-            "ai_rank": 8,
+            "ai_rank": 7,
             "style": "追込",
             "tan_pct": 5.4,
-            "ren_pct": 10.7,
-            "fuku_pct": 17.9,
-            "rl_rank": 8,
+            "ren_pct": 10.8,
+            "fuku_pct": 18.1,
+            "rl_rank": 7,
             "solo_rank": 7,
             "fit_rank": 6,
             "ev_tan_pct": 7.9,
             "ev_fuku_pct": 27.1,
             "need_odds": 15.2,
             "cl_rank": 8,
-            "sim_ev": 0.735,
-            "prob_gap": -0.0044,
+            "sim_ev": 1.035,
+            "prob_gap": 0.0126,
             "cal_prob": 0.0824,
             "mark": "",
             "ability_margin": 2.642435,
@@ -32007,29 +32022,29 @@
               }
             ],
             "mx_flag": null,
-            "tansho_odds": 13.7,
-            "fukusho_odds": 3.3
+            "tansho_odds": 19.1,
+            "fukusho_odds": 3.9
           },
           {
             "n": 7,
             "name": "クーデール",
-            "odds": 15.1,
-            "score": 2.0,
-            "pop": 9,
+            "odds": 28.6,
+            "score": 1.9,
+            "pop": 10,
             "ai_rank": 11,
             "style": "先行",
-            "tan_pct": 3.3,
-            "ren_pct": 6.6,
-            "fuku_pct": 11.2,
+            "tan_pct": 3.2,
+            "ren_pct": 6.3,
+            "fuku_pct": 10.9,
             "rl_rank": 11,
             "solo_rank": 10,
             "fit_rank": 3,
             "ev_tan_pct": 2.0,
             "ev_fuku_pct": 9.4,
             "need_odds": 58.6,
-            "cl_rank": 7,
-            "sim_ev": 0.497,
-            "prob_gap": -0.0197,
+            "cl_rank": 6,
+            "sim_ev": 0.906,
+            "prob_gap": 0.0039,
             "cal_prob": 0.0101,
             "mark": "",
             "ability_margin": 1.933877,
@@ -32100,30 +32115,30 @@
               }
             ],
             "mx_flag": null,
-            "tansho_odds": 15.1,
-            "fukusho_odds": 6.0
+            "tansho_odds": 28.6,
+            "fukusho_odds": 7.1
           },
           {
             "n": 8,
             "name": "ジョディーズマロン",
-            "odds": 7.9,
-            "score": 4.6,
-            "pop": 5,
-            "ai_rank": 5,
+            "odds": 17.2,
+            "score": 3.7,
+            "pop": 7,
+            "ai_rank": 8,
             "style": "追込",
-            "tan_pct": 6.8,
-            "ren_pct": 13.6,
-            "fuku_pct": 22.3,
-            "rl_rank": 5,
+            "tan_pct": 5.3,
+            "ren_pct": 10.7,
+            "fuku_pct": 17.9,
+            "rl_rank": 8,
             "solo_rank": 8,
             "fit_rank": 4,
             "ev_tan_pct": 5.6,
             "ev_fuku_pct": 21.7,
             "need_odds": 21.4,
-            "cl_rank": 5,
-            "sim_ev": 0.537,
-            "prob_gap": -0.0326,
-            "cal_prob": 0.1574,
+            "cl_rank": 4,
+            "sim_ev": 0.919,
+            "prob_gap": 0.0073,
+            "cal_prob": 0.077,
             "mark": "",
             "ability_margin": 2.478699,
             "ability_breakdown": [
@@ -32193,29 +32208,29 @@
               }
             ],
             "mx_flag": null,
-            "tansho_odds": 7.9,
-            "fukusho_odds": 2.5
+            "tansho_odds": 17.2,
+            "fukusho_odds": 4.4
           },
           {
             "n": 9,
             "name": "キタノソワレ",
-            "odds": 24.5,
+            "odds": 49.4,
             "score": 3.6,
             "pop": 11,
             "ai_rank": 9,
             "style": "追込",
-            "tan_pct": 5.1,
-            "ren_pct": 10.3,
-            "fuku_pct": 17.2,
+            "tan_pct": 5.2,
+            "ren_pct": 10.4,
+            "fuku_pct": 17.4,
             "rl_rank": 9,
             "solo_rank": 3,
             "fit_rank": 9,
             "ev_tan_pct": 13.6,
             "ev_fuku_pct": 42.1,
             "need_odds": 8.8,
-            "cl_rank": 6,
-            "sim_ev": 1.259,
-            "prob_gap": 0.019,
+            "cl_rank": 5,
+            "sim_ev": 2.565,
+            "prob_gap": 0.0359,
             "cal_prob": 0.068,
             "mark": "",
             "ability_margin": 2.908475,
@@ -32286,30 +32301,30 @@
               }
             ],
             "mx_flag": null,
-            "tansho_odds": 24.5,
-            "fukusho_odds": 5.0
+            "tansho_odds": 49.4,
+            "fukusho_odds": 8.3
           },
           {
             "n": 10,
             "name": "トゥロン",
-            "odds": 7.5,
-            "score": 5.6,
-            "pop": 4,
-            "ai_rank": 3,
+            "odds": 5.0,
+            "score": 7.4,
+            "pop": 2,
+            "ai_rank": 2,
             "style": "追込",
-            "tan_pct": 9.2,
-            "ren_pct": 18.3,
-            "fuku_pct": 29.2,
-            "rl_rank": 3,
+            "tan_pct": 15.4,
+            "ren_pct": 30.8,
+            "fuku_pct": 45.1,
+            "rl_rank": 2,
             "solo_rank": 6,
             "fit_rank": 8,
             "ev_tan_pct": 7.9,
             "ev_fuku_pct": 27.1,
             "need_odds": 15.2,
-            "cl_rank": 4,
-            "sim_ev": 0.687,
-            "prob_gap": -0.0144,
-            "cal_prob": 0.2606,
+            "cl_rank": 7,
+            "sim_ev": 0.771,
+            "prob_gap": -0.0045,
+            "cal_prob": 0.4618,
             "mark": "",
             "ability_margin": 2.649806,
             "ability_breakdown": [
@@ -32379,29 +32394,29 @@
               }
             ],
             "mx_flag": null,
-            "tansho_odds": 7.5,
-            "fukusho_odds": 3.0
+            "tansho_odds": 5.0,
+            "fukusho_odds": 2.0
           },
           {
             "n": 11,
             "name": "マッシャーブルム",
-            "odds": 6.4,
-            "score": 3.8,
+            "odds": 5.5,
+            "score": 3.7,
             "pop": 3,
-            "ai_rank": 7,
+            "ai_rank": 6,
             "style": "逃げ",
             "tan_pct": 5.4,
-            "ren_pct": 10.8,
-            "fuku_pct": 18.0,
-            "rl_rank": 7,
+            "ren_pct": 10.9,
+            "fuku_pct": 18.2,
+            "rl_rank": 6,
             "solo_rank": 11,
             "fit_rank": 12,
             "ev_tan_pct": 0.9,
             "ev_fuku_pct": 6.8,
             "need_odds": 128.4,
             "cl_rank": 10,
-            "sim_ev": 0.344,
-            "prob_gap": -0.0704,
+            "sim_ev": 0.299,
+            "prob_gap": -0.09,
             "cal_prob": 0.0831,
             "mark": "",
             "ability_margin": 1.591026,
@@ -32472,31 +32487,31 @@
               }
             ],
             "mx_flag": null,
-            "tansho_odds": 6.4,
-            "fukusho_odds": 2.2
+            "tansho_odds": 5.5,
+            "fukusho_odds": 2.5
           },
           {
             "n": 12,
             "name": "サンダーバース",
-            "odds": 4.9,
-            "score": 8.9,
-            "pop": 1,
-            "ai_rank": 1,
+            "odds": 6.1,
+            "score": 5.8,
+            "pop": 4,
+            "ai_rank": 4,
             "style": "追込",
-            "tan_pct": 23.6,
-            "ren_pct": 47.1,
-            "fuku_pct": 60.3,
-            "rl_rank": 1,
+            "tan_pct": 9.7,
+            "ren_pct": 19.4,
+            "fuku_pct": 30.8,
+            "rl_rank": 4,
             "solo_rank": 4,
             "fit_rank": 7,
             "ev_tan_pct": 10.2,
             "ev_fuku_pct": 27.1,
             "need_odds": 11.8,
             "cl_rank": 12,
-            "sim_ev": 1.155,
-            "prob_gap": 0.0735,
-            "cal_prob": 0.6509,
-            "mark": "高",
+            "sim_ev": 0.592,
+            "prob_gap": -0.033,
+            "cal_prob": 0.281,
+            "mark": "",
             "ability_margin": 2.722998,
             "ability_breakdown": [
               {
@@ -32565,150 +32580,122 @@
               }
             ],
             "mx_flag": null,
-            "tansho_odds": 4.9,
-            "fukusho_odds": 2.4
+            "tansho_odds": 6.1,
+            "fukusho_odds": 2.5
           }
         ],
         "bets": [
           {
-            "tag": "fuku",
-            "label": "複勝",
-            "horse": "#12 サンダーバース",
-            "est": "4.9倍",
+            "tag": "wide",
+            "label": "馬連",
+            "horse": "#5 モーニングマジック",
+            "est": "3.8倍",
             "amt": "¥500"
           },
           {
             "tag": "sanfuku",
-            "label": "三連複(4点)",
-            "trio_type": "formation",
-            "legs": [
-              [
-                5,
-                12
-              ],
-              [
-                5,
-                12
-              ],
-              [
-                2,
-                8,
-                9,
-                10
-              ]
-            ],
+            "label": "三連複(10点)",
+            "trio_type": "box",
+            "legs": null,
             "nums": [
-              2,
+              4,
               5,
+              6,
               8,
-              9,
-              10,
-              12
+              9
             ],
             "combos": [
-              "5-9-12",
-              "5-10-12",
-              "2-5-12",
-              "5-8-12"
+              "4-6-9",
+              "4-8-9",
+              "6-8-9",
+              "4-6-8",
+              "4-5-9",
+              "5-6-9",
+              "5-8-9",
+              "4-5-6",
+              "4-5-8",
+              "5-6-8"
             ],
-            "est": "4点",
-            "amt": "¥400"
+            "est": "10点",
+            "amt": "¥1000"
           }
         ],
         "gumbel_bets": [
           {
             "tag": "tan",
             "label": "単勝（軸）",
-            "horse": "#12 サンダーバース",
-            "est": "4.9倍",
+            "horse": "#5 モーニングマジック",
+            "est": "3.8倍",
             "amt": "¥100"
           },
           {
             "tag": "wide",
             "label": "ワイド(3点)",
-            "axis": 12,
-            "horse": "#12 - #10・#2・#8",
+            "axis": 5,
+            "horse": "#5 - #3・#6・#8",
             "mates": [
-              {
-                "n": 10,
-                "name": "トゥロン",
-                "odds": 6.8,
-                "prob": 0.2213
-              },
-              {
-                "n": 2,
-                "name": "ハクサンアイリス",
-                "odds": 7.6,
-                "prob": 0.2043
-              },
-              {
-                "n": 8,
-                "name": "ジョディーズマロン",
-                "odds": 7.0,
-                "prob": 0.1297
-              }
-            ],
-            "est": "6.8〜7.6倍",
-            "amt": "¥300"
-          },
-          {
-            "tag": "umaren",
-            "label": "馬連(8点)",
-            "axis": 12,
-            "horse": "#12 - #2・#10・#8・#3・#6・#9・#4・#7",
-            "mates": [
-              {
-                "n": 2,
-                "name": "ハクサンアイリス",
-                "odds": 19.5,
-                "prob": 0.0743
-              },
-              {
-                "n": 10,
-                "name": "トゥロン",
-                "odds": 19.2,
-                "prob": 0.07
-              },
-              {
-                "n": 8,
-                "name": "ジョディーズマロン",
-                "odds": 19.5,
-                "prob": 0.045
-              },
               {
                 "n": 3,
                 "name": "アスクアイルビゼア",
-                "odds": 31.4,
-                "prob": 0.0427
+                "odds": 7.9,
+                "prob": 0.1697
               },
               {
                 "n": 6,
                 "name": "エムズマインド",
-                "odds": 37.5,
-                "prob": 0.035
+                "odds": 12.1,
+                "prob": 0.1333
               },
               {
-                "n": 9,
-                "name": "キタノソワレ",
-                "odds": 72.7,
-                "prob": 0.0317
+                "n": 8,
+                "name": "ジョディーズマロン",
+                "odds": 12.0,
+                "prob": 0.1293
+              }
+            ],
+            "est": "7.9〜12.1倍",
+            "amt": "¥300"
+          },
+          {
+            "tag": "umaren",
+            "label": "馬連(5点)",
+            "axis": 5,
+            "horse": "#5 - #3・#6・#8・#4・#7",
+            "mates": [
+              {
+                "n": 3,
+                "name": "アスクアイルビゼア",
+                "odds": 22.8,
+                "prob": 0.0667
+              },
+              {
+                "n": 6,
+                "name": "エムズマインド",
+                "odds": 40.1,
+                "prob": 0.056
+              },
+              {
+                "n": 8,
+                "name": "ジョディーズマロン",
+                "odds": 36.3,
+                "prob": 0.053
               },
               {
                 "n": 4,
                 "name": "シゲルソロソロ",
-                "odds": 56.7,
-                "prob": 0.0197
+                "odds": 49.5,
+                "prob": 0.0347
               },
               {
                 "n": 7,
                 "name": "クーデール",
-                "odds": 33.7,
-                "prob": 0.0133
+                "odds": 62.8,
+                "prob": 0.0183
               }
             ],
-            "est": "19.2〜72.7倍",
-            "amt": "¥800",
-            "syn_odds": 3.6
+            "est": "22.8〜62.8倍",
+            "amt": "¥500",
+            "syn_odds": 7.5
           },
           {
             "tag": "sanfuku",
@@ -32716,21 +32703,21 @@
             "trio_type": "formation",
             "legs": [
               [
-                12
+                5
               ],
               [
-                2,
-                10
+                3,
+                6
               ],
               [
                 2,
                 3,
-                5,
                 6,
                 8,
                 9,
                 10,
-                11
+                11,
+                12
               ]
             ],
             "nums": [
@@ -32745,22 +32732,22 @@
               12
             ],
             "combos": [
-              "5-10-12",
-              "2-5-12",
-              "2-10-12",
-              "2-8-12",
-              "8-10-12",
-              "10-11-12",
-              "3-10-12",
-              "2-9-12",
-              "2-6-12",
-              "2-11-12",
-              "2-3-12",
-              "9-10-12",
-              "6-10-12"
+              "3-5-10",
+              "5-6-10",
+              "2-3-5",
+              "3-5-12",
+              "2-5-6",
+              "5-6-12",
+              "3-5-8",
+              "3-5-11",
+              "3-5-9",
+              "3-5-6",
+              "5-6-11",
+              "5-6-8",
+              "5-6-9"
             ],
-            "est": "¥3,320〜¥29,060",
-            "syn_odds": 4.7,
+            "est": "¥3,180〜¥46,500",
+            "syn_odds": 5.4,
             "amt": "¥1300"
           }
         ],
@@ -32768,40 +32755,40 @@
           "umaren": [
             {
               "nums": [
-                3,
-                10
+                2,
+                6
               ],
-              "axis_num": 10,
-              "axis_name": "トゥロン",
-              "axis_pop": 4,
+              "axis_num": 2,
+              "axis_name": "ハクサンアイリス",
+              "axis_pop": 5,
               "axis_ai": 3,
-              "partner_num": 3,
-              "partner_name": "アスクアイルビゼア",
-              "partner_pop": 7,
-              "partner_ai": 6
+              "partner_num": 6,
+              "partner_name": "エムズマインド",
+              "partner_pop": 8,
+              "partner_ai": 7
             }
           ],
           "wide": [
             {
               "nums": [
-                3,
-                10
+                2,
+                6
               ],
-              "axis_num": 10,
-              "axis_name": "トゥロン",
-              "axis_pop": 4,
+              "axis_num": 2,
+              "axis_name": "ハクサンアイリス",
+              "axis_pop": 5,
               "axis_ai": 3,
-              "partner_num": 3,
-              "partner_name": "アスクアイルビゼア",
-              "partner_pop": 7,
-              "partner_ai": 6
+              "partner_num": 6,
+              "partner_name": "エムズマインド",
+              "partner_pop": 8,
+              "partner_ai": 7
             }
           ],
           "axis": [
-            10
+            2
           ],
           "partners": [
-            3
+            6
           ],
           "measured": {
             "races": 4173,
@@ -32818,26 +32805,52 @@
           "unverified": true
         },
         "formation": {
-          "pattern": "2頭軸流し",
-          "axis": {
-            "num": 12,
-            "name": "サンダーバース",
-            "pop": 1,
-            "odds": 4.9
-          },
-          "axis2": {
-            "num": 5,
-            "name": "モーニングマジック",
-            "pop": 2,
-            "odds": 5.7
-          },
+          "pattern": "ボックス",
+          "axis": null,
+          "axis2": null,
           "bets": [
             {
               "type": "三連複F",
               "nums": [
+                4,
+                6,
+                9
+              ],
+              "amount": 100
+            },
+            {
+              "type": "三連複F",
+              "nums": [
+                4,
+                8,
+                9
+              ],
+              "amount": 100
+            },
+            {
+              "type": "三連複F",
+              "nums": [
+                6,
+                8,
+                9
+              ],
+              "amount": 100
+            },
+            {
+              "type": "三連複F",
+              "nums": [
+                4,
+                6,
+                8
+              ],
+              "amount": 100
+            },
+            {
+              "type": "三連複F",
+              "nums": [
+                4,
                 5,
-                9,
-                12
+                9
               ],
               "amount": 100
             },
@@ -32845,17 +32858,8 @@
               "type": "三連複F",
               "nums": [
                 5,
-                10,
-                12
-              ],
-              "amount": 100
-            },
-            {
-              "type": "三連複F",
-              "nums": [
-                2,
-                5,
-                12
+                6,
+                9
               ],
               "amount": 100
             },
@@ -32864,21 +32868,48 @@
               "nums": [
                 5,
                 8,
-                12
+                9
+              ],
+              "amount": 100
+            },
+            {
+              "type": "三連複F",
+              "nums": [
+                4,
+                5,
+                6
+              ],
+              "amount": 100
+            },
+            {
+              "type": "三連複F",
+              "nums": [
+                4,
+                5,
+                8
+              ],
+              "amount": 100
+            },
+            {
+              "type": "三連複F",
+              "nums": [
+                5,
+                6,
+                8
               ],
               "amount": 100
             }
           ],
-          "total_points": 4,
-          "total_amount": 400,
+          "total_points": 10,
+          "total_amount": 1000,
           "payout_range": {
-            "min": 466,
-            "mid": 490,
-            "max": 689
+            "min": 841,
+            "mid": 1284,
+            "max": 2188
           },
-          "syn_odds": 4.44
+          "syn_odds": 8.1
         },
-        "cmt": "馬場はフラット。スロー想定(42%)で逃げ・先行に有利な流れ。◎は追込でこの展開は向かない点に注意。能力差明確な一戦。◎サンダーバース(スコア8.9)が最有力。中穴(4.9倍)で期待値十分。",
+        "cmt": "馬場はフラット。スロー想定(42%)で逃げ・先行に有利な流れ。◎は差しでこの展開は向かない点に注意。能力差明確な一戦。◎モーニングマジック(スコア9.3)が最有力。中穴(3.8倍)で期待値十分。",
         "claude_view": null
       }
     ],
