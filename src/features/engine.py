@@ -7,7 +7,9 @@ import os
 import pickle
 
 from src.utils.config import POST_BIAS, POST_BIAS_BY_ZONE
-from src.models.predict import softmax_probs, calibrate_and_renormalize
+# calibrate_and_renormalize は一度も呼んでいなかったので import しない
+# （2026-10-19 に確認。定義は src/models/predict.py にそのまま残る）
+from src.models.predict import softmax_probs
 from src.models.calibration_xgb import load_xgb_calibrator
 
 # ── グローバルコンテキスト（init_engine()で設定） ─────────────────
@@ -189,8 +191,11 @@ def _flat_base_margin(n_horses):
 
     全馬に同じ値を渡せば市場の寄与が順位に効かなくなり、順位は
     ability_margin（市場を見ないAIの評価）だけで決まる。水準を保つため
-    定数0ではなく「人気1〜nの base_margin の平均」を使う（cal_prob の
-    スケールが動くと穴マーク閾値 cal_prob>=0.15 まで動くため）。
+    定数0ではなく「人気1〜nの base_margin の平均」を使う（水準がずれると
+    cal_prob のスケールごと動いてアプリの複勝確率表示が別物になるため）。
+    ⚠ 2026-10-19 訂正: ここに「穴マーク閾値 cal_prob>=0.15 まで動く」と書いて
+    いたのは誤り。穴マークは `pn`（= win_prob・softmax の値）を見ており
+    cal_prob を読まない（app_json.py の該当箇所を参照）。
 
     5窓の実測（複勝回収率 / 各レース1位を1点買い）:
         健全な人気 82.6%  ／ 馬番順(現状) 73.6%  ／ フラット 83.0%
