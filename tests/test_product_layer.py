@@ -35,6 +35,22 @@ def _load_real_races():
     return out
 
 
+def _proper_nouns(race):
+    """JRA から来た固有名詞（馬名・騎手名）。禁止表現の判定から外す。
+
+    2026-10-18 新潟9R の「ベルウッドバイオ」が `ウッド`（調教コース）に一致していた。
+    guard の目的はこちらが陣営・調教・パドックに触れる文を書かないことなので、
+    こちらが書いたのではない固有名詞は対象外にする。
+    """
+    out = []
+    for h in race.get('horses') or []:
+        for k in ('name', 'jockey', 'trainer'):
+            v = h.get(k)
+            if v:
+                out.append(v)
+    return out
+
+
 @pytest.fixture(scope='module')
 def real_races():
     if not os.path.exists(LATEST):
@@ -86,7 +102,7 @@ class TestNoFabrication:
             if not race.get('horses'):
                 continue
             sec = article.build_race_section(race, race['horses'], {}, paid=True)
-            hit = commentary.find_forbidden(sec['markdown'])
+            hit = commentary.find_forbidden(sec['markdown'], _proper_nouns(race))
             assert hit is None, (
                 f"{race['_venue']}{race.get('r')}R の記事に禁止表現「{hit}」"
             )
@@ -1203,7 +1219,7 @@ class TestCommentMarkCount:
             if not race.get('horses'):
                 continue
             md = self._sec(race, 2)['markdown']
-            assert commentary.find_forbidden(md) is None
+            assert commentary.find_forbidden(md, _proper_nouns(race)) is None
 
     def test_cli_option_trims_the_third_comment(self):
         """CLI を実際に起動して確認する（配線漏れを見逃さないため）。"""

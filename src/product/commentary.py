@@ -56,6 +56,9 @@ def _fmt_odds(v):
 def horse_comment(horse, facts, race):
     """1頭ぶんの見解。事実のある節だけを連ねる。"""
     parts = []
+    # 騎手名は JRA から来た固有名詞なので禁止表現の判定から外す
+    _jc = facts.get('jockey_change') or {}
+    _nm = (horse.get('name'), _jc.get('from'), _jc.get('to'))
 
     # --- 順位の関係（latest.json の実値。ここは必ず書ける） ----------------
     rl = horse.get('rl_rank')
@@ -106,10 +109,10 @@ def horse_comment(horse, facts, race):
     #    キャリアのある馬にまで「初出走」と書いてしまう＝商品に嘘が載る（§20）。
     n_past = facts.get('n_past_runs')
     if n_past is None:
-        return _join(parts)
+        return _join(parts, names=_nm)
     if n_past == 0:
         parts.append('初出走のため、過去の実績から書けることはない。')
-        return _join(parts)
+        return _join(parts, names=_nm)
 
     # --- 近走の安定感 -----------------------------------------------------
     if facts.get('placed_streak'):
@@ -200,7 +203,7 @@ def horse_comment(horse, facts, race):
         j = facts['jockey_change']
         parts.append(f"騎手は{j['from']}から{j['to']}へ乗り替わり。")
 
-    return _join(parts)
+    return _join(parts, names=_nm)
 
 
 # ---------------------------------------------------------------------------
@@ -288,19 +291,38 @@ DANGER_IS_AXIS = (
 )
 
 
-def find_forbidden(text):
-    """禁止表現が含まれていれば最初に見つかったパターンを返す。無ければ None。"""
+def find_forbidden(text, names=()):
+    """禁止表現が含まれていれば最初に見つかったパターンを返す。無ければ None。
+
+    `names` には馬名・騎手名のような**JRA から来た固有名詞**を渡す。
+    判定の前にそれらを伏せる。
+
+    🔴 なぜ必要か（2026-10-18 の実データで実際に当たった）:
+    新潟9R の「ベル**ウッド**バイオ」が `ウッド`（調教コース）に一致し、
+    ①`tests/test_product_layer.py` の2件が落ちる
+    ②もしこの馬が「市場の支持ほどAIは評価していない馬」に選ばれていたら
+      `race_comment` が馬名を本文に書くので `_join` が AssertionError を投げ、
+      **そのレースの記事生成ごと落ちていた**（実際は3番人気で条件を満たさず助かった）
+    という2つの実害がある。この guard の目的は「**こちらが**陣営・調教・パドックに
+    触れる文を書かないこと」なので、こちらが書いたのではない固有名詞は対象外。
+
+    ⚠ 弱める方向の変更なので範囲を最小にする: 伏せるのは渡された固有名詞だけで、
+    パターン自体は1つも減らしていない。
+    """
     if not text:
         return None
+    for nm in names or ():
+        if nm:
+            text = text.replace(str(nm), '〇')
     for pat, rx in _FORBIDDEN_RE:
         if rx.search(text):
             return pat
     return None
 
 
-def _join(parts):
+def _join(parts, names=()):
     text = ''.join(parts)
-    hit = find_forbidden(text)
+    hit = find_forbidden(text, names)
     if hit:
         # 実装のミスを黙って商品に出さない。落として気づかせる
         raise AssertionError(
@@ -383,7 +405,8 @@ def race_comment(race, horses, tickets, dangers):
                          '市場を見ないAIの評価は下位。'
                          'ここを信頼しすぎない方がよい（詳細は上の節）。')
 
-    return _join(parts)
+    # 馬名は JRA から来た固有名詞なので禁止表現の判定から外す（find_forbidden の docstring）
+    return _join(parts, names=[d.get('name') for d in (dangers or [])])
 
 
 def disclaimer():
