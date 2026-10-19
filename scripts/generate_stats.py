@@ -172,6 +172,197 @@ def _calc_upset_patterns(shadows):
     }
 
 
+def _axis_conf_map(conn):
+    """レースごとの `conf`（レース信頼度）を race_predictions から復元する。
+
+    `conf` は `app_json.race_confidence()` = **軸(rl_rank==1)の3着内確率**で、
+    `latest.json` にしか出力されずDBには保存されていない。ただし
+    `race_predictions.fuku_prob` が軸の `top3_prob`（0〜1）そのものなので、
+    同じ式で復元できる。
+
+    ✅ 別経路での突合（North Star #8）: 2026-10-18 の34レースで
+       `latest.json` の `conf` と**34/34 完全一致**した（不一致0・欠損0）。
+
+    ⚠ `race_predictions` は同一 race_id を上書きするので、ここで得られるのは
+      **その日の最後の refresh 時点**の conf。朝の記事を作った時点の値とは
+      数ポイントずれることがある（11:30/14:00 の追い更新でオッズが動くため）。
+    """
+    out = {}
+    for r in conn.execute(
+            'SELECT race_id, fuku_prob FROM race_predictions WHERE rl_rank = 1'):
+        p = r['fuku_prob']
+        if p is None:
+            continue
+        out[r['race_id']] = min(99, max(0, int(round(float(p) * 100))))
+    return out
+
+
+def _scope_bucket(rows, label):
+    """軸(RL1)1頭ベースの的中実績を1グループぶん集計する。
+
+    🔴 **的中率と回収率は別物**（North Star #9）。的中だけを出すと
+      「当たるようになった＝儲かる」と読まれるので、複勝回収率を必ず隣に置く。
+
+    ⚠ 回収率は「的中したのに配当が取れていない行」を0円として混ぜず、
+      評価不能として分母から除く（2026-08-18③ で実力を過小評価した件）。
+      除いた件数は `roi_missing` で出す。
+    """
+    n = len(rows)
+    tan = sum(1 for r in rows if r['shadow_tansho_hit'] == 1)
+    fuku = sum(1 for r in rows if r['shadow_fukusho_hit'] == 1)
+    pay = 0.0
+    roi_n = 0
+    miss = 0
+    for r in rows:
+        if r['shadow_fukusho_hit'] == 1:
+            p = r['shadow_fukusho_payout']
+            if p:
+                pay += float(p)
+                roi_n += 1
+            else:
+                miss += 1
+        else:
+            roi_n += 1
+    return {
+        'label':       label,
+        'races':       n,
+        'tan_hit':     tan,
+        'tan_rate':    round(tan / n * 100, 1) if n else None,
+        'fuku_hit':    fuku,
+        'fuku_rate':   round(fuku / n * 100, 1) if n else None,
+        'fuku_roi':    round(pay / (roi_n * 100) * 100, 1) if roi_n else None,
+        'roi_races':   roi_n,
+        'roi_missing': miss,
+    }
+
+
+def calc_scope_accuracy(conn):
+    """商品の対象範囲（各競馬場9〜11R ＋ 自信のある推奨レース）の的中実績。
+
+    ユーザー依頼（2026-10-19）:
+        「各競馬場9から11レース及び自信のある推奨レースの的中実績、
+          9から11レースに関しては、その中に推奨レースがあるならそれがわかるように」
+
+    🔑 範囲の判定は `src/product/scope.py` を**そのまま呼ぶ**（ここで作り直さない）。
+       レース番号は `scope.is_main_race`、推奨の閾値は `scope.FLAT_MIN_CONF`（=66）。
+       2026-10-16 の「危険な人気馬」で、判定条件を2箇所に分けると記事と台帳が
+       静かに食い違うと分かっているため。
+
+    🔴 「推奨」は**商品側の固定値 conf >= 66**であって、本番の `rec`
+       （軸の3着内確率>=0.55 のうちその日の上位6本）ではない
+       （2026-10-06 ユーザー決定）。`shadow_bets.was_recommended` も使わない
+       （あちらは `rec` 由来で、しかも 2026-08-31 まで全行0だった）。
+
+    ⚠ 期間は shadow_bets が持つ範囲（＝予想を出した全レース・walk-forward）。
+      この間にモデルを2回入れ替えている（2026-08-21 / 09-15）ので、
+      累積の数字は「今のモデルの実力」そのものではない。期間は `period` で出す。
+    """
+    try:
+        from src.product import scope
+    except Exception as e:  # 商品レイヤーが無い環境では出さない
+        print(f'⚠ scope_accuracy スキップ（src/product/scope.py を読めない）: {e}')
+        return None
+
+    rows = conn.execute(
+        '''SELECT date, race_id, racecourse, race_num, rl1_num,
+                  shadow_tansho_hit, shadow_tansho_payout,
+                  shadow_fukusho_hit, shadow_fukusho_payout
+           FROM shadow_bets ORDER BY date'''
+    ).fetchall()
+    if not rows:
+        return None
+
+    confs = _axis_conf_map(conn)
+
+    # 軸が無い行（オッズ全滅等でRL1を決められなかった回）と conf を復元できない行は
+    # 「不的中」ではなく**評価不能**なので母集団から除く。除いた数は画面に出す。
+    usable, no_axis, no_conf = [], 0, 0
+    for r in rows:
+        if r['rl1_num'] is None:
+            no_axis += 1
+            continue
+        if r['race_id'] not in confs:
+            no_conf += 1
+            continue
+        usable.append(r)
+    if not usable:
+        return None
+
+    def _is_main(r):
+        return scope.is_main_race({'r': r['race_num']})
+
+    def _is_rec(r):
+        return confs[r['race_id']] >= scope.FLAT_MIN_CONF
+
+    main = [r for r in usable if _is_main(r)]
+    rec  = [r for r in usable if _is_rec(r)]
+    thr  = scope.FLAT_MIN_CONF
+
+    groups = [
+        _scope_bucket(main, '9〜11R 全体'),
+        _scope_bucket([r for r in main if _is_rec(r)], f'　うち推奨（信頼度{thr}以上）'),
+        _scope_bucket([r for r in main if not _is_rec(r)], '　うち推奨以外'),
+        _scope_bucket(rec, f'推奨レース 全体（信頼度{thr}以上）'),
+        _scope_bucket([r for r in rec if not _is_main(r)], '　うち平場（9〜11R以外）'),
+        _scope_bucket(usable, '（参考）全レース'),
+    ]
+
+    by_venue = []
+    venues = defaultdict(list)
+    for r in main:
+        venues[r['racecourse'] or '不明'].append(r)
+    for venue, rs in venues.items():
+        nums = []
+        for num in scope.MAIN_RACE_NUMS:
+            sub = [r for r in rs if r['race_num'] == num]
+            nums.append({
+                'num':      num,
+                'races':    len(sub),
+                'rec':      sum(1 for r in sub if _is_rec(r)),
+                'fuku_hit': sum(1 for r in sub if r['shadow_fukusho_hit'] == 1),
+                'tan_hit':  sum(1 for r in sub if r['shadow_tansho_hit'] == 1),
+            })
+        d = _scope_bucket(rs, venue)
+        d['venue'] = venue
+        d['rec_races'] = sum(1 for r in rs if _is_rec(r))
+        d['by_num'] = nums
+        by_venue.append(d)
+    by_venue.sort(key=lambda d: -d['races'])
+
+    # 直近の対象レース一覧（9〜11R か 推奨）。★が付いた行が推奨レース。
+    recent = []
+    for r in reversed(usable):
+        if not (_is_main(r) or _is_rec(r)):
+            continue
+        recent.append({
+            'date':     r['date'],
+            'venue':    r['racecourse'],
+            'num':      r['race_num'],
+            'conf':     confs[r['race_id']],
+            'rec':      1 if _is_rec(r) else 0,
+            'main':     1 if _is_main(r) else 0,
+            'rl1':      r['rl1_num'],
+            'tan_hit':  r['shadow_tansho_hit'],
+            'fuku_hit': r['shadow_fukusho_hit'],
+            'fuku_pay': r['shadow_fukusho_payout'],
+        })
+        if len(recent) >= 60:
+            break
+
+    dates = [r['date'] for r in usable if r['date']]
+    return {
+        'conf_strong': thr,
+        'main_nums':   list(scope.MAIN_RACE_NUMS),
+        'period':      {'from': min(dates) if dates else None,
+                        'to':   max(dates) if dates else None},
+        'races':       len(usable),
+        'excluded':    {'no_axis': no_axis, 'no_conf': no_conf},
+        'groups':      groups,
+        'by_venue':    by_venue,
+        'recent':      recent,
+    }
+
+
 def calc_divergence_analysis(conn):
     """AI予測 vs 市場オッズの乖離分析 + 結果との相関。
 
@@ -969,6 +1160,14 @@ def generate_stats(base_dir=None):
     if kpi:
         stats['model_kpi'] = kpi
         _save_kpi_weekly(kpi, base_dir)
+
+    # ── 商品の対象範囲（9〜11R ＋ 推奨レース）の的中実績 ──────────────────
+    try:
+        sa = calc_scope_accuracy(conn)
+        if sa:
+            stats['scope_accuracy'] = sa
+    except Exception as e:
+        print(f'⚠ scope_accuracy 生成失敗（表示のみ・他の集計は続行）: {e}')
 
     # ── AI vs 市場 乖離分析 ──────────────────────────────────────────────
     div = calc_divergence_analysis(conn)
