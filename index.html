@@ -2384,6 +2384,90 @@ function renderStats(S) {
   }
   h += '</div>';
 
+  // ── 対象範囲（9〜11R / 推奨レース）の的中実績 ─────────────────────────
+  // ユーザー依頼（2026-10-19）。商品の対象範囲ごとの的中実績を出す。
+  // 🔴 ★=推奨は **商品側の固定値 conf>=66**（scope.FLAT_MIN_CONF）であって、
+  //    本番の rec（その日の上位6本）ではない。was_recommended も使っていない。
+  // 🔴 的中率の隣に必ず複勝回収率を置く。的中率だけ出すと「当たる＝儲かる」と
+  //    読まれる（North Star #9）。実測はどのグループも100%未満。
+  const sa = S.scope_accuracy || {};
+  h += '<div class="stat-card"><div class="stat-title">🎯 対象範囲の的中実績（9〜11R / 推奨レース）</div>';
+  if ((sa.groups || []).length) {
+    const thr = sa.conf_strong;
+    const pf = (sa.period || {}).from, pt = (sa.period || {}).to;
+    h += `<div style="font-size:11px;color:var(--sub);margin-bottom:8px">`
+       + `${pf || '?'}〜${pt || '?'} の ${sa.races}レース（軸=AI 1位の複勝1点で測った実績）`;
+    const ex = sa.excluded || {};
+    if ((ex.no_axis || 0) + (ex.no_conf || 0) > 0) {
+      h += `<br>評価不能として除外: 軸なし${ex.no_axis || 0}R / 信頼度なし${ex.no_conf || 0}R`;
+    }
+    h += '</div>';
+
+    for (const g of sa.groups) {
+      if (!g.races) continue;
+      const roi = g.fuku_roi;
+      h += `<div class="stat-row"><span class="stat-key" style="font-size:11px">${g.label}</span>`
+         + `<span style="font-size:11px;color:var(--sub)">${g.fuku_hit}/${g.races}R (${g.fuku_rate}%)</span>`
+         + `<span class="stat-val" style="color:var(--sub)">`
+         + (roi == null ? '—' : roi + '%') + '</span></div>';
+    }
+    h += `<div style="font-size:10px;color:var(--sub);margin-top:6px;line-height:1.5">`
+       + `左の数字が<b>軸の複勝的中</b>、右が<b>複勝回収率</b>。`
+       + `⚠ 的中率と回収率は別物で、<b>どのグループも100%に届いていません</b>（複勝の控除率は20%）。`
+       + `回収率は<b>色を付けていません</b>——良いセルを選んで買う使い方を禁じているためです。<br>`
+       + `★「推奨」＝レース信頼度${thr}以上。商品側で決めた<b>固定の閾値</b>で、`
+       + `アプリの★推奨（その日の上位6本）とは別物です。<br>`
+       + `⚠ この期間にモデルを2回入れ替えています（8/21・9/15）。累積の数字は今のモデルの実力そのものではありません。`
+       + '</div>';
+
+    // 会場別 9〜11R
+    if ((sa.by_venue || []).length) {
+      h += '<div style="margin-top:12px;font-size:11px;font-weight:700;color:var(--sub);margin-bottom:6px">競馬場別 9〜11R（的中/レース数・括弧内★は推奨の本数）</div>';
+      h += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px">';
+      h += '<tr style="color:var(--sub)"><th style="text-align:left;padding:2px 4px">会場</th>';
+      for (const n of (sa.main_nums || [9, 10, 11])) h += `<th style="padding:2px 4px">${n}R</th>`;
+      h += '<th style="padding:2px 4px">計</th><th style="padding:2px 4px">回収</th></tr>';
+      for (const v of sa.by_venue) {
+        h += `<tr><td style="padding:3px 4px;font-weight:700">${v.venue}</td>`;
+        for (const d of v.by_num) {
+          const star = d.rec ? `<span style="color:#e67e22">★${d.rec}</span>` : '';
+          h += `<td style="padding:3px 4px;text-align:center">`
+             + (d.races ? `${d.fuku_hit}/${d.races}${star ? ' ' + star : ''}` : '—')
+             + '</td>';
+        }
+        h += `<td style="padding:3px 4px;text-align:center">${v.fuku_hit}/${v.races} (${v.fuku_rate}%)</td>`;
+        h += `<td style="padding:3px 4px;text-align:center;color:var(--sub)">`
+           + (v.fuku_roi == null ? '—' : v.fuku_roi + '%') + '</td></tr>';
+      }
+      h += '</table></div>';
+      h += '<div style="font-size:10px;color:var(--sub);margin-top:4px;line-height:1.5">'
+         + '⚠ 1会場あたり十数レースしかありません。会場別の差は偶然の範囲として読んでください。'
+         + '<b>回収率が100%を超えて見える会場があっても買い材料にはなりません</b>'
+         + '（「成績表の良いセルだけ買う」は 2026-08-15・08-31 に大規模検証で3度否定済み）。</div>';
+    }
+
+    // 直近の対象レース（★が推奨）
+    if ((sa.recent || []).length) {
+      h += '<details style="margin-top:12px"><summary style="font-size:11px;font-weight:700;color:var(--sub);cursor:pointer">直近の対象レース ' + sa.recent.length + '件（★=推奨）</summary>';
+      h += '<div style="overflow-x:auto;margin-top:6px"><table style="width:100%;border-collapse:collapse;font-size:11px">';
+      h += '<tr style="color:var(--sub)"><th style="text-align:left;padding:2px 4px">日付</th><th style="padding:2px 4px">レース</th>'
+         + '<th style="padding:2px 4px">信頼度</th><th style="padding:2px 4px">軸</th><th style="padding:2px 4px">単勝</th><th style="padding:2px 4px">複勝</th></tr>';
+      for (const r of sa.recent) {
+        const star = r.rec ? '<span style="color:#e67e22">★</span>' : '';
+        h += `<tr><td style="padding:3px 4px;white-space:nowrap">${(r.date || '').slice(5)}</td>`
+           + `<td style="padding:3px 4px;white-space:nowrap">${r.venue || ''}${r.num}R ${star}</td>`
+           + `<td style="padding:3px 4px;text-align:center">${r.conf == null ? '—' : r.conf}</td>`
+           + `<td style="padding:3px 4px;text-align:center">#${r.rl1 == null ? '?' : r.rl1}</td>`
+           + `<td style="padding:3px 4px;text-align:center">${r.tan_hit === 1 ? '◯' : '×'}</td>`
+           + `<td style="padding:3px 4px;text-align:center">${r.fuku_hit === 1 ? ('◯ ¥' + (r.fuku_pay || '?')) : '×'}</td></tr>`;
+      }
+      h += '</table></div></details>';
+    }
+  } else {
+    h += '<div style="color:var(--sub);font-size:12px">データ蓄積中（土日結果取得後に表示されます）</div>';
+  }
+  h += '</div>';
+
   // ── RL精度 ──────────────────────────────────────────────────────────
   const rl = S.rl_accuracy || {};
   h += '<div class="stat-card"><div class="stat-title">🎯 RL予測精度（全レース）</div>';

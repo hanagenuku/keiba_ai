@@ -1354,7 +1354,7 @@
         "races": 11
       }
     ],
-    "workflow_run_at": "2026-10-18T09:47:20Z",
+    "workflow_run_at": "2026-10-19T00:54:15Z",
     "workflow_result": "success"
   },
   "web_sources": {
@@ -1813,6 +1813,1175 @@
         "ai_logloss": 0.2403,
         "mkt_logloss": 0.2329,
         "delta": 0.0074
+      }
+    ]
+  },
+  "scope_accuracy": {
+    "conf_strong": 66,
+    "main_nums": [
+      9,
+      10,
+      11
+    ],
+    "period": {
+      "from": "2026-06-27",
+      "to": "2026-10-18"
+    },
+    "races": 1023,
+    "excluded": {
+      "no_axis": 44,
+      "no_conf": 2
+    },
+    "groups": [
+      {
+        "label": "9〜11R 全体",
+        "races": 241,
+        "tan_hit": 60,
+        "tan_rate": 24.9,
+        "fuku_hit": 127,
+        "fuku_rate": 52.7,
+        "fuku_roi": 75.0,
+        "roi_races": 240,
+        "roi_missing": 1
+      },
+      {
+        "label": "　うち推奨（信頼度66以上）",
+        "races": 47,
+        "tan_hit": 16,
+        "tan_rate": 34.0,
+        "fuku_hit": 30,
+        "fuku_rate": 63.8,
+        "fuku_roi": 83.5,
+        "roi_races": 46,
+        "roi_missing": 1
+      },
+      {
+        "label": "　うち推奨以外",
+        "races": 194,
+        "tan_hit": 44,
+        "tan_rate": 22.7,
+        "fuku_hit": 97,
+        "fuku_rate": 50.0,
+        "fuku_roi": 73.0,
+        "roi_races": 194,
+        "roi_missing": 0
+      },
+      {
+        "label": "推奨レース 全体（信頼度66以上）",
+        "races": 229,
+        "tan_hit": 83,
+        "tan_rate": 36.2,
+        "fuku_hit": 150,
+        "fuku_rate": 65.5,
+        "fuku_roi": 95.7,
+        "roi_races": 225,
+        "roi_missing": 4
+      },
+      {
+        "label": "　うち平場（9〜11R以外）",
+        "races": 182,
+        "tan_hit": 67,
+        "tan_rate": 36.8,
+        "fuku_hit": 120,
+        "fuku_rate": 65.9,
+        "fuku_roi": 98.8,
+        "roi_races": 179,
+        "roi_missing": 3
+      },
+      {
+        "label": "（参考）全レース",
+        "races": 1023,
+        "tan_hit": 335,
+        "tan_rate": 32.7,
+        "fuku_hit": 614,
+        "fuku_rate": 60.0,
+        "fuku_roi": 86.6,
+        "roi_races": 1019,
+        "roi_missing": 4
+      }
+    ],
+    "by_venue": [
+      {
+        "label": "札幌",
+        "races": 41,
+        "tan_hit": 12,
+        "tan_rate": 29.3,
+        "fuku_hit": 23,
+        "fuku_rate": 56.1,
+        "fuku_roi": 80.2,
+        "roi_races": 41,
+        "roi_missing": 0,
+        "venue": "札幌",
+        "rec_races": 11,
+        "by_num": [
+          {
+            "num": 9,
+            "races": 14,
+            "rec": 5,
+            "fuku_hit": 7,
+            "tan_hit": 3
+          },
+          {
+            "num": 10,
+            "races": 14,
+            "rec": 2,
+            "fuku_hit": 10,
+            "tan_hit": 7
+          },
+          {
+            "num": 11,
+            "races": 13,
+            "rec": 4,
+            "fuku_hit": 6,
+            "tan_hit": 2
+          }
+        ]
+      },
+      {
+        "label": "新潟",
+        "races": 35,
+        "tan_hit": 10,
+        "tan_rate": 28.6,
+        "fuku_hit": 21,
+        "fuku_rate": 60.0,
+        "fuku_roi": 84.0,
+        "roi_races": 35,
+        "roi_missing": 0,
+        "venue": "新潟",
+        "rec_races": 3,
+        "by_num": [
+          {
+            "num": 9,
+            "races": 9,
+            "rec": 0,
+            "fuku_hit": 3,
+            "tan_hit": 2
+          },
+          {
+            "num": 10,
+            "races": 13,
+            "rec": 2,
+            "fuku_hit": 10,
+            "tan_hit": 5
+          },
+          {
+            "num": 11,
+            "races": 13,
+            "rec": 1,
+            "fuku_hit": 8,
+            "tan_hit": 3
+          }
+        ]
+      },
+      {
+        "label": "中京",
+        "races": 29,
+        "tan_hit": 9,
+        "tan_rate": 31.0,
+        "fuku_hit": 13,
+        "fuku_rate": 44.8,
+        "fuku_roi": 68.3,
+        "roi_races": 29,
+        "roi_missing": 0,
+        "venue": "中京",
+        "rec_races": 3,
+        "by_num": [
+          {
+            "num": 9,
+            "races": 6,
+            "rec": 1,
+            "fuku_hit": 2,
+            "tan_hit": 2
+          },
+          {
+            "num": 10,
+            "races": 12,
+            "rec": 0,
+            "fuku_hit": 6,
+            "tan_hit": 4
+          },
+          {
+            "num": 11,
+            "races": 11,
+            "rec": 2,
+            "fuku_hit": 5,
+            "tan_hit": 3
+          }
+        ]
+      },
+      {
+        "label": "中山",
+        "races": 27,
+        "tan_hit": 1,
+        "tan_rate": 3.7,
+        "fuku_hit": 11,
+        "fuku_rate": 40.7,
+        "fuku_roi": 57.0,
+        "roi_races": 27,
+        "roi_missing": 0,
+        "venue": "中山",
+        "rec_races": 6,
+        "by_num": [
+          {
+            "num": 9,
+            "races": 9,
+            "rec": 3,
+            "fuku_hit": 3,
+            "tan_hit": 0
+          },
+          {
+            "num": 10,
+            "races": 9,
+            "rec": 3,
+            "fuku_hit": 4,
+            "tan_hit": 0
+          },
+          {
+            "num": 11,
+            "races": 9,
+            "rec": 0,
+            "fuku_hit": 4,
+            "tan_hit": 1
+          }
+        ]
+      },
+      {
+        "label": "阪神",
+        "races": 25,
+        "tan_hit": 7,
+        "tan_rate": 28.0,
+        "fuku_hit": 12,
+        "fuku_rate": 48.0,
+        "fuku_roi": 61.7,
+        "roi_races": 24,
+        "roi_missing": 1,
+        "venue": "阪神",
+        "rec_races": 3,
+        "by_num": [
+          {
+            "num": 9,
+            "races": 7,
+            "rec": 2,
+            "fuku_hit": 4,
+            "tan_hit": 1
+          },
+          {
+            "num": 10,
+            "races": 9,
+            "rec": 1,
+            "fuku_hit": 4,
+            "tan_hit": 2
+          },
+          {
+            "num": 11,
+            "races": 9,
+            "rec": 0,
+            "fuku_hit": 4,
+            "tan_hit": 4
+          }
+        ]
+      },
+      {
+        "label": "福島",
+        "races": 18,
+        "tan_hit": 2,
+        "tan_rate": 11.1,
+        "fuku_hit": 5,
+        "fuku_rate": 27.8,
+        "fuku_roi": 45.0,
+        "roi_races": 18,
+        "roi_missing": 0,
+        "venue": "福島",
+        "rec_races": 7,
+        "by_num": [
+          {
+            "num": 9,
+            "races": 6,
+            "rec": 3,
+            "fuku_hit": 1,
+            "tan_hit": 0
+          },
+          {
+            "num": 10,
+            "races": 4,
+            "rec": 1,
+            "fuku_hit": 2,
+            "tan_hit": 1
+          },
+          {
+            "num": 11,
+            "races": 8,
+            "rec": 3,
+            "fuku_hit": 2,
+            "tan_hit": 1
+          }
+        ]
+      },
+      {
+        "label": "京都",
+        "races": 18,
+        "tan_hit": 4,
+        "tan_rate": 22.2,
+        "fuku_hit": 12,
+        "fuku_rate": 66.7,
+        "fuku_roi": 82.8,
+        "roi_races": 18,
+        "roi_missing": 0,
+        "venue": "京都",
+        "rec_races": 4,
+        "by_num": [
+          {
+            "num": 9,
+            "races": 6,
+            "rec": 2,
+            "fuku_hit": 6,
+            "tan_hit": 0
+          },
+          {
+            "num": 10,
+            "races": 6,
+            "rec": 2,
+            "fuku_hit": 4,
+            "tan_hit": 3
+          },
+          {
+            "num": 11,
+            "races": 6,
+            "rec": 0,
+            "fuku_hit": 2,
+            "tan_hit": 1
+          }
+        ]
+      },
+      {
+        "label": "東京",
+        "races": 17,
+        "tan_hit": 5,
+        "tan_rate": 29.4,
+        "fuku_hit": 13,
+        "fuku_rate": 76.5,
+        "fuku_roi": 109.4,
+        "roi_races": 17,
+        "roi_missing": 0,
+        "venue": "東京",
+        "rec_races": 2,
+        "by_num": [
+          {
+            "num": 9,
+            "races": 5,
+            "rec": 1,
+            "fuku_hit": 4,
+            "tan_hit": 2
+          },
+          {
+            "num": 10,
+            "races": 6,
+            "rec": 1,
+            "fuku_hit": 4,
+            "tan_hit": 1
+          },
+          {
+            "num": 11,
+            "races": 6,
+            "rec": 0,
+            "fuku_hit": 5,
+            "tan_hit": 2
+          }
+        ]
+      },
+      {
+        "label": "函館",
+        "races": 16,
+        "tan_hit": 4,
+        "tan_rate": 25.0,
+        "fuku_hit": 8,
+        "fuku_rate": 50.0,
+        "fuku_roi": 75.0,
+        "roi_races": 16,
+        "roi_missing": 0,
+        "venue": "函館",
+        "rec_races": 4,
+        "by_num": [
+          {
+            "num": 9,
+            "races": 5,
+            "rec": 0,
+            "fuku_hit": 2,
+            "tan_hit": 1
+          },
+          {
+            "num": 10,
+            "races": 6,
+            "rec": 2,
+            "fuku_hit": 4,
+            "tan_hit": 2
+          },
+          {
+            "num": 11,
+            "races": 5,
+            "rec": 2,
+            "fuku_hit": 2,
+            "tan_hit": 1
+          }
+        ]
+      },
+      {
+        "label": "小倉",
+        "races": 15,
+        "tan_hit": 6,
+        "tan_rate": 40.0,
+        "fuku_hit": 9,
+        "fuku_rate": 60.0,
+        "fuku_roi": 94.7,
+        "roi_races": 15,
+        "roi_missing": 0,
+        "venue": "小倉",
+        "rec_races": 4,
+        "by_num": [
+          {
+            "num": 9,
+            "races": 5,
+            "rec": 1,
+            "fuku_hit": 4,
+            "tan_hit": 3
+          },
+          {
+            "num": 10,
+            "races": 5,
+            "rec": 2,
+            "fuku_hit": 3,
+            "tan_hit": 1
+          },
+          {
+            "num": 11,
+            "races": 5,
+            "rec": 1,
+            "fuku_hit": 2,
+            "tan_hit": 2
+          }
+        ]
+      }
+    ],
+    "recent": [
+      {
+        "date": "2026-10-18",
+        "venue": "新潟",
+        "num": 11,
+        "conf": 62,
+        "rec": 0,
+        "main": 1,
+        "rl1": 10,
+        "tan_hit": 0,
+        "fuku_hit": 0,
+        "fuku_pay": null
+      },
+      {
+        "date": "2026-10-18",
+        "venue": "新潟",
+        "num": 9,
+        "conf": 58,
+        "rec": 0,
+        "main": 1,
+        "rl1": 1,
+        "tan_hit": 1,
+        "fuku_hit": 1,
+        "fuku_pay": 140.0
+      },
+      {
+        "date": "2026-10-18",
+        "venue": "京都",
+        "num": 11,
+        "conf": 49,
+        "rec": 0,
+        "main": 1,
+        "rl1": 8,
+        "tan_hit": 1,
+        "fuku_hit": 1,
+        "fuku_pay": 110.0
+      },
+      {
+        "date": "2026-10-18",
+        "venue": "京都",
+        "num": 10,
+        "conf": 62,
+        "rec": 0,
+        "main": 1,
+        "rl1": 9,
+        "tan_hit": 0,
+        "fuku_hit": 0,
+        "fuku_pay": null
+      },
+      {
+        "date": "2026-10-18",
+        "venue": "京都",
+        "num": 9,
+        "conf": 70,
+        "rec": 1,
+        "main": 1,
+        "rl1": 8,
+        "tan_hit": 0,
+        "fuku_hit": 1,
+        "fuku_pay": 110.0
+      },
+      {
+        "date": "2026-10-18",
+        "venue": "京都",
+        "num": 5,
+        "conf": 82,
+        "rec": 1,
+        "main": 0,
+        "rl1": 3,
+        "tan_hit": 1,
+        "fuku_hit": 1,
+        "fuku_pay": 120.0
+      },
+      {
+        "date": "2026-10-18",
+        "venue": "京都",
+        "num": 2,
+        "conf": 77,
+        "rec": 1,
+        "main": 0,
+        "rl1": 4,
+        "tan_hit": 0,
+        "fuku_hit": 1,
+        "fuku_pay": 230.0
+      },
+      {
+        "date": "2026-10-18",
+        "venue": "東京",
+        "num": 11,
+        "conf": 58,
+        "rec": 0,
+        "main": 1,
+        "rl1": 11,
+        "tan_hit": 0,
+        "fuku_hit": 1,
+        "fuku_pay": 210.0
+      },
+      {
+        "date": "2026-10-18",
+        "venue": "東京",
+        "num": 10,
+        "conf": 62,
+        "rec": 0,
+        "main": 1,
+        "rl1": 6,
+        "tan_hit": 0,
+        "fuku_hit": 1,
+        "fuku_pay": 110.0
+      },
+      {
+        "date": "2026-10-18",
+        "venue": "東京",
+        "num": 6,
+        "conf": 70,
+        "rec": 1,
+        "main": 0,
+        "rl1": 7,
+        "tan_hit": 1,
+        "fuku_hit": 1,
+        "fuku_pay": 110.0
+      },
+      {
+        "date": "2026-10-18",
+        "venue": "東京",
+        "num": 5,
+        "conf": 73,
+        "rec": 1,
+        "main": 0,
+        "rl1": 4,
+        "tan_hit": 1,
+        "fuku_hit": 1,
+        "fuku_pay": 110.0
+      },
+      {
+        "date": "2026-10-18",
+        "venue": "東京",
+        "num": 2,
+        "conf": 73,
+        "rec": 1,
+        "main": 0,
+        "rl1": 9,
+        "tan_hit": 1,
+        "fuku_hit": 1,
+        "fuku_pay": 110.0
+      },
+      {
+        "date": "2026-10-18",
+        "venue": "東京",
+        "num": 1,
+        "conf": 67,
+        "rec": 1,
+        "main": 0,
+        "rl1": 3,
+        "tan_hit": 0,
+        "fuku_hit": 1,
+        "fuku_pay": 120.0
+      },
+      {
+        "date": "2026-10-17",
+        "venue": "新潟",
+        "num": 11,
+        "conf": 51,
+        "rec": 0,
+        "main": 1,
+        "rl1": 13,
+        "tan_hit": 0,
+        "fuku_hit": 0,
+        "fuku_pay": null
+      },
+      {
+        "date": "2026-10-17",
+        "venue": "新潟",
+        "num": 10,
+        "conf": 56,
+        "rec": 0,
+        "main": 1,
+        "rl1": 5,
+        "tan_hit": 0,
+        "fuku_hit": 0,
+        "fuku_pay": null
+      },
+      {
+        "date": "2026-10-17",
+        "venue": "新潟",
+        "num": 9,
+        "conf": 57,
+        "rec": 0,
+        "main": 1,
+        "rl1": 3,
+        "tan_hit": 1,
+        "fuku_hit": 1,
+        "fuku_pay": 170.0
+      },
+      {
+        "date": "2026-10-17",
+        "venue": "京都",
+        "num": 11,
+        "conf": 54,
+        "rec": 0,
+        "main": 1,
+        "rl1": 14,
+        "tan_hit": 0,
+        "fuku_hit": 0,
+        "fuku_pay": null
+      },
+      {
+        "date": "2026-10-17",
+        "venue": "京都",
+        "num": 10,
+        "conf": 68,
+        "rec": 1,
+        "main": 1,
+        "rl1": 6,
+        "tan_hit": 1,
+        "fuku_hit": 1,
+        "fuku_pay": 100.0
+      },
+      {
+        "date": "2026-10-17",
+        "venue": "京都",
+        "num": 9,
+        "conf": 57,
+        "rec": 0,
+        "main": 1,
+        "rl1": 11,
+        "tan_hit": 0,
+        "fuku_hit": 1,
+        "fuku_pay": 130.0
+      },
+      {
+        "date": "2026-10-17",
+        "venue": "京都",
+        "num": 8,
+        "conf": 66,
+        "rec": 1,
+        "main": 0,
+        "rl1": 7,
+        "tan_hit": 1,
+        "fuku_hit": 1,
+        "fuku_pay": 170.0
+      },
+      {
+        "date": "2026-10-17",
+        "venue": "京都",
+        "num": 3,
+        "conf": 69,
+        "rec": 1,
+        "main": 0,
+        "rl1": 8,
+        "tan_hit": 0,
+        "fuku_hit": 1,
+        "fuku_pay": 120.0
+      },
+      {
+        "date": "2026-10-17",
+        "venue": "京都",
+        "num": 1,
+        "conf": 66,
+        "rec": 1,
+        "main": 0,
+        "rl1": 2,
+        "tan_hit": 1,
+        "fuku_hit": 1,
+        "fuku_pay": 130.0
+      },
+      {
+        "date": "2026-10-17",
+        "venue": "東京",
+        "num": 11,
+        "conf": 58,
+        "rec": 0,
+        "main": 1,
+        "rl1": 4,
+        "tan_hit": 0,
+        "fuku_hit": 0,
+        "fuku_pay": null
+      },
+      {
+        "date": "2026-10-17",
+        "venue": "東京",
+        "num": 10,
+        "conf": 59,
+        "rec": 0,
+        "main": 1,
+        "rl1": 3,
+        "tan_hit": 0,
+        "fuku_hit": 0,
+        "fuku_pay": null
+      },
+      {
+        "date": "2026-10-17",
+        "venue": "東京",
+        "num": 9,
+        "conf": 60,
+        "rec": 0,
+        "main": 1,
+        "rl1": 12,
+        "tan_hit": 0,
+        "fuku_hit": 1,
+        "fuku_pay": 120.0
+      },
+      {
+        "date": "2026-10-17",
+        "venue": "東京",
+        "num": 8,
+        "conf": 69,
+        "rec": 1,
+        "main": 0,
+        "rl1": 3,
+        "tan_hit": 0,
+        "fuku_hit": 1,
+        "fuku_pay": 120.0
+      },
+      {
+        "date": "2026-10-17",
+        "venue": "東京",
+        "num": 5,
+        "conf": 73,
+        "rec": 1,
+        "main": 0,
+        "rl1": 9,
+        "tan_hit": 1,
+        "fuku_hit": 1,
+        "fuku_pay": 110.0
+      },
+      {
+        "date": "2026-10-17",
+        "venue": "東京",
+        "num": 2,
+        "conf": 67,
+        "rec": 1,
+        "main": 0,
+        "rl1": 9,
+        "tan_hit": 0,
+        "fuku_hit": 1,
+        "fuku_pay": 110.0
+      },
+      {
+        "date": "2026-10-17",
+        "venue": "東京",
+        "num": 1,
+        "conf": 68,
+        "rec": 1,
+        "main": 0,
+        "rl1": 2,
+        "tan_hit": 0,
+        "fuku_hit": 1,
+        "fuku_pay": 110.0
+      },
+      {
+        "date": "2026-10-12",
+        "venue": "京都",
+        "num": 11,
+        "conf": 52,
+        "rec": 0,
+        "main": 1,
+        "rl1": 9,
+        "tan_hit": 0,
+        "fuku_hit": 1,
+        "fuku_pay": 160.0
+      },
+      {
+        "date": "2026-10-12",
+        "venue": "京都",
+        "num": 10,
+        "conf": 66,
+        "rec": 1,
+        "main": 1,
+        "rl1": 5,
+        "tan_hit": 1,
+        "fuku_hit": 1,
+        "fuku_pay": 110.0
+      },
+      {
+        "date": "2026-10-12",
+        "venue": "京都",
+        "num": 9,
+        "conf": 56,
+        "rec": 0,
+        "main": 1,
+        "rl1": 12,
+        "tan_hit": 0,
+        "fuku_hit": 1,
+        "fuku_pay": 140.0
+      },
+      {
+        "date": "2026-10-12",
+        "venue": "京都",
+        "num": 2,
+        "conf": 66,
+        "rec": 1,
+        "main": 0,
+        "rl1": 11,
+        "tan_hit": 1,
+        "fuku_hit": 1,
+        "fuku_pay": 110.0
+      },
+      {
+        "date": "2026-10-12",
+        "venue": "東京",
+        "num": 11,
+        "conf": 54,
+        "rec": 0,
+        "main": 1,
+        "rl1": 2,
+        "tan_hit": 1,
+        "fuku_hit": 1,
+        "fuku_pay": 160.0
+      },
+      {
+        "date": "2026-10-12",
+        "venue": "東京",
+        "num": 10,
+        "conf": 66,
+        "rec": 1,
+        "main": 1,
+        "rl1": 11,
+        "tan_hit": 1,
+        "fuku_hit": 1,
+        "fuku_pay": 110.0
+      },
+      {
+        "date": "2026-10-12",
+        "venue": "東京",
+        "num": 9,
+        "conf": 60,
+        "rec": 0,
+        "main": 1,
+        "rl1": 8,
+        "tan_hit": 1,
+        "fuku_hit": 1,
+        "fuku_pay": 110.0
+      },
+      {
+        "date": "2026-10-12",
+        "venue": "東京",
+        "num": 8,
+        "conf": 81,
+        "rec": 1,
+        "main": 0,
+        "rl1": 5,
+        "tan_hit": 1,
+        "fuku_hit": 1,
+        "fuku_pay": 140.0
+      },
+      {
+        "date": "2026-10-12",
+        "venue": "東京",
+        "num": 3,
+        "conf": 67,
+        "rec": 1,
+        "main": 0,
+        "rl1": 8,
+        "tan_hit": 0,
+        "fuku_hit": 0,
+        "fuku_pay": null
+      },
+      {
+        "date": "2026-10-12",
+        "venue": "東京",
+        "num": 2,
+        "conf": 66,
+        "rec": 1,
+        "main": 0,
+        "rl1": 2,
+        "tan_hit": 1,
+        "fuku_hit": 1,
+        "fuku_pay": 110.0
+      },
+      {
+        "date": "2026-10-11",
+        "venue": "京都",
+        "num": 11,
+        "conf": 60,
+        "rec": 0,
+        "main": 1,
+        "rl1": 13,
+        "tan_hit": 0,
+        "fuku_hit": 0,
+        "fuku_pay": null
+      },
+      {
+        "date": "2026-10-11",
+        "venue": "京都",
+        "num": 10,
+        "conf": 53,
+        "rec": 0,
+        "main": 1,
+        "rl1": 4,
+        "tan_hit": 1,
+        "fuku_hit": 1,
+        "fuku_pay": 110.0
+      },
+      {
+        "date": "2026-10-11",
+        "venue": "京都",
+        "num": 9,
+        "conf": 54,
+        "rec": 0,
+        "main": 1,
+        "rl1": 7,
+        "tan_hit": 0,
+        "fuku_hit": 1,
+        "fuku_pay": 110.0
+      },
+      {
+        "date": "2026-10-11",
+        "venue": "東京",
+        "num": 11,
+        "conf": 54,
+        "rec": 0,
+        "main": 1,
+        "rl1": 16,
+        "tan_hit": 1,
+        "fuku_hit": 1,
+        "fuku_pay": 140.0
+      },
+      {
+        "date": "2026-10-11",
+        "venue": "東京",
+        "num": 10,
+        "conf": 56,
+        "rec": 0,
+        "main": 1,
+        "rl1": 7,
+        "tan_hit": 0,
+        "fuku_hit": 1,
+        "fuku_pay": 240.0
+      },
+      {
+        "date": "2026-10-11",
+        "venue": "東京",
+        "num": 9,
+        "conf": 62,
+        "rec": 0,
+        "main": 1,
+        "rl1": 9,
+        "tan_hit": 1,
+        "fuku_hit": 1,
+        "fuku_pay": 140.0
+      },
+      {
+        "date": "2026-10-10",
+        "venue": "京都",
+        "num": 11,
+        "conf": 58,
+        "rec": 0,
+        "main": 1,
+        "rl1": 13,
+        "tan_hit": 0,
+        "fuku_hit": 0,
+        "fuku_pay": null
+      },
+      {
+        "date": "2026-10-10",
+        "venue": "京都",
+        "num": 10,
+        "conf": 55,
+        "rec": 0,
+        "main": 1,
+        "rl1": 11,
+        "tan_hit": 0,
+        "fuku_hit": 0,
+        "fuku_pay": null
+      },
+      {
+        "date": "2026-10-10",
+        "venue": "京都",
+        "num": 9,
+        "conf": 56,
+        "rec": 0,
+        "main": 1,
+        "rl1": 9,
+        "tan_hit": 0,
+        "fuku_hit": 1,
+        "fuku_pay": 130.0
+      },
+      {
+        "date": "2026-10-10",
+        "venue": "京都",
+        "num": 8,
+        "conf": 76,
+        "rec": 1,
+        "main": 0,
+        "rl1": 6,
+        "tan_hit": 0,
+        "fuku_hit": 1,
+        "fuku_pay": 730.0
+      },
+      {
+        "date": "2026-10-10",
+        "venue": "京都",
+        "num": 3,
+        "conf": 72,
+        "rec": 1,
+        "main": 0,
+        "rl1": 8,
+        "tan_hit": 0,
+        "fuku_hit": 0,
+        "fuku_pay": null
+      },
+      {
+        "date": "2026-10-10",
+        "venue": "東京",
+        "num": 11,
+        "conf": 65,
+        "rec": 0,
+        "main": 1,
+        "rl1": 5,
+        "tan_hit": 0,
+        "fuku_hit": 1,
+        "fuku_pay": 120.0
+      },
+      {
+        "date": "2026-10-10",
+        "venue": "東京",
+        "num": 10,
+        "conf": 55,
+        "rec": 0,
+        "main": 1,
+        "rl1": 14,
+        "tan_hit": 0,
+        "fuku_hit": 1,
+        "fuku_pay": 160.0
+      },
+      {
+        "date": "2026-10-10",
+        "venue": "東京",
+        "num": 9,
+        "conf": 71,
+        "rec": 1,
+        "main": 1,
+        "rl1": 2,
+        "tan_hit": 0,
+        "fuku_hit": 0,
+        "fuku_pay": null
+      },
+      {
+        "date": "2026-10-03",
+        "venue": "京都",
+        "num": 11,
+        "conf": 51,
+        "rec": 0,
+        "main": 1,
+        "rl1": 10,
+        "tan_hit": 0,
+        "fuku_hit": 0,
+        "fuku_pay": null
+      },
+      {
+        "date": "2026-10-03",
+        "venue": "京都",
+        "num": 10,
+        "conf": 52,
+        "rec": 0,
+        "main": 1,
+        "rl1": 14,
+        "tan_hit": 0,
+        "fuku_hit": 1,
+        "fuku_pay": 130.0
+      },
+      {
+        "date": "2026-10-03",
+        "venue": "京都",
+        "num": 9,
+        "conf": 68,
+        "rec": 1,
+        "main": 1,
+        "rl1": 6,
+        "tan_hit": 0,
+        "fuku_hit": 1,
+        "fuku_pay": 150.0
+      },
+      {
+        "date": "2026-10-03",
+        "venue": "東京",
+        "num": 11,
+        "conf": 58,
+        "rec": 0,
+        "main": 1,
+        "rl1": 4,
+        "tan_hit": 0,
+        "fuku_hit": 1,
+        "fuku_pay": 120.0
+      },
+      {
+        "date": "2026-10-03",
+        "venue": "東京",
+        "num": 10,
+        "conf": 55,
+        "rec": 0,
+        "main": 1,
+        "rl1": 5,
+        "tan_hit": 0,
+        "fuku_hit": 0,
+        "fuku_pay": null
+      },
+      {
+        "date": "2026-10-03",
+        "venue": "東京",
+        "num": 9,
+        "conf": 62,
+        "rec": 0,
+        "main": 1,
+        "rl1": 4,
+        "tan_hit": 0,
+        "fuku_hit": 1,
+        "fuku_pay": 120.0
+      },
+      {
+        "date": "2026-10-03",
+        "venue": "東京",
+        "num": 5,
+        "conf": 69,
+        "rec": 1,
+        "main": 0,
+        "rl1": 3,
+        "tan_hit": 1,
+        "fuku_hit": 1,
+        "fuku_pay": 110.0
       }
     ]
   },
@@ -2880,5 +4049,5 @@
       "top3_rate": 16.4
     }
   },
-  "generated_at": "2026-10-19 00:54"
+  "generated_at": "2026-10-19 22:58"
 }
