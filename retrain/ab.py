@@ -154,7 +154,7 @@ def main(W):
                'pooled': [dict(seed=r[0], n=r[1], auc_P=r[2], auc_N=r[3],
                                brier_P=r[4], brier_N=r[5], ll_P=r[6], ll_N=r[7])
                           for r in rows],
-               'criteria': {'c1': c1, 'c2': c2, 'c3': c3, 'c4': c4},
+               'criteria': {'c1': bool(c1), 'c2': bool(c2), 'c3': bool(c3), 'c4': bool(c4)},
                'delta_auc_mean': float(np.mean(dA)), 'seed_std': sd},
               open(os.path.join(W, 'ab_result.json'), 'w'), ensure_ascii=False, indent=2)
 
