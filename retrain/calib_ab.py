@@ -36,7 +36,7 @@ def main(W):
     sys.path.insert(0, W)
     import src.tools.train_xgb as T
     from src.tools.calibrate_xgb import _fit_isotonic
-    from src.models.calibration import load_calibrator
+    from src.models.calibration_xgb import load_xgb_calibrator
 
     # ── 特徴量 ──
     df = pd.read_csv(os.path.join(W, 'data', 'horse_features.csv'))
@@ -47,7 +47,7 @@ def main(W):
     meta = json.load(open(os.path.join(W, 'data', 'xgb_feature_cols_residual.json')))
     feat = list(meta['feature_cols'])
     P = T._load_xgb_model_any(os.path.join(W, 'data', 'xgb_fukusho_model_residual.pkl'), True)
-    cal_now = load_calibrator(W)
+    cal_now = load_xgb_calibrator(W)
     drift = T.load_popularity_drift(W)
     print(f'CSV {len(df):,}行 / 特徴量 {len(feat)} / 現行較正器 {"OK" if cal_now else "なし"} / '
           f'drift {"ON" if drift is not None else "OFF"}')
@@ -73,7 +73,9 @@ def main(W):
     y_ev = (ev['actual_place'] <= 3).astype(int).values
 
     # ── 中止条件2: raw_prob の再構成が正しいか（現行 pkl で保存値を再現できるか）──
-    rec = np.asarray(cal_now.transform(raw_ev.tolist()), dtype=float)
+    # engine.py:3112 は transform の結果を [0.01, 0.99] にクリップして保存する。
+    # ここを省くと保存値を再現できない。
+    rec = np.clip(np.asarray(cal_now.transform(raw_ev.tolist()), dtype=float), 0.01, 0.99)
     d_med = float(np.median(np.abs(rec - ev['cal_prob'].values)))
     print(f'\n中止条件2 raw_prob 再構成の検算: 現行較正器を当てた値 vs 保存 cal_prob の '
           f'中央値差 {d_med:.5f}  → {"✅ 通過" if d_med <= 0.002 else "🔴 不通過（ECEを読まずに破棄）"}')
