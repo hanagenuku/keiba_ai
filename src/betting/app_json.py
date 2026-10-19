@@ -76,7 +76,10 @@ def _assign_marks(scored, by_odds):
     for h in osusume[:2]:
         marks[h['num']] = '推'
 
-    # 穴マーク: 6番人気以下 かつ AI上位5位 かつ EV>=1.5 かつ cal_prob>=0.15（最大1頭）
+    # 穴マーク: 6番人気以下 かつ AI上位5位 かつ EV>=1.5 かつ pn>=0.15（最大1頭）
+    # 🔴 pn は win_prob（softmax T=3.5 の値・engine.py:3271）であって cal_prob ではない。
+    #    この閾値は較正器を通らない経路なので、xgb_calibrator.pkl を差し替えても動かない
+    #    （2026-10-19 に確認。CLAUDE.md の「穴マーク閾値 cal_prob>=0.15」は誤り）。
     ana_cands = [h for h in scored
                  if h['_pop'] >= 6
                  and h['ai_rank'] <= 5
