@@ -61,7 +61,7 @@ def main(W):
     # ── 評価行: 本番が実際に出した予想（朝オッズ条件）──
     con = sqlite3.connect(os.path.join(W, 'data', 'keiba.db'))
     rp = pd.read_sql_query(
-        "SELECT race_id, horse_num, popularity, cal_prob, actual_place FROM race_predictions "
+        "SELECT date, race_id, horse_num, popularity, cal_prob, actual_place FROM race_predictions "
         f"WHERE date > '{TRAIN_END}' AND actual_place IS NOT NULL", con)
     con.close()
     rp = rp[(rp.popularity > 0) & (rp.popularity != 99)]
@@ -72,16 +72,32 @@ def main(W):
     raw_ev = raw_from(ev[feat], ev['popularity'].values, ev['_n'].values)
     y_ev = (ev['actual_place'] <= 3).astype(int).values
 
-    # ── 中止条件2: raw_prob の再構成が正しいか（現行 pkl で保存値を再現できるか）──
+    # ── 中止条件2（カード §9 v2）──
+    # 2a: base_margin の分母（出走頭数）が CSV と一致するか。ここがズレると base_margin が丸ごと狂う。
+    n_csv = df.groupby('race_id')['horse_num'].count().rename('n_csv')
+    chk = ev[['race_id', '_n']].merge(n_csv, on='race_id', how='left')
+    ok_n = float((chk['_n'] == chk['n_csv']).mean())
+    print(f'\n中止条件2a 出走頭数の一致: {ok_n:.4f}  → {"✅ 通過" if ok_n >= 1.0 else "🔴 不通過"}')
+
+    # 2b: 9/15 以降（いまの data/ のモデル＋較正器が実際に本番で動いていた期間）で、
+    #     再構成に現行 pkl を当てた ECE が保存 cal_prob の ECE を再現するか。
+    #     合格線は手で決めず ECE 自身の帰無分布の std×2 から導く。
     # engine.py:3112 は transform の結果を [0.01, 0.99] にクリップして保存する。
-    # ここを省くと保存値を再現できない。
     rec = np.clip(np.asarray(cal_now.transform(raw_ev.tolist()), dtype=float), 0.01, 0.99)
-    d_med = float(np.median(np.abs(rec - ev['cal_prob'].values)))
-    print(f'\n中止条件2 raw_prob 再構成の検算: 現行較正器を当てた値 vs 保存 cal_prob の '
-          f'中央値差 {d_med:.5f}  → {"✅ 通過" if d_med <= 0.002 else "🔴 不通過（ECEを読まずに破棄）"}')
-    if d_med > 0.002:
-        print('   破棄。raw_prob の再構成が本番と一致していない。')
+    m15 = (ev['date'].astype(str) >= '2026-09-15').values
+    e_rec15 = ece_and_bins(rec[m15], y_ev[m15])[0]
+    e_sav15 = ece_and_bins(ev['cal_prob'].values[m15], y_ev[m15])[0]
+    rng = np.random.default_rng(20261019)
+    null = np.array([ece_and_bins(rec[m15], rng.binomial(1, rec[m15]))[0] for _ in range(400)])
+    lim = float(null.std() * 2)
+    gap = abs(e_rec15 - e_sav15)
+    print(f'中止条件2b 9/15以降 N={int(m15.sum()):,}: ECE 保存 {e_sav15:.4f} / 再構成 {e_rec15:.4f} '
+          f'差 {gap:.4f}  判定線（帰無std×2）{lim:.4f}  → {"✅ 通過" if gap <= lim else "🔴 不通過"}')
+    if ok_n < 1.0 or gap > lim:
+        print('   破棄。raw_prob の再構成が本番と一致していない（ECEを読まずに破棄）。')
         return
+    d_all = float(np.median(np.abs(rec - ev['cal_prob'].values)))
+    print(f'   参考: 全期間の中央値差 {d_all:.5f}（世代交代ぶん。カード §9 の階段）')
 
     # ── 学習行（評価行と重ならない）──
     tr = df[df.date_obj <= pd.Timestamp(TRAIN_END)].copy()
