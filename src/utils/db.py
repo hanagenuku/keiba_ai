@@ -960,10 +960,17 @@ def check_and_update_bets(all_results, base_dir=None, db_path=None):
         is_hit = False
         payout = 0
 
-        if bet_type == '複勝' and h1 in top3:
-            is_hit = True
+        if bet_type == '複勝':
+            # 🔴 「3着内＝複勝的中」ではない。7頭以下のレースは複勝が
+            #    **2着までしか発売されない**ので、3着に入っても外れ。
+            #    払戻表にその馬の行があるかどうかが唯一の正しい判定
+            #    （頭数の規則を手で書くとワイド等まで巻き込んで誤判定する。
+            #     2026-10-02 に prediction_archive 側で確定させた規則）。
+            #    実データで5件、3着なのに「的中・払戻0円」と記録されていた
+            #    （2026-10-20 の監査で発覚）。
             for f in divs.get('fukusho', []):
                 if f['num'] == h1:
+                    is_hit = True
                     payout = int(amount * f['payout'] / 100)
                     break
         elif bet_type == '単勝' and h1 == top1:

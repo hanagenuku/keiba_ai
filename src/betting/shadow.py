@@ -214,8 +214,12 @@ def _build_shadow_row(result, morning_map, recommended_race_ids):
     tan_pay  = divs.get('tansho', {}).get('payout') if tan_hit else None
 
     # 複勝
-    fuku_hit = 1 if rl1_num and rl1_num in top3_nums else 0
-    fuku_pay = fuku_map.get(rl1_num) if fuku_hit else None
+    # 🔴 「3着内＝複勝的中」ではない。7頭以下のレースは複勝が2着までしか
+    #    発売されないため、3着に入っても外れになる。払戻表にその馬の行が
+    #    あるかどうかで判定する（2026-10-20 の監査で、3着なのに
+    #    「的中・払戻なし」と記録された行が4件見つかった）。
+    fuku_pay = fuku_map.get(rl1_num) if rl1_num else None
+    fuku_hit = 1 if fuku_pay is not None else 0
 
     # 馬連
     rl12 = {rl1_num, rl2_num} if rl1_num and rl2_num else set()

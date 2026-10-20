@@ -1,10 +1,11 @@
-"""成績ページの「対象範囲の的中実績」を固定する。
+"""成績ページの「的中実績（軸1頭ベース・全券種）」を固定する。
 
-ユーザー依頼（2026-10-19）:
-    「各競馬場9から11レース及び自信のある推奨レースの的中実績、
-      9から11レースに関しては、その中に推奨レースがあるならそれがわかるように」
+ユーザー依頼:
+  2026-10-19「各競馬場9から11レース及び自信のある推奨レースの的中実績、
+              9から11レースに関しては、その中に推奨レースがあるならわかるように」
+  2026-10-20「複勝以外の的中率と回収率も。それの累積も。全レースの的中率と回収率も」
 
-ここで固定したいのは数字ではなく**どの規則で範囲を分けているか**:
+ここで固定したいのは数字ではなく**どの規則で測っているか**:
 
 1. 範囲の判定は `src/product/scope.py` を呼ぶ。閾値を集計側で作り直さない
    （2026-10-16「危険な人気馬」で、判定条件が2箇所に分かれると記事と台帳が
@@ -13,9 +14,11 @@
    `shadow_bets.was_recommended` でもない（2026-10-06 ユーザー決定）。
 3. `conf` は `race_predictions` の軸行から復元する。復元式は
    `app_json.race_confidence()` と同一でなければならない。
-4. 軸が無い行は「不的中」ではなく**評価不能**として母集団から除く。
-5. 的中率の隣に必ず複勝回収率を置く（North Star #9）。的中したのに配当が
-   取れていない行は0円として混ぜず分母から外す（2026-08-18③）。
+4. 🔴 **的中と払戻は `race_dividends` を正とする**。`shadow_*_hit` /
+   `shadow_*_payout` 列は使わない（2026-10-20 の監査で3種類の壊れ方を確認）。
+5. 🔴 **回収率は必ず「3本抜き」と並べて出す**。100%超のマスは例外なく
+   高配当1〜2本で出来ている。
+6. 軸が無い行は「不的中」ではなく**評価不能**として母集団から除く。
 """
 import ast
 import os
@@ -25,7 +28,8 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from scripts.generate_stats import (  # noqa: E402
-    _axis_conf_map, _scope_bucket, calc_scope_accuracy,
+    SHADOW_BETS, _axis_conf_map, _bet_stats, _combo_key, _dividend_map,
+    calc_scope_accuracy,
 )
 from src.betting.app_json import race_confidence  # noqa: E402
 from src.product import scope  # noqa: E402
@@ -43,45 +47,61 @@ def _db(tmp_path):
     return conn
 
 
-def _race(conn, race_id, venue, num, axis_top3, fuku_hit, tan_hit=0,
-          fuku_pay=None, rl1=3, date='2026-10-18'):
+def _race(conn, race_id, venue, num, axis_top3, rl=(3, 4, 5),
+          pays=None, date='2026-10-18'):
+    """1レース分を本番と同じ3テーブルに書く。
+
+    pays: {bet_type: {combo: payout}} をそのまま race_dividends へ。
+          渡さない券種は「払戻表に行が無い」＝評価不能になる。
+    """
+    for rank, num_ in enumerate(rl, 1):
+        conn.execute(
+            'INSERT INTO race_predictions (date, race_id, racecourse, race_num, '
+            'horse_num, rl_rank, fuku_prob) VALUES (?,?,?,?,?,?,?)',
+            (date, race_id, venue, num, num_, rank,
+             axis_top3 if rank == 1 else 0.1))
     conn.execute(
-        'INSERT INTO race_predictions (date, race_id, racecourse, race_num, '
-        'horse_num, rl_rank, fuku_prob) VALUES (?,?,?,?,?,1,?)',
-        (date, race_id, venue, num, rl1, axis_top3))
-    # 軸以外の馬（rl_rank != 1）も入れて、軸行だけを拾えていることを確かめる
-    conn.execute(
-        'INSERT INTO race_predictions (date, race_id, racecourse, race_num, '
-        'horse_num, rl_rank, fuku_prob) VALUES (?,?,?,?,?,2,?)',
-        (date, race_id, venue, num, rl1 + 1, 0.99))
-    conn.execute(
-        'INSERT INTO shadow_bets (date, race_id, racecourse, race_num, rl1_num, '
-        'shadow_tansho_hit, shadow_fukusho_hit, shadow_fukusho_payout, '
-        'shadow_wide_hit, shadow_umaren_hit, shadow_sanrenp_hit, was_recommended) '
-        'VALUES (?,?,?,?,?,?,?,?,0,0,0,0)',
-        (date, race_id, venue, num, rl1, tan_hit, fuku_hit, fuku_pay))
+        'INSERT INTO shadow_bets (date, race_id, racecourse, race_num, '
+        'rl1_num, rl2_num, rl3_num, was_recommended) VALUES (?,?,?,?,?,?,?,0)',
+        (date, race_id, venue, num, rl[0], rl[1], rl[2]))
+    for bt, combos in (pays or {}).items():
+        for combo, pay in combos.items():
+            conn.execute(
+                'INSERT INTO race_dividends (race_id, date, bet_type, combo, '
+                'payout) VALUES (?,?,?,?,?)', (race_id, date, bt, combo, pay))
     conn.commit()
+
+
+def _all_pays(rl, tansho=None, fukusho=None, umaren=None, wide=None, san=None):
+    """軸がちょうど当たる払戻表を作る。"""
+    a, b, c = rl
+    return {
+        'tansho':     {str(a): tansho} if tansho else {},
+        'fukusho':    {str(a): fukusho} if fukusho else {},
+        'umaren':     {'-'.join(map(str, sorted([a, b]))): umaren} if umaren else {},
+        'wide':       {'-'.join(map(str, sorted([a, b]))): wide} if wide else {},
+        'sanrenpuku': {'-'.join(map(str, sorted([a, b, c]))): san} if san else {},
+    }
 
 
 class TestConfReconstruction:
     def test_matches_race_confidence(self, tmp_path):
-        """復元式が app_json.race_confidence() と一致すること。
+        """復元式が app_json.race_confidence() と一致すること（North Star #8）。
 
-        別実装で作って値を突合する（North Star #8）。実データでも
-        2026-10-18 の34レースで latest.json の conf と 34/34 一致した。
+        実データでも 2026-10-18 の34レースで latest.json の conf と 34/34 一致。
         """
         conn = _db(tmp_path)
-        for i, p in enumerate([0.25, 0.555, 0.66, 0.664, 0.7, 0.999]):
-            _race(conn, f'20261018_05_{i:02d}', '東京', 9, p, 0)
+        probs = [0.25, 0.555, 0.66, 0.664, 0.7, 0.999]
+        for i, p in enumerate(probs):
+            _race(conn, f'20261018_05_{i:02d}', '東京', 9, p)
         got = _axis_conf_map(conn)
-        for i, p in enumerate([0.25, 0.555, 0.66, 0.664, 0.7, 0.999]):
+        for i, p in enumerate(probs):
             scored = [{'rl_rank': 1, 'top3_prob': p}, {'rl_rank': 2, 'top3_prob': 0.1}]
             assert got[f'20261018_05_{i:02d}'] == race_confidence(scored)
 
     def test_ignores_non_axis_rows(self, tmp_path):
-        """軸以外の馬の fuku_prob を拾わないこと。"""
         conn = _db(tmp_path)
-        _race(conn, '20261018_05_09', '東京', 9, 0.40, 0, rl1=3)
+        _race(conn, '20261018_05_09', '東京', 9, 0.40, rl=(3, 4, 5))
         assert _axis_conf_map(conn)['20261018_05_09'] == 40
 
 
@@ -106,7 +126,6 @@ class TestScopeRulesComeFromScopeModule:
         return '\n'.join(ast.unparse(n) for n in body)
 
     def test_threshold_is_not_hardcoded_in_stats(self):
-        """閾値の出どころが scope.py であること（集計側で発明しない）。"""
         code = self._code()
         assert 'scope.FLAT_MIN_CONF' in code
         assert 'scope.is_main_race' in code
@@ -114,19 +133,113 @@ class TestScopeRulesComeFromScopeModule:
         assert '66' not in code, '閾値を直書きしている。scope.FLAT_MIN_CONF を使うこと'
 
     def test_does_not_use_production_rec(self):
-        """本番の rec / was_recommended に追従していないこと。
-
-        🔴 `rec` は「軸の3着内確率>=0.55 のうちその日の上位6本」で、商品の
-        固定閾値とは別物（2026-10-05 に実データで食い違いを確認・10-06 に
-        ユーザーが固定値を選択）。
-        """
+        """本番の rec / was_recommended に追従していないこと。"""
         code = self._code()
         assert 'was_recommended' not in code
-        assert "'rec'" not in code.replace("'rec':", '')
 
     def test_flat_min_conf_is_tickets_conf_strong(self):
         from src.product import tickets
         assert scope.FLAT_MIN_CONF == tickets.CONF_STRONG == 66
+
+
+class TestPayoutsComeFromDividends:
+    """🔴 的中・払戻は race_dividends を正とする（shadow の列を信用しない）。"""
+
+    def test_stats_never_reads_shadow_hit_columns(self):
+        src = open(os.path.join(BASE, 'scripts', 'generate_stats.py'),
+                   encoding='utf-8').read()
+        head = src[:src.index('def calc_divergence_analysis')]
+        code = '\n'.join(l for l in head.splitlines()
+                         if not l.lstrip().startswith('#'))
+        for col in ('shadow_fukusho_hit', 'shadow_tansho_hit',
+                    'shadow_fukusho_payout', 'shadow_wide_payout'):
+            assert col not in code, f'{col} を読んでいる。race_dividends を正とすること'
+
+    def test_combo_key_is_sorted_ascending(self):
+        """組番は昇順。実データで `bets` 側が馬連 10-8 を払戻表の 8-10 と
+        突き合わせられず、唯一の的中なのに回収0%と表示していた。"""
+        row = {'rl1_num': 10, 'rl2_num': 8, 'rl3_num': 3}
+        assert _combo_key(row, 1) == '10'
+        assert _combo_key(row, 2) == '8-10'
+        assert _combo_key(row, 3) == '3-8-10'
+
+    def test_combo_key_none_when_axis_incomplete(self):
+        assert _combo_key({'rl1_num': 1, 'rl2_num': None, 'rl3_num': 3}, 2) is None
+        assert _combo_key({'rl1_num': 1, 'rl2_num': 1, 'rl3_num': 3}, 2) is None
+
+    def test_fukusho_without_a_payout_row_is_a_miss_not_a_hit(self, tmp_path):
+        """7頭以下は複勝が2着までしか発売されない。3着は**外れ**。
+
+        実データで4件、3着なのに「的中・払戻0円」と記録されていた
+        （20260809_07_06 など）。払戻表に行があるかで判定する。
+        """
+        conn = _db(tmp_path)
+        # 軸#3は3着に入ったが、複勝の払戻行は他の2頭ぶんしか無い
+        _race(conn, '20261018_05_09', '東京', 9, 0.70, rl=(3, 4, 5),
+              pays={'fukusho': {'4': 150, '5': 120},
+                    'sanrenpuku': {'3-4-5': 900}})
+        divs = _dividend_map(conn)
+        rows = conn.execute('SELECT * FROM shadow_bets').fetchall()
+        fuku = _bet_stats(rows, divs, '複勝', 'fukusho', 1)
+        assert fuku['races'] == 1 and fuku['hit'] == 0, '3着を複勝的中にしない'
+        san = _bet_stats(rows, divs, '三連複', 'sanrenpuku', 3)
+        assert san['hit'] == 1, '三連複は当たっている'
+
+    def test_missing_dividend_table_is_unevaluable_not_a_miss(self, tmp_path):
+        """ワイドの払戻行が1行も無いレースは**評価不能**（不的中にしない）。
+
+        実データで22レース。スクレイプ漏れであって外れではない。
+        """
+        conn = _db(tmp_path)
+        _race(conn, '20261018_05_09', '東京', 9, 0.70, rl=(3, 4, 5),
+              pays={'fukusho': {'3': 130}})       # wide の行が無い
+        divs = _dividend_map(conn)
+        rows = conn.execute('SELECT * FROM shadow_bets').fetchall()
+        wide = _bet_stats(rows, divs, 'ワイド', 'wide', 2)
+        assert wide['races'] == 0 and wide['na'] == 1
+
+
+class TestAllBetTypesAndCumulative:
+    def test_every_bet_type_has_hit_rate_and_recovery(self, tmp_path):
+        """複勝以外も的中率と回収率を出す（2026-10-20 の依頼）。"""
+        conn = _db(tmp_path)
+        rl = (3, 4, 5)
+        _race(conn, '20261018_05_09', '東京', 9, 0.70, rl=rl,
+              pays=_all_pays(rl, tansho=300, fukusho=130, umaren=800,
+                             wide=250, san=1500))
+        sa = calc_scope_accuracy(conn)
+        g = sa['groups'][0]
+        assert [b['type'] for b in g['bets']] == list(sa['bet_types'])
+        assert len(g['bets']) == len(SHADOW_BETS) == 5
+        for b in g['bets']:
+            assert b['hit'] == 1 and b['hit_rate'] == 100.0
+            assert b['roi'] is not None and b['roi_cut3'] is not None
+
+    def test_cumulative_row_sums_all_bet_types(self, tmp_path):
+        conn = _db(tmp_path)
+        rl = (3, 4, 5)
+        _race(conn, '20261018_05_09', '東京', 9, 0.70, rl=rl,
+              pays=_all_pays(rl, tansho=300, fukusho=130, umaren=800,
+                             wide=250, san=1500))
+        g = calc_scope_accuracy(conn)['groups'][0]
+        t = g['total']
+        assert t['races'] == 5 and t['hit'] == 5
+        # 5点買って払戻合計 2980円 → 2980 / (5点×100円) = 596%
+        assert t['roi'] == 596.0
+
+    def test_monthly_cumulative_is_running_total(self, tmp_path):
+        """「それの累積」＝その月までの累計。"""
+        conn = _db(tmp_path)
+        rl = (3, 4, 5)
+        _race(conn, '20260905_05_09', '東京', 9, 0.70, rl=rl, date='2026-09-05',
+              pays=_all_pays(rl, tansho=300, fukusho=130))
+        _race(conn, '20261018_05_09', '東京', 9, 0.70, rl=rl, date='2026-10-18',
+              pays=_all_pays(rl, tansho=0, fukusho=0))   # 払戻行はあるが全外れ
+        m = calc_scope_accuracy(conn)['monthly']
+        assert [x['month'] for x in m] == ['2026-09', '2026-10']
+        assert m[0]['cum_bets'] == m[0]['bets']
+        assert m[1]['cum_bets'] == m[0]['bets'] + m[1]['bets']
+        assert m[1]['cum_hit'] == m[0]['hit'] + m[1]['hit']
 
 
 class TestGrouping:
@@ -134,43 +247,38 @@ class TestGrouping:
         """9〜11R の中の推奨が分かれること（依頼の核心）。"""
         conn = _db(tmp_path)
         thr = scope.FLAT_MIN_CONF / 100.0
-        # 東京 9R: 推奨・複勝的中 / 10R: 非推奨・的中 / 11R: 非推奨・不的中
-        _race(conn, '20261018_05_09', '東京', 9, thr + 0.04, 1, fuku_pay=130)
-        _race(conn, '20261018_05_10', '東京', 10, thr - 0.10, 1, fuku_pay=110)
-        _race(conn, '20261018_05_11', '東京', 11, thr - 0.20, 0)
-        # 平場の推奨（9〜11R ではない）
-        _race(conn, '20261018_05_03', '東京', 3, thr + 0.10, 1, fuku_pay=150)
-        # 平場の非推奨（どちらのグループにも入らない）
-        _race(conn, '20261018_05_04', '東京', 4, thr - 0.30, 1, fuku_pay=120)
+        rl = (3, 4, 5)
+        p = _all_pays(rl, tansho=300, fukusho=130, umaren=800, wide=250, san=900)
+        _race(conn, '20261018_05_09', '東京', 9, thr + 0.04, rl=rl, pays=p)
+        _race(conn, '20261018_05_10', '東京', 10, thr - 0.10, rl=rl, pays=p)
+        _race(conn, '20261018_05_11', '東京', 11, thr - 0.20, rl=rl, pays=p)
+        _race(conn, '20261018_05_03', '東京', 3, thr + 0.10, rl=rl, pays=p)
+        _race(conn, '20261018_05_04', '東京', 4, thr - 0.30, rl=rl, pays=p)
 
         sa = calc_scope_accuracy(conn)
         g = {x['label'].strip(): x for x in sa['groups']}
-        main = g['9〜11R 全体']
-        assert main['races'] == 3 and main['fuku_hit'] == 2
+        assert g['9〜11R 全体']['races'] == 3
         assert g[f'うち推奨（信頼度{scope.FLAT_MIN_CONF}以上）']['races'] == 1
         assert g['うち推奨以外']['races'] == 2
-        rec = g[f'推奨レース 全体（信頼度{scope.FLAT_MIN_CONF}以上）']
-        assert rec['races'] == 2, '9〜11R の推奨 + 平場の推奨'
+        assert g[f'推奨レース 全体（信頼度{scope.FLAT_MIN_CONF}以上）']['races'] == 2
         assert g['うち平場（9〜11R以外）']['races'] == 1
-        assert g['（参考）全レース']['races'] == 5
+        assert g['全レース']['races'] == 5
 
         venue = {v['venue']: v for v in sa['by_venue']}['東京']
         assert venue['races'] == 3 and venue['rec_races'] == 1
         nums = {d['num']: d for d in venue['by_num']}
         assert sorted(nums) == list(scope.MAIN_RACE_NUMS)
-        assert nums[9]['rec'] == 1 and nums[10]['rec'] == 0 and nums[11]['rec'] == 0
-        assert nums[9]['fuku_hit'] == 1 and nums[11]['fuku_hit'] == 0
+        assert nums[9]['rec'] == 1 and nums[10]['rec'] == 0
 
-        # 直近一覧にも推奨フラグが出る（平場の非推奨は載らない）
         recent = {(r['num'], r['rec']) for r in sa['recent']}
         assert (9, 1) in recent and (10, 0) in recent and (3, 1) in recent
         assert 4 not in {r['num'] for r in sa['recent']}
 
     def test_conf_exactly_on_the_threshold_is_recommended(self, tmp_path):
-        """境界（conf == 66）は推奨に含む（scope.in_scope と同じ >= 判定）。"""
         conn = _db(tmp_path)
-        _race(conn, '20261018_05_01', '東京', 1, scope.FLAT_MIN_CONF / 100.0, 1,
-              fuku_pay=110)
+        rl = (3, 4, 5)
+        _race(conn, '20261018_05_01', '東京', 1, scope.FLAT_MIN_CONF / 100.0,
+              rl=rl, pays=_all_pays(rl, fukusho=110))
         sa = calc_scope_accuracy(conn)
         rec = [g for g in sa['groups'] if g['label'].startswith('推奨レース 全体')][0]
         assert rec['races'] == 1
@@ -179,82 +287,90 @@ class TestGrouping:
 
 class TestEvaluableRowsOnly:
     def test_race_without_axis_is_excluded_not_counted_as_miss(self, tmp_path):
-        """軸が無い行（オッズ全滅等）は不的中ではなく評価不能。"""
         conn = _db(tmp_path)
-        _race(conn, '20261018_05_09', '東京', 9, 0.60, 1, fuku_pay=120)
+        rl = (3, 4, 5)
+        _race(conn, '20261018_05_09', '東京', 9, 0.60, rl=rl,
+              pays=_all_pays(rl, fukusho=120))
         conn.execute(
-            'INSERT INTO shadow_bets (date, race_id, racecourse, race_num, '
-            'rl1_num, shadow_tansho_hit, shadow_fukusho_hit) '
-            "VALUES ('2026-10-18','20261018_05_10','東京',10,NULL,0,0)")
+            "INSERT INTO shadow_bets (date, race_id, racecourse, race_num, "
+            "rl1_num) VALUES ('2026-10-18','20261018_05_10','東京',10,NULL)")
         conn.execute(
-            'INSERT INTO race_predictions (date, race_id, racecourse, race_num, '
-            "horse_num, rl_rank, fuku_prob) VALUES ('2026-10-18','20261018_05_10',"
-            "'東京',10,3,1,0.6)")
+            "INSERT INTO race_predictions (date, race_id, racecourse, race_num, "
+            "horse_num, rl_rank, fuku_prob) "
+            "VALUES ('2026-10-18','20261018_05_10','東京',10,3,1,0.6)")
         conn.commit()
         sa = calc_scope_accuracy(conn)
         assert sa['excluded']['no_axis'] == 1
         assert sa['races'] == 1
         main = [g for g in sa['groups'] if g['label'] == '9〜11R 全体'][0]
-        assert main['races'] == 1 and main['fuku_rate'] == 100.0
+        fuku = [b for b in main['bets'] if b['type'] == '複勝'][0]
+        assert fuku['races'] == 1 and fuku['hit_rate'] == 100.0
 
     def test_race_without_conf_is_excluded(self, tmp_path):
         conn = _db(tmp_path)
         conn.execute(
-            'INSERT INTO shadow_bets (date, race_id, racecourse, race_num, '
-            'rl1_num, shadow_tansho_hit, shadow_fukusho_hit) '
-            "VALUES ('2026-10-18','20261018_05_09','東京',9,3,0,1)")
+            "INSERT INTO shadow_bets (date, race_id, racecourse, race_num, "
+            "rl1_num) VALUES ('2026-10-18','20261018_05_09','東京',9,3)")
         conn.commit()
         sa = calc_scope_accuracy(conn)
         assert sa is None or sa['excluded']['no_conf'] == 1
 
 
-class TestRecoveryRateIsAlwaysShownNextToHits:
-    def test_bucket_has_both_hit_rate_and_recovery(self):
-        """的中率だけ出さない（North Star #9）。"""
-        rows = [{'shadow_tansho_hit': 1, 'shadow_fukusho_hit': 1,
-                 'shadow_fukusho_payout': 200.0},
-                {'shadow_tansho_hit': 0, 'shadow_fukusho_hit': 0,
-                 'shadow_fukusho_payout': None}]
-        b = _scope_bucket(rows, 'x')
-        assert b['fuku_rate'] == 50.0
-        assert b['fuku_roi'] == 100.0   # 200円 / 2点 = 100%
-        assert b['roi_races'] == 2 and b['roi_missing'] == 0
-
-    def test_hit_without_payout_is_excluded_from_the_denominator(self):
-        """的中なのに配当が無い行を0円として混ぜない（2026-08-18③）。"""
-        rows = [{'shadow_tansho_hit': 0, 'shadow_fukusho_hit': 1,
-                 'shadow_fukusho_payout': None},
-                {'shadow_tansho_hit': 0, 'shadow_fukusho_hit': 1,
-                 'shadow_fukusho_payout': 150.0}]
-        b = _scope_bucket(rows, 'x')
-        assert b['fuku_hit'] == 2
-        assert b['roi_missing'] == 1
-        assert b['roi_races'] == 1
-        assert b['fuku_roi'] == 150.0, '欠損を0円で混ぜると75%になる'
+class TestRobustnessIsAlwaysShown:
+    def test_cut3_is_computed_and_lower_when_one_payout_dominates(self, tmp_path):
+        """高配当1本で作られた回収率が「3本抜き」で崩れること。"""
+        conn = _db(tmp_path)
+        rl = (3, 4, 5)
+        for i in range(5):
+            _race(conn, f'20261018_05_{i:02d}', '東京', 9, 0.70, rl=rl,
+                  pays={'sanrenpuku': ({'3-4-5': 50000} if i == 0 else {'1-2-6': 100})})
+        divs = _dividend_map(conn)
+        rows = conn.execute('SELECT * FROM shadow_bets').fetchall()
+        san = _bet_stats(rows, divs, '三連複', 'sanrenpuku', 3)
+        assert san['roi'] == 10000.0        # 50000 / (5点×100)
+        assert san['roi_cut3'] == 0.0       # 1本抜けば何も残らない
+        assert san['top_pay'] == 50000
 
 
 class TestAppRendering:
+    @staticmethod
+    def _card():
+        html = open(os.path.join(BASE, 'index.html'), encoding='utf-8').read()
+        i = html.index('的中実績（軸1頭ベース・全券種）')
+        return html[i:html.index('// ── 直前オッズの変動', i)]
+
     def test_card_is_in_the_page(self):
         html = open(os.path.join(BASE, 'index.html'), encoding='utf-8').read()
         assert 'scope_accuracy' in html
-        assert '対象範囲の的中実績' in html
 
-    def test_card_warns_hit_rate_is_not_profit(self):
-        """的中率と回収率が別物であることを画面に書く。"""
-        html = open(os.path.join(BASE, 'index.html'), encoding='utf-8').read()
-        i = html.index('対象範囲の的中実績')
-        card = html[i:i + 6000]
+    def test_card_shows_every_bet_type_and_the_cumulative_row(self):
+        card = self._card()
+        assert 'g.bets' in card and 'g.total' in card
+        assert 'sa.monthly' in card and 'cum_roi' in card
+
+    def test_card_warns_hit_rate_is_not_profit_and_shows_cut3(self):
+        card = self._card()
         assert '的中率と回収率は別物' in card
-        assert '100%に届いていません' in card
+        assert 'roi_cut3' in card and '3本抜き' in card
 
     def test_card_does_not_colour_recovery_rates(self):
         """回収率に緑（pos）を付けない。
 
-        「成績表の良いセルだけ買う」は 2026-08-15・08-31 に3度否定済みで、
-        緑のセルがその提案を呼んだ。色で選ばせる作りに戻さない。
+        「成績表の良いセルだけ買う」は3度否定済みで、緑のセルがそれを呼んだ。
+        """
+        card = self._card()
+        assert 'roi' in card
+        assert "'pos'" not in card and 'class="pos"' not in card
+
+    def test_removed_cards_are_gone(self):
+        """ユーザー依頼（2026-10-20「今までの表示は要りません」）。
+
+        消した表示が stats.json 側にも残っていないこと（溜めるだけにしない）。
         """
         html = open(os.path.join(BASE, 'index.html'), encoding='utf-8').read()
-        i = html.index('対象範囲の的中実績')
-        card = html[i:html.index('// ── RL精度', i)]
-        assert 'fuku_roi' in card
-        assert "'pos'" not in card and 'pos"' not in card
+        src = open(os.path.join(BASE, 'scripts', 'generate_stats.py'),
+                   encoding='utf-8').read()
+        for key in ('rl_accuracy', 'by_type', 'upset_patterns', 'recent_races',
+                    'divergence_analysis'):
+            assert key not in html, f'{key} の表示が残っている'
+            assert f"stats['{key}']" not in src, f'{key} を stats.json に出している'
