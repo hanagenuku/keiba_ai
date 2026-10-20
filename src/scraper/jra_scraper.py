@@ -257,9 +257,17 @@ def fetch_horse_pedigree(sess, cname):
 PEDIGREE_FETCH_BUDGET_DEFAULT = 60
 # suffix が計算式から外れた時の近傍走査。0x00〜0xFF を尽くすので ±128。
 SUFFIX_SCAN_HALF_RANGE = 128
-# ⚠ 実行全体での走査リクエスト上限（North Star #4）。1レース最大256件なので
-#    3レースぶん。これが無いとJRA不調時に全レースが全域走査してタイムアウトする。
-SUFFIX_SCAN_BUDGET_DEFAULT = 800
+# ⚠ 走査リクエストの上限（North Star #4）。これが無いとJRA不調時に
+#    全レースが全域走査してタイムアウトし、その回のデータを丸ごと失う
+#    （2026-07-18 に実際に発生）。1レース最大256件なので、約1.2レースぶん。
+# 🔴 **会場ごとの上限**。2026-10-20 までは実行全体で共有する 800 件だったが、
+#    それだと先に処理した会場が使い切った時点で**後続の会場が1件も走査できない**。
+#    しかもその状態は「カード途中の穴」としても検知できない（R10〜R12 が
+#    まとめて落ちると last_ok が下がり、末尾の短いカードと区別がつかない）。
+#    2026-10-18 に 新潟R10（飛翼特別・芝1000m・18頭）が朝の生成から落ち、
+#    `parse_failures` にも1件も残らなかった（原因は特定できていないが、
+#    会場ごとに割れば少なくとも「他会場の巻き添え」は構造的に起きない）。
+SUFFIX_SCAN_BUDGET_DEFAULT = 300
 # 走査が空振りしたレースを、確度の高い suffix だけ待って叩き直す待ち時間（秒）。
 # 🔴 2026-10-12 の実運用: 朝に「見つからない」と記録した 東京10R・京都10R が、
 #    同日 11:08 の再実行と夜の結果取得では**両方取れた**（＝ページは実在した）。
@@ -587,7 +595,6 @@ def fetch_races_on_date(sess, target_date, hist_db_path):
     all_races = []
     failures = []
     pedigree_budget = {'remaining': PEDIGREE_FETCH_BUDGET_DEFAULT}
-    scan_budget = {'remaining': SUFFIX_SCAN_BUDGET_DEFAULT}
     links = get_kaisai_on_date(target_date, sess)
     for base, date_str in links.items():
         pc = re.search(r'pw01dde01(\d{2})', base)
@@ -599,6 +606,9 @@ def fetch_races_on_date(sess, target_date, hist_db_path):
             print('❌')
             continue
         print(f'✅ {r01:02X}')
+        # 🔴 走査予算は会場ごと。実行全体で共有すると先の会場が使い切った時に
+        #    後続会場が無言で全滅する（2026-10-18 新潟R10）。
+        scan_budget = {'remaining': SUFFIX_SCAN_BUDGET_DEFAULT}
         # オッズページ専用のr01を探索（suffixがシャトウバと異なる）
         odds_base = _to_odds_base(base)
         odds_r01 = find_r01_odds(odds_base, date_str, sess)
@@ -1539,7 +1549,8 @@ def parse_result_soup(soup, racecourse, race_num, date, place_code):
 
 
 
-def fetch_results(sess, target_date, calendar=None, hist_db_path=None):
+def fetch_results(sess, target_date, calendar=None, hist_db_path=None,
+                  failures=None):
     """指定日の全レース結果を取得。
 
     hist_db_path を渡すと、確定した出走馬の血統(父・母の父)を補完して
@@ -1557,7 +1568,7 @@ def fetch_results(sess, target_date, calendar=None, hist_db_path=None):
     #    走査を出走表側と同じ全域に揃え、同時に North Star #4 の予算を入れる
     #    （予算が無いままの全域走査はタイムアウトのリスクを倍にするため、
     #     広げるのと予算を入れるのは同じ変更でやる）。
-    scan_budget = {'remaining': SUFFIX_SCAN_BUDGET_DEFAULT}
+    _fail = failures if failures is not None else []
 
     # Step1: 結果一覧(pw01sli00/AF)から sde_base を取得
     bases = {}
@@ -1605,6 +1616,9 @@ def fetch_results(sess, target_date, calendar=None, hist_db_path=None):
             print('❌')
             continue
         print(f'✅ {r01:02X}')
+        # 🔴 出走表側と同じく会場ごとの予算にする。
+        scan_budget = {'remaining': SUFFIX_SCAN_BUDGET_DEFAULT}
+        page_missing, got_nums = {}, []
         for r in range(1, 13):
             sx = calc_suffix(r01, r)
             soup = _try_fetch_result(sess, base_result, r, target_date, sx)
@@ -1620,9 +1634,11 @@ def fetch_results(sess, target_date, calendar=None, hist_db_path=None):
             if soup is None:
                 base_s = int(sx, 16)
                 found_delta = None
+                scan_cut = False
                 for delta in range(1, SUFFIX_SCAN_HALF_RANGE + 1):
                     if scan_budget['remaining'] <= 0:
                         print(f'  R{r:02d}: 結果suffix走査の予算切れ（±{delta - 1} まで）')
+                        scan_cut = True
                         break
                     for _sign, cand in [(+delta, (base_s + delta) % 256),
                                         (-delta, (base_s - delta) % 256)]:
@@ -1658,7 +1674,17 @@ def fetch_results(sess, target_date, calendar=None, hist_db_path=None):
             #   （再実行したら取れたので一過性の失敗）。片側だけ対策されていた
             #   典型例なので、結果側にも同じ粒度のログを入れる。
             if soup is None:
+                # 🔴 ここで失敗と決めつけない（12レース未満の開催がある）。
+                #    venueのループが終わってから「後続レースが取れているか」で
+                #    「途中の穴」と「末尾の短いカード」を切り分ける。
+                #    出走表側は 2026-09-12 にこの切り分けを入れたが、
+                #    **結果側は無言の continue のままだった**。そのため
+                #    結果だけ取れなかったレースが誰にも気づかれずに消え、
+                #    history.db にも race_dividends にも残らなかった
+                #    （2026-10-20 の監査で22レース・displayed_bets 620点が
+                #     決済不能のまま放置されていたと判明）。
                 print(f'  R{r:02d}: suffix={sx} → パラメータエラー/ページなし')
+                page_missing[r] = 'budget' if scan_cut else 'scanned'
                 continue
             result = parse_result_soup(soup, rc, r, target_date, pc)
             if not result:
@@ -1671,8 +1697,12 @@ def fetch_results(sess, target_date, calendar=None, hist_db_path=None):
                         print(f'  R{r:02d}: 障害レース → スキップ')
                     else:
                         print(f'  R{r:02d}: 結果parse失敗 (着順なし or 例外) suffix={sx}')
+                        _fail.append({'racecourse': rc, 'race_num': r,
+                                      'reason': '結果parse失敗'})
                 except Exception:
                     print(f'  R{r:02d}: 結果parse失敗（ログ取得中に例外） suffix={sx}')
+                    _fail.append({'racecourse': rc, 'race_num': r,
+                                  'reason': '結果parse失敗（例外）'})
                 continue
             if hist_db_path:
                 _fill_pedigree(sess, result['finishers'], hist_db_path, budget=pedigree_budget)
@@ -1683,8 +1713,27 @@ def fetch_results(sess, target_date, calendar=None, hist_db_path=None):
                 for h in top3
             )
             print(f'  R{r:02d}: {result.get("race_name", "")} {t3}')
+            got_nums.append(r)
             time.sleep(0.8)
-    print(f'\n📋 結果取得完了: {len(all_results)}レース')
+
+        # 🔴 「カードの途中が抜けた」だけを失敗として記録する。
+        #    Rn が取れず Rn+1 以降が取れている ＝ そのレースは実在するのに落ちた。
+        #    末尾（後続が1つも無い）は12レース未満の開催なので記録しない。
+        last_ok = max(got_nums) if got_nums else 0
+        for r, why in sorted(page_missing.items()):
+            if r < last_ok:
+                reason = ('カード途中・結果suffix走査の予算切れ' if why == 'budget'
+                          else 'カード途中・結果suffix走査で発見できず')
+                print(f'  🔴 R{r:02d}: {reason}（R{last_ok:02d}は取れている）'
+                      f'→ 取得失敗として記録')
+                _fail.append({'racecourse': rc, 'race_num': r, 'reason': reason})
+
+    print(f'\n📋 結果取得完了: {len(all_results)}レース'
+          + (f'（取得失敗 {len(_fail)}件）' if _fail else ''))
+    if _fail:
+        print('🔴 取得できなかったレース（再実行で拾える可能性があります）:')
+        for f in _fail:
+            print(f"   {f['racecourse']}R{f['race_num']:02d}  {f['reason']}")
     return all_results
 
 

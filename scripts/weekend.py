@@ -49,7 +49,9 @@ APP_PATH = os.path.join(ROOT, 'data', 'latest.json')
 def fetch_and_save_results(sess, hist_path, target_date):
     print(f'📅 本日結果取得: {target_date}')
 
-    all_results = fetch_results(sess, target_date, hist_db_path=hist_path)
+    result_failures = []
+    all_results = fetch_results(sess, target_date, hist_db_path=hist_path,
+                                failures=result_failures)
     print(f'📋 取得完了: {len(all_results)}レース')
 
     if all_results:
@@ -125,6 +127,30 @@ def fetch_and_save_results(sess, hist_path, target_date):
                   f'レース {bf["races_covered"]}/{bf["races_total"]}')
     except Exception as e:
         print(f'⚠ bet_simulation過去分決済失敗（結果取得には影響なし）: {e}')
+
+    # 🔴 結果が取れなかったレースを明示する。
+    #    ここを黙って通していたため、2026-10-20 の監査で見つかるまで
+    #    22レース（displayed_bets 620点）が決済不能のまま放置されていた。
+    #    JRAの結果一覧は直近しか載らないので、**その日のうちに**
+    #    TARGET_DATE を指定して再実行すれば拾える可能性がある。
+    if result_failures:
+        print(f'\n🔴 結果を取得できなかったレース {len(result_failures)}件:')
+        for f in result_failures:
+            print(f"   {f['racecourse']}R{f['race_num']:02d}  {f['reason']}")
+        print('   → TARGET_DATE を指定して sunday-results.yml を再実行すると'
+              '拾える場合があります')
+    try:
+        from src.utils.db import unsettled_displayed_bets
+        pend = unsettled_displayed_bets(ROOT, hist_db_path=hist_path)
+        if pend:
+            print(f'\n⚠ 結果が無くて決済できない表示買い目: '
+                  f'{sum(p["bets"] for p in pend)}点 / {len(pend)}レース')
+            for p in pend[:10]:
+                print(f"   {p['date']} {p['race_id']}  {p['bets']}点")
+            if len(pend) > 10:
+                print(f'   ほか {len(pend) - 10}レース')
+    except Exception as e:
+        print(f'⚠ 未決済の点検に失敗（結果取得には影響なし）: {e}')
 
     return all_results
 
@@ -253,12 +279,15 @@ def refresh_today(sess, hist_path, avg_bias, jst_now):
     このモードを実行すると、より情報量の多いオッズを土台にした予想へ
     latest.jsonを更新できる。
 
-    keiba.db（bets/bet_simulation等の実績記録）は書き換えない。
-    save_bets_db/log_bet_simulationは同一race_idへの再実行を想定した
-    重複排除を備えていない（bet_simulationは重複排除自体が無く、betsも
-    「新しい買い目が前回と違う馬番なら古い行を残したまま追加」される）ため、
-    これらは前日夜生成時点の記録のまま維持し、本関数はrace_predictions
-    （UNIQUE制約で安全に上書きされる）とlatest.json（表示専用）のみを更新する。
+    書き込むのは**再実行しても増えないテーブルだけ**にする:
+      race_predictions / prediction_snapshots … UNIQUE制約で安全に上書き
+      displayed_bets                          … UNIQUE制約（snapshot別）
+      bet_simulation                          … 2026-10-20 に冪等化したので可
+      latest.json                             … 表示専用
+
+    🔴 `bets` だけは**書かない**。save_bets_db は「新しい買い目が前回と違う
+       馬番なら古い行を残したまま追加」するため、1日3回走る当日refreshから
+       呼ぶと実績記録が膨らむ。
     """
     # 曜日で day_type を決める。latest.json の 'type' に入るだけで、表示日付は
     # same_day=True のため jst_now そのもの（曜日に依存しない）。
@@ -365,6 +394,22 @@ def refresh_today(sess, hist_path, avg_bias, jst_now):
     selected = select_quality_races(races, avg_bias)
     print(f'⭐ 厳選: {len(selected)}レース'
           + ('（推奨レースなし）' if not selected else ''))
+
+    # 全券種シミュレーションの記録。
+    # 🔴 2026-10-07 にボタン運用をやめて predict_next_day が走らなくなった結果、
+    #    呼び出し元が消えて **2026-10-04 を最後に記録が止まっていた**
+    #    （2026-10-20 の監査で発覚）。refresh からも記録する。
+    #    log_bet_simulation は INSERT OR IGNORE ＋ 一意制約で冪等なので、
+    #    1日3回走っても二重計上しない（この冪等化も同日に入れた）。
+    _nsim = 0
+    for c in selected:
+        try:
+            log_bet_simulation(c['race']['date'], c, ROOT)
+            _nsim += 1
+        except Exception as e:
+            print(f'⚠ bet_simulation 記録失敗（予想には影響なし）: {e}')
+    if _nsim:
+        print(f'✅ bet_simulation: {_nsim}レース記録')
 
     _fallback = build_market_odds_from_races(races)
     for _rid, _om in _fallback.items():
