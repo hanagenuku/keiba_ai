@@ -112,20 +112,26 @@ def _load_morning_predictions(db_path, race_ids):
     conn.row_factory = None
     placeholders = ','.join('?' * len(race_ids))
     cur = conn.execute(
-        f'''SELECT race_id, horse_num, horse_name, rl_rank, win_prob, cal_prob
+        f'''SELECT race_id, horse_num, horse_name, rl_rank, win_prob, cal_prob,
+                   popularity
             FROM race_predictions
             WHERE race_id IN ({placeholders})
             ORDER BY race_id, rl_rank''',
         race_ids,
     )
     morning_map = {}
-    for race_id, horse_num, horse_name, rl_rank, win_prob, cal_prob in cur.fetchall():
+    for (race_id, horse_num, horse_name, rl_rank,
+         win_prob, cal_prob, popularity) in cur.fetchall():
         morning_map.setdefault(race_id, []).append({
             'horse_num':  horse_num,
             'horse_name': horse_name or '',
             'rl_rank':    rl_rank,
             'win_prob':   win_prob,
             'cal_prob':   cal_prob,
+            # 🔴 波乱度の判定に要る。渡さないと `classify_race_chaos` の
+            #    `top1_pop` が既定の 99 になり、`top1_pop >= 8 → C` が
+            #    必ず成立して **A以外すべてC** になる（2026-10-20 に発覚）。
+            'popularity': popularity,
         })
     conn.close()
     return morning_map
@@ -174,8 +180,12 @@ def _build_shadow_row(result, morning_map, recommended_race_ids):
     rl2 = by_rl[1] if len(by_rl) > 1 else {}
     rl3 = by_rl[2] if len(by_rl) > 2 else {}
 
+    # 🔴 popularity を必ず渡す。欠けると `top1_pop` が 99 に落ちて
+    #    「A以外は全部C」になる。実データで 2026-07-05 以降 B が
+    #    1件も生成されていなかった（1,069件中 C が 880件＝82%）。
     chaos_grade = classify_race_chaos(
-        [{'pn': h.get('win_prob') or 0} for h in morning])
+        [{'pn': h.get('win_prob') or 0, 'popularity': h.get('popularity')}
+         for h in morning])
 
     # ── 実結果 ───────────────────────────────────────────────────────
     by_place  = sorted(finishers, key=lambda h: h.get('place', 99))

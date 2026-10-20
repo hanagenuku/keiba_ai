@@ -773,7 +773,10 @@ def log_bet_simulation(date_str, c, base_dir=None, db_path=None):
     conn = _connect(path)
     for bt, hn, hname, oe, ap, ev in rows:
         conn.execute(
-            'INSERT INTO bet_simulation'
+            # 🔴 OR IGNORE。同一レースを2回記録しても増えないようにする
+            #    （init_db が (race_id,bet_type,horse_num) に一意制約を張る）。
+            #    当日refreshは1日3回走るので、冪等でないと二重計上になる。
+            'INSERT OR IGNORE INTO bet_simulation'
             '(date,race_id,racecourse,race_num,bet_type,horse_num,horse_name,'
             'odds_est,ai_prob,ev,num_horses,chaos,is_tanzen,is_2kyou,is_konsen,pop_rank,score_gap)'
             'VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',

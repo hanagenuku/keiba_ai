@@ -281,6 +281,26 @@ def init_db(base_dir=None, db_path=None):
         )
     except sqlite3.OperationalError:
         pass
+    # bet_simulation も同じ。log_bet_simulation は重複排除を一切持たない
+    # 素の INSERT だったため、同じレースを2回記録すると行が増えていた
+    # （2026-10-20 時点で 2,718行中 459組が重複）。
+    # (race_id, bet_type, horse_num) に一意制約を張り、
+    # log_bet_simulation 側を INSERT OR IGNORE にして冪等にする。
+    # これで当日refresh（1日3回走る）から呼んでも二重計上しない。
+    try:
+        conn.execute("""
+            DELETE FROM bet_simulation
+            WHERE id NOT IN (
+                SELECT MAX(id) FROM bet_simulation
+                GROUP BY race_id, bet_type, horse_num
+            )
+        """)
+        conn.execute(
+            "CREATE UNIQUE INDEX IF NOT EXISTS idx_bet_sim_uniq "
+            "ON bet_simulation(race_id, bet_type, horse_num)"
+        )
+    except sqlite3.OperationalError:
+        pass
     # cal_prob > 1.0 の修正（旧market_correction残骸）
     try:
         conn.execute("UPDATE race_predictions SET cal_prob = 0.99 WHERE cal_prob > 1.0")
@@ -816,7 +836,15 @@ def settle_displayed_bets(base_dir=None, db_path=None, hist_db_path=None):
         if bt == 'tansho':
             won = nums[0] == t[0]
         elif bt == 'fukusho':
-            won = nums[0] in t
+            # 🔴 「3着内＝複勝的中」ではない。7頭以下のレースは複勝が
+            #    2着までしか発売されないので、3着に入っても外れ。
+            #    払戻表にその馬の行があるかで判定する（2026-10-20）。
+            #    払戻表そのものが取れていないレースは着順で代用する
+            #    （スクレイプ漏れを「外れ」にしないため）。
+            has_table = any(k[0] == b['race_id'] and k[1] == 'fukusho'
+                            for k in div)
+            won = ((b['race_id'], 'fukusho', b['combo']) in div if has_table
+                   else nums[0] in t)
         elif bt == 'wide':
             won = len(set(nums) & set(t)) == 2
         elif bt == 'umaren':
@@ -844,6 +872,47 @@ def settle_displayed_bets(base_dir=None, db_path=None, hist_db_path=None):
     conn.close()
     return {'settled': settled, 'hit': hit, 'invested': invested,
             'recovered': recovered, 'no_payout': no_payout}
+
+
+def unsettled_displayed_bets(base_dir=None, db_path=None, hist_db_path=None):
+    """結果が無くて決済できない displayed_bets をレース単位で返す。
+
+    `settle_displayed_bets` は着順が history.db に無いレースを黙って
+    次回に持ち越す。結果が永久に来ないレース（スクレイプに失敗して
+    history.db にも race_dividends にも入らなかったもの）はここに
+    溜まり続けるが、**誰も見ていなかった**。
+    2026-10-20 の監査で 22レース・620点が放置されていたと判明したので、
+    毎回ログに出せるようにする。
+
+    Returns:
+        [{'race_id', 'date', 'bets'}, ...] 日付の新しい順。
+    """
+    path = db_path or get_db_path(base_dir)
+    conn = _connect(path)
+    conn.row_factory = sqlite3.Row
+    rows = conn.execute(
+        'SELECT race_id, MIN(date) AS date, COUNT(*) AS bets '
+        'FROM displayed_bets WHERE is_hit = -1 GROUP BY race_id'
+    ).fetchall()
+    conn.close()
+    if not rows:
+        return []
+
+    hp = hist_db_path or os.path.join(base_dir or '.', 'data', 'history.db')
+    have = set()
+    if os.path.exists(hp):
+        hc = sqlite3.connect(hp)
+        qmarks = ','.join('?' * len(rows))
+        for (rid,) in hc.execute(
+                f'SELECT DISTINCT race_id FROM horse_history '
+                f'WHERE place BETWEEN 1 AND 3 AND race_id IN ({qmarks})',
+                tuple(r['race_id'] for r in rows)):
+            have.add(rid)
+        hc.close()
+    out = [{'race_id': r['race_id'], 'date': r['date'], 'bets': r['bets']}
+           for r in rows if r['race_id'] not in have]
+    out.sort(key=lambda d: d['date'] or '', reverse=True)
+    return out
 
 
 def get_dividends_for_races(race_ids, base_dir=None, db_path=None):
