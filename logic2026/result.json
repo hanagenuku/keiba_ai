@@ -1,0 +1,313 @@
+{
+  "train_rows": 131424,
+  "val_rows": 37118,
+  "cols": 134,
+  "auc_market": 0.7575,
+  "roi_market": {
+    "n": 2658,
+    "hit": 1624,
+    "rate": 61.1,
+    "roi": 79.84,
+    "cut3": 79.06,
+    "unevaluable": 47,
+    "no_result": 0
+  },
+  "arms": {
+    "P": [
+      {
+        "seed": 42,
+        "auc": 0.7884,
+        "brier": 0.179,
+        "logloss": 0.5369,
+        "fuku": {
+          "n": 2656,
+          "hit": 1506,
+          "rate": 56.7,
+          "roi": 81.04,
+          "cut3": 79.98,
+          "unevaluable": 49,
+          "no_result": 0
+        },
+        "tan": {
+          "n": 2702,
+          "hit": 742,
+          "rate": 27.46,
+          "roi": 77.45,
+          "cut3": 75.75,
+          "unevaluable": 3,
+          "no_result": 0
+        }
+      },
+      {
+        "seed": 7,
+        "auc": 0.7883,
+        "brier": 0.179,
+        "logloss": 0.537,
+        "fuku": {
+          "n": 2655,
+          "hit": 1499,
+          "rate": 56.46,
+          "roi": 80.5,
+          "cut3": 79.44,
+          "unevaluable": 50,
+          "no_result": 0
+        },
+        "tan": {
+          "n": 2702,
+          "hit": 743,
+          "rate": 27.5,
+          "roi": 78.09,
+          "cut3": 76.07,
+          "unevaluable": 3,
+          "no_result": 0
+        }
+      },
+      {
+        "seed": 2026,
+        "auc": 0.788,
+        "brier": 0.1792,
+        "logloss": 0.5376,
+        "fuku": {
+          "n": 2655,
+          "hit": 1503,
+          "rate": 56.61,
+          "roi": 80.68,
+          "cut3": 79.62,
+          "unevaluable": 50,
+          "no_result": 0
+        },
+        "tan": {
+          "n": 2702,
+          "hit": 742,
+          "rate": 27.46,
+          "roi": 77.91,
+          "cut3": 75.9,
+          "unevaluable": 3,
+          "no_result": 0
+        }
+      }
+    ],
+    "F": [
+      {
+        "seed": 42,
+        "auc": 0.7786,
+        "brier": 0.1799,
+        "logloss": 0.5314,
+        "fuku": {
+          "n": 2635,
+          "hit": 1503,
+          "rate": 57.04,
+          "roi": 80.94,
+          "cut3": 79.62,
+          "unevaluable": 70,
+          "no_result": 0
+        },
+        "tan": {
+          "n": 2694,
+          "hit": 707,
+          "rate": 26.24,
+          "roi": 75.39,
+          "cut3": 73.0,
+          "unevaluable": 11,
+          "no_result": 0
+        }
+      },
+      {
+        "seed": 7,
+        "auc": 0.7769,
+        "brier": 0.1802,
+        "logloss": 0.5322,
+        "fuku": {
+          "n": 2640,
+          "hit": 1474,
+          "rate": 55.83,
+          "roi": 79.12,
+          "cut3": 77.59,
+          "unevaluable": 65,
+          "no_result": 0
+        },
+        "tan": {
+          "n": 2693,
+          "hit": 690,
+          "rate": 25.62,
+          "roi": 78.53,
+          "cut3": 72.92,
+          "unevaluable": 12,
+          "no_result": 0
+        }
+      },
+      {
+        "seed": 2026,
+        "auc": 0.7779,
+        "brier": 0.18,
+        "logloss": 0.5314,
+        "fuku": {
+          "n": 2633,
+          "hit": 1492,
+          "rate": 56.67,
+          "roi": 79.26,
+          "cut3": 78.31,
+          "unevaluable": 72,
+          "no_result": 0
+        },
+        "tan": {
+          "n": 2694,
+          "hit": 702,
+          "rate": 26.06,
+          "roi": 75.14,
+          "cut3": 72.98,
+          "unevaluable": 11,
+          "no_result": 0
+        }
+      }
+    ]
+  },
+  "monthly_P": [
+    {
+      "month": "2026-01",
+      "races": 274,
+      "roi": 86.61,
+      "rate": 63.5,
+      "n": 274
+    },
+    {
+      "month": "2026-02",
+      "races": 281,
+      "roi": 87.79,
+      "rate": 60.85,
+      "n": 281
+    },
+    {
+      "month": "2026-03",
+      "races": 298,
+      "roi": 89.26,
+      "rate": 62.16,
+      "n": 296
+    },
+    {
+      "month": "2026-04",
+      "races": 264,
+      "roi": 78.22,
+      "rate": 54.55,
+      "n": 264
+    },
+    {
+      "month": "2026-05",
+      "races": 334,
+      "roi": 43.88,
+      "rate": 26.87,
+      "n": 294
+    },
+    {
+      "month": "2026-06",
+      "races": 241,
+      "roi": 88.92,
+      "rate": 61.0,
+      "n": 241
+    },
+    {
+      "month": "2026-07",
+      "races": 279,
+      "roi": 82.72,
+      "rate": 59.14,
+      "n": 279
+    },
+    {
+      "month": "2026-08",
+      "races": 347,
+      "roi": 82.06,
+      "rate": 57.68,
+      "n": 345
+    },
+    {
+      "month": "2026-09",
+      "races": 228,
+      "roi": 80.89,
+      "rate": 58.48,
+      "n": 224
+    },
+    {
+      "month": "2026-10",
+      "races": 159,
+      "roi": 100.89,
+      "rate": 70.89,
+      "n": 158
+    }
+  ],
+  "monthly_F": [
+    {
+      "month": "2026-01",
+      "races": 274,
+      "roi": 83.83,
+      "rate": 57.66,
+      "n": 274
+    },
+    {
+      "month": "2026-02",
+      "races": 281,
+      "roi": 77.58,
+      "rate": 56.58,
+      "n": 281
+    },
+    {
+      "month": "2026-03",
+      "races": 298,
+      "roi": 85.56,
+      "rate": 61.36,
+      "n": 295
+    },
+    {
+      "month": "2026-04",
+      "races": 264,
+      "roi": 80.68,
+      "rate": 60.08,
+      "n": 263
+    },
+    {
+      "month": "2026-05",
+      "races": 334,
+      "roi": 67.64,
+      "rate": 48.19,
+      "n": 276
+    },
+    {
+      "month": "2026-06",
+      "races": 241,
+      "roi": 81.88,
+      "rate": 55.42,
+      "n": 240
+    },
+    {
+      "month": "2026-07",
+      "races": 279,
+      "roi": 82.93,
+      "rate": 56.88,
+      "n": 276
+    },
+    {
+      "month": "2026-08",
+      "races": 347,
+      "roi": 79.34,
+      "rate": 56.94,
+      "n": 346
+    },
+    {
+      "month": "2026-09",
+      "races": 228,
+      "roi": 86.06,
+      "rate": 56.19,
+      "n": 226
+    },
+    {
+      "month": "2026-10",
+      "races": 159,
+      "roi": 88.16,
+      "rate": 63.29,
+      "n": 158
+    }
+  ],
+  "controlB_delta": 20.0,
+  "controlA_mean": -11.394750000000005,
+  "controlA_std": 4.441299239805847,
+  "months_F_wins": 4
+}
