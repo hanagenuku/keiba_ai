@@ -37,11 +37,35 @@ VAL_END   = '2026-10-18'
 SEEDS     = (42, 7, 2026)
 
 # 本番と同じハイパラ（train_xgb の既定値）
-PARAMS = dict(max_depth=6, learning_rate=0.05, subsample=0.8,
-              colsample_bytree=0.8, min_child_weight=10,
-              reg_alpha=0.1, reg_lambda=1.0, eval_metric='logloss')
 N_ROUNDS = 500
 EARLY_STOP = 50
+
+
+def _xgb_params(spw, seed):
+    """本番 `train_xgb` とまったく同じパラメータ辞書を作る。
+
+    🔴 **ここを自分で dict リテラルで書いてはいけない。**
+    v1 のハーネスは `objective` を書き忘れ、`xgb.train` の既定
+    `reg:squarederror` で学習していた。base_margin は logit 空間なのに木が
+    確率空間の二乗誤差を詰めるので、**市場アンカーを足したアームが市場単独
+    より弱くなる**（実測 P 0.6761 < 市場単独 0.7954）。しかも市場を使わない
+    アーム F は 0.7810 と無事なので、**そのまま読めば「市場を外した方が良い」
+    という嘘になる**（MF-1b が 2026-08-28 に踏んだ穴そのもの）。
+    中止条件3（P の AUC が 0.75〜0.82 の外）がこれを止めた。
+    以後は本番と同じ XGBClassifier から `get_xgb_params()` を取る。
+    """
+    from xgboost import XGBClassifier
+    m = XGBClassifier(
+        n_estimators=N_ROUNDS, max_depth=6, learning_rate=0.05,
+        subsample=0.8, colsample_bytree=0.8, min_child_weight=10,
+        reg_alpha=0.1, reg_lambda=1.0, scale_pos_weight=spw,
+        eval_metric='logloss', early_stopping_rounds=EARLY_STOP,
+        random_state=seed, n_jobs=-1,
+    )
+    params = m.get_xgb_params()
+    params['eval_metric'] = 'logloss'
+    params['seed'] = seed
+    return params
 
 
 # ── データ ──────────────────────────────────────────────────────────────
@@ -100,7 +124,7 @@ def train_arm(arm, tr, va, cols, drift, seed):
     Xtr, ytr = tr[cols].fillna(5.0), tr['is_fukusho'].values
     Xva, yva = va[cols].fillna(5.0), va['is_fukusho'].values
     spw = round((1 - ytr.mean()) / max(ytr.mean(), 0.01), 2)
-    params = dict(PARAMS, scale_pos_weight=spw, random_state=seed, seed=seed)
+    params = _xgb_params(spw, seed)
 
     dtr = xgb.DMatrix(Xtr, label=ytr, feature_names=cols)
     dva = xgb.DMatrix(Xva, label=yva, feature_names=cols)
@@ -197,13 +221,28 @@ def main():
     pay = load_payouts(base)
     print(f'  3. 払戻テーブル: {len(pay):,}行')
 
+    # 目的関数が本番と同じか（v1 はここを書き忘れて reg:squarederror で学習した）
+    obj = _xgb_params(3.5, SEEDS[0]).get('objective')
+    print(f'  4. objective = {obj}（binary:logistic 以外なら中止）')
+    if obj != 'binary:logistic':
+        stop.append(f'objective が {obj}（本番は binary:logistic）')
+
     # P を1シードだけ先に学習して AUC 帯を確認する
     probP0, bi0 = train_arm('P', tr, va, cols, drift, SEEDS[0])
-    aucP0 = roc_auc_score(va['is_fukusho'].values, probP0)
-    print(f'  4. P の検定窓 AUC = {aucP0:.4f}（0.75〜0.82 の外なら中止）'
+    yv = va['is_fukusho'].values
+    aucP0 = roc_auc_score(yv, probP0)
+    print(f'  5. P の検定窓 AUC = {aucP0:.4f}（0.75〜0.82 の外なら中止）'
           f'  best_iteration={bi0}')
     if not (0.75 <= aucP0 <= 0.82):
         stop.append(f'P の AUC {aucP0:.4f} が想定帯の外')
+
+    # 残差学習では「市場アンカー＋AI補正」が市場単独を下回ることは構造的に
+    # 起こりえない。下回ったら仮説ではなくハーネスを疑う（v1 の追加・§11）。
+    nh = va.groupby('race_id')['horse_num'].transform('count')
+    auc_mkt0 = roc_auc_score(yv, -va['f_popularity'].fillna(nh / 2).values)
+    print(f'  6. 市場単独 AUC = {auc_mkt0:.4f}（P がこれを下回ったら中止）')
+    if aucP0 < auc_mkt0:
+        stop.append(f'P {aucP0:.4f} が市場単独 {auc_mkt0:.4f} を下回った')
 
     if stop:
         print('\n🔴 中止条件に該当。結果を読まずに破棄する:')
