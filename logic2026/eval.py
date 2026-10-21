@@ -236,13 +236,17 @@ def main():
     if not (0.75 <= aucP0 <= 0.82):
         stop.append(f'P の AUC {aucP0:.4f} が想定帯の外')
 
-    # 残差学習では「市場アンカー＋AI補正」が市場単独を下回ることは構造的に
-    # 起こりえない。下回ったら仮説ではなくハーネスを疑う（v1 の追加・§11）。
-    nh = va.groupby('race_id')['horse_num'].transform('count')
-    auc_mkt0 = roc_auc_score(yv, -va['f_popularity'].fillna(nh / 2).values)
-    print(f'  6. 市場単独 AUC = {auc_mkt0:.4f}（P がこれを下回ったら中止）')
-    if aucP0 < auc_mkt0:
-        stop.append(f'P {aucP0:.4f} が市場単独 {auc_mkt0:.4f} を下回った')
+    # 残差学習は P = base_margin + 木 なので、**自分の土台**を下回ることは
+    # 構造的に起こりえない。下回ったら仮説ではなく計測器を疑う（§11.1）。
+    # ⚠ 比較相手は「確定人気の市場単独」ではなく **P が実際に受け取る
+    #   ドリフト入り base_margin**。確定人気は P に渡らない情報なので、
+    #   そこと比べると「ドリフトを注入した分だけ低い」を毎回中止と誤判定する
+    #   （2026-08-25 D-2: ドリフト 0.8038 vs 確定オッズ 0.8292 が実測）。
+    auc_bm0 = roc_auc_score(yv, _base_margin(va, drift, 12))
+    print(f'  6. P の土台（ドリフト入り base_margin）AUC = {auc_bm0:.4f}'
+          f'（P がこれを下回ったら中止）')
+    if aucP0 < auc_bm0:
+        stop.append(f'P {aucP0:.4f} が自分の土台 {auc_bm0:.4f} を下回った')
 
     if stop:
         print('\n🔴 中止条件に該当。結果を読まずに破棄する:')
