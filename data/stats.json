@@ -81,11 +81,11 @@
         "races": 11
       }
     ],
-    "workflow_run_at": "2026-10-21T09:49:11Z",
+    "workflow_run_at": "2026-10-22T01:19:15Z",
     "workflow_result": "success"
   },
   "web_sources": {
-    "updated_at": "2026-09-25",
+    "updated_at": "2026-10-22",
     "network_policy": "Full",
     "n_adopted": 0,
     "sources": [
@@ -235,6 +235,48 @@
         "status": "untested",
         "access": "allowed",
         "access_note": "✅ 2026-09-25 に新規: Full で到達可・robots は /wp-admin/ のみ。2026-08-04 は egress で403だった",
+        "prior": "low",
+        "delta_auc_mean": null,
+        "fukusho_roi_arm": null,
+        "fukusho_roi_base": null,
+        "measured_at": null,
+        "results": null,
+        "closed_reason": null
+      },
+      {
+        "source": "yosounohone",
+        "label": "競馬予想のホネ（追い切り★評価）",
+        "status": "rejected",
+        "access": "allowed",
+        "access_note": "robots は /api/ /draft/ /preview /iframe/hatena_bookmark_comment のみ Disallow・Claude の名指しなし・Crawl-delay なし（2026-10-22 実読）。はてなブログ。公開は当日朝 08:30 JST（2023年は前日朝）で、OG の article:published_time と JSON-LD の datePublished が**同一瞬間**を指す（kayochin は9時間ずれていた）",
+        "prior": null,
+        "delta_auc_mean": null,
+        "fukusho_roi_arm": null,
+        "fukusho_roi_base": null,
+        "measured_at": "2026-10-22",
+        "results": "oikiri/RESULTS.md",
+        "closed_reason": null
+      },
+      {
+        "source": "keibanomiryoku",
+        "label": "競馬の魅力（重賞の追い切り・陣営コメント）",
+        "status": "untested",
+        "access": "allowed",
+        "access_note": "docs/claude_web_findings.md の4層表で「5. 使える」と判定（2026-09-28）。⚠ 台帳への登録が漏れていたので 2026-10-22 に追加した",
+        "prior": "low",
+        "delta_auc_mean": null,
+        "fukusho_roi_arm": null,
+        "fukusho_roi_base": null,
+        "measured_at": null,
+        "results": null,
+        "closed_reason": null
+      },
+      {
+        "source": "muryou-keiba-ai",
+        "label": "無料競馬AI",
+        "status": "untested",
+        "access": "allowed",
+        "access_note": "docs/claude_web_findings.md の4層表で「5. 使える」と判定（2026-09-28）。⚠ 台帳への登録が漏れていたので 2026-10-22 に追加した",
         "prior": "low",
         "delta_auc_mean": null,
         "fukusho_roi_arm": null,
@@ -3009,5 +3051,5 @@
       "top3_rate": 16.4
     }
   },
-  "generated_at": "2026-10-22 01:19"
+  "generated_at": "2026-10-22 07:53"
 }
