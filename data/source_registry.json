@@ -220,13 +220,56 @@
    "access_note": "robots は /api/ /draft/ /preview /iframe/hatena_bookmark_comment のみ Disallow・Claude の名指しなし・Crawl-delay なし（2026-10-22 実読）。はてなブログ。公開は当日朝 08:30 JST（2023年は前日朝）で、OG の article:published_time と JSON-LD の datePublished が**同一瞬間**を指す（kayochin は9時間ずれていた）",
    "data_scope": "private",
    "collector": "scripts/collect_oikiri.py",
-   "status": "untested",
+   "status": "rejected",
    "card": "oikiri/CRITERIA.md",
-   "results": null,
-   "measured": null,
+   "results": "oikiri/RESULTS.md",
+   "measured": {
+    "measured_at": "2026-10-22",
+    "period": [
+     "2023-01-01",
+     "2025-12-31"
+    ],
+    "n_marked": 6575,
+    "n_rows": 60527,
+    "n_races": 4283,
+    "n_articles": 838,
+    "top3_marked_pct": 33.61,
+    "top3_control_pct": 19.74,
+    "effect_pt": 13.87,
+    "band_top3_pct": [
+     30.43,
+     33.18,
+     36.22,
+     46.39
+    ],
+    "market_controlled_pt": [
+     6.55,
+     2.66,
+     2.62
+    ],
+    "fukusho_roi_marked": 85.02,
+    "fukusho_roi_cut3": 83.42,
+    "fukusho_roi_control": 69.87,
+    "fukusho_roi_all": 71.52,
+    "auc_market_only": 0.806,
+    "auc_market_plus_star": 0.8059,
+    "auc_star_only": 0.5406,
+    "half_effect_pt": [
+     15.18,
+     13.17
+    ],
+    "half_roi": [
+     86.6,
+     84.16
+    ],
+    "perm_p": 0.005,
+    "failed_criterion": "基準6（判定指標＝複勝回収率）。85.02% で 合格線100%に未達。複勝プール平均80%に対し +5.0pt",
+    "note": "🔑 信号ライン4基準は**すべて通った**（このプロジェクトで初）。3着内率は +13.87pt（1.70倍）動き、市場人気で統制しても各分位で +2.6〜6.6pt 残り、2期間とも安定。それでも回収率は 85%。市場に足すと複勝AUC 0.8060→0.8059 で動かない。North Star #9 のこれまでで最も純粋な実例。⚠ 対照群A は登録線未達（帰無 +0.70pt・頭数交絡が推定量の重みから入った）。⚠ 測ったのは「筆者が選んだ注目馬1〜2頭への★」で**全馬の調教タイムではない**"
+   },
    "feature_cols": [],
-   "prior": "unknown",
-   "prior_note": "🔴 2026-09-25 に「① は測れる候補を使い切った」と記録したが、それは Custom 時代の許可リスト11件の中での話で、この情報源は台帳にも docs/claude_web_findings.md にも載っていなかった。2026-10-22 に判定表の3つの問いに当てると3つとも通った: ①sitemap が 2019-02 まで（月53〜55記事・history.db 全期間をカバー）②1記事＝会場×開催日で1レースに1〜2頭に★1〜5＝レース内に印なしの対照群が居る ③**調教は一度も天井を測っていない唯一の次元**（2026-08-16「丸ごと欠けている唯一の次元」）。⚠ 期待値は低い: websig は 134,874頭・全馬・連続量でも複勝回収 79.7→79.1 で悪化した"
+   "decided_at": "2026-10-22",
+   "decided_by": "oikiri/RESULTS.md",
+   "closed_note": "🔴 この情報源を定義・閾値・期間・結果変数を変えて測り直さない（P3-01 / Step 1 / websig / SPAIA / danger と同じ扱い）。⚠ 「調教は効かない」ではない。全馬の調教タイムは一度も測っていない"
   },
   {
    "source": "keibanomiryoku",
