@@ -57,7 +57,12 @@ MIN_PARSE_OK = 0.90
 MIN_NAME_MATCH = 0.95
 MAX_PLACE_NULL = 0.05
 MAX_BASELINE_DEV_PT = 3.0
-RACE_START_JST_HOUR = 9.5   # 1R目は概ね 09:50。同日公開は 09:30 より前なら発走前
+# 🔴 当日公開の記事は、この時刻以降なら**記事ごと母集団から落とす**（カード §11.3）。
+#    中止条件ではない（登録した条件3は「発走日より後」で、実測0件）。
+#    `keiba.db:race_schedule` は 2026-08-30 以降しか無く 2023-2025 の発走時刻が
+#    手元に無いので、レース単位では切り分けられない。
+#    1R目は概ね 09:50（2026-10-10〜12 実測）なので 50分の余裕を取る。
+SAME_DAY_CUTOFF_JST_HOUR = 9.0
 
 
 def _p(s=''):
@@ -77,12 +82,41 @@ def load_rows():
     marks = oc.execute(
         'SELECT * FROM marks WHERE date >= ? AND date <= ?', (START, END)).fetchall()
 
+    # 🔴 カード §11.3: 当日 09:00 JST 以降に公開された記事は**記事ごと**落とす。
+    #    2023-2025 の発走時刻が手元に無く（race_schedule は 2026-08-30 以降だけ）、
+    #    早いレースが既に発走している可能性をレース単位で切り分けられない。
+    #    落とす基準は公開時刻だけで、着順・配当・★の数と無関係。
+    same_day_late = set()
+    for a in arts:
+        if not a['published_og']:
+            continue
+        og = datetime.fromisoformat(a['published_og']).astimezone(JST)
+        rd = datetime.fromisoformat(a['date'] + 'T00:00:00').replace(tzinfo=JST)
+        if og.date() == rd.date() and \
+                (og.hour + og.minute / 60.0) >= SAME_DAY_CUTOFF_JST_HOUR:
+            same_day_late.add(a['url'])
+    n_before = len(marks)
+    marks = [m for m in marks if m['url'] not in same_day_late]
+    print(f'   当日 {SAME_DAY_CUTOFF_JST_HOUR:.1f} 時以降公開のため除外: '
+          f'記事 {len(same_day_late)} / 印 {n_before - len(marks)}', flush=True)
+
     # (date, venue, race_num) -> race_id
+    # 🔴 `race_history.race_num` は 2023-2025 の 60% が NULL（実測 7,428/12,290）。
+    #    レース番号は `race_id` の末尾（YYYYMMDD_場コード_RR）が正。
+    #    2026-10-05 に `_target_date` で確定した「日付は race_id だけが信用できる」
+    #    と同じ理由。値がある行では両者を突合する（タダで手に入る検算）。
     rid = {}
+    rnum_mismatch = []
     for r in hc.execute(
             'SELECT race_id, date, racecourse, race_num FROM race_history '
             'WHERE date >= ? AND date <= ?', (START, END)):
-        rid[(r['date'], r['racecourse'], int(r['race_num']))] = r['race_id']
+        parts = str(r['race_id']).split('_')
+        if len(parts) != 3 or not parts[2].isdigit():
+            continue
+        rno = int(parts[2])
+        if r['race_num'] is not None and int(r['race_num']) != rno:
+            rnum_mismatch.append((r['race_id'], r['race_num'], rno))
+        rid[(r['date'], r['racecourse'], rno)] = r['race_id']
 
     # race_id -> {horse_name: row}
     horses = defaultdict(dict)
@@ -120,7 +154,7 @@ def load_rows():
                 'payout': h['fukusho_payout'],
                 'field': len(horses[r_id]),
             })
-    return arts, marks, matched, unmatched, rows
+    return arts, marks, matched, unmatched, rows, rnum_mismatch
 
 
 # ───────────────────────── 指標 ─────────────────────────
@@ -191,7 +225,7 @@ def auc(y, s):
 
 # ───────────────────────── ① 中止条件 ─────────────────────────
 
-def stop_conditions(arts, marks, matched, unmatched, rows):
+def stop_conditions(arts, marks, matched, unmatched, rows, rnum_mismatch):
     _p('=' * 78)
     _p('① 中止条件（カード §7）— 結果より手前に全部印字する')
     _p('=' * 78)
@@ -207,16 +241,24 @@ def stop_conditions(arts, marks, matched, unmatched, rows):
     if rate < MIN_PARSE_OK:
         stop.append(f'パース成功率 {rate:.4f} < {MIN_PARSE_OK}')
 
+    # 🔴 カード §11.2: 条件2 の対象は「表記ゆれ・レース番号誤記」。
+    #    history.db にレースが無いのはそのどちらでもない（DBの欠落）ので分ける。
     n_m = len(marks)
-    mrate = len(matched) / n_m if n_m else 0.0
-    _p(f'  2. 馬名の突合率 = {len(matched)}/{n_m} = {mrate:.4f}（線 >= {MIN_NAME_MATCH}）')
+    no_race = sum(1 for _, _, w in unmatched if 'レースが' in w)
+    denom = n_m - no_race
+    nrate = len(matched) / denom if denom else 0.0
+    cov = denom / n_m if n_m else 0.0
+    _p(f'  2. 馬名の突合率 = {len(matched)}/{denom} = {nrate:.4f}'
+       f'（線 >= {MIN_NAME_MATCH}。分母は history.db にレースがある印だけ）')
+    _p(f'     （参考）レースの被覆率 = {denom}/{n_m} = {cov:.4f}'
+       f' ← **母集団の上限**。線は当てない（history.db の欠落）')
     why = defaultdict(int)
     for _, _, w in unmatched:
         why[w] += 1
     for w, c in sorted(why.items(), key=lambda x: -x[1]):
         _p(f'       内訳: {w} = {c}')
-    if mrate < MIN_NAME_MATCH:
-        stop.append(f'突合率 {mrate:.4f} < {MIN_NAME_MATCH}')
+    if nrate < MIN_NAME_MATCH:
+        stop.append(f'突合率 {nrate:.4f} < {MIN_NAME_MATCH}')
 
     late, miss = [], []
     for a in arts:
@@ -227,17 +269,16 @@ def stop_conditions(arts, marks, matched, unmatched, rows):
             continue
         og = datetime.fromisoformat(a['published_og']).astimezone(JST)
         rd = datetime.fromisoformat(a['date'] + 'T00:00:00').replace(tzinfo=JST)
-        hours = og.hour + og.minute / 60.0
-        if og.date() > rd.date() or (og.date() == rd.date()
-                                     and hours >= RACE_START_JST_HOUR):
+        if og.date() > rd.date():
             late.append((a['date'], a['venue'], og.isoformat()))
-    _p(f'  3. 公開時刻が発走前でない記事 = {len(late)} 件（線 = 0）')
+    # 🔴 登録した条件はこれだけ（「発走日より後」）。当日の時刻は母集団の除外に回す
+    _p(f'  3. 公開が発走日より後の記事 = {len(late)} 件（線 = 0）')
     for x in late[:10]:
         _p(f'       {x}')
     if miss:
         _p(f'     ⚠ 公開時刻が読めない記事 {len(miss)} 件')
     if late or miss:
-        stop.append(f'公開時刻が発走前でない/読めない記事 {len(late) + len(miss)} 件')
+        stop.append(f'公開が発走日より後/読めない記事 {len(late) + len(miss)} 件')
 
     mism = []
     for a in arts:
@@ -270,6 +311,13 @@ def stop_conditions(arts, marks, matched, unmatched, rows):
     _p(f'  7. M の place が NULL = {nullrate:.4f}（線 < {MAX_PLACE_NULL}）')
     if nullrate >= MAX_PLACE_NULL:
         stop.append(f'M の place NULL率 {nullrate:.4f} >= {MAX_PLACE_NULL}')
+
+    # 突合キーの検算。race_num 列が埋まっている行で race_id の末尾と食い違わないか
+    _p(f'  8. race_id の末尾と race_num 列の食い違い = {len(rnum_mismatch)} 件（線 = 0）')
+    for x in rnum_mismatch[:5]:
+        _p(f'       {x}')
+    if rnum_mismatch:
+        stop.append(f'race_id と race_num 列が食い違う {len(rnum_mismatch)} 件')
 
     _p()
     if stop:
@@ -541,7 +589,7 @@ def main():
     _p('🔴 2026 は 2026-10-21 の logic2026 で読んだので使わない')
     _p()
 
-    arts, marks, matched, unmatched, rows = load_rows()
+    arts, marks, matched, unmatched, rows, rnum_mismatch = load_rows()
     _p(f'記事 {len(arts)} / 印 {len(marks)} / 突合できた印 {len(matched)} / '
        f'対象レースの全馬 {len(rows)}')
     _p(f'レース数 {len({r["race_id"] for r in rows})}')
@@ -550,7 +598,7 @@ def main():
            'n_matched': len(matched), 'n_rows': len(rows),
            'n_races': len({r['race_id'] for r in rows})}
 
-    stop = stop_conditions(arts, marks, matched, unmatched, rows)
+    stop = stop_conditions(arts, marks, matched, unmatched, rows, rnum_mismatch)
     res['stop'] = stop
     if stop:
         with open(OUT_JSON, 'w', encoding='utf-8') as f:
