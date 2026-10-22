@@ -85,6 +85,20 @@ jobs:
       - name: Attach results to danger favorites (非ブロッキング)
         run: python scripts/record_danger_favorites.py --base-dir . --attach-results || true
 
+      # 朝に web から集めた見解を、情報源ごとに台帳へ残す（data/web_findings_log.json）。
+      # 🔴 ここで記録するのは `data/claude_web_findings.json` が**上書き**される前に
+      #   残すため。あのファイルは開催日ごとに書き換わり、過去分は git 履歴にしか
+      #   残らなかった（2026-10-22 時点で5コミット）。結果と突合するコードも無かった。
+      # 🔴 一度記録したものは上書きしない。判定は再実装せず claude_web.py が
+      #   検証して書いた形をそのまま読む。回収率は出さない（事実だけ）。
+      - name: Record web findings (非ブロッキング)
+        run: python scripts/record_web_findings.py --base-dir . || true
+
+      # 確定馬場・着順・複勝払戻を追記する（結果が無いレースは何も書かない）。
+      # 🔑 going（馬場・想定）は**馬券の結果を待たずに**採点できる次元。
+      - name: Attach results to web findings (非ブロッキング)
+        run: python scripts/record_web_findings.py --base-dir . --attach-results || true
+
       - name: Generate stats
         run: python scripts/generate_stats.py
 

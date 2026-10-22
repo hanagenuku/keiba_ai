@@ -53,7 +53,17 @@ ROI予測150%）。そのためこの層は **AI側の数字を1つも変えな�
 | 2. robots は許可だがサーバーが 403 | 出口IP/UAレピュテーション | `tospo-keiba.jp` / `www.jra.go.jp` |
 | 3. robots は許可だがサイトが reset | site 側の接続切断 | `keibalab.jp` |
 | 4. Claude Code の取得ポリシー | ハーネス側 | `nikkansports.com` |
-| 5. **使える** | — | `www.bloodline-trackbias.work` / `kayochinkeiba.com` / `www.keibanomiryoku.com` / `muryou-keiba-ai.jp` / `netkeiba`(API/db) |
+| 5. **使える** | — | `www.bloodline-trackbias.work` / `kayochinkeiba.com` / `www.keibanomiryoku.com` / `muryou-keiba-ai.jp` / `www.yosounohone.com` / `umasiru.com` / `netkeiba`(API/db) |
+
+⚠ **2026-10-22 追記: この表と `data/source_registry.json` が食い違っていた。**
+`www.yosounohone.com`（2026-10-12 に実運用で見つけた）は**どちらにも載っておらず**、
+`www.keibanomiryoku.com` / `muryou-keiba-ai.jp` はこの表にだけあって台帳に無かった。
+3件とも台帳に追加した。**新しい情報源を使ったら、この表と台帳の両方に書くこと。**
+
+🔑 `www.yosounohone.com` は会場×開催日ごとに1記事で、**レース別に「追い切り注目馬」
+1〜2頭へ★1〜5**（クラス補正済みの絶対評価と記事が明記）。当日朝 08:30 JST 公開。
+sitemap が 2019-02 まで遡れるので**過去分が取れる**＝測定できる唯一の新候補として
+`oikiri/CRITERIA.md` に事前登録した。
 
 🔑 **検索（WebSearch）の層は 1〜4 に縛られない。** 1〜4 のサイトの内容も抜粋で入る。
 「本文の全文取得ができない」だけで、情報が取れないのではない。

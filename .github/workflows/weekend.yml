@@ -118,6 +118,13 @@ jobs:
       - name: Attach results to danger favorites (非ブロッキング)
         run: python scripts/record_danger_favorites.py --base-dir . --attach-results || true
 
+      # 朝に web から集めた見解を情報源ごとに台帳へ残す（data/web_findings_log.json）。
+      # ⚠ この時点のリポジトリにある `data/claude_web_findings.json` は**前回の開催日**の
+      #   ものかもしれない（Routine は weekend.yml の refresh が終わってから findings を
+      #   main に置く）。台帳はキー先着順で上書きしないので、二重に記録されることは無い。
+      - name: Record web findings (非ブロッキング)
+        run: python scripts/record_web_findings.py --base-dir . || true
+
       - name: Generate stats
         run: python scripts/generate_stats.py
 
