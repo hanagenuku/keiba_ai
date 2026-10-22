@@ -1,0 +1,3300 @@
+{
+ "schema_version": 1,
+ "updated_at": "2026-10-22T13:03:47.397072+09:00",
+ "entries": [
+  {
+   "date": "2026-10-10",
+   "race_id": "20261010_05_10",
+   "venue": "東京",
+   "race_num": 10,
+   "collected_at": "2026-10-10T09:07:10+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/09/190000"
+   ],
+   "kind": "going",
+   "key": "ダート",
+   "said": {
+    "surface": "ダート",
+    "state": "良",
+    "expected": "乾燥（含水率2％台）",
+    "expected_state": null,
+    "summary": "東京ダートは金曜昼時点で良、含水率2％台で土曜はさらに乾燥する見込み。枠・直線ともフラット、前後は展開次第〜差し、想定時計は−1.0〜−0.5秒位。このレースの調教・陣営コメントは web から取れなかった。"
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/09/190000"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "良",
+    "actual_surface": "ダート",
+    "said_state_at_collection": "良",
+    "collection_state_matches_actual": true,
+    "said_expected_state": null,
+    "expected_state_matches_actual": null
+   }
+  },
+  {
+   "date": "2026-10-10",
+   "race_id": "20261010_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-10T09:07:10+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/09/190000",
+    "https://umasiru.com/archives/21846",
+    "https://www.keibanomiryoku.com/%E3%82%B5%E3%82%A6%E3%82%B8%E3%82%A2%E3%83%A9%E3%83%93%E3%82%A2%E3%83%AD%E3%82%A4%E3%83%A4%E3%83%AB%E3%82%AB%E3%83%83%E3%83%97"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": "良",
+    "expected": "やや硬め",
+    "expected_state": null,
+    "summary": "東京芝は金曜昼時点で良。土曜は「馬場が少し硬めかもしれない」との想定で、枠は内〜フラット・直線はやや内〜フラット・前後は展開次第〜差し、想定時計は標準なら−2.7秒前後（硬めなら−3.5〜−2.9秒）。追い切りの最高評価Sは3サトノハクマイと6ベルウッドディープ。"
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/09/190000",
+    "https://umasiru.com/archives/21846",
+    "https://www.keibanomiryoku.com/%E3%82%B5%E3%82%A6%E3%82%B8%E3%82%A2%E3%83%A9%E3%83%93%E3%82%A2%E3%83%AD%E3%82%A4%E3%83%A4%E3%83%AB%E3%82%AB%E3%83%83%E3%83%97"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "umasiru.com",
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "良",
+    "actual_surface": "芝",
+    "said_state_at_collection": "良",
+    "collection_state_matches_actual": true,
+    "said_expected_state": null,
+    "expected_state_matches_actual": null
+   }
+  },
+  {
+   "date": "2026-10-10",
+   "race_id": "20261010_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-10T09:07:10+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/09/190000",
+    "https://umasiru.com/archives/21846",
+    "https://www.keibanomiryoku.com/%E3%82%B5%E3%82%A6%E3%82%B8%E3%82%A2%E3%83%A9%E3%83%93%E3%82%A2%E3%83%AD%E3%82%A4%E3%83%A4%E3%83%AB%E3%82%AB%E3%83%83%E3%83%97"
+   ],
+   "kind": "horse",
+   "key": "1",
+   "said": {
+    "note": "栗東ウッド 6F88秒6-上がり1F12秒0（3頭併せ・馬なり）。評価C",
+    "direction": "down"
+   },
+   "sources": [
+    "https://umasiru.com/archives/21846"
+   ],
+   "hosts": [
+    "umasiru.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 8,
+    "top3": false,
+    "popularity": 9,
+    "horse_name": "ギブリ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-10",
+   "race_id": "20261010_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-10T09:07:10+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/09/190000",
+    "https://umasiru.com/archives/21846",
+    "https://www.keibanomiryoku.com/%E3%82%B5%E3%82%A6%E3%82%B8%E3%82%A2%E3%83%A9%E3%83%93%E3%82%A2%E3%83%AD%E3%82%A4%E3%83%A4%E3%83%AB%E3%82%AB%E3%83%83%E3%83%97"
+   ],
+   "kind": "horse",
+   "key": "10",
+   "said": {
+    "note": "美浦ウッド 6F82秒4-上がり1F11秒8（ライーリーアースと併せ・強めの追い切り）。評価A",
+    "direction": null
+   },
+   "sources": [
+    "https://umasiru.com/archives/21846"
+   ],
+   "hosts": [
+    "umasiru.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 7,
+    "top3": false,
+    "popularity": 8,
+    "horse_name": "アイファーマーリン",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-10",
+   "race_id": "20261010_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-10T09:07:10+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/09/190000",
+    "https://umasiru.com/archives/21846",
+    "https://www.keibanomiryoku.com/%E3%82%B5%E3%82%A6%E3%82%B8%E3%82%A2%E3%83%A9%E3%83%93%E3%82%A2%E3%83%AD%E3%82%A4%E3%83%A4%E3%83%AB%E3%82%AB%E3%83%83%E3%83%97"
+   ],
+   "kind": "horse",
+   "key": "11",
+   "said": {
+    "note": "栗東坂路 全体54秒3-上がり1F12秒7（単走・馬なり）。評価B",
+    "direction": null
+   },
+   "sources": [
+    "https://umasiru.com/archives/21846"
+   ],
+   "hosts": [
+    "umasiru.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 11,
+    "top3": false,
+    "popularity": 7,
+    "horse_name": "ハンサム",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-10",
+   "race_id": "20261010_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-10T09:07:10+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/09/190000",
+    "https://umasiru.com/archives/21846",
+    "https://www.keibanomiryoku.com/%E3%82%B5%E3%82%A6%E3%82%B8%E3%82%A2%E3%83%A9%E3%83%93%E3%82%A2%E3%83%AD%E3%82%A4%E3%83%A4%E3%83%AB%E3%82%AB%E3%83%83%E3%83%97"
+   ],
+   "kind": "horse",
+   "key": "2",
+   "said": {
+    "note": "美浦ウッド 6F83秒2-上がり1F11秒8（インナーパッションと併せ・馬なり）。評価C。レーン騎手は新馬戦後に「ポテンシャルの高い馬」と評価",
+    "direction": null
+   },
+   "sources": [
+    "https://umasiru.com/archives/21846",
+    "https://www.keibanomiryoku.com/%E3%82%B5%E3%82%A6%E3%82%B8%E3%82%A2%E3%83%A9%E3%83%93%E3%82%A2%E3%83%AD%E3%82%A4%E3%83%A4%E3%83%AB%E3%82%AB%E3%83%83%E3%83%97"
+   ],
+   "hosts": [
+    "umasiru.com",
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 9,
+    "top3": false,
+    "popularity": 4,
+    "horse_name": "デミアン",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-10",
+   "race_id": "20261010_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-10T09:07:10+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/09/190000",
+    "https://umasiru.com/archives/21846",
+    "https://www.keibanomiryoku.com/%E3%82%B5%E3%82%A6%E3%82%B8%E3%82%A2%E3%83%A9%E3%83%93%E3%82%A2%E3%83%AD%E3%82%A4%E3%83%A4%E3%83%AB%E3%82%AB%E3%83%83%E3%83%97"
+   ],
+   "kind": "horse",
+   "key": "3",
+   "said": {
+    "note": "美浦ウッド 6F83秒2-上がり1F11秒1（サトノワーグナーと併せ・馬なり）。最高評価S",
+    "direction": "up"
+   },
+   "sources": [
+    "https://umasiru.com/archives/21846"
+   ],
+   "hosts": [
+    "umasiru.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 2,
+    "top3": true,
+    "popularity": 6,
+    "horse_name": "サトノハクマイ",
+    "fukusho_payout": 300,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-10",
+   "race_id": "20261010_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-10T09:07:10+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/09/190000",
+    "https://umasiru.com/archives/21846",
+    "https://www.keibanomiryoku.com/%E3%82%B5%E3%82%A6%E3%82%B8%E3%82%A2%E3%83%A9%E3%83%93%E3%82%A2%E3%83%AD%E3%82%A4%E3%83%A4%E3%83%AB%E3%82%AB%E3%83%83%E3%83%97"
+   ],
+   "kind": "horse",
+   "key": "4",
+   "said": {
+    "note": "美浦ウッド 5F68秒3-上がり1F11秒3（単走・ゴール前で仕掛け）。評価A",
+    "direction": null
+   },
+   "sources": [
+    "https://umasiru.com/archives/21846"
+   ],
+   "hosts": [
+    "umasiru.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 1,
+    "top3": true,
+    "popularity": 3,
+    "horse_name": "アゴルディーノ",
+    "fukusho_payout": 200,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-10",
+   "race_id": "20261010_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-10T09:07:10+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/09/190000",
+    "https://umasiru.com/archives/21846",
+    "https://www.keibanomiryoku.com/%E3%82%B5%E3%82%A6%E3%82%B8%E3%82%A2%E3%83%A9%E3%83%93%E3%82%A2%E3%83%AD%E3%82%A4%E3%83%A4%E3%83%AB%E3%82%AB%E3%83%83%E3%83%97"
+   ],
+   "kind": "horse",
+   "key": "5",
+   "said": {
+    "note": "美浦ウッド 5F68秒7-上がり1F11秒3（3頭併せ・ゴール前で仕掛け）。評価A。ルメール騎手は「子供っぽい面があるので、まだ伸びしろがありますね」とコメント",
+    "direction": null
+   },
+   "sources": [
+    "https://umasiru.com/archives/21846",
+    "https://www.keibanomiryoku.com/%E3%82%B5%E3%82%A6%E3%82%B8%E3%82%A2%E3%83%A9%E3%83%93%E3%82%A2%E3%83%AD%E3%82%A4%E3%83%A4%E3%83%AB%E3%82%AB%E3%83%83%E3%83%97"
+   ],
+   "hosts": [
+    "umasiru.com",
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 3,
+    "top3": true,
+    "popularity": 1,
+    "horse_name": "フィリオソラーレ",
+    "fukusho_payout": 120,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-10",
+   "race_id": "20261010_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-10T09:07:10+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/09/190000",
+    "https://umasiru.com/archives/21846",
+    "https://www.keibanomiryoku.com/%E3%82%B5%E3%82%A6%E3%82%B8%E3%82%A2%E3%83%A9%E3%83%93%E3%82%A2%E3%83%AD%E3%82%A4%E3%83%A4%E3%83%AB%E3%82%AB%E3%83%83%E3%83%97"
+   ],
+   "kind": "horse",
+   "key": "6",
+   "said": {
+    "note": "美浦ウッド 5F67秒1-上がり1F11秒4（ミカッテヨンデイイと併せ・馬なり）。最高評価S",
+    "direction": "up"
+   },
+   "sources": [
+    "https://umasiru.com/archives/21846"
+   ],
+   "hosts": [
+    "umasiru.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 5,
+    "top3": false,
+    "popularity": 2,
+    "horse_name": "ベルウッドディープ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-10",
+   "race_id": "20261010_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-10T09:07:10+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/09/190000",
+    "https://umasiru.com/archives/21846",
+    "https://www.keibanomiryoku.com/%E3%82%B5%E3%82%A6%E3%82%B8%E3%82%A2%E3%83%A9%E3%83%93%E3%82%A2%E3%83%AD%E3%82%A4%E3%83%A4%E3%83%AB%E3%82%AB%E3%83%83%E3%83%97"
+   ],
+   "kind": "horse",
+   "key": "7",
+   "said": {
+    "note": "美浦ウッド 5F68秒9-上がり1F12秒2（単走・強めの追い切り）。評価B",
+    "direction": null
+   },
+   "sources": [
+    "https://umasiru.com/archives/21846"
+   ],
+   "hosts": [
+    "umasiru.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 10,
+    "top3": false,
+    "popularity": 11,
+    "horse_name": "ニシノトラノスケ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-10",
+   "race_id": "20261010_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-10T09:07:10+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/09/190000",
+    "https://umasiru.com/archives/21846",
+    "https://www.keibanomiryoku.com/%E3%82%B5%E3%82%A6%E3%82%B8%E3%82%A2%E3%83%A9%E3%83%93%E3%82%A2%E3%83%AD%E3%82%A4%E3%83%A4%E3%83%AB%E3%82%AB%E3%83%83%E3%83%97"
+   ],
+   "kind": "horse",
+   "key": "8",
+   "said": {
+    "note": "美浦ウッド 5F65秒9-上がり1F11秒4（マダックスと併せ・強めの追い切り）。評価A",
+    "direction": null
+   },
+   "sources": [
+    "https://umasiru.com/archives/21846"
+   ],
+   "hosts": [
+    "umasiru.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 4,
+    "top3": false,
+    "popularity": 10,
+    "horse_name": "グルーヴェンス",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-10",
+   "race_id": "20261010_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-10T09:07:10+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/09/190000",
+    "https://umasiru.com/archives/21846",
+    "https://www.keibanomiryoku.com/%E3%82%B5%E3%82%A6%E3%82%B8%E3%82%A2%E3%83%A9%E3%83%93%E3%82%A2%E3%83%AD%E3%82%A4%E3%83%A4%E3%83%AB%E3%82%AB%E3%83%83%E3%83%97"
+   ],
+   "kind": "horse",
+   "key": "9",
+   "said": {
+    "note": "美浦ウッド 6F84秒2-上がり1F11秒4（馬なり）。評価B",
+    "direction": null
+   },
+   "sources": [
+    "https://umasiru.com/archives/21846"
+   ],
+   "hosts": [
+    "umasiru.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 6,
+    "top3": false,
+    "popularity": 5,
+    "horse_name": "ジップスパーク",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-10",
+   "race_id": "20261010_08_10",
+   "venue": "京都",
+   "race_num": 10,
+   "collected_at": "2026-10-10T09:07:10+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/09/190000"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": "良",
+    "expected": "硬さは標準",
+    "expected_state": null,
+    "summary": "京都芝は金曜昼時点で良。今週は雨がほとんど降らず「馬場の硬さは標準位」との想定で、枠は内〜フラット・直線はやや内〜フラット・前後は展開次第〜差し、想定時計は−3.5〜−3.0秒位。このレースの調教・陣営コメントは web から取れなかった。"
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/09/190000"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "良",
+    "actual_surface": "芝",
+    "said_state_at_collection": "良",
+    "collection_state_matches_actual": true,
+    "said_expected_state": null,
+    "expected_state_matches_actual": null
+   }
+  },
+  {
+   "date": "2026-10-10",
+   "race_id": "20261010_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-10-10T09:07:10+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/09/190000"
+   ],
+   "kind": "going",
+   "key": "ダート",
+   "said": {
+    "surface": "ダート",
+    "state": "良",
+    "expected": "乾燥（含水率4〜5％台）",
+    "expected_state": null,
+    "summary": "京都ダートは金曜昼時点で良、含水率4〜5％台で土曜はさらに乾燥する見込み。枠・直線ともフラット、前後は展開次第、想定時計は−1.0〜−0.5秒位。3勝クラスのため調教評価の記事が web に無く、調教・陣営コメントは取れなかった。"
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/09/190000"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "良",
+    "actual_surface": "ダート",
+    "said_state_at_collection": "良",
+    "collection_state_matches_actual": true,
+    "said_expected_state": null,
+    "expected_state_matches_actual": null
+   }
+  },
+  {
+   "date": "2026-10-11",
+   "race_id": "20261011_05_10",
+   "venue": "東京",
+   "race_num": 10,
+   "collected_at": "2026-10-11T09:04:18+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/10/200000"
+   ],
+   "kind": "going",
+   "key": "ダート",
+   "said": {
+    "surface": "ダート",
+    "state": "良",
+    "expected": "乾燥（含水率2％台）",
+    "expected_state": null,
+    "summary": "東京ダートは土曜夜時点で良、含水率2％台で日曜はさらに乾燥する見込み。枠・直線ともフラット、前後は展開次第〜差し、想定時計は−1.3〜−0.7秒位（土曜の実測は−1.0秒位）。このレースの調教・陣営コメントは web から取れなかった。"
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/10/200000"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "良",
+    "actual_surface": "ダート",
+    "said_state_at_collection": "良",
+    "collection_state_matches_actual": true,
+    "said_expected_state": null,
+    "expected_state_matches_actual": null
+   }
+  },
+  {
+   "date": "2026-10-11",
+   "race_id": "20261011_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-11T09:04:18+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/10/200000",
+    "https://umasiru.com/archives/21848"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": "良",
+    "expected": "前日より硬くなる可能性",
+    "expected_state": null,
+    "summary": "東京芝は土曜夜時点で良。日曜は晴れ予報で前日より硬くなる可能性があり、枠は内〜フラット・直線はやや内〜フラット・前後は展開次第〜差し、想定時計は−3.0〜−2.5秒位（土曜の実測は−2.7秒位・前日は差し有利だった）。🔴 追い切り最高評価Sのヴォンフレ（とA評価のテリオスララ）は取消で不在。出走馬の最上位はA評価の8ルージュソリテール・11ラヴァンダ・13ワタシマツワ・16カムニャック。"
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/10/200000",
+    "https://umasiru.com/archives/21848"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "umasiru.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "良",
+    "actual_surface": "芝",
+    "said_state_at_collection": "良",
+    "collection_state_matches_actual": true,
+    "said_expected_state": null,
+    "expected_state_matches_actual": null
+   }
+  },
+  {
+   "date": "2026-10-11",
+   "race_id": "20261011_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-11T09:04:18+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/10/200000",
+    "https://umasiru.com/archives/21848"
+   ],
+   "kind": "horse",
+   "key": "1",
+   "said": {
+    "note": "美浦ウッド（良）6F84秒5-上がり11秒6（馬なり）。評価B",
+    "direction": null
+   },
+   "sources": [
+    "https://umasiru.com/archives/21848"
+   ],
+   "hosts": [
+    "umasiru.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 7,
+    "top3": false,
+    "popularity": 7,
+    "horse_name": "ニシノティアモ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-11",
+   "race_id": "20261011_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-11T09:04:18+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/10/200000",
+    "https://umasiru.com/archives/21848"
+   ],
+   "kind": "horse",
+   "key": "10",
+   "said": {
+    "note": "栗東ウッド（良）4F53秒6-上がり11秒9（馬なり）。評価B",
+    "direction": null
+   },
+   "sources": [
+    "https://umasiru.com/archives/21848"
+   ],
+   "hosts": [
+    "umasiru.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 15,
+    "top3": false,
+    "popularity": 6,
+    "horse_name": "セキトバイースト",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-11",
+   "race_id": "20261011_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-11T09:04:18+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/10/200000",
+    "https://umasiru.com/archives/21848"
+   ],
+   "kind": "horse",
+   "key": "11",
+   "said": {
+    "note": "栗東坂路（良）全体51秒5-上がり12秒2（馬なり）。評価A。終いの2Fが2秒台前半と鋭く瞬発力を評価",
+    "direction": "up"
+   },
+   "sources": [
+    "https://umasiru.com/archives/21848"
+   ],
+   "hosts": [
+    "umasiru.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 3,
+    "top3": true,
+    "popularity": 2,
+    "horse_name": "ラヴァンダ",
+    "fukusho_payout": 160,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-11",
+   "race_id": "20261011_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-11T09:04:18+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/10/200000",
+    "https://umasiru.com/archives/21848"
+   ],
+   "kind": "horse",
+   "key": "12",
+   "said": {
+    "note": "美浦ウッド（良）6F82秒2-上がり11秒4（馬なり）。評価B",
+    "direction": null
+   },
+   "sources": [
+    "https://umasiru.com/archives/21848"
+   ],
+   "hosts": [
+    "umasiru.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 5,
+    "top3": false,
+    "popularity": 11,
+    "horse_name": "ミアネーロ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-11",
+   "race_id": "20261011_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-11T09:04:18+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/10/200000",
+    "https://umasiru.com/archives/21848"
+   ],
+   "kind": "horse",
+   "key": "13",
+   "said": {
+    "note": "美浦ウッド（良）5F66秒8-上がり12秒4（馬なり）。評価A",
+    "direction": "up"
+   },
+   "sources": [
+    "https://umasiru.com/archives/21848"
+   ],
+   "hosts": [
+    "umasiru.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 11,
+    "top3": false,
+    "popularity": 12,
+    "horse_name": "ワタシマツワ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-11",
+   "race_id": "20261011_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-11T09:04:18+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/10/200000",
+    "https://umasiru.com/archives/21848"
+   ],
+   "kind": "horse",
+   "key": "14",
+   "said": {
+    "note": "栗東ウッド（良）6F80秒9-上がり12秒1（馬なり）。評価B",
+    "direction": null
+   },
+   "sources": [
+    "https://umasiru.com/archives/21848"
+   ],
+   "hosts": [
+    "umasiru.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 9,
+    "top3": false,
+    "popularity": 15,
+    "horse_name": "ハワイアンティアレ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-11",
+   "race_id": "20261011_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-11T09:04:18+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/10/200000",
+    "https://umasiru.com/archives/21848"
+   ],
+   "kind": "horse",
+   "key": "15",
+   "said": {
+    "note": "美浦ウッド（良）5F67秒8-上がり11秒2（馬なり）。評価B",
+    "direction": null
+   },
+   "sources": [
+    "https://umasiru.com/archives/21848"
+   ],
+   "hosts": [
+    "umasiru.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 2,
+    "top3": true,
+    "popularity": 4,
+    "horse_name": "ジョスラン",
+    "fukusho_payout": 190,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-11",
+   "race_id": "20261011_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-11T09:04:18+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/10/200000",
+    "https://umasiru.com/archives/21848"
+   ],
+   "kind": "horse",
+   "key": "16",
+   "said": {
+    "note": "栗東坂路（良）全体53秒9-上がり12秒4（馬なり）。評価A。僚馬に楽に先着し、直線で右手前に替えてからの動きに前向きさ",
+    "direction": "up"
+   },
+   "sources": [
+    "https://umasiru.com/archives/21848"
+   ],
+   "hosts": [
+    "umasiru.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 1,
+    "top3": true,
+    "popularity": 1,
+    "horse_name": "カムニャック",
+    "fukusho_payout": 140,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-11",
+   "race_id": "20261011_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-11T09:04:18+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/10/200000",
+    "https://umasiru.com/archives/21848"
+   ],
+   "kind": "horse",
+   "key": "2",
+   "said": {
+    "note": "栗東坂路（良）全体55秒6-上がり12秒1（末強め）。評価C",
+    "direction": "down"
+   },
+   "sources": [
+    "https://umasiru.com/archives/21848"
+   ],
+   "hosts": [
+    "umasiru.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 12,
+    "top3": false,
+    "popularity": 10,
+    "horse_name": "チェルビアット",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-11",
+   "race_id": "20261011_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-11T09:04:18+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/10/200000",
+    "https://umasiru.com/archives/21848"
+   ],
+   "kind": "horse",
+   "key": "3",
+   "said": {
+    "note": "栗東坂路（良）全体56秒0-上がり11秒8（馬なり）。評価B",
+    "direction": null
+   },
+   "sources": [
+    "https://umasiru.com/archives/21848"
+   ],
+   "hosts": [
+    "umasiru.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 8,
+    "top3": false,
+    "popularity": 3,
+    "horse_name": "クイーンズウォーク",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-11",
+   "race_id": "20261011_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-11T09:04:18+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/10/200000",
+    "https://umasiru.com/archives/21848"
+   ],
+   "kind": "horse",
+   "key": "4",
+   "said": {
+    "note": "栗東坂路（良）全体56秒0-上がり13秒0（馬なり）。評価C",
+    "direction": "down"
+   },
+   "sources": [
+    "https://umasiru.com/archives/21848"
+   ],
+   "hosts": [
+    "umasiru.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 16,
+    "top3": false,
+    "popularity": 14,
+    "horse_name": "クランフォード",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-11",
+   "race_id": "20261011_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-11T09:04:18+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/10/200000",
+    "https://umasiru.com/archives/21848"
+   ],
+   "kind": "horse",
+   "key": "5",
+   "said": {
+    "note": "美浦ウッド（良）6F81秒6-上がり11秒6（強め）。評価C",
+    "direction": "down"
+   },
+   "sources": [
+    "https://umasiru.com/archives/21848"
+   ],
+   "hosts": [
+    "umasiru.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 4,
+    "top3": false,
+    "popularity": 9,
+    "horse_name": "カネラフィーナ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-11",
+   "race_id": "20261011_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-11T09:04:18+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/10/200000",
+    "https://umasiru.com/archives/21848"
+   ],
+   "kind": "horse",
+   "key": "6",
+   "said": {
+    "note": "栗東坂路（良）全体53秒9-上がり12秒5（馬なり）。評価E＝映像がなく判断できないとされている",
+    "direction": "down"
+   },
+   "sources": [
+    "https://umasiru.com/archives/21848"
+   ],
+   "hosts": [
+    "umasiru.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 10,
+    "top3": false,
+    "popularity": 16,
+    "horse_name": "ムイ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-11",
+   "race_id": "20261011_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-11T09:04:18+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/10/200000",
+    "https://umasiru.com/archives/21848"
+   ],
+   "kind": "horse",
+   "key": "7",
+   "said": {
+    "note": "美浦ウッド（良）5F67秒7-上がり11秒6（ゴール前仕掛け）。評価B",
+    "direction": null
+   },
+   "sources": [
+    "https://umasiru.com/archives/21848"
+   ],
+   "hosts": [
+    "umasiru.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 6,
+    "top3": false,
+    "popularity": 13,
+    "horse_name": "ミラビリスマジック",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-11",
+   "race_id": "20261011_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-11T09:04:18+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/10/200000",
+    "https://umasiru.com/archives/21848"
+   ],
+   "kind": "horse",
+   "key": "8",
+   "said": {
+    "note": "栗東坂路（良）全体54秒4-上がり12秒0（馬なり）。評価A",
+    "direction": "up"
+   },
+   "sources": [
+    "https://umasiru.com/archives/21848"
+   ],
+   "hosts": [
+    "umasiru.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 13,
+    "top3": false,
+    "popularity": 5,
+    "horse_name": "ルージュソリテール",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-11",
+   "race_id": "20261011_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-11T09:04:18+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/10/200000",
+    "https://umasiru.com/archives/21848"
+   ],
+   "kind": "horse",
+   "key": "9",
+   "said": {
+    "note": "栗東坂路（良）全体53秒9-上がり12秒0（末強め）。評価B",
+    "direction": null
+   },
+   "sources": [
+    "https://umasiru.com/archives/21848"
+   ],
+   "hosts": [
+    "umasiru.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 14,
+    "top3": false,
+    "popularity": 8,
+    "horse_name": "ウイントワイライト",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-11",
+   "race_id": "20261011_08_10",
+   "venue": "京都",
+   "race_num": 10,
+   "collected_at": "2026-10-11T09:04:18+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/10/200000"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": "良",
+    "expected": "硬さは標準程度",
+    "expected_state": null,
+    "summary": "京都芝は土曜夜時点で良。馬場へのダメージは目立たず硬さは標準程度との想定で、枠は内〜フラット・直線はやや内〜フラット・前後は展開次第〜差し（外回りは差し有利の可能性）、想定時計は−3.5秒前後（土曜の実測は−3.5秒位で、前日はバイアスが出なかった）。このレースの調教・陣営コメントは web から取れなかった。"
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/10/200000"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "良",
+    "actual_surface": "芝",
+    "said_state_at_collection": "良",
+    "collection_state_matches_actual": true,
+    "said_expected_state": null,
+    "expected_state_matches_actual": null
+   }
+  },
+  {
+   "date": "2026-10-11",
+   "race_id": "20261011_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-10-11T09:04:18+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/10/200000"
+   ],
+   "kind": "going",
+   "key": "ダート",
+   "said": {
+    "surface": "ダート",
+    "state": "良",
+    "expected": "乾燥（含水率3〜4％台）",
+    "expected_state": null,
+    "summary": "京都ダートは土曜夜時点で良、含水率3〜4％台で日曜はさらに乾燥する見込み。枠・直線ともフラット、前後は展開次第（今開催は良馬場だとバイアスが出にくい傾向）、想定時計は−1.6〜−0.8秒位（土曜の実測は−1.4秒位）。オープン特別だが追い切り評価の記事が web に無く、調教・陣営コメントは取れなかった。"
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/10/200000"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "良",
+    "actual_surface": "ダート",
+    "said_state_at_collection": "良",
+    "collection_state_matches_actual": true,
+    "said_expected_state": null,
+    "expected_state_matches_actual": null
+   }
+  },
+  {
+   "date": "2026-10-12",
+   "race_id": "20261012_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-12T09:14:00+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/11/200000"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": "良",
+    "expected": "やや硬め",
+    "expected_state": null,
+    "summary": "東京の芝は内ラチ沿いにダメージが出てきたため外枠有利と事前に想定される一方、馬場が硬めなら内が伸びる可能性も指摘されている。直線の伸びはやや内〜フラット、前後は展開次第〜差し。想定時計は標準的な硬さなら-2.5〜-2.2秒、硬めなら-3.0〜-2.7秒"
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/11/200000"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "良",
+    "actual_surface": "芝",
+    "said_state_at_collection": "良",
+    "collection_state_matches_actual": true,
+    "said_expected_state": null,
+    "expected_state_matches_actual": null
+   }
+  },
+  {
+   "date": "2026-10-12",
+   "race_id": "20261012_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-10-12T09:14:00+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/11/200000",
+    "https://www.keibanomiryoku.com/?p=91719",
+    "https://www.yosounohone.com/entry/kyoto-2026-10-12"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": "良",
+    "expected": "標準的な硬さ",
+    "expected_state": null,
+    "summary": "京都の芝は枠が内〜フラット、直線の伸びがやや内〜フラットと事前に想定されており、ロスの少ない馬の好走が多いことから内枠有利の可能性。想定時計は-3.4秒前後。速い上がりが出れば外回りで差しが届く可能性もある"
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/11/200000",
+    "https://www.keibanomiryoku.com/?p=91719",
+    "https://www.yosounohone.com/entry/kyoto-2026-10-12"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "keibanomiryoku.com",
+    "yosounohone.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "良",
+    "actual_surface": "芝",
+    "said_state_at_collection": "良",
+    "collection_state_matches_actual": true,
+    "said_expected_state": null,
+    "expected_state_matches_actual": null
+   }
+  },
+  {
+   "date": "2026-10-12",
+   "race_id": "20261012_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-10-12T09:14:00+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/11/200000",
+    "https://www.keibanomiryoku.com/?p=91719",
+    "https://www.yosounohone.com/entry/kyoto-2026-10-12"
+   ],
+   "kind": "horse",
+   "key": "1",
+   "said": {
+    "note": "最終は栗東CW・良で4F 51.8-36.4-11.2を馬なり。1週前は栗東坂路で一杯に追ってロングトールサリーにクビ先着。福永調教師は「徐々に上向いている」",
+    "direction": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/?p=91719"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 1,
+    "top3": true,
+    "popularity": 2,
+    "horse_name": "ダイヤモンドノット",
+    "fukusho_payout": 230,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-12",
+   "race_id": "20261012_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-10-12T09:14:00+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/11/200000",
+    "https://www.keibanomiryoku.com/?p=91719",
+    "https://www.yosounohone.com/entry/kyoto-2026-10-12"
+   ],
+   "kind": "horse",
+   "key": "10",
+   "said": {
+    "note": "最終は美浦坂路・良で800m 54.8-40.0-25.5-12.0を馬なり、ジョイフルニュースと同入。大竹調教師は「明らかに今回の方が状態はいい」",
+    "direction": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/?p=91719"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 14,
+    "top3": false,
+    "popularity": 14,
+    "horse_name": "ララマセラシオン",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-12",
+   "race_id": "20261012_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-10-12T09:14:00+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/11/200000",
+    "https://www.keibanomiryoku.com/?p=91719",
+    "https://www.yosounohone.com/entry/kyoto-2026-10-12"
+   ],
+   "kind": "horse",
+   "key": "11",
+   "said": {
+    "note": "最終は栗東坂路・良で800m 53.6-38.7-25.4-12.6を馬なり。松下調教師は「動きや気配は良くなっている」、大野木厩務員は「京都は久々だけど好走しているので心配ない」",
+    "direction": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/?p=91719"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 10,
+    "top3": false,
+    "popularity": 12,
+    "horse_name": "レザベーション",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-12",
+   "race_id": "20261012_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-10-12T09:14:00+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/11/200000",
+    "https://www.keibanomiryoku.com/?p=91719",
+    "https://www.yosounohone.com/entry/kyoto-2026-10-12"
+   ],
+   "kind": "horse",
+   "key": "12",
+   "said": {
+    "note": "最終は栗東坂路・良で800m 53.7-38.1-24.6-12.5を馬なり。橋田調教師は「変わらず順調に来ています」",
+    "direction": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/?p=91719"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 16,
+    "top3": false,
+    "popularity": 6,
+    "horse_name": "アイサンサン",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-12",
+   "race_id": "20261012_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-10-12T09:14:00+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/11/200000",
+    "https://www.keibanomiryoku.com/?p=91719",
+    "https://www.yosounohone.com/entry/kyoto-2026-10-12"
+   ],
+   "kind": "horse",
+   "key": "13",
+   "said": {
+    "note": "最終は栗東坂路・良で800m 52.3-37.9-24.3-12.1を馬なり。1週前は同コースで800m 51.2を一杯。宮調教師は「楽しみだよ」。別の追い切り記事でも坂路の動きを高く評価",
+    "direction": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/?p=91719",
+    "https://www.yosounohone.com/entry/kyoto-2026-10-12"
+   ],
+   "hosts": [
+    "keibanomiryoku.com",
+    "yosounohone.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 6,
+    "top3": false,
+    "popularity": 5,
+    "horse_name": "マイネルチケット",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-12",
+   "race_id": "20261012_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-10-12T09:14:00+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/11/200000",
+    "https://www.keibanomiryoku.com/?p=91719",
+    "https://www.yosounohone.com/entry/kyoto-2026-10-12"
+   ],
+   "kind": "horse",
+   "key": "14",
+   "said": {
+    "note": "最終は栗東坂路・良で800m 55.2-38.8-24.8-12.3を北村友騎手が馬なり。北村友騎手は「条件はベストと言っていいと思います」",
+    "direction": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/?p=91719"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 12,
+    "top3": false,
+    "popularity": 11,
+    "horse_name": "ワイドラトゥール",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-12",
+   "race_id": "20261012_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-10-12T09:14:00+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/11/200000",
+    "https://www.keibanomiryoku.com/?p=91719",
+    "https://www.yosounohone.com/entry/kyoto-2026-10-12"
+   ],
+   "kind": "horse",
+   "key": "15",
+   "said": {
+    "note": "最終は美浦坂路・良で800m 55.1-40.3-25.8-12.2を馬なり。1週前は美浦ウッドで6F 79.7-64.2-50.3-36.1-11.0を馬なり。大竹調教師は「いい状態で出せる」",
+    "direction": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/?p=91719"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 5,
+    "top3": false,
+    "popularity": 4,
+    "horse_name": "ジョイフルニュース",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-12",
+   "race_id": "20261012_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-10-12T09:14:00+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/11/200000",
+    "https://www.keibanomiryoku.com/?p=91719",
+    "https://www.yosounohone.com/entry/kyoto-2026-10-12"
+   ],
+   "kind": "horse",
+   "key": "16",
+   "said": {
+    "note": "最終は栗東CW・良で4F 51.6-36.0-10.9を馬なり。福永調教師は「キレキレの動き」",
+    "direction": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/?p=91719"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 9,
+    "top3": false,
+    "popularity": 16,
+    "horse_name": "ランフォーヴァウ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-12",
+   "race_id": "20261012_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-10-12T09:14:00+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/11/200000",
+    "https://www.keibanomiryoku.com/?p=91719",
+    "https://www.yosounohone.com/entry/kyoto-2026-10-12"
+   ],
+   "kind": "horse",
+   "key": "17",
+   "said": {
+    "note": "最終は栗東坂路・良で800m 54.6-39.3-25.4-12.5を馬なり。1週前は栗東CWを一杯。杉山佳調教師は脚さばきを「軽快だった」",
+    "direction": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/?p=91719"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 11,
+    "top3": false,
+    "popularity": 9,
+    "horse_name": "ミニトランザット",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-12",
+   "race_id": "20261012_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-10-12T09:14:00+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/11/200000",
+    "https://www.keibanomiryoku.com/?p=91719",
+    "https://www.yosounohone.com/entry/kyoto-2026-10-12"
+   ],
+   "kind": "horse",
+   "key": "18",
+   "said": {
+    "note": "最終は栗東坂路・良で800m 54.4-38.7-25.1-12.1を武豊騎手が馬なり。杉山晴調教師は「順調で特に変わりないですね」、武豊騎手は「状態はいいと思う」",
+    "direction": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/?p=91719"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 8,
+    "top3": false,
+    "popularity": 3,
+    "horse_name": "エリカエクスプレス",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-12",
+   "race_id": "20261012_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-10-12T09:14:00+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/11/200000",
+    "https://www.keibanomiryoku.com/?p=91719",
+    "https://www.yosounohone.com/entry/kyoto-2026-10-12"
+   ],
+   "kind": "horse",
+   "key": "2",
+   "said": {
+    "note": "最終は栗東坂路・良で800m 53.8-38.3-24.3-11.8を末強め。1週前は同コースを一杯。松下調教師は「いい動き」",
+    "direction": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/?p=91719"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 17,
+    "top3": false,
+    "popularity": 10,
+    "horse_name": "ショウナンザナドゥ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-12",
+   "race_id": "20261012_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-10-12T09:14:00+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/11/200000",
+    "https://www.keibanomiryoku.com/?p=91719",
+    "https://www.yosounohone.com/entry/kyoto-2026-10-12"
+   ],
+   "kind": "horse",
+   "key": "3",
+   "said": {
+    "note": "最終は美浦ウッド・良で5F 68.5-52.7-38.1-11.9を馬なり。鹿戸調教師は「相変わらずいい動き」",
+    "direction": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/?p=91719"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 15,
+    "top3": false,
+    "popularity": 17,
+    "horse_name": "レイベリング",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-12",
+   "race_id": "20261012_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-10-12T09:14:00+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/11/200000",
+    "https://www.keibanomiryoku.com/?p=91719",
+    "https://www.yosounohone.com/entry/kyoto-2026-10-12"
+   ],
+   "kind": "horse",
+   "key": "4",
+   "said": {
+    "note": "最終は栗東坂路・良で800m 53.1-37.9-24.3-11.7を馬なり。牧田調教師はラストを「抜群の動き」と評価。別の追い切り記事でも栗東坂路の最終追いに★2つ",
+    "direction": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/?p=91719",
+    "https://www.yosounohone.com/entry/kyoto-2026-10-12"
+   ],
+   "hosts": [
+    "keibanomiryoku.com",
+    "yosounohone.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 2,
+    "top3": true,
+    "popularity": 8,
+    "horse_name": "スズハローム",
+    "fukusho_payout": 480,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-12",
+   "race_id": "20261012_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-10-12T09:14:00+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/11/200000",
+    "https://www.keibanomiryoku.com/?p=91719",
+    "https://www.yosounohone.com/entry/kyoto-2026-10-12"
+   ],
+   "kind": "horse",
+   "key": "5",
+   "said": {
+    "note": "最終は栗東坂路・良で800m 53.4-38.7-25.2-12.4を馬なり。1週前はM.デムーロ騎手が一杯に追った。杉山晴調教師は「状態面は変わらず順調です」",
+    "direction": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/?p=91719"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 7,
+    "top3": false,
+    "popularity": 15,
+    "horse_name": "ビッグシーザー",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-12",
+   "race_id": "20261012_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-10-12T09:14:00+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/11/200000",
+    "https://www.keibanomiryoku.com/?p=91719",
+    "https://www.yosounohone.com/entry/kyoto-2026-10-12"
+   ],
+   "kind": "horse",
+   "key": "6",
+   "said": {
+    "note": "最終は美浦ウッド・良で5F 67.0-51.0-37.3-11.9を馬なり、1.0秒追走から0.2秒先着。1週前は6F 82.2から一杯。深山調教師は「動きは良かった」",
+    "direction": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/?p=91719"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 13,
+    "top3": false,
+    "popularity": 7,
+    "horse_name": "ウインマーベル",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-12",
+   "race_id": "20261012_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-10-12T09:14:00+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/11/200000",
+    "https://www.keibanomiryoku.com/?p=91719",
+    "https://www.yosounohone.com/entry/kyoto-2026-10-12"
+   ],
+   "kind": "horse",
+   "key": "7",
+   "said": {
+    "note": "最終は小林・良で2F 23.0-11.3を馬なり。1週前は小林・稍重で5F 67.3を強め。荒山勝調教師は「ベストの距離で持ち味を生かしたい」",
+    "direction": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/?p=91719"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 18,
+    "top3": false,
+    "popularity": 18,
+    "horse_name": "ネオトキオ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-12",
+   "race_id": "20261012_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-10-12T09:14:00+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/11/200000",
+    "https://www.keibanomiryoku.com/?p=91719",
+    "https://www.yosounohone.com/entry/kyoto-2026-10-12"
+   ],
+   "kind": "horse",
+   "key": "8",
+   "said": {
+    "note": "最終は美浦ウッド・良で5F 68.6-52.6-37.9-11.3を馬なり、0.1秒追走で同入。太田助手は「若干急仕上げで詰め込んだ稽古をしている」",
+    "direction": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/?p=91719"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 4,
+    "top3": false,
+    "popularity": 13,
+    "horse_name": "サンダーストラック",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-12",
+   "race_id": "20261012_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-10-12T09:14:00+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/11/200000",
+    "https://www.keibanomiryoku.com/?p=91719",
+    "https://www.yosounohone.com/entry/kyoto-2026-10-12"
+   ],
+   "kind": "horse",
+   "key": "9",
+   "said": {
+    "note": "昨年のスワンS勝ち馬。最終は栗東坂路・良で800m 53.6-39.0-25.1-12.2を馬なり。吉村調教師は「ようやく本格化した感じがあります」。別記事でも坂路の追いに★2つ",
+    "direction": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/?p=91719",
+    "https://www.yosounohone.com/entry/kyoto-2026-10-12"
+   ],
+   "hosts": [
+    "keibanomiryoku.com",
+    "yosounohone.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 3,
+    "top3": true,
+    "popularity": 1,
+    "horse_name": "オフトレイル",
+    "fukusho_payout": 160,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-17",
+   "race_id": "20261017_04_10",
+   "venue": "新潟",
+   "race_num": 10,
+   "collected_at": "2026-10-17T09:09:39+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/16/190000"
+   ],
+   "kind": "going",
+   "key": "ダート",
+   "said": {
+    "surface": "ダート",
+    "state": "良",
+    "expected": "良〜やや重（含水率5〜6%台で水分が残る）",
+    "expected_state": "重",
+    "summary": "新潟は開幕週で雨量次第。ダートは含水率5〜6%台で水分が残り、道悪なら前有利に振れることがある。 想定時計は雨量次第で -1.5〜±0秒（1800mは向かい風予報で遅くなる可能性）／枠は内〜外（例年良馬場は7割バイアスなし）／直線フラット／前後は前〜展開次第（道悪なら前有利になることがある）"
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/16/190000"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "良",
+    "actual_surface": "ダート",
+    "said_state_at_collection": "良",
+    "collection_state_matches_actual": true,
+    "said_expected_state": "重",
+    "expected_state_matches_actual": false
+   }
+  },
+  {
+   "date": "2026-10-17",
+   "race_id": "20261017_04_11",
+   "venue": "新潟",
+   "race_num": 11,
+   "collected_at": "2026-10-17T09:09:39+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/16/190000"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": "良",
+    "expected": "良〜やや重（開幕週・金曜午後の雨量次第）",
+    "expected_state": "重",
+    "summary": "新潟は開幕週。金曜午後の雨量で良〜やや重が決まり、枠・直線とも想定の幅が広い。 想定時計は雨量次第で -2.0〜±0秒／枠は内〜外（例年の開幕週は6割がバイアスなし・内外2割ずつ）／直線はやや内〜やや外／前後は展開次第〜差し（例年良馬場で差し有利5割程度）"
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/16/190000"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "良",
+    "actual_surface": "芝",
+    "said_state_at_collection": "良",
+    "collection_state_matches_actual": true,
+    "said_expected_state": "重",
+    "expected_state_matches_actual": false
+   }
+  },
+  {
+   "date": "2026-10-17",
+   "race_id": "20261017_05_10",
+   "venue": "東京",
+   "race_num": 10,
+   "collected_at": "2026-10-17T09:09:39+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/16/190000"
+   ],
+   "kind": "going",
+   "key": "ダート",
+   "said": {
+    "surface": "ダート",
+    "state": "良",
+    "expected": "良（含水率1〜2%台で非常に乾燥・土曜も晴れ予報）",
+    "expected_state": "良",
+    "summary": "東京ダートは含水率1〜2%台で非常に乾燥。良馬場だと外枠有利・差し有利に振れる開催。 想定時計 -1.3〜-0.7秒／枠はフラット〜外（今開催は良馬場だと外枠有利になることがある）／直線フラット／前後は展開次第〜差し（良馬場だと差し有利が多い）"
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/16/190000"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "良",
+    "actual_surface": "ダート",
+    "said_state_at_collection": "良",
+    "collection_state_matches_actual": true,
+    "said_expected_state": "良",
+    "expected_state_matches_actual": true
+   }
+  },
+  {
+   "date": "2026-10-17",
+   "race_id": "20261017_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-17T09:09:39+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/16/190000",
+    "https://www.keibanomiryoku.com/article/fuji-stakes-2026-work-out.html"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": "良",
+    "expected": "良（府中は約2週間雨がなく硬め寄りの可能性）",
+    "expected_state": "良",
+    "summary": "東京芝は乾いて硬め寄り。速い上がりが出る形なら差し有利に振れる想定。追い切りは美浦勢（エコロアルバ・トロヴァトーレ・ファンダム）の評価が高い一方、陣営が明確に不安を口にした馬もいる。 想定時計 -2.5〜-2.0秒（硬めなら -3.5〜-2.7秒）／枠は内〜外（硬くなればロスの少ない内、向正面の内ラチにダメージが出れば外）／直線はやや内〜フラット／前後は展開次第〜差し（速い上がりが出れば差し有利）"
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/16/190000",
+    "https://www.keibanomiryoku.com/article/fuji-stakes-2026-work-out.html"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "良",
+    "actual_surface": "芝",
+    "said_state_at_collection": "良",
+    "collection_state_matches_actual": true,
+    "said_expected_state": "良",
+    "expected_state_matches_actual": true
+   }
+  },
+  {
+   "date": "2026-10-17",
+   "race_id": "20261017_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-17T09:09:39+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/16/190000",
+    "https://www.keibanomiryoku.com/article/fuji-stakes-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "1",
+   "said": {
+    "note": "美浦ウッド 最終 6F 82.4-65.7-51.2-37.1-11.8（馬なり）トーアケルキラの外0.5秒追走・0.2秒先着。戸崎騎手が自ら追い切り",
+    "direction": "up"
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/fuji-stakes-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 10,
+    "top3": false,
+    "popularity": 6,
+    "horse_name": "ファンダム",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-17",
+   "race_id": "20261017_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-17T09:09:39+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/16/190000",
+    "https://www.keibanomiryoku.com/article/fuji-stakes-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "10",
+   "said": {
+    "note": "美浦ウッド 最終 5F 67.2-52.0-37.8-11.2（G前仕掛け）ソーロブストの外0.4秒先行・同入。太田助手「順調に調整はできた。先週よりは（状態が）上がっている」",
+    "direction": "up"
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/fuji-stakes-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 2,
+    "top3": true,
+    "popularity": 2,
+    "horse_name": "アンパドゥ",
+    "fukusho_payout": 170,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-17",
+   "race_id": "20261017_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-17T09:09:39+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/16/190000",
+    "https://www.keibanomiryoku.com/article/fuji-stakes-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "11",
+   "said": {
+    "note": "栗東坂路 最終 53.4-38.4-25.4-12.3（末強め）。田代助手「前回（関屋記念・3着）も、しっかり脚を使っていましたね」",
+    "direction": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/fuji-stakes-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 8,
+    "top3": false,
+    "popularity": 8,
+    "horse_name": "ファーヴェント",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-17",
+   "race_id": "20261017_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-17T09:09:39+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/16/190000",
+    "https://www.keibanomiryoku.com/article/fuji-stakes-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "12",
+   "said": {
+    "note": "美浦坂路 最終 55.1-40.1-25.8-12.7（G前仕掛け）アトラステソーロに0.8秒先行・0.2秒遅れ。高木師「久々でも気がいいので問題ない。リズム良くハナを切れるかどうかが鍵」",
+    "direction": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/fuji-stakes-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 14,
+    "top3": false,
+    "popularity": 11,
+    "horse_name": "エンペラーズソード",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-17",
+   "race_id": "20261017_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-17T09:09:39+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/16/190000",
+    "https://www.keibanomiryoku.com/article/fuji-stakes-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "13",
+   "said": {
+    "note": "栗東CW 1週前 6F 80.8-64.9-50.1-36.0-11.4（馬なり）0.1秒先着。清水久師「いい雰囲気。宝塚記念の後はダメージがあったので休養したが、すっかり良くなった」",
+    "direction": "up"
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/fuji-stakes-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 1,
+    "top3": true,
+    "popularity": 12,
+    "horse_name": "シュガークン",
+    "fukusho_payout": 1250,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-17",
+   "race_id": "20261017_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-17T09:09:39+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/16/190000",
+    "https://www.keibanomiryoku.com/article/fuji-stakes-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "14",
+   "said": {
+    "note": "美浦坂路 最終 52.5-38.1-24.3-11.6（一杯）ハイヤーマークを0.5秒追走・0.6秒先着。手塚久師「さすがの動き。調教だけ見ていたら、（また）重賞を勝てそうな感じがする」",
+    "direction": "up"
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/fuji-stakes-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 3,
+    "top3": true,
+    "popularity": 4,
+    "horse_name": "エコロアルバ",
+    "fukusho_payout": 280,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-17",
+   "race_id": "20261017_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-17T09:09:39+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/16/190000",
+    "https://www.keibanomiryoku.com/article/fuji-stakes-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "2",
+   "said": {
+    "note": "栗東CW 最終は稍重で 6F 85.1-68.7-53.0-37.8-11.7（馬なり）。前川師「ちょうどいい仕上がりですよ」",
+    "direction": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/fuji-stakes-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 11,
+    "top3": false,
+    "popularity": 13,
+    "horse_name": "ミトノオルフェ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-17",
+   "race_id": "20261017_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-17T09:09:39+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/16/190000",
+    "https://www.keibanomiryoku.com/article/fuji-stakes-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "3",
+   "said": {
+    "note": "栗東坂路 最終 54.8-39.0-25.2-12.8（馬なり）。清水助手「先週しっかりやっているので今朝はテンションを上げないように」",
+    "direction": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/fuji-stakes-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 13,
+    "top3": false,
+    "popularity": 14,
+    "horse_name": "シンフォーエバー",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-17",
+   "race_id": "20261017_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-17T09:09:39+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/16/190000",
+    "https://www.keibanomiryoku.com/article/fuji-stakes-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "4",
+   "said": {
+    "note": "美浦ウッド 最終 6F 85.6-69.5-53.8-38.4-11.3（馬なり）。鹿戸師「馬なりでラスト1ハロン11秒3が出たし、そのままのペースで1コーナーまで走れていた」",
+    "direction": "up"
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/fuji-stakes-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 12,
+    "top3": false,
+    "popularity": 1,
+    "horse_name": "トロヴァトーレ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-17",
+   "race_id": "20261017_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-17T09:09:39+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/16/190000",
+    "https://www.keibanomiryoku.com/article/fuji-stakes-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "5",
+   "said": {
+    "note": "栗東坂路 最終 54.0-38.8-24.4-11.9（馬なり）/1週前 51.7-36.7-23.7-12.3。友道師「動きは良かったし、ジョッキーの感触も良かった」。ただ大江助手「爪に弱さがあり、しっかりケアして戻ってきました」",
+    "direction": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/fuji-stakes-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 6,
+    "top3": false,
+    "popularity": 3,
+    "horse_name": "アドマイヤズーム",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-17",
+   "race_id": "20261017_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-17T09:09:39+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/16/190000",
+    "https://www.keibanomiryoku.com/article/fuji-stakes-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "6",
+   "said": {
+    "note": "栗東CW 1週前 7F 99.6-67.4-52.8-37.1-11.1（一杯）クビ遅れ。上村師「今朝は予定通り。元々、ワンターンが得意。ただ、東京に実績がないのがね」",
+    "direction": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/fuji-stakes-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 5,
+    "top3": false,
+    "popularity": 10,
+    "horse_name": "デビットバローズ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-17",
+   "race_id": "20261017_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-17T09:09:39+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/16/190000",
+    "https://www.keibanomiryoku.com/article/fuji-stakes-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "7",
+   "said": {
+    "note": "石橋師「少しもたもたした感じで、動きに物足りなさはある」。最終は栗東Eダート稍重でゲートなり。師は「12日（月・坂路800m 55.2-40.0-25.3-12.0 強め）が実質的な追い切りで反応は良かった」",
+    "direction": "down"
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/fuji-stakes-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 7,
+    "top3": false,
+    "popularity": 7,
+    "horse_name": "ウォーターリヒト",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-17",
+   "race_id": "20261017_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-17T09:09:39+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/16/190000",
+    "https://www.keibanomiryoku.com/article/fuji-stakes-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "8",
+   "said": {
+    "note": "栗東坂路 最終 53.8-38.1-24.3-11.9（末強め）/1週前CW 6F 81.3-65.5-50.8-36.1-11.3（一杯）0.3秒先着。北村助手「春からの状態で言えば、今回がベスト」",
+    "direction": "up"
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/fuji-stakes-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 4,
+    "top3": false,
+    "popularity": 5,
+    "horse_name": "マジックサンズ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-17",
+   "race_id": "20261017_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-17T09:09:39+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/16/190000",
+    "https://www.keibanomiryoku.com/article/fuji-stakes-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "9",
+   "said": {
+    "note": "栗東坂路 最終 52.6-38.6-25.0-12.5（一杯）。中竹師「しまいまでしっかりやって、との指示」",
+    "direction": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/fuji-stakes-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 9,
+    "top3": false,
+    "popularity": 9,
+    "horse_name": "キープカルム",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-17",
+   "race_id": "20261017_08_10",
+   "venue": "京都",
+   "race_num": 10,
+   "collected_at": "2026-10-17T09:09:39+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/16/190000"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": "良",
+    "expected": "良（水曜に5.5mmの雨・金曜昼は良／土曜晴れ予報）",
+    "expected_state": "良",
+    "summary": "京都芝は馬場が良好で内〜フラット想定。全体にバイアスは出にくい開催。 想定時計 -3.5〜-3.0秒／枠は内〜フラット（馬場が良好でロスの少ない内が有利になることもあり得る）／直線はやや内〜フラット／前後は展開次第〜差し（外回りで速い上がりが出れば差し有利）"
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/16/190000"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "良",
+    "actual_surface": "芝",
+    "said_state_at_collection": "良",
+    "collection_state_matches_actual": true,
+    "said_expected_state": "良",
+    "expected_state_matches_actual": true
+   }
+  },
+  {
+   "date": "2026-10-17",
+   "race_id": "20261017_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-10-17T09:09:39+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/16/190000"
+   ],
+   "kind": "going",
+   "key": "ダート",
+   "said": {
+    "surface": "ダート",
+    "state": "良",
+    "expected": "良（含水率2〜3%台でパサパサ・土曜はさらに乾く見込み）",
+    "expected_state": "良",
+    "summary": "京都は全体にバイアスが出にくい開催。ダートは含水率2〜3%台でパサパサ。 想定時計 -1.6〜-1.0秒／枠は内〜フラット（偶に内枠有利）／直線フラット／前後は展開次第（前後のバイアスも出にくい）"
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/16/190000"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "良",
+    "actual_surface": "ダート",
+    "said_state_at_collection": "良",
+    "collection_state_matches_actual": true,
+    "said_expected_state": "良",
+    "expected_state_matches_actual": true
+   }
+  },
+  {
+   "date": "2026-10-18",
+   "race_id": "20261018_04_11",
+   "venue": "新潟",
+   "race_num": 11,
+   "collected_at": "2026-10-18T09:05:18+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/17/200000"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": "良",
+    "expected": "良（開幕週で例年以上に良好・水曜10mm/金曜1mmの雨／日曜は晴れ予報）",
+    "expected_state": "良",
+    "summary": "新潟は開幕週で例年以上に良好な芝。時計は速い方向で、差しに振れる可能性がある。 想定時計 -2.2〜-1.7秒で速い時計が出る可能性／枠はフラット（多少は内枠の好走が多くなるかもしれない）／直線フラット／前後は展開次第〜差し（土曜に速い上がりが出ており差し有利になる可能性がある）"
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/17/200000"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "良",
+    "actual_surface": "芝",
+    "said_state_at_collection": "良",
+    "collection_state_matches_actual": true,
+    "said_expected_state": "良",
+    "expected_state_matches_actual": true
+   }
+  },
+  {
+   "date": "2026-10-18",
+   "race_id": "20261018_05_10",
+   "venue": "東京",
+   "race_num": 10,
+   "collected_at": "2026-10-18T09:05:18+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/17/200000"
+   ],
+   "kind": "going",
+   "key": "ダート",
+   "said": {
+    "surface": "ダート",
+    "state": "良",
+    "expected": "良（含水率1%台で非常に乾燥・日曜はさらに乾く見込み）",
+    "expected_state": "良",
+    "summary": "東京ダートは含水率1%台で非常に乾燥し、日曜はさらに乾く見込み。 想定時計 -1.3〜-0.8秒／枠はフラット〜外（良馬場では偶に外枠有利）／直線フラット／前後は展開次第〜差し（良馬場だと差し有利が多い）"
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/17/200000"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "良",
+    "actual_surface": "ダート",
+    "said_state_at_collection": "良",
+    "collection_state_matches_actual": true,
+    "said_expected_state": "良",
+    "expected_state_matches_actual": true
+   }
+  },
+  {
+   "date": "2026-10-18",
+   "race_id": "20261018_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-18T09:05:18+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/17/200000"
+   ],
+   "kind": "going",
+   "key": "ダート",
+   "said": {
+    "surface": "ダート",
+    "state": "良",
+    "expected": "良（含水率1%台で非常に乾燥・日曜はさらに乾く見込み）",
+    "expected_state": "良",
+    "summary": "東京ダートは含水率1%台で非常に乾燥。良馬場では差しに振れることが多い開催。 想定時計 -1.3〜-0.8秒／枠はフラット〜外（良馬場では偶に外枠有利）／直線フラット／前後は展開次第〜差し（良馬場だと差し有利が多い）"
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/17/200000"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "良",
+    "actual_surface": "ダート",
+    "said_state_at_collection": "良",
+    "collection_state_matches_actual": true,
+    "said_expected_state": "良",
+    "expected_state_matches_actual": true
+   }
+  },
+  {
+   "date": "2026-10-18",
+   "race_id": "20261018_08_10",
+   "venue": "京都",
+   "race_num": 10,
+   "collected_at": "2026-10-18T09:05:18+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/17/200000"
+   ],
+   "kind": "going",
+   "key": "ダート",
+   "said": {
+    "surface": "ダート",
+    "state": "良",
+    "expected": "良（含水率2%台でパサパサに乾燥・日曜はさらに乾く見込み）",
+    "expected_state": "良",
+    "summary": "京都ダートは含水率2%台でパサパサ。今開催は全体にバイアスが出にくい。 想定時計 -1.6〜-1.1秒／枠は内〜フラット（良馬場では偶に内枠有利）／直線フラット／前後は展開次第（今開催はバイアスが出にくい傾向）"
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/17/200000"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "良",
+    "actual_surface": "ダート",
+    "said_state_at_collection": "良",
+    "collection_state_matches_actual": true,
+    "said_expected_state": "良",
+    "expected_state_matches_actual": true
+   }
+  },
+  {
+   "date": "2026-10-18",
+   "race_id": "20261018_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-10-18T09:05:18+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/17/200000",
+    "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": "良",
+    "expected": "良（水曜に5.5mmの雨・土曜のクッション値10.8／日曜は晴れ予報）",
+    "expected_state": "良",
+    "summary": "京都芝は内ラチ沿いのダメージが出始めた段階。進行すれば外枠・外伸びに振れる。追い切りは栗東・美浦とも好評価が多く、はっきり不安を口にした陣営は1件。 🔴 内ラチ沿いに少しダメージが出てきており、進行次第でバイアスが出る可能性がある。想定時計 -3.2〜-2.9秒／枠はフラット〜外（ダメージが進行すると外枠有利になることもあり得る）／直線はフラット〜やや外／前後は展開次第〜差し（速い上がりが出るようだと差し有利）"
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/17/200000",
+    "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "良",
+    "actual_surface": "芝",
+    "said_state_at_collection": "良",
+    "collection_state_matches_actual": true,
+    "said_expected_state": "良",
+    "expected_state_matches_actual": true
+   }
+  },
+  {
+   "date": "2026-10-18",
+   "race_id": "20261018_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-10-18T09:05:18+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/17/200000",
+    "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "1",
+   "said": {
+    "note": "栗東CW 最終 4F 51.5-36.7-11.2（馬なり）/1週前 7F 97.4-65.8-51.3-36.7-11.8（一杯）同入。杉山晴師「春よりも今の方が不安なく調整できている」。吉松助手「器用さがあって内回り2000mも大丈夫」",
+    "direction": "up"
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 2,
+    "top3": true,
+    "popularity": 7,
+    "horse_name": "ギャラボーグ",
+    "fukusho_payout": 370,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-18",
+   "race_id": "20261018_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-10-18T09:05:18+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/17/200000",
+    "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "10",
+   "said": {
+    "note": "美浦ウッド 最終 6F 83.2-66.4-51.5-37.4-11.7（馬なり）ゼンダンタカの内0.2秒先行・0.1秒先着。高木助手「満足いく追い切りができた」。寺河助手「高いレベルで安定している」",
+    "direction": "up"
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 16,
+    "top3": false,
+    "popularity": 17,
+    "horse_name": "ナイスプレーアスク",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-18",
+   "race_id": "20261018_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-10-18T09:05:18+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/17/200000",
+    "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "11",
+   "said": {
+    "note": "栗東坂路 最終 54.9-39.8-25.0-12.3（馬なり）。杉山佳師「軽快に走れていた。動きは軽快だったし、仕上がっている」",
+    "direction": "up"
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 11,
+    "top3": false,
+    "popularity": 10,
+    "horse_name": "ガーネットフレア",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-18",
+   "race_id": "20261018_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-10-18T09:05:18+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/17/200000",
+    "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "12",
+   "said": {
+    "note": "美浦坂路 最終 54.2-39.0-24.9-12.0（馬なり）/1週前ウッド 5F 65.2-50.2-36.3-11.3（馬なり）アドマイヤウルトラの内1.0秒追走・0.2秒先着。宮田師「加速が素晴らしかった。一発を狙うつもりでやっています」",
+    "direction": "up"
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 13,
+    "top3": false,
+    "popularity": 4,
+    "horse_name": "カナルサンマルタン",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-18",
+   "race_id": "20261018_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-10-18T09:05:18+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/17/200000",
+    "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "13",
+   "said": {
+    "note": "美浦ウッド 最終 6F 84.8-68.3-53.1-38.6-11.7（馬なり）同入。田中博師「このままではマズいので何とかします」。飯塚助手「体に張りも出てきた」",
+    "direction": "down"
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 3,
+    "top3": true,
+    "popularity": 2,
+    "horse_name": "ドリームコア",
+    "fukusho_payout": 170,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-18",
+   "race_id": "20261018_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-10-18T09:05:18+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/17/200000",
+    "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "14",
+   "said": {
+    "note": "美浦ウッド 最終 6F 83.9-66.9-51.4-36.8-11.3（馬なり）アールプロストの内0.2秒追走・0.1秒先着。伊藤大師「文句なしでした。今までで一番よかったと思います」",
+    "direction": "up"
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 5,
+    "top3": false,
+    "popularity": 8,
+    "horse_name": "サムシングスイート",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-18",
+   "race_id": "20261018_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-10-18T09:05:18+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/17/200000",
+    "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "15",
+   "said": {
+    "note": "栗東CW 最終 4F 52.6-36.9-11.3（馬なり）/1週前 6F 83.0-66.4-50.7-35.8-11.4（馬なり）0.4秒先着。四位師「いい動きだった。枠はどこでもいいですよ」",
+    "direction": "up"
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 7,
+    "top3": false,
+    "popularity": 15,
+    "horse_name": "フェスティバルヒル",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-18",
+   "race_id": "20261018_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-10-18T09:05:18+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/17/200000",
+    "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "16",
+   "said": {
+    "note": "栗東CW 最終 5F 67.7-52.2-36.7-11.4（馬なり）/1週前 6F 83.9-67.5-52.4-36.8-11.2（直強め）。東田師「テンションが鍵。どんな競馬でもできる器用さがある」",
+    "direction": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 9,
+    "top3": false,
+    "popularity": 9,
+    "horse_name": "ハヤブササキチャン",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-18",
+   "race_id": "20261018_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-10-18T09:05:18+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/17/200000",
+    "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "17",
+   "said": {
+    "note": "栗東CW 最終 6F 80.2-65.7-52.5-38.6-12.8（馬なり）。寺島師「しっかり時計は出ていたので、状態は良さそう。立ち回りが上手なので舞台も合いそう」",
+    "direction": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 15,
+    "top3": false,
+    "popularity": 14,
+    "horse_name": "ロザーンジュ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-18",
+   "race_id": "20261018_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-10-18T09:05:18+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/17/200000",
+    "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "2",
+   "said": {
+    "note": "栗東坂路 最終 54.1-40.0-25.5-12.2（馬なり）。宮地師「ブレずにいい動きだった。テンションが高い子なので、そこを気をつけて調整している」",
+    "direction": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 14,
+    "top3": false,
+    "popularity": 13,
+    "horse_name": "テイエムアイラン",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-18",
+   "race_id": "20261018_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-10-18T09:05:18+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/17/200000",
+    "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "3",
+   "said": {
+    "note": "美浦ウッド 最終 4F 54.4-39.7-12.4（馬なり）。蛯名正師「今回は今までで一番、脚元にもダメージがなかった」。斎藤助手「前回よりさらに良くなってきている感じがあります」",
+    "direction": "up"
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 8,
+    "top3": false,
+    "popularity": 5,
+    "horse_name": "マスターソアラ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-18",
+   "race_id": "20261018_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-10-18T09:05:18+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/17/200000",
+    "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "4",
+   "said": {
+    "note": "栗東坂路 最終 58.5-42.3-27.9-14.1（馬なり）。吉岡師「いい意味でうるささがあります」。坂井騎手「その通りの追い切りができて、動きもいつも通り」",
+    "direction": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 4,
+    "top3": false,
+    "popularity": 6,
+    "horse_name": "エンネ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-18",
+   "race_id": "20261018_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-10-18T09:05:18+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/17/200000",
+    "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "5",
+   "said": {
+    "note": "栗東坂路 最終 56.6-41.0-25.8-12.2（馬なり）/1週前CW 7F 96.0-65.0-50.4-36.1-11.6（馬なり）。松下師「体が少し締まってきた感じ」",
+    "direction": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 10,
+    "top3": false,
+    "popularity": 12,
+    "horse_name": "タイセイボーグ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-18",
+   "race_id": "20261018_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-10-18T09:05:18+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/17/200000",
+    "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "6",
+   "said": {
+    "note": "美浦ウッド 最終 6F 84.8-69.0-54.5-39.6-12.1（馬なり）。鹿戸師「めちゃくちゃいい。確実に力をつけている」。荻野極騎手「折り合い良く、余力を残しながら」",
+    "direction": "up"
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 6,
+    "top3": false,
+    "popularity": 3,
+    "horse_name": "ラベルセーヌ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-18",
+   "race_id": "20261018_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-10-18T09:05:18+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/17/200000",
+    "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "7",
+   "said": {
+    "note": "栗東坂路 最終 55.4-40.2-25.0-12.0（馬なり）/1週前はカズタンジャーを0.7秒追走・0.5秒先着。新谷師「中距離の方がイメージがいい」。田山騎手「今日追い切った感じは落ち着いていました」",
+    "direction": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 12,
+    "top3": false,
+    "popularity": 16,
+    "horse_name": "バースデイフライト",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-18",
+   "race_id": "20261018_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-10-18T09:05:18+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/17/200000",
+    "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "8",
+   "said": {
+    "note": "栗東坂路 最終 53.2-38.4-25.2-12.4（馬なり）/1週前CW 6F 81.9-65.9-50.9-36.1-11.2（馬なり）クビ先着。上村師「軽快だった。好調をキープできている。息の乱れもなく、平然と駆け上がってきた」",
+    "direction": "up"
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": {
+    "checked_at": "2026-10-22T13:03:47.397072+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 1,
+    "top3": true,
+    "popularity": 1,
+    "horse_name": "モンローウォーク",
+    "fukusho_payout": 110,
+    "fukusho_sold": true
+   }
+  },
+  {
+   "date": "2026-10-18",
+   "race_id": "20261018_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-10-18T09:05:18+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/17/200000",
+    "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "9",
+   "said": {
+    "note": "栗東坂路 最終 54.1-38.4-25.0-12.6（末強め）。北出師「本当に良くなるのはこれからだと思うけど」。佐々木騎手「動きはシャープになったかなと思います」",
+    "direction": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/shuka-sho-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": null
+  }
+ ]
+}
