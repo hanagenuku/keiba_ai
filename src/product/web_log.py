@@ -42,6 +42,33 @@
 
 ⚠ **予想には一切繋がない。** この層は本番の数字を読まないし書かない
    （`claude_web.py` の別枠設計をそのまま引き継ぐ）。
+
+＝＝ 🔴 情報源ごとに「測れる形」が違う（2026-10-23 に実データ97件で判明）＝＝
+
+「どの情報源が信頼できるか」は**共通の的中率1本では測れない**。実測した内訳:
+
+| 情報源 | 1レースあたり言及頭数 | 序列 | 同レース対照群 |
+|---|---|---|---|
+| `keibanomiryoku` | 中央値 **15.5頭**（ほぼ全馬） | 自由文のみ（評価記号 2/51） | **無い** |
+| `umasiru` | 中央値 **13.5頭**（ほぼ全馬） | note に 評価 S/A/B/C が 26/27 | グレード帯の**間**に取る |
+| `yosounohone` | **3頭**（選別型） | ★（note の文中） | 同レースの印なし |
+| `bloodline-trackbias` | going のみ | — | 確定馬場との突合 |
+
+🔴 **全馬型（ほぼ全馬にメモが付く情報源）の「3着内率」は信頼度ではない。**
+全馬に言及すれば率は母集団の3着内率（約20%）そのものになる。実測 10/50 = 20.0% は
+まさにそれで、**当たり外れの概念が無い**。昨日 `yosounohone` の★が測れたのは
+「同レースに印なしの馬が居た」からで（`oikiri/RESULTS.md`）、全馬型にはその
+対照群が**構造的に存在しない**（jugem を「1レース1頭なのでレース内順位が常に1・
+z が 0」で閉じたのと同型の、向きが逆の問題）。
+
+🔑 **だから測れるのは「レース内で変わる序列」を持つ情報源だけ。**
+全馬型でも序列（評価 S/A/B/C）があれば帯の間に差を取れる。序列が無ければ測れない。
+判定の基準は `websig/CRITERIA_RELIABILITY.md` に事前登録した。
+
+⚠ **序列は `said.grade` に構造化して記録する。`note` の自由文から正規表現で
+後から取り出さない**（記録された値とこちらが解釈した値が同じ列に混ざり、後から
+区別できなくなる。2026-09-02 のパドック `condition` キーと同型）。
+既存97件は `grade=None` のまま残す（遡って埋めない）。
 """
 
 import json
@@ -52,7 +79,7 @@ from urllib.parse import urlparse
 
 JST = timezone(timedelta(hours=9))
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 LEDGER_FILENAME = os.path.join('data', 'web_findings_log.json')
 FINDINGS_FILENAME = os.path.join('data', 'claude_web_findings.json')
 
@@ -67,6 +94,25 @@ KINDS = ('going', 'horse', 'mark')
 # 「予想が当たったか」を書く。
 TRACK_STATES = ('不良', '稍重', '重', '良')
 
+#: 情報源が付けた序列（評価 S/A/B/C、★2 など）の最大長。これより長ければ
+#: 自由文が紛れ込んだと見なして捨てる
+GRADE_MAX_LEN = 8
+
+
+def normalize_grade(value):
+    """情報源が付けた序列を短い文字列に正規化する。
+
+    🔴 `note` の自由文から正規表現で取り出さない。**情報源が構造化して渡した
+    ものだけ**を受ける。後付け抽出をすると、同じ `grade` 列に「情報源が付けた値」と
+    「こちらが解釈した値」が混ざり、後から区別できなくなる。
+    """
+    if value is None:
+        return None
+    text = str(value).strip()
+    if not text or len(text) > GRADE_MAX_LEN:
+        return None
+    return text
+
 
 def ledger_path(base_dir):
     return os.path.join(base_dir or '.', LEDGER_FILENAME)
@@ -76,6 +122,13 @@ def empty_ledger():
     return {'schema_version': SCHEMA_VERSION, 'updated_at': None, 'entries': []}
 
 
+#: 読める schema_version。**1 → 2 は `said.grade` の追加だけ**なので、
+#: 既存エントリに手を入れずそのまま読める（`said.get('grade')` が None になる）。
+#: 🔴 遡って `grade` を埋めない。note の自由文から後付けで入れた値と、情報源が
+#: 付けた値が同じ列に混ざると後から区別できない。
+READABLE_SCHEMA_VERSIONS = (1, 2)
+
+
 def load(base_dir):
     path = ledger_path(base_dir)
     if not os.path.exists(path):
@@ -83,11 +136,11 @@ def load(base_dir):
     with open(path, encoding='utf-8') as f:
         data = json.load(f)
     ver = data.get('schema_version')
-    if ver != SCHEMA_VERSION:
+    if ver not in READABLE_SCHEMA_VERSIONS:
         raise ValueError(
             f'{LEDGER_FILENAME} の schema_version={ver} は未対応'
-            f'（期待 {SCHEMA_VERSION}）。作り直すと過去の記録が消えるので、'
-            '移行コードを書いてから読むこと')
+            f'（読めるのは {READABLE_SCHEMA_VERSIONS}）。作り直すと過去の記録が'
+            '消えるので、移行コードを書いてから読むこと')
     data.setdefault('entries', [])
     return data
 
@@ -225,7 +278,9 @@ def collect_from_findings(findings):
             srcs = list(v.get('sources') or [])
             out.append(dict(base, kind='horse', key=str(num),
                             said={'note': str(v.get('note')).strip(),
-                                  'direction': v.get('direction')},
+                                  'direction': v.get('direction'),
+                                  # 情報源が付けた序列。無ければ None のまま
+                                  'grade': normalize_grade(v.get('grade'))},
                             sources=srcs, hosts=_hosts(srcs), result=None))
 
         for num, mk in sorted((e.get('marks') or {}).items(),
@@ -360,19 +415,38 @@ def attach_results(base_dir, hist_conn, keiba_conn, now=None, dry_run=False):
 # ───────────────────────── 集計（事実だけ） ─────────────────────────
 
 def summarize(base_dir):
-    """情報源 × 次元ごとの事実を返す。🔴 回収率は出さない。"""
+    """情報源 × 次元ごとの事実を返す。🔴 回収率は出さない。
+
+    🔴 **率をそのまま信頼度として読まないこと。** 1レースのほぼ全馬にメモが付く
+    情報源（`mentions_per_race` の中央値が出走頭数に近い）では、3着内率は母集団の
+    3着内率そのもので当たり外れの概念が無い。信頼度を測れる形になっているかは
+    `with_grade` / `with_direction` / `mentions_per_race` の3つで見る
+    （基準は `websig/CRITERIA_RELIABILITY.md`）。
+    """
     ledger = load(base_dir)
     entries = ledger.get('entries') or []
     by_host = {}
     for e in entries:
         done = e.get('result') is not None
+        said = e.get('said') or {}
         for h in (e.get('hosts') or ['(出典なし)']):
             d = by_host.setdefault(h, {})
             k = d.setdefault(e.get('kind'), {
                 'n': 0, 'with_result': 0, 'top3': 0, 'top3_of': 0,
                 'stable': 0, 'stable_of': 0,
-                'expected_match': 0, 'expected_of': 0})
+                'expected_match': 0, 'expected_of': 0,
+                # 🔑 測れる形になっているかの進捗メーター（効果ではない）
+                'with_grade': 0, 'with_direction': 0, 'n_races': 0,
+                'mentions_per_race': None, '_per_race': {}})
             k['n'] += 1
+            if e.get('kind') != 'going':
+                if said.get('grade'):
+                    k['with_grade'] += 1
+                if said.get('direction') in ('up', 'down'):
+                    k['with_direction'] += 1
+            rid = e.get('race_id')
+            if rid:
+                k['_per_race'][rid] = k['_per_race'].get(rid, 0) + 1
             if not done:
                 continue
             k['with_result'] += 1
@@ -390,6 +464,11 @@ def summarize(base_dir):
                 if r.get('top3') is not None:
                     k['top3_of'] += 1
                     k['top3'] += 1 if r['top3'] else 0
+    for kinds in by_host.values():
+        for k in kinds.values():
+            per = k.pop('_per_race')
+            k['n_races'] = len(per)
+            k['mentions_per_race'] = _median(sorted(per.values())) if per else None
     return {
         'n_entries': len(entries),
         'n_with_result': sum(1 for e in entries if e.get('result') is not None),
@@ -401,5 +480,19 @@ def summarize(base_dir):
                    '回収率は出していない（事実だけ）。'
                    '🔴 going の stable は「収集時点の馬場と確定馬場が同じだったか」で、'
                    '**予想の精度ではない**（予想は expected 側で、'
-                   '状態名を名乗らないことが多い）'),
+                   '状態名を名乗らないことが多い）。'
+                   '🔴 1レースのほぼ全馬にメモが付く情報源では 3着内率は母集団の'
+                   '3着内率そのもので、**信頼度ではない**'
+                   '（mentions_per_race を必ず並べて読む）'),
     }
+
+
+def _median(values):
+    """ソート済みの数列の中央値。偶数個なら2つの平均。"""
+    if not values:
+        return None
+    n = len(values)
+    mid = n // 2
+    if n % 2:
+        return float(values[mid])
+    return (values[mid - 1] + values[mid]) / 2.0

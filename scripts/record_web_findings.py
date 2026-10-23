@@ -56,8 +56,17 @@ def main(argv=None):
                                 if k['expected_of'] else '想定は状態名を名乗らず採点不能')
                     extra = ' / ' + ' / '.join(bits)
                 elif k['top3_of']:
+                    # 🔴 これは信頼度ではない。全馬にメモが付く情報源では
+                    #   母集団の3着内率そのものになる。必ず言及頭数と並べて読む
                     extra = f' / 3着内 {k["top3"]}/{k["top3_of"]}'
                 print(f'    {kind:6s} {k["n"]:4d}件（結果あり {k["with_result"]:4d}）{extra}')
+                if kind != 'going':
+                    mpr = k.get('mentions_per_race')
+                    print(f'           言及レース {k["n_races"]:3d} / '
+                          f'1レースあたり {mpr if mpr is not None else "-"}頭'
+                          f' / 序列あり {k["with_grade"]:4d}'
+                          f' / 方向あり {k["with_direction"]:4d}'
+                          f'  ← 測れる形か（websig/CRITERIA_RELIABILITY.md）')
         print(f'⚠ {s["caveat"]}', file=sys.stderr)
         return 0
 
