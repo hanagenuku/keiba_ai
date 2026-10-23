@@ -50,10 +50,19 @@ ROI予測150%）。そのためこの層は **AI側の数字を1つも変えな�
 | 層 | 理由 | 対象 |
 |---|---|---|
 | 1. robots で明示拒否 | サイトが `Disallow: /` | `sponichi.co.jp` / `p.keibabook.co.jp` / `s.keibabook.co.jp` / `umanity.jp` |
-| 2. robots は許可だがサーバーが 403 | 出口IP/UAレピュテーション | `tospo-keiba.jp` / `www.jra.go.jp` |
+| 2. robots は許可だがサーバーが 403 | 出口IP/UAレピュテーション | `tospo-keiba.jp`（robots でも名指し拒否） / `www.umadb.com` |
 | 3. robots は許可だがサイトが reset | site 側の接続切断 | `keibalab.jp` |
 | 4. Claude Code の取得ポリシー | ハーネス側 | `nikkansports.com` |
 | 5. **使える** | — | `www.bloodline-trackbias.work` / `kayochinkeiba.com` / `www.keibanomiryoku.com` / `muryou-keiba-ai.jp` / `www.yosounohone.com` / `umasiru.com` / `netkeiba`(API/db) |
+
+🔴 **2026-10-23 訂正: 層2 から `www.jra.go.jp` を外した。**
+「サイト全体が 403」は誤りで、403 なのは **`/sitemap.xml` だけ**だった
+（2026-08-15 の「sitemap.xml は403」が 2026-09-28 にサイト全体へ一般化されて残っていた）。
+実測（2026-10-23）: `/` 200 / `/keiba/` 200 / `/keiba/baba/` 200 /
+`/keiba/baba/archive/2023.html` 200 / `/keiba/baba/archive/2026pdf/tokyo01.pdf` 200 /
+`/sitemap.xml` **403**。robots は `Disallow:` 空＝全許可。
+🔑 この誤りのせいで **JRA公式が 2018年〜のクッション値・含水率を開催単位の PDF で
+公開していること**が見えていなかった（`websig/CANDIDATES_2026-10-23.md` §2-D）。
 
 ⚠ **2026-10-22 追記: この表と `data/source_registry.json` が食い違っていた。**
 `www.yosounohone.com`（2026-10-12 に実運用で見つけた）は**どちらにも載っておらず**、
