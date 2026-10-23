@@ -142,6 +142,20 @@ def test_going_only_view_renders_a_block_and_changes_nothing():
     assert '芝の馬場' in body and '良' in body and 'やや硬め' in body
 
 
+def test_grade_in_the_findings_never_reaches_the_view(tmp_path=None):
+    """🔴 `horses[num].grade`（情報源が付けた序列）は**台帳専用**。
+
+    web の序列・印を AI の印と同じ記事・画面に並べない（2026-10-07 の決定）。
+    `grade` は `src/product/web_log.py` が台帳に残すだけで、ここを通らない。
+    """
+    plain = build_claude_view(RID, 11, HORSES, _notes(), '20260927')
+    n = _notes()
+    n['races'][RID]['horses']['13']['grade'] = 'A'
+    with_grade = build_claude_view(RID, 11, HORSES, n, '20260927')
+    assert with_grade == plain, 'grade が view（記事・アプリ）に漏れている'
+    assert 'grade' not in with_grade['horse_notes'][13]
+
+
 def test_load_findings_missing_file(tmp_path):
     assert load_findings(str(tmp_path)) is None
 

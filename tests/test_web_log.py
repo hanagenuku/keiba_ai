@@ -276,3 +276,78 @@ def test_it_does_not_read_or_write_the_prediction(base):
             assert pat not in body, f'web_log が予想の {field} に触っている'
     # 本番の予想ファイルを読まない（読むのは findings と history/keiba だけ）
     assert 'latest.json' not in body
+
+
+# ──────────── 序列（grade）＝「測れる形になっているか」の記録 ────────────
+#
+# 🔴 2026-10-23 に実データ97件で判明したこと: 情報源ごとに測れる形が違う。
+#   `keibanomiryoku` は 1レースあたり中央値 15.5頭（ほぼ全馬）に**方向も序列も無い
+#   メモ**を付けるので、3着内率は母集団の3着内率そのものになり当たり外れの概念が無い。
+#   `umasiru` は note の文中に 評価 S/A/B/C を 26/27 持っていたが自由文なので
+#   台帳から序列として読めなかった。基準は `websig/CRITERIA_RELIABILITY.md`。
+
+def test_normalize_grade_takes_only_a_short_recorded_value():
+    assert web_log.normalize_grade('A') == 'A'
+    assert web_log.normalize_grade(' ★2 ') == '★2'
+    assert web_log.normalize_grade(None) is None
+    assert web_log.normalize_grade('') is None
+    # 自由文が紛れ込んだら捨てる（8文字以内だけ通す）
+    assert web_log.normalize_grade('栗東坂路で抜群の動き。評価A') is None
+
+
+def test_collect_keeps_the_grade_the_source_gave(base):
+    findings = json.loads(json.dumps(FINDINGS))
+    findings['races']['20261018_08_11']['horses']['6']['grade'] = 'A'
+    rows = web_log.collect_from_findings(findings)
+    g = {r['key']: r['said'].get('grade') for r in rows if r['kind'] == 'horse'}
+    assert g['6'] == 'A'
+    # 情報源が序列を出していない馬は None のまま。こちらで埋めない
+    assert g['9'] is None
+
+
+def test_grade_is_never_parsed_out_of_the_free_text_note(base):
+    """🔴 `note` から正規表現で取り出すと、情報源が付けた値とこちらが解釈した値が
+    同じ列に混ざり後から区別できなくなる（2026-09-02 のパドック condition と同型）。"""
+    findings = json.loads(json.dumps(FINDINGS))
+    h = findings['races']['20261018_08_11']['horses']
+    h['9']['note'] = '美浦ウッド 6F82秒4-上がり1F11秒8（強めの追い切り）。評価A'
+    assert 'grade' not in h['9']
+    rows = web_log.collect_from_findings(findings)
+    said = next(r['said'] for r in rows if r['kind'] == 'horse' and r['key'] == '9')
+    assert said['grade'] is None, 'note の「評価A」を grade に流用してはいけない'
+
+
+def test_summary_reports_whether_the_source_is_measurable_at_all(base, tmp_path):
+    """率より先に「測れる形か」を見るための3つ: 言及頭数・序列あり・方向あり。"""
+    findings = json.loads(json.dumps(FINDINGS))
+    findings['races']['20261018_08_11']['horses']['6']['grade'] = 'A'
+    with open(os.path.join(base, 'data', 'claude_web_findings.json'), 'w',
+              encoding='utf-8') as f:
+        json.dump(findings, f, ensure_ascii=False)
+    web_log.record(base)
+    s = web_log.summarize(base)
+    k = s['by_host']['keibanomiryoku.com']['horse']
+    assert k['n'] == 2 and k['n_races'] == 1
+    assert k['mentions_per_race'] == 2.0
+    assert k['with_grade'] == 1          # #6 だけ序列あり
+    assert k['with_direction'] == 1      # #9 は direction=None
+    # 🔴 全馬型では率が信頼度にならないことを注意文に必ず残す
+    assert '信頼度ではない' in s['caveat']
+    assert 'mentions_per_race' in s['caveat']
+
+
+def test_a_v1_ledger_is_read_without_touching_its_rows(base):
+    """schema 1→2 は `said.grade` の追加だけ。既存の記録に手を入れずに読める。"""
+    web_log.record(base)
+    p = web_log.ledger_path(base)
+    d = json.load(open(p, encoding='utf-8'))
+    assert d['schema_version'] == web_log.SCHEMA_VERSION == 2
+    # 本番の台帳（97件）と同じ v1 の形に戻し、grade を持たない行にする
+    d['schema_version'] = 1
+    for e in d['entries']:
+        e['said'].pop('grade', None)
+    json.dump(d, open(p, 'w', encoding='utf-8'), ensure_ascii=False)
+    loaded = web_log.load(base)
+    assert len(loaded['entries']) == len(d['entries'])
+    s = web_log.summarize(base)
+    assert s['by_host']['keibanomiryoku.com']['horse']['with_grade'] == 0
