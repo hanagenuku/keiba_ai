@@ -1,6 +1,6 @@
 {
  "schema_version": 1,
- "updated_at": "2026-10-24T09:12:55.279649+09:00",
+ "updated_at": "2026-10-24T10:45:14.897335+09:00",
  "entries": [
   {
    "date": "2026-10-10",
@@ -1059,6 +1059,27 @@
   },
   {
    "date": "2026-10-24",
+   "race_id": "20261024_08_03",
+   "venue": "京都",
+   "race_num": 3,
+   "race_name": "新馬",
+   "num": 10,
+   "name": "ノーブルセプター",
+   "pop": 1,
+   "solo_rank": 9,
+   "rl_rank": 1,
+   "odds": 5.4,
+   "conf": 53,
+   "verdict": "skip",
+   "in_scope": false,
+   "scope_reason": "平場でレース信頼度53（66未満）",
+   "snapshot": "2026-10-24T10:24:28.116180+09:00",
+   "odds_coverage": 0.978,
+   "recorded_at": "2026-10-24T10:45:14.897035+09:00",
+   "result": null
+  },
+  {
+   "date": "2026-10-24",
    "race_id": "20261024_08_05",
    "venue": "京都",
    "race_num": 5,
@@ -1076,6 +1097,27 @@
    "snapshot": "2026-10-24T08:56:19.008213+09:00",
    "odds_coverage": 0.985,
    "recorded_at": "2026-10-24T09:12:55.279387+09:00",
+   "result": null
+  },
+  {
+   "date": "2026-10-24",
+   "race_id": "20261024_08_07",
+   "venue": "京都",
+   "race_num": 7,
+   "race_name": "3歳以上1勝クラス",
+   "num": 10,
+   "name": "エイコーンドリーム",
+   "pop": 1,
+   "solo_rank": 6,
+   "rl_rank": 1,
+   "odds": 4.1,
+   "conf": 61,
+   "verdict": "light",
+   "in_scope": false,
+   "scope_reason": "平場でレース信頼度61（66未満）",
+   "snapshot": "2026-10-24T10:24:28.116180+09:00",
+   "odds_coverage": 0.978,
+   "recorded_at": "2026-10-24T10:45:14.897035+09:00",
    "result": null
   },
   {

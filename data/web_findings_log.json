@@ -1,6 +1,6 @@
 {
- "schema_version": 1,
- "updated_at": "2026-10-22T13:03:47.397072+09:00",
+ "schema_version": 2,
+ "updated_at": "2026-10-24T10:45:15.002614+09:00",
  "entries": [
   {
    "date": "2026-10-10",
@@ -3293,6 +3293,532 @@
    ],
    "hosts": [
     "keibanomiryoku.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-10-24",
+   "race_id": "20261024_04_10",
+   "venue": "新潟",
+   "race_num": 10,
+   "collected_at": "2026-10-24T09:13:33+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/23/190000"
+   ],
+   "kind": "going",
+   "key": "ダート",
+   "said": {
+    "surface": "ダート",
+    "state": null,
+    "expected": "良〜不良（想定雨量0〜15mm・金曜昼はやや重）",
+    "expected_state": "不良",
+    "summary": "枠はフラット〜外、直線の伸びはフラット、前後は前〜展開次第と想定。近年の道悪の傾向だと外枠有利・前有利になることがある。"
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/23/190000"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-10-24",
+   "race_id": "20261024_04_11",
+   "venue": "新潟",
+   "race_num": 11,
+   "collected_at": "2026-10-24T09:13:33+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/23/190000"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": null,
+    "expected": "良〜重（想定雨量0〜15mm）",
+    "expected_state": "重",
+    "summary": "枠はフラット〜外、直線の伸びはフラット〜やや外、前後は前〜差しと想定。雨が降れば外枠有利・外伸びになる可能性。月〜木曜に64mmの雨が降っており、気温の低い時期なので少量の雨でも馬場がタフになる可能性がある。"
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/23/190000"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-10-24",
+   "race_id": "20261024_05_10",
+   "venue": "東京",
+   "race_num": 10,
+   "collected_at": "2026-10-24T09:13:33+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/23/190000"
+   ],
+   "kind": "going",
+   "key": "ダート",
+   "said": {
+    "surface": "ダート",
+    "state": null,
+    "expected": "良〜不良（想定雨量0〜25mm）",
+    "expected_state": "不良",
+    "summary": "枠は内〜外、直線の伸びはフラット、前後は前〜差しと想定。良なら今開催の傾向として差し有利になることが多く、外枠有利になることもある。今開催はバイアスが出にくい傾向。"
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/23/190000"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-10-24",
+   "race_id": "20261024_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-24T09:13:33+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/23/190000",
+    "https://www.keibanomiryoku.com/article/artemis-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22034"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": null,
+    "expected": "良〜重（想定雨量0〜25mm）",
+    "expected_state": "重",
+    "summary": "枠はフラット〜外、直線の伸びはフラット〜やや外、前後は展開次第〜差しと想定。土曜は曇りのち雨予報で、早ければレース前・遅くとも昼過ぎに降り始める見込み。雨が降るまでの想定時計は-3.5〜1.8秒、降ってからは雨量次第で-3.3〜+2.5秒。"
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/23/190000",
+    "https://www.keibanomiryoku.com/article/artemis-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22034"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "keibanomiryoku.com",
+    "umasiru.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-10-24",
+   "race_id": "20261024_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-24T09:13:33+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/23/190000",
+    "https://www.keibanomiryoku.com/article/artemis-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22034"
+   ],
+   "kind": "horse",
+   "key": "1",
+   "said": {
+    "note": "最終は栗東坂路 800m 54.3-39.5-25.1-12.3 馬なり（1週前に本追い切り）。岡田師「１週前の動きは良かった。成長している」",
+    "direction": "up",
+    "grade": "B"
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/artemis-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22034"
+   ],
+   "hosts": [
+    "keibanomiryoku.com",
+    "umasiru.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-10-24",
+   "race_id": "20261024_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-24T09:13:33+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/23/190000",
+    "https://www.keibanomiryoku.com/article/artemis-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22034"
+   ],
+   "kind": "horse",
+   "key": "10",
+   "said": {
+    "note": "最終は栗東坂路 800m 54.0-39.7-25.7-12.5 馬なりで自己ベスト。松下師「使いながら着実に良くなっています」",
+    "direction": "up",
+    "grade": "A"
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/artemis-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22034"
+   ],
+   "hosts": [
+    "keibanomiryoku.com",
+    "umasiru.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-10-24",
+   "race_id": "20261024_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-24T09:13:33+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/23/190000",
+    "https://www.keibanomiryoku.com/article/artemis-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22034"
+   ],
+   "kind": "horse",
+   "key": "11",
+   "said": {
+    "note": "最終は美浦坂路 800m 52.8-38.6-25.6-12.4 馬なり。尾形師「動きはかなり良かったと思います。初戦もいい勝ち方だったし、楽しみ」",
+    "direction": "up",
+    "grade": "B"
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/artemis-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22034"
+   ],
+   "hosts": [
+    "keibanomiryoku.com",
+    "umasiru.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-10-24",
+   "race_id": "20261024_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-24T09:13:33+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/23/190000",
+    "https://www.keibanomiryoku.com/article/artemis-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22034"
+   ],
+   "kind": "horse",
+   "key": "12",
+   "said": {
+    "note": "最終は美浦ウッド 6F84.3-68.0-52.7-38.4-11.7 稍重でリバートゥルーと併走。久保田師「どんどん良くなっている段階で、現状の動きとしてはまずまず。ここは力試し」",
+    "direction": null,
+    "grade": "A"
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/artemis-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22034"
+   ],
+   "hosts": [
+    "keibanomiryoku.com",
+    "umasiru.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-10-24",
+   "race_id": "20261024_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-24T09:13:33+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/23/190000",
+    "https://www.keibanomiryoku.com/article/artemis-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22034"
+   ],
+   "kind": "horse",
+   "key": "13",
+   "said": {
+    "note": "最終は美浦ウッド 6F83.9-66.6-51.2-36.9-11.8 馬なり。松永康師「直線でスッと伸びた。時計は少し速くなったが、それだけ馬の状態がいい証拠」",
+    "direction": "up",
+    "grade": "A"
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/artemis-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22034"
+   ],
+   "hosts": [
+    "keibanomiryoku.com",
+    "umasiru.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-10-24",
+   "race_id": "20261024_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-24T09:13:33+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/23/190000",
+    "https://www.keibanomiryoku.com/article/artemis-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22034"
+   ],
+   "kind": "horse",
+   "key": "2",
+   "said": {
+    "note": "最終は栗東坂路 800m 53.0-37.9-24.0-12.0 一杯で自己ベスト。中村師「今週の調教は手応えでやや見劣ったけど、状態面に問題はない」「輸送で減らなければ」",
+    "direction": null,
+    "grade": "B"
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/artemis-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22034"
+   ],
+   "hosts": [
+    "keibanomiryoku.com",
+    "umasiru.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-10-24",
+   "race_id": "20261024_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-24T09:13:33+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/23/190000",
+    "https://www.keibanomiryoku.com/article/artemis-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22034"
+   ],
+   "kind": "horse",
+   "key": "3",
+   "said": {
+    "note": "最終は栗東坂路 800m 58.1-42.2-26.8-12.9 馬なり。清水久師「時計は予定より遅くなったけど１週前にやっているし、放牧先でも乗り込んでもらっていた」",
+    "direction": null,
+    "grade": "B"
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/artemis-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22034"
+   ],
+   "hosts": [
+    "keibanomiryoku.com",
+    "umasiru.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-10-24",
+   "race_id": "20261024_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-24T09:13:33+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/23/190000",
+    "https://www.keibanomiryoku.com/article/artemis-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22034"
+   ],
+   "kind": "horse",
+   "key": "4",
+   "said": {
+    "note": "最終は美浦ウッド 6F84.1-66.8-51.2-37.0-11.7 馬なり。奥村豊師「新馬のときから動くし、きょうもよく動いていた。しまいは切れるなという動き」",
+    "direction": "up",
+    "grade": "A"
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/artemis-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22034"
+   ],
+   "hosts": [
+    "keibanomiryoku.com",
+    "umasiru.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-10-24",
+   "race_id": "20261024_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-24T09:13:33+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/23/190000",
+    "https://www.keibanomiryoku.com/article/artemis-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22034"
+   ],
+   "kind": "horse",
+   "key": "5",
+   "said": {
+    "note": "最終は栗東CW 6F83.5-69.2-55.1-40.0-13.2 馬なり。今助手「時計は気にせず、バランスとリズムの確認ですね」（前走は4角で不利）",
+    "direction": null,
+    "grade": "C"
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/artemis-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22034"
+   ],
+   "hosts": [
+    "keibanomiryoku.com",
+    "umasiru.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-10-24",
+   "race_id": "20261024_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-24T09:13:33+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/23/190000",
+    "https://www.keibanomiryoku.com/article/artemis-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22034"
+   ],
+   "kind": "horse",
+   "key": "6",
+   "said": {
+    "note": "最終は栗東坂路 800m 55.0-38.6-25.2-12.2 馬なり。岡助手「大きくは変わっていないけど、素軽さは出たかな」「今朝は輸送を考慮し、しまいだけ」",
+    "direction": null,
+    "grade": "B"
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/artemis-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22034"
+   ],
+   "hosts": [
+    "keibanomiryoku.com",
+    "umasiru.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-10-24",
+   "race_id": "20261024_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-24T09:13:33+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/23/190000",
+    "https://www.keibanomiryoku.com/article/artemis-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22034"
+   ],
+   "kind": "horse",
+   "key": "7",
+   "said": {
+    "note": "最終は美浦坂路 800m 54.3-40.0-25.8-12.6 馬なりで自己ベスト。体は20kg増。ただし大竹師は「左回りはあまりいいとは思わない」と明言（今日は東京＝左回り）",
+    "direction": "down",
+    "grade": "A"
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/artemis-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22034"
+   ],
+   "hosts": [
+    "keibanomiryoku.com",
+    "umasiru.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-10-24",
+   "race_id": "20261024_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-24T09:13:33+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/23/190000",
+    "https://www.keibanomiryoku.com/article/artemis-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22034"
+   ],
+   "kind": "horse",
+   "key": "8",
+   "said": {
+    "note": "岩手所属。最終は盛岡 4F54.8-38.3-12.2 馬なり。飯田師「久々にしては想定以上の時計が出たし、仕上がりは悪くないと思います」",
+    "direction": "up",
+    "grade": "E"
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/artemis-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22034"
+   ],
+   "hosts": [
+    "keibanomiryoku.com",
+    "umasiru.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-10-24",
+   "race_id": "20261024_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-10-24T09:13:33+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/23/190000",
+    "https://www.keibanomiryoku.com/article/artemis-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22034"
+   ],
+   "kind": "horse",
+   "key": "9",
+   "said": {
+    "note": "最終は美浦ウッド 6F82.8-66.4-50.9-37.0-11.5 馬なり。栗田師「動きは良かった。引っ掛からないし、芯がしっかりしていて走りがぶれない」",
+    "direction": "up",
+    "grade": "S"
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/artemis-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22034"
+   ],
+   "hosts": [
+    "keibanomiryoku.com",
+    "umasiru.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-10-24",
+   "race_id": "20261024_08_10",
+   "venue": "京都",
+   "race_num": 10,
+   "collected_at": "2026-10-24T09:13:33+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/23/190000"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": null,
+    "expected": "良〜不良（想定雨量3〜50mm）",
+    "expected_state": "不良",
+    "summary": "枠は内〜外、直線の伸びはやや内〜やや外、前後は前〜差しと想定。土曜は雨のち曇り予報で、雨量次第で-3.0〜+3.0秒以上の極悪馬場まで想定。秋雨前線の位置次第では雨量がさらに増える可能性。"
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/23/190000"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-10-24",
+   "race_id": "20261024_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-10-24T09:13:33+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/23/190000"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": null,
+    "expected": "良〜不良（想定雨量3〜50mm）",
+    "expected_state": "不良",
+    "summary": "枠は内〜外、直線の伸びはやや内〜やや外、前後は前〜差しと想定。土曜は雨のち曇り予報で、雨量次第で-3.0〜+3.0秒以上の極悪馬場まで想定。秋雨前線の位置次第では雨量がさらに増える可能性。"
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/10/23/190000"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work"
    ],
    "result": null
   }
