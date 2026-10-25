@@ -1,195 +1,241 @@
 {
   "schema_version": 1,
-  "date": "20261024",
-  "collected_at": "2026-10-24T09:13:33+09:00",
+  "date": "20261025",
+  "collected_at": "2026-10-25T09:07:44+09:00",
   "races": {
-    "20261024_05_10": {
+    "20261025_05_10": {
       "venue": "東京",
       "race_num": 10,
       "going": {
-        "surface": "ダート",
-        "expected": "良〜不良（想定雨量0〜25mm）"
+        "surface": "芝",
+        "expected": "良〜不良"
       },
-      "summary": "枠は内〜外、直線の伸びはフラット、前後は前〜差しと想定。良なら今開催の傾向として差し有利になることが多く、外枠有利になることもある。今開催はバイアスが出にくい傾向。",
       "sources": [
-        "https://www.bloodline-trackbias.work/entry/2026/10/23/190000"
-      ]
+        "https://www.bloodline-trackbias.work/entry/2026/10/24/200000"
+      ],
+      "summary": "想定馬場は良〜不良。枠は内〜外。直線の伸びはやや内〜やや外。前後は前〜差し。想定時計は雨がほとんど降らない場合は-2.0〜-1.3秒位、雨が降った場合は雨量次第で-1.8〜+2.5秒位。このレースの調教タイム・陣営コメントを無料で出している媒体は見つからなかった。"
     },
-    "20261024_05_11": {
+    "20261025_05_11": {
       "venue": "東京",
       "race_num": 11,
       "going": {
-        "surface": "芝",
-        "expected": "良〜重（想定雨量0〜25mm）"
+        "surface": "ダート",
+        "expected": "やや重〜不良"
       },
-      "summary": "枠はフラット〜外、直線の伸びはフラット〜やや外、前後は展開次第〜差しと想定。土曜は曇りのち雨予報で、早ければレース前・遅くとも昼過ぎに降り始める見込み。雨が降るまでの想定時計は-3.5〜1.8秒、降ってからは雨量次第で-3.3〜+2.5秒。",
       "sources": [
-        "https://www.bloodline-trackbias.work/entry/2026/10/23/190000",
-        "https://www.keibanomiryoku.com/article/artemis-stakes-2026-work-out.html",
-        "https://umasiru.com/archives/22034"
+        "https://www.bloodline-trackbias.work/entry/2026/10/24/200000"
+      ],
+      "summary": "想定馬場はやや重〜不良。枠は内〜外（近年の道悪の傾向だとバイアスが出ないことが多い）。直線の伸びはフラット。前後は前〜差し。想定時計は雨量次第で-4.5〜-1.1秒位。このレースの調教タイム・陣営コメントを無料で出している媒体は見つからなかった。"
+    },
+    "20261025_08_10": {
+      "venue": "京都",
+      "race_num": 10,
+      "going": {
+        "surface": "ダート",
+        "expected": "重〜不良"
+      },
+      "sources": [
+        "https://www.bloodline-trackbias.work/entry/2026/10/24/200000"
+      ],
+      "summary": "想定馬場は重〜不良。枠は内〜外（稀に内枠有利や外枠有利）。直線の伸びはフラット。前後は前〜展開次第。想定時計は曇りのち雨予報、雨量次第で-4.5〜-2.0秒位。このレースの調教タイム・陣営コメントを無料で出している媒体は見つからなかった。"
+    },
+    "20261025_08_11": {
+      "venue": "京都",
+      "race_num": 11,
+      "going": {
+        "surface": "芝",
+        "expected": "良〜不良"
+      },
+      "sources": [
+        "https://www.bloodline-trackbias.work/entry/2026/10/24/200000",
+        "https://www.keibanomiryoku.com/article/kikuka-sho-2026-work-out.html",
+        "https://umasiru.com/archives/22030"
       ],
       "horses": {
-        "9": {
-          "note": "最終は美浦ウッド 6F82.8-66.4-50.9-37.0-11.5 馬なり。栗田師「動きは良かった。引っ掛からないし、芯がしっかりしていて走りがぶれない」",
+        "3": {
+          "note": "最終追い切り 美浦ウッド 67.4-51.9-37.6-12.0（一杯）。津村騎手「相変わらず動かないですね。」／手塚久調教師「京都競馬場は…コース的には合うと思っている。」",
           "sources": [
-            "https://www.keibanomiryoku.com/article/artemis-stakes-2026-work-out.html",
-            "https://umasiru.com/archives/22034"
+            "https://www.keibanomiryoku.com/article/kikuka-sho-2026-work-out.html",
+            "https://umasiru.com/archives/22030"
+          ],
+          "grade": "B"
+        },
+        "11": {
+          "note": "最終追い切り 栗東CW 81.5-66.2-51.3-36.6-11.3（G前仕掛け）。岩田康騎手「ダイナミックなフォームで気持ちのいい走りをしてくれた。」／福永調教師「とにかく動きがいいし、青写真通りに調整できている。」",
+          "sources": [
+            "https://www.keibanomiryoku.com/article/kikuka-sho-2026-work-out.html",
+            "https://umasiru.com/archives/22030"
           ],
           "direction": "up",
           "grade": "S"
         },
-        "12": {
-          "note": "最終は美浦ウッド 6F84.3-68.0-52.7-38.4-11.7 稍重でリバートゥルーと併走。久保田師「どんどん良くなっている段階で、現状の動きとしてはまずまず。ここは力試し」",
+        "1": {
+          "note": "最終追い切り 栗東ポリ 83.0-67.1-52.6-38.3-11.9（馬なり）。友道調教師「１回使ったことで動きも体も良くなった。」",
           "sources": [
-            "https://www.keibanomiryoku.com/article/artemis-stakes-2026-work-out.html",
-            "https://umasiru.com/archives/22034"
-          ],
-          "grade": "A"
-        },
-        "10": {
-          "note": "最終は栗東坂路 800m 54.0-39.7-25.7-12.5 馬なりで自己ベスト。松下師「使いながら着実に良くなっています」",
-          "sources": [
-            "https://www.keibanomiryoku.com/article/artemis-stakes-2026-work-out.html",
-            "https://umasiru.com/archives/22034"
+            "https://www.keibanomiryoku.com/article/kikuka-sho-2026-work-out.html",
+            "https://umasiru.com/archives/22030"
           ],
           "direction": "up",
-          "grade": "A"
-        },
-        "4": {
-          "note": "最終は美浦ウッド 6F84.1-66.8-51.2-37.0-11.7 馬なり。奥村豊師「新馬のときから動くし、きょうもよく動いていた。しまいは切れるなという動き」",
-          "sources": [
-            "https://www.keibanomiryoku.com/article/artemis-stakes-2026-work-out.html",
-            "https://umasiru.com/archives/22034"
-          ],
-          "direction": "up",
-          "grade": "A"
-        },
-        "7": {
-          "note": "最終は美浦坂路 800m 54.3-40.0-25.8-12.6 馬なりで自己ベスト。体は20kg増。ただし大竹師は「左回りはあまりいいとは思わない」と明言（今日は東京＝左回り）",
-          "sources": [
-            "https://www.keibanomiryoku.com/article/artemis-stakes-2026-work-out.html",
-            "https://umasiru.com/archives/22034"
-          ],
-          "direction": "down",
-          "grade": "A"
+          "grade": "B"
         },
         "13": {
-          "note": "最終は美浦ウッド 6F83.9-66.6-51.2-36.9-11.8 馬なり。松永康師「直線でスッと伸びた。時計は少し速くなったが、それだけ馬の状態がいい証拠」",
+          "note": "最終追い切り 美浦ウッド 82.6-67.6-52.5-38.0-11.9（馬なり）。古賀慎調教師「いい動きでした。順調に来ています。」",
           "sources": [
-            "https://www.keibanomiryoku.com/article/artemis-stakes-2026-work-out.html",
-            "https://umasiru.com/archives/22034"
+            "https://www.keibanomiryoku.com/article/kikuka-sho-2026-work-out.html",
+            "https://umasiru.com/archives/22030"
+          ],
+          "direction": "up",
+          "grade": "C"
+        },
+        "2": {
+          "note": "最終追い切り 栗東坂路 54.3-39.2-25.2-12.2（馬なり）。高野調教師「まだ動けるぞ、という感じ。」",
+          "sources": [
+            "https://www.keibanomiryoku.com/article/kikuka-sho-2026-work-out.html",
+            "https://umasiru.com/archives/22030"
+          ],
+          "direction": "up",
+          "grade": "B"
+        },
+        "9": {
+          "note": "最終追い切り 美浦ウッド 84.9-68.6-53.2-37.8-11.9（馬なり）。上原佑調教師「先週しっかりとやりましたし、今週は輸送も控えているのでサラッと。」",
+          "sources": [
+            "https://www.keibanomiryoku.com/article/kikuka-sho-2026-work-out.html",
+            "https://umasiru.com/archives/22030"
+          ],
+          "grade": "A"
+        },
+        "12": {
+          "note": "最終追い切り 美浦ウッド 88.3-72.2-55.9-40.1-12.6（馬なり）。尾形調教師「馬は順調で文句ない仕上がりです。」",
+          "sources": [
+            "https://www.keibanomiryoku.com/article/kikuka-sho-2026-work-out.html",
+            "https://umasiru.com/archives/22030"
           ],
           "direction": "up",
           "grade": "A"
         },
-        "11": {
-          "note": "最終は美浦坂路 800m 52.8-38.6-25.6-12.4 馬なり。尾形師「動きはかなり良かったと思います。初戦もいい勝ち方だったし、楽しみ」",
+        "5": {
+          "note": "最終追い切り 美浦ウッド 66.6-52.2-38.2-11.9（馬なり）。原騎手「最後まで馬なりで一定のリズムで走らせた。」／宮田調教師「前回よりも仕上げやすかった。」",
           "sources": [
-            "https://www.keibanomiryoku.com/article/artemis-stakes-2026-work-out.html",
-            "https://umasiru.com/archives/22034"
+            "https://www.keibanomiryoku.com/article/kikuka-sho-2026-work-out.html",
+            "https://umasiru.com/archives/22030"
           ],
           "direction": "up",
           "grade": "B"
         },
-        "1": {
-          "note": "最終は栗東坂路 800m 54.3-39.5-25.1-12.3 馬なり（1週前に本追い切り）。岡田師「１週前の動きは良かった。成長している」",
+        "4": {
+          "note": "最終追い切り 栗東CW 84.5-67.8-52.5-37.3-11.5（直強め）。須貝調教師「最近はレースで集中しないところがある。」",
           "sources": [
-            "https://www.keibanomiryoku.com/article/artemis-stakes-2026-work-out.html",
-            "https://umasiru.com/archives/22034"
+            "https://www.keibanomiryoku.com/article/kikuka-sho-2026-work-out.html",
+            "https://umasiru.com/archives/22030"
+          ],
+          "direction": "down",
+          "grade": "C"
+        },
+        "16": {
+          "note": "最終追い切り 栗東坂路 52.9-38.3-24.6-12.0（末強め）。渡辺調教師「ステイヤー体形なので、距離が延びるのはいいと思う。」",
+          "sources": [
+            "https://www.keibanomiryoku.com/article/kikuka-sho-2026-work-out.html",
+            "https://umasiru.com/archives/22030"
           ],
           "direction": "up",
           "grade": "B"
         },
-        "3": {
-          "note": "最終は栗東坂路 800m 58.1-42.2-26.8-12.9 馬なり。清水久師「時計は予定より遅くなったけど１週前にやっているし、放牧先でも乗り込んでもらっていた」",
+        "15": {
+          "note": "最終追い切り 栗東坂路 57.8-42.2-27.4-13.6（馬なり）。吉岡調教師「集中して走れていました。落ち着いていて、いい雰囲気でした。」",
           "sources": [
-            "https://www.keibanomiryoku.com/article/artemis-stakes-2026-work-out.html",
-            "https://umasiru.com/archives/22034"
+            "https://www.keibanomiryoku.com/article/kikuka-sho-2026-work-out.html",
+            "https://umasiru.com/archives/22030"
           ],
+          "direction": "up",
           "grade": "B"
         },
-        "2": {
-          "note": "最終は栗東坂路 800m 53.0-37.9-24.0-12.0 一杯で自己ベスト。中村師「今週の調教は手応えでやや見劣ったけど、状態面に問題はない」「輸送で減らなければ」",
+        "10": {
+          "note": "最終追い切り 美浦ウッド 67.6-51.6-37.3-11.7（馬なり）。堀調教師「あとは上がってきた時の息が非常に良かったです。」",
           "sources": [
-            "https://www.keibanomiryoku.com/article/artemis-stakes-2026-work-out.html",
-            "https://umasiru.com/archives/22034"
+            "https://www.keibanomiryoku.com/article/kikuka-sho-2026-work-out.html",
+            "https://umasiru.com/archives/22030"
+          ],
+          "direction": "up",
+          "grade": "A"
+        },
+        "17": {
+          "note": "最終追い切り 美浦ウッド 67.7-52.4-37.5-11.6（馬なり）。奥村武調教師「いい追い切りになった。負荷を強くかけられているし、筋力が強くなっているんじゃないかな。」",
+          "sources": [
+            "https://www.keibanomiryoku.com/article/kikuka-sho-2026-work-out.html",
+            "https://umasiru.com/archives/22030"
+          ],
+          "direction": "up",
+          "grade": "B"
+        },
+        "18": {
+          "note": "最終追い切り 栗東CW 51.7-36.7-11.8（馬なり）。北村友騎手「無駄な力を使わないし乗りやすいので3000メートルでいい方に出ると思う」／福永調教師「いい状態で帰って来られなかった。」",
+          "sources": [
+            "https://www.keibanomiryoku.com/article/kikuka-sho-2026-work-out.html",
+            "https://umasiru.com/archives/22030"
           ],
           "grade": "B"
         },
         "6": {
-          "note": "最終は栗東坂路 800m 55.0-38.6-25.2-12.2 馬なり。岡助手「大きくは変わっていないけど、素軽さは出たかな」「今朝は輸送を考慮し、しまいだけ」",
+          "note": "最終追い切り 栗東CW 85.8-69.2-53.2-37.8-11.6（馬なり）。斉藤崇調教師「まだまだ改善の余地がありますね。」",
           "sources": [
-            "https://www.keibanomiryoku.com/article/artemis-stakes-2026-work-out.html",
-            "https://umasiru.com/archives/22034"
+            "https://www.keibanomiryoku.com/article/kikuka-sho-2026-work-out.html",
+            "https://umasiru.com/archives/22030"
           ],
-          "grade": "B"
-        },
-        "5": {
-          "note": "最終は栗東CW 6F83.5-69.2-55.1-40.0-13.2 馬なり。今助手「時計は気にせず、バランスとリズムの確認ですね」（前走は4角で不利）",
-          "sources": [
-            "https://www.keibanomiryoku.com/article/artemis-stakes-2026-work-out.html",
-            "https://umasiru.com/archives/22034"
-          ],
+          "direction": "down",
           "grade": "C"
         },
-        "8": {
-          "note": "岩手所属。最終は盛岡 4F54.8-38.3-12.2 馬なり。飯田師「久々にしては想定以上の時計が出たし、仕上がりは悪くないと思います」",
+        "14": {
+          "note": "最終追い切り 栗東坂路 54.1-39.5-26.2-12.7（馬なり）。友道調教師「折り合いがつくので、距離は伸びても問題ないし、むしろ伸びた方が良さそう。」",
           "sources": [
-            "https://www.keibanomiryoku.com/article/artemis-stakes-2026-work-out.html",
-            "https://umasiru.com/archives/22034"
+            "https://www.keibanomiryoku.com/article/kikuka-sho-2026-work-out.html",
+            "https://umasiru.com/archives/22030"
           ],
           "direction": "up",
-          "grade": "E"
+          "grade": "B"
+        },
+        "7": {
+          "note": "最終追い切り 美浦ウッド 81.3-66.5-51.9-12.1（馬なり）。武井調教師「折り合いがいいのが一番のセールスポイント。」",
+          "sources": [
+            "https://www.keibanomiryoku.com/article/kikuka-sho-2026-work-out.html",
+            "https://umasiru.com/archives/22030"
+          ],
+          "direction": "up",
+          "grade": "B"
+        },
+        "8": {
+          "note": "最終追い切り 栗東CW 52.5-36.9-11.1（馬なり）。松山騎手「自在性が一番の強み。」／杉山晴調教師「今週はいつも通り整える感じでやった。」",
+          "sources": [
+            "https://www.keibanomiryoku.com/article/kikuka-sho-2026-work-out.html",
+            "https://umasiru.com/archives/22030"
+          ],
+          "grade": "A"
         }
-      }
-    },
-    "20261024_08_10": {
-      "venue": "京都",
-      "race_num": 10,
-      "going": {
-        "surface": "芝",
-        "expected": "良〜不良（想定雨量3〜50mm）"
       },
-      "summary": "枠は内〜外、直線の伸びはやや内〜やや外、前後は前〜差しと想定。土曜は雨のち曇り予報で、雨量次第で-3.0〜+3.0秒以上の極悪馬場まで想定。秋雨前線の位置次第では雨量がさらに増える可能性。",
-      "sources": [
-        "https://www.bloodline-trackbias.work/entry/2026/10/23/190000"
-      ]
+      "summary": "想定馬場は良〜不良。枠は内〜外。直線の伸びはやや内〜やや外。前後は前〜差し。想定時計は雨が降るまでは-2.8〜-1.5秒位、雨が降ってからは雨量次第で-2.5〜+3.0秒位。菊花賞は出走予定18頭の最終追い切りと陣営コメントが18頭ぶん揃っている。"
     },
-    "20261024_08_11": {
-      "venue": "京都",
-      "race_num": 11,
-      "going": {
-        "surface": "芝",
-        "expected": "良〜不良（想定雨量3〜50mm）"
-      },
-      "summary": "枠は内〜外、直線の伸びはやや内〜やや外、前後は前〜差しと想定。土曜は雨のち曇り予報で、雨量次第で-3.0〜+3.0秒以上の極悪馬場まで想定。秋雨前線の位置次第では雨量がさらに増える可能性。",
-      "sources": [
-        "https://www.bloodline-trackbias.work/entry/2026/10/23/190000"
-      ]
-    },
-    "20261024_04_10": {
+    "20261025_04_10": {
       "venue": "新潟",
       "race_num": 10,
       "going": {
-        "surface": "ダート",
-        "expected": "良〜不良（想定雨量0〜15mm・金曜昼はやや重）"
+        "surface": "芝",
+        "expected": "重〜不良"
       },
-      "summary": "枠はフラット〜外、直線の伸びはフラット、前後は前〜展開次第と想定。近年の道悪の傾向だと外枠有利・前有利になることがある。",
       "sources": [
-        "https://www.bloodline-trackbias.work/entry/2026/10/23/190000"
-      ]
+        "https://www.bloodline-trackbias.work/entry/2026/10/24/200000"
+      ],
+      "summary": "想定馬場は重〜不良。枠は内〜外。直線の伸びはフラット〜やや外。前後は前〜差し。想定時計は雨量が多くなる予報なので-0.5〜+3.0秒以上の極悪馬場まで想定。このレースの調教タイム・陣営コメントを無料で出している媒体は見つからなかった。"
     },
-    "20261024_04_11": {
+    "20261025_04_11": {
       "venue": "新潟",
       "race_num": 11,
       "going": {
         "surface": "芝",
-        "expected": "良〜重（想定雨量0〜15mm）"
+        "expected": "重〜不良"
       },
-      "summary": "枠はフラット〜外、直線の伸びはフラット〜やや外、前後は前〜差しと想定。雨が降れば外枠有利・外伸びになる可能性。月〜木曜に64mmの雨が降っており、気温の低い時期なので少量の雨でも馬場がタフになる可能性がある。",
       "sources": [
-        "https://www.bloodline-trackbias.work/entry/2026/10/23/190000"
-      ]
+        "https://www.bloodline-trackbias.work/entry/2026/10/24/200000"
+      ],
+      "summary": "想定馬場は重〜不良。枠は内〜外。直線の伸びはフラット〜やや外。前後は前〜差し。想定時計は雨量が多くなる予報なので-0.5〜+3.0秒以上の極悪馬場まで想定。このレースの調教タイム・陣営コメントを無料で出している媒体は見つからなかった。"
     }
   }
 }
