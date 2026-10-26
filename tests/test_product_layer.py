@@ -464,11 +464,18 @@ class TestTickets:
         assert 'オッズ' in t['skip_reason']
 
     def test_allocation_sums_to_total(self):
+        """🟢 2026-10-26: 配分はコースの中だけで意味を持つ（またいだ配分は出さない）。"""
+        seen = 0
         for hs in (self._horses(), self._wide_field()):
             for conf in (60, 70):
                 t = tickets.build_tickets({'conf': conf}, hs)
-                for amt, detail in t['allocation_examples'].items():
-                    assert sum(detail.values()) == amt, (conf, amt, detail)
+                assert t['allocation_ratio'] == {}
+                assert t['allocation_examples'] == {}
+                for c in t['courses']:
+                    for amt, detail in c['allocation_examples'].items():
+                        assert sum(detail.values()) == amt, (conf, amt, detail)
+                        seen += 1
+        assert seen > 0, 'コースの換算例が1つも無い（テストが素通りしている）'
 
     def test_allocation_keeps_the_ratio_order(self):
         """🔴 券種が増えても金額の大小が比率と逆転しない。
@@ -478,14 +485,18 @@ class TestTickets:
         最大剰余法に直した回帰テスト。
         """
         t = tickets.build_tickets({'conf': 70}, self._wide_field())
-        ratio = t['allocation_ratio']
-        for amt, detail in t['allocation_examples'].items():
-            top = max(ratio, key=lambda k: ratio[k])
-            assert detail[top] == max(detail.values()), (amt, detail)
-            for a in ratio:
-                for b in ratio:
-                    if ratio[a] > ratio[b]:
-                        assert detail[a] >= detail[b], (amt, a, b, detail)
+        seen = 0
+        for c in t['courses']:
+            ratio = c['allocation_ratio']
+            for amt, detail in c['allocation_examples'].items():
+                top = max(ratio, key=lambda k: ratio[k])
+                assert detail[top] == max(detail.values()), (amt, detail)
+                for a in ratio:
+                    for b in ratio:
+                        if ratio[a] > ratio[b]:
+                            assert detail[a] >= detail[b], (amt, a, b, detail)
+                seen += 1
+        assert seen > 0, 'コースの換算例が1つも無い（テストが素通りしている）'
 
 
 # ---------------------------------------------------------------------------
@@ -504,7 +515,10 @@ class TestAllocationIsNotAsserted:
 
     def test_note_is_attached_when_allocation_exists(self):
         t = tickets.build_tickets({'conf': 70}, self._horses())
-        assert t['allocation_ratio']
+        # 🟢 2026-10-26: 配分はコースが持つ。全券種にまたがる比率は作らない。
+        assert t['allocation_ratio'] == {}
+        assert t['courses']
+        assert all(c['allocation_ratio'] for c in t['courses'])
         assert t['allocation_note'] == tickets.ALLOCATION_NOTE
         assert '各自調整' in t['allocation_note']
 
@@ -535,6 +549,104 @@ class TestAllocationIsNotAsserted:
         assert '期待値は動きません' in note
         for bad in ('勝てる', '儲か', '必ず'):
             assert bad not in note
+
+
+class TestRecommendedCourses:
+    """🟢 2026-10-26 ユーザー指示「全部の買い目は推奨しない。2種程度を推奨する」。
+
+    固くいきたい人は単複、大きく勝ちたい人は連系、の2コースに分ける。
+    🔴 ここで守るのは「全部買う前提に戻さない」こと。壊すと落ちる。
+    """
+
+    def _field(self):
+        return marks.assign_marks([
+            {'n': 11, 'name': 'A', 'rl_rank': 1, 'pop': 2, 'solo_rank': 1,
+             'odds': 3.0},
+            {'n': 1, 'name': 'B', 'rl_rank': 2, 'pop': 1, 'solo_rank': 2,
+             'odds': 2.5},
+            {'n': 2, 'name': 'C', 'rl_rank': 3, 'pop': 3, 'solo_rank': 3,
+             'odds': 5.0},
+            {'n': 5, 'name': 'D', 'rl_rank': 4, 'pop': 4, 'solo_rank': 4,
+             'odds': 6.0},
+            {'n': 7, 'name': 'E', 'rl_rank': 5, 'pop': 5, 'solo_rank': 5,
+             'odds': 9.0},
+            {'n': 10, 'name': 'F', 'rl_rank': 6, 'pop': 6, 'solo_rank': 6,
+             'odds': 14.0},
+        ])
+
+    def test_two_courses_split_steady_and_aggressive(self):
+        t = tickets.build_tickets({'conf': 70}, self._field())
+        assert [c['key'] for c in t['courses']] == ['steady', 'aggressive']
+        steady, agg = t['courses']
+        assert steady['types'] == ['単勝', '複勝']
+        assert agg['types'] == ['馬連', 'ワイド', '三連複', '三連単']
+
+    def test_each_group_appears_once_per_course(self):
+        """同じ券種の別の組み方をコースに重ねて入れない。"""
+        t = tickets.build_tickets({'conf': 70}, self._field())
+        for c in t['courses']:
+            groups = [b.get('group') or b['type'] for b in c['lines']]
+            assert len(groups) == len(set(groups)), groups
+
+    def test_overlapping_lines_are_kept_out_of_the_courses(self):
+        """🔴 重複する行はコースに入れない。これは好みではなく算数。
+
+        実データで部分集合であることを確かめてから、コースに入っていない
+        ことを確認する（片方だけ直すと意味が無いので両方見る）。
+        """
+        t = tickets.build_tickets({'conf': 70}, self._field())
+        by = {b['type']: b for b in t['bets']}
+
+        def combos(key, ordered):
+            return {tuple(c) if ordered else tuple(sorted(c))
+                    for c in by[key]['combos']}
+
+        assert combos('三連複(2頭軸)', False) < combos('三連複', False)
+        assert combos('三連単フォーメーション', True) < combos('三連単', True)
+        assert combos('三連単マルチ', True) & combos('三連単', True)
+
+        in_course = {b['type'] for c in t['courses'] for b in c['lines']}
+        for dup in ('三連複(2頭軸)', '三連単マルチ', '三連単フォーメーション'):
+            assert dup not in in_course, dup
+        assert {b['type'] for b in t['alternatives']} == {
+            '三連複(2頭軸)', '三連単マルチ', '三連単フォーメーション'}
+
+    def test_course_points_are_smaller_than_the_naive_sum(self):
+        """コースの点数は全行の素の合計より小さい（二重計上を外したぶん）。"""
+        t = tickets.build_tickets({'conf': 70}, self._field())
+        for c in t['courses']:
+            assert c['points'] < t['total_points']
+            assert c['flat_unit_total'] == c['points'] * 100
+
+    def test_article_says_the_courses_are_a_choice(self):
+        """「両方足して買う」と読まれない文を必ず載せる。"""
+        md = article._bets_md(tickets.build_tickets({'conf': 70}, self._field()))
+        assert 'どちらか一方を選ぶ' in md
+        assert '両方を足して買う前提ではありません' in md
+
+    def test_article_does_not_tell_the_reader_to_buy_everything(self):
+        """旧版の「全部を1点100円で買うと…」は出さない（2026-10-26）。"""
+        md = article._bets_md(tickets.build_tickets({'conf': 70}, self._field()))
+        assert '全部を1点100円で買うと' not in md
+        assert 'この中から好きな券種を選んでください' not in md
+
+    def test_article_warns_that_alternatives_overlap(self):
+        md = article._bets_md(tickets.build_tickets({'conf': 70}, self._field()))
+        assert '上のコースと重ねて買うものではありません' in md
+        assert '完全に含まれ' in md
+
+    def test_light_course_has_no_trifecta(self):
+        t = tickets.build_tickets({'conf': 60}, self._field())
+        agg = [c for c in t['courses'] if c['key'] == 'aggressive'][0]
+        assert '三連単' not in agg['types']
+        assert agg['types'] == ['馬連', 'ワイド', '三連複']
+
+    def test_courses_never_claim_an_edge(self):
+        """コース分けを「勝てる」根拠として書かない。"""
+        joined = tickets.COURSE_NOTE + tickets.REASON_COURSES
+        for bad in ('必ず', '儲か', '確実', '勝てる'):
+            assert bad not in joined
+        assert '測って決めたものではありません' in tickets.REASON_COURSES
 
 
 class TestBetTypeReason:
@@ -633,11 +745,19 @@ class TestBetTypeReason:
         assert '換算例' not in md
         assert '配分の目安' not in md
 
-    def test_article_shows_point_count_and_flat_total(self):
-        """🔴 点数が多いので「全部買うと幾らか」を記事に必ず出す。"""
-        md = article._bets_md(tickets.build_tickets({'conf': 70}, self._horses()))
-        assert '合計' in md and '点' in md
-        assert '1点100円で買うと' in md
+    def test_article_shows_point_count_and_flat_total_per_course(self):
+        """🔴 点数と「1点100円で幾らか」は**コースごとに**出す（2026-10-26）。
+
+        コースをまたいだ合計は出さない。三連複(2頭軸)は三連複(流し)の
+        部分集合なので、またいで足すと同じ当たり組を二重に数えることになる。
+        """
+        t = tickets.build_tickets({'conf': 70}, self._horses())
+        md = article._bets_md(t)
+        assert t['courses']
+        for c in t['courses']:
+            assert f"{c['points']}点（1点100円で{c['flat_unit_total']:,}円）" in md
+        # またいだ総額（全行の素の合計）は記事に出さない
+        assert f"{t['flat_unit_total']:,}円" not in md
 
     def test_article_shows_which_partners_are_solid_or_longshot(self):
         """固め・中穴の内訳を読者に見せる（2026-10-15 指示の実体）。"""
@@ -682,6 +802,21 @@ class TestBetTypeReason:
             self._horses(), [], t, [], {}, 'レース見解')
         assert snap['allocation_note'] == tickets.ALLOCATION_NOTE
         assert snap['bet_type_reasons'] == t['bet_type_reasons']
+
+    def test_courses_are_frozen_in_archive(self):
+        """🟢 2026-10-26: 読者が実際に読んだのはコース。これも凍結する。"""
+        for k in ('courses', 'alternatives', 'course_note', 'alternative_note'):
+            assert k in archive._FROZEN_KEYS, k
+        assert archive.SCHEMA_VERSION >= 3
+        t = tickets.build_tickets({'conf': 70}, self._horses())
+        snap = archive.build_snapshot(
+            {'race_id': '20260927_06_09', 'r': 9, 'name': 'テスト',
+             'dist': '1600m芝', 'conf': 70, '_venue': '中山'},
+            self._horses(), [], t, [], {}, 'レース見解')
+        assert snap['courses'] == t['courses']
+        assert snap['course_note'] == tickets.COURSE_NOTE
+        # またいだ配分はもう作らない（キーは互換のため残す）
+        assert snap['allocation_ratio'] == {}
 
 
 class TestArticleNeverShowsBrokenOdds:
