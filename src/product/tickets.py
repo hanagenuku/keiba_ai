@@ -750,7 +750,9 @@ def build_tickets(race, horses):
     courses, alternatives = build_courses(result['bets'], base)
     result['courses'] = courses
     result['alternatives'] = alternatives
-    result['course_note'] = COURSE_NOTE
+    # コースが1つしか組めないとき（相手が1頭も取れない等）に
+    # 「どちらか一方を選ぶ」と書くと意味が通らない。
+    result['course_note'] = COURSE_NOTE if len(courses) >= 2 else None
     result['alternative_note'] = ALTERNATIVE_NOTE if alternatives else None
     # 🔴 2026-10-26: 全券種にまたがる配分は作らない。コースは選ぶものなので、
     #    またいだ比率を出すと結局「全部買う」形に戻る。配分は各コースが持つ。

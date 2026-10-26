@@ -641,6 +641,21 @@ class TestRecommendedCourses:
         assert '三連単' not in agg['types']
         assert agg['types'] == ['馬連', 'ワイド', '三連複']
 
+    def test_single_course_does_not_say_choose_one_of_two(self):
+        """相手が取れずコースが1つしか組めないとき「どちらか一方」と書かない。"""
+        hs = marks.assign_marks([
+            {'n': 1, 'name': 'A', 'rl_rank': 1, 'pop': 1, 'solo_rank': 1,
+             'odds': 2.0},
+            {'n': 2, 'name': 'B', 'rl_rank': 2, 'pop': 2, 'solo_rank': 2,
+             'odds': 0},
+        ])
+        t = tickets.build_tickets({'conf': 70}, hs)
+        assert [c['key'] for c in t['courses']] == ['steady']
+        assert t['course_note'] is None
+        md = article._bets_md(t)
+        assert 'どちらか一方を選ぶ' not in md
+        assert '各自調整' in md
+
     def test_courses_never_claim_an_edge(self):
         """コース分けを「勝てる」根拠として書かない。"""
         joined = tickets.COURSE_NOTE + tickets.REASON_COURSES
