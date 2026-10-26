@@ -551,6 +551,127 @@ class TestAllocationIsNotAsserted:
             assert bad not in note
 
 
+class TestStakeAllocation:
+    """🟢 2026-10-26② ユーザー指示「掛け金を最適な配分にしてください」。
+
+    🔴 回収率を上げる配分は存在しない（総期待値は各EVの加重平均）。
+       ここで守るのは算数で直せる2点だけ。
+       (A) ◎が2〜3着＝複勝だけ当たったときに**元本を割らない**
+       (B) 換算例の金額が**100円単位で実際に買える**
+       壊すと落ちる。
+    """
+
+    def _field(self, fukusho_odds, win_odds=3.0):
+        return marks.assign_marks([
+            {'n': 11, 'name': 'A', 'rl_rank': 1, 'pop': 2, 'solo_rank': 1,
+             'odds': win_odds, 'fukusho_odds': fukusho_odds},
+            {'n': 1, 'name': 'B', 'rl_rank': 2, 'pop': 1, 'solo_rank': 2,
+             'odds': 2.5},
+            {'n': 2, 'name': 'C', 'rl_rank': 3, 'pop': 3, 'solo_rank': 3,
+             'odds': 5.0},
+            {'n': 5, 'name': 'D', 'rl_rank': 4, 'pop': 4, 'solo_rank': 4,
+             'odds': 6.0},
+            {'n': 7, 'name': 'E', 'rl_rank': 5, 'pop': 5, 'solo_rank': 5,
+             'odds': 9.0},
+            {'n': 10, 'name': 'F', 'rl_rank': 6, 'pop': 6, 'solo_rank': 6,
+             'odds': 14.0},
+        ])
+
+    def _steady(self, t):
+        return next(c for c in t['courses'] if c['key'] == 'steady')
+
+    def test_win_share_cap_is_one_minus_inverse_fukusho_odds(self):
+        assert tickets.win_share_cap(1.1) == pytest.approx(1 - 1 / 1.1)
+        assert tickets.win_share_cap(1.4) == pytest.approx(1 - 1 / 1.4)
+        # オッズが無い／元返しなら単勝を混ぜない
+        assert tickets.win_share_cap(None) == 0.0
+        assert tickets.win_share_cap(1.0) == 0.0
+        assert tickets.win_share_cap('x') == 0.0
+
+    def test_steady_course_never_loses_money_when_only_the_place_bet_hits(self):
+        """🔴 これが今回直した defect。
+
+        2026-10-25 の27レースで、均等比率（strong 複勝71%/単勝29%）だと
+        ◎が2〜3着のとき **strong 9/9 すべて元本割れ**（最悪 0.781）だった。
+        """
+        seen = 0
+        for fo in (1.0, 1.05, 1.1, 1.2, 1.4, 1.8, 2.9, 5.0):
+            for conf in (60, 70):
+                t = tickets.build_tickets({'conf': conf}, self._field(fo))
+                st = self._steady(t)
+                for amt, oc in st['outcomes'].items():
+                    assert oc['total'] == amt
+                    assert oc['place'] >= oc['total'], (fo, conf, amt, oc)
+                    assert oc['win'] >= oc['place']
+                    seen += 1
+        assert seen > 0, '堅実コースの手元が1件も計算されていない'
+
+    def test_place_bet_stays_the_heavier_side_of_the_steady_course(self):
+        """堅実コースは「固く当てにいきたい人向け」。単勝へ寄せ切らない。"""
+        for fo in (1.1, 1.4, 2.9, 5.0):
+            t = tickets.build_tickets({'conf': 70}, self._field(fo))
+            st = self._steady(t)
+            assert st['allocation_ratio']['複勝'] >= st['allocation_ratio']['単勝']
+            for detail in st['allocation_examples'].values():
+                assert detail['複勝'] >= detail.get('単勝', 0)
+
+    def test_odds_only_lower_the_win_share_never_raise_it(self):
+        """🔴 上限としてしか使わない。`ALLOC_*` の値は基準として残る。"""
+        base = (tickets.ALLOC_STRONG['単勝']
+                / (tickets.ALLOC_STRONG['単勝'] + tickets.ALLOC_STRONG['複勝']))
+        # 複勝5.0倍なら上限は0.8だが、基準の0.29を超えて寄せない
+        st = self._steady(tickets.build_tickets({'conf': 70}, self._field(5.0)))
+        assert st['allocation_ratio']['単勝'] == pytest.approx(round(base, 2))
+        # 複勝1.1倍なら上限0.0909が効いて基準より下がる
+        st = self._steady(tickets.build_tickets({'conf': 70}, self._field(1.1)))
+        assert st['allocation_ratio']['単勝'] < base
+
+    def test_no_win_bet_when_the_place_odds_cannot_cover_one_unit(self):
+        """複勝1.1倍・1,000円では単勝を混ぜると必ず元本割れになる（単位の算数）。"""
+        got = tickets.steady_split(1000, 1.1, 0.29)
+        assert got == {'複勝': 1000, '単勝': 0}
+        # 複勝オッズが無いときも単勝を混ぜない
+        assert tickets.steady_split(1000, None, 0.29) == {'複勝': 1000, '単勝': 0}
+
+    def test_example_totals_start_at_the_minimum_buyable_amount(self):
+        """🔴 37点のコースは1点100円でも3,700円。1,000円の内訳は買えない額だった。"""
+        assert tickets.course_example_totals(37)[0] == 3700
+        assert 1000 not in tickets.course_example_totals(37)
+        assert tickets.course_example_totals(2)[0] == 200
+        for c in tickets.build_tickets({'conf': 70}, self._field(1.4))['courses']:
+            assert min(c['allocation_examples']) >= c['points'] * 100
+
+    def test_multi_point_course_amounts_are_whole_hundreds_per_point(self):
+        """🔴 従来は三連単が 900円 ÷ 17点 = 53円/点 で買えない額だった。"""
+        t = tickets.build_tickets({'conf': 70}, self._field(1.4))
+        agg = next(c for c in t['courses'] if c['key'] == 'aggressive')
+        pts = {(b.get('group') or b['type']): b['points'] for b in agg['lines']}
+        seen = 0
+        for amt, detail in agg['allocation_examples'].items():
+            assert sum(detail.values()) == amt
+            for k, v in detail.items():
+                per = v / pts[k]
+                assert per >= 100, (amt, k, v, pts[k])
+                assert per % 100 == 0, (amt, k, v, pts[k])
+                seen += 1
+        assert seen > 0, '勝負コースの換算例が1つも無い'
+
+    def test_full_allocation_reason_is_not_repeated_per_race(self):
+        """🔴 全文は記事末尾に1回だけ（§19）。券種理由に混ぜると7回出る。"""
+        t = tickets.build_tickets({'conf': 70}, self._field(1.4))
+        assert tickets.REASON_ALLOC not in t['bet_type_reasons']
+        assert '当たったのに損をする' in commentary.disclaimer()
+        assert '1 − 1÷複勝オッズ' in commentary.disclaimer()
+
+    def test_allocation_text_never_claims_an_edge(self):
+        for text in (tickets.REASON_ALLOC, commentary.disclaimer()):
+            for bad in ('勝てる', '儲か', '必ず', '確実'):
+                assert bad not in text
+        md = article._bets_md(tickets.build_tickets({'conf': 70}, self._field(1.4)))
+        assert '換算例' in md
+        assert '推奨額ではありません' in md
+
+
 class TestRecommendedCourses:
     """🟢 2026-10-26 ユーザー指示「全部の買い目は推奨しない。2種程度を推奨する」。
 

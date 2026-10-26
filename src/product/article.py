@@ -75,24 +75,48 @@ def _course_md(course):
     body += [b['line'] for b in course['lines']]
 
     # 🔴 §10「資金配分は、オッズと資金に応じて各自調整 とする」。
-    #    比率は目安・金額は換算例として出し、断定形にしない。
+    #    金額は換算例として出し、断定形にしない。
     #    券種が1つなら配る先が無いので出さない（自明な表を載せない）。
+    ex = course.get('allocation_examples') or {}
+    outcomes = course.get('outcomes') or {}
     ratio = course.get('allocation_ratio') or {}
-    if len(ratio) >= 2:
-        # 🔴 int(v * 100) は 0.29 を 28% と表示する（0.29*100 = 28.999…）。
-        #    比率の合計が 99% に見えるので四捨五入で出す。
-        #    並びは比率の大きい順（下の換算例と同じ順序にそろえる）。
-        order = sorted(ratio, key=lambda k: (-ratio[k], k))
-        rt = ' / '.join(f'{k} {round(ratio[k] * 100)}%' for k in order)
+    if len(ratio) >= 2 and ex:
         body.append('')
-        body.append(f'配分の目安（比率）：{rt}')
-        ex = course.get('allocation_examples') or {}
-        if ex:
-            body.append('')
-            body.append('比率を円に直した換算例（推奨額ではありません）：')
+        if outcomes:
+            # 単勝・複勝（各1点）。金額の自由度があるので円で示す。
+            # 🔴 単勝の比率は「複勝だけ当たっても元本を割らない」上限
+            #    （= 1 − 1/複勝オッズ）で抑えている。tickets.py 冒頭 (A)。
+            body.append('掛け金の換算例（推奨額ではありません。'
+                        '◎が2〜3着＝複勝だけ当たったときに元本を割らない範囲で'
+                        '単勝に回しています）：')
             for amt in sorted(ex):
-                detail = '・'.join(f'{k} {v}円' for k, v in ex[amt].items())
-                body.append(f'- 合計{amt}円で買う場合　{detail}')
+                detail = '・'.join(f'{k} {v:,}円' for k, v in ex[amt].items() if v)
+                line = f'- 合計{amt:,}円　{detail}'
+                oc = outcomes.get(amt)
+                if oc:
+                    line += (f'　→ ◎が1着なら{oc["win"]:,}円 / '
+                             f'2〜3着なら{oc["place"]:,}円 / 4着以下なら0円')
+                body.append(line)
+            zero = [a for a in sorted(ex) if not ex[a].get('単勝')]
+            if zero and any(ex[a].get('単勝') for a in ex):
+                body.append(f'- ⚠ 合計{zero[-1]:,}円以下では単勝を混ぜると'
+                            f'「複勝は当たったのに元本割れ」になるため、'
+                            f'複勝だけにしています。')
+            elif zero and len(zero) == len(ex):
+                body.append('- ⚠ 今回の複勝オッズでは、単勝を混ぜると'
+                            '「複勝は当たったのに元本割れ」になります。'
+                            'このレースは複勝だけにしています。')
+            body.append('- ⚠ 複勝オッズは発売中は幅で出ます。'
+                        '上の戻りは記事作成時点の表示値での計算です。')
+        else:
+            # 多点のコース。配分できるのは1点あたりの単価だけ。
+            body.append('掛け金の換算例（推奨額ではありません。'
+                        '券種ごとに単価を変える根拠が無いので1点の単価をそろえています）：')
+            for amt in sorted(ex):
+                pts = course['points'] or 1
+                up = amt // pts
+                detail = '・'.join(f'{k} {v:,}円' for k, v in ex[amt].items() if v)
+                body.append(f'- 1点{up}円（合計{amt:,}円）　{detail}')
     return '\n'.join(body)
 
 
