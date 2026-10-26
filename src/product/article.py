@@ -66,23 +66,58 @@ def _marks_line(rows):
     return '\n'.join(lines)
 
 
+def _course_md(course):
+    """1コースぶんの本文。点数・総額・配分はコースの中で閉じる。"""
+    head = (f"**【{course['name']}】{course['lead']}**　"
+            f"{course['points']}点"
+            f"（1点100円で{course['flat_unit_total']:,}円）")
+    body = [head, '']
+    body += [b['line'] for b in course['lines']]
+
+    # 🔴 §10「資金配分は、オッズと資金に応じて各自調整 とする」。
+    #    比率は目安・金額は換算例として出し、断定形にしない。
+    #    券種が1つなら配る先が無いので出さない（自明な表を載せない）。
+    ratio = course.get('allocation_ratio') or {}
+    if len(ratio) >= 2:
+        # 🔴 int(v * 100) は 0.29 を 28% と表示する（0.29*100 = 28.999…）。
+        #    比率の合計が 99% に見えるので四捨五入で出す。
+        #    並びは比率の大きい順（下の換算例と同じ順序にそろえる）。
+        order = sorted(ratio, key=lambda k: (-ratio[k], k))
+        rt = ' / '.join(f'{k} {round(ratio[k] * 100)}%' for k in order)
+        body.append('')
+        body.append(f'配分の目安（比率）：{rt}')
+        ex = course.get('allocation_examples') or {}
+        if ex:
+            body.append('')
+            body.append('比率を円に直した換算例（推奨額ではありません）：')
+            for amt in sorted(ex):
+                detail = '・'.join(f'{k} {v}円' for k, v in ex[amt].items())
+                body.append(f'- 合計{amt}円で買う場合　{detail}')
+    return '\n'.join(body)
+
+
 def _bets_md(tickets):
     if tickets.get('verdict') == 'skip':
         return '**今回は見送り。**\n\n' + (tickets.get('skip_reason') or '')
-    lines = []
-    for b in tickets.get('bets', []):
-        # 🟢 2026-10-15: 表示行は tickets 側で組み立てた `line` をそのまま出す。
-        #    券種ごとの書き分け（→ / － / 点数）を記事側に二重で持たせない。
-        line = b.get('line')
-        if not line:
-            combos = b.get('combos') or []
-            if b['type'] in ('単勝', '複勝'):
-                line = f"{b['type']}　{combos[0][0]}"
-            else:
-                partners = '・'.join(str(c[1]) for c in combos)
-                line = f"{b['type']}　{b['axis']} － {partners}"
-        lines.append(line)
-    body = '\n'.join(lines)
+
+    # 🟢 2026-10-26 ユーザー指示「全部の買い目は推奨しない。2種程度を推奨する」。
+    #    9行を1つの塊として出すのをやめ、コース単位で出す。
+    #    🔴 コースをまたいだ合計点数・合計金額・配分は出さない。出すと
+    #       「全部買う」形に戻るうえ、重複する行を二重に数えることになる
+    #       （三連複(2頭軸) ⊂ 三連複、三連単フォーメーション ⊂ 三連単）。
+    blocks = []
+    courses = tickets.get('courses') or []
+    for c in courses:
+        blocks.append(_course_md(c))
+    if not blocks:
+        # コースが組めないとき（相手が取れない等）は行をそのまま出す
+        blocks.append('\n'.join(b['line'] for b in tickets.get('bets', [])))
+    body = '\n\n'.join(blocks)
+
+    if tickets.get('course_note'):
+        body += '\n\n' + tickets['course_note']
+    # §10「資金配分は各自調整」。コースが組めなかった場合でも落とさない。
+    body += '\n\n' + _tk.ALLOCATION_NOTE_SHORT
 
     # 🟢 固めと中穴がどれなのかを読者に見せる（2026-10-15 ユーザー指示の実体）。
     solid = tickets.get('solid_partners') or []
@@ -98,13 +133,12 @@ def _bets_md(tickets):
                  f'（固めは単勝{_tk.ANA_ODDS_MIN:.0f}倍未満、'
                  f'中穴は{_tk.ANA_ODDS_MIN:.0f}〜{_tk.ANA_ODDS_MAX:.0f}倍）')
 
-    # 🔴 点数が多いので総額を必ず出す。読者が「全部買うと幾らか」を知らずに
-    #    券種だけ並べられるのは §10（各自調整）に反する。
-    pts = tickets.get('total_points')
-    if pts:
-        flat = tickets.get('flat_unit_total') or pts * 100
-        body += (f'\n\n**合計{pts}点**。全部を1点100円で買うと{flat:,}円です。'
-                 f'この中から好きな券種を選んでください（点数を減らすのは自由です）。')
+    # 参考：同じ券種の絞り込み版。コースと重ねて買うものではない。
+    alts = tickets.get('alternatives') or []
+    if alts:
+        body += '\n\n**参考：同じ券種を点数を絞って買う場合**\n\n'
+        body += (tickets.get('alternative_note') or '') + '\n\n'
+        body += '\n'.join(b['line'] for b in alts)
 
     if tickets.get('downgrade_reason'):
         body = '⚠ ' + tickets['downgrade_reason'] + '。\n\n' + body
@@ -112,26 +146,6 @@ def _bets_md(tickets):
     reasons = tickets.get('bet_type_reasons') or []
     if reasons:
         body += '\n\n**なぜこの券種か**\n\n' + '\n\n'.join(reasons)
-
-    # 🔴 §10「資金配分は、オッズと資金に応じて各自調整 とする」。
-    #    比率は目安・金額は換算例として出し、断定形にしない。
-    # 券種が1つなら配る先が無いので比率・換算例は出さない（自明な表を載せない）。
-    ratio = tickets.get('allocation_ratio') or {}
-    if len(ratio) >= 2:
-        rt = ' / '.join(f'{k} {int(v * 100)}%' for k, v in ratio.items())
-        body += f'\n\n**配分の目安（比率）**：{rt}'
-        ex = tickets.get('allocation_examples') or {}
-        if ex:
-            body += '\n\n比率を円に直した換算例（推奨額ではありません）：'
-            for amt in sorted(ex):
-                detail = '・'.join(f'{k} {v}円' for k, v in ex[amt].items())
-                body += f'\n- 合計{amt}円で買う場合　{detail}'
-        # レースごとは短縮版。期待値が動かない理由の全文は記事末尾に1回だけ出す。
-        if tickets.get('allocation_note'):
-            body += '\n\n' + _tk.ALLOCATION_NOTE_SHORT
-    elif ratio:
-        body += ('\n\n金額はオッズと手持ち資金に応じて各自調整してください'
-                 '（券種が1つなので配分はありません）。')
     return body
 
 

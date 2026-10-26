@@ -18,7 +18,11 @@ JST = timezone(timedelta(hours=9))
 ARCHIVE_DIRNAME = 'prediction_archive'
 
 # 2: allocation_note / bet_type_reasons を追加（2026-09-29・§10・§11）
-SCHEMA_VERSION = 2
+# 3: courses / alternatives / course_note / alternative_note を追加
+#    （2026-10-26・買い目を2コースに分け、全券種にまたがる配分をやめた）。
+#    ⚠ allocation_ratio / allocation_examples は**キーだけ残して空**になった。
+#       旧スナップショット（schema 2）はそのまま読める（追加しかしていない）。
+SCHEMA_VERSION = 3
 
 
 class AlreadyPublished(Exception):
@@ -100,6 +104,13 @@ def build_snapshot(race, horses, marks_rows, tickets, dangers,
         'horse_comments': horse_comments,
         'race_comment': race_text,
         'bets': tickets.get('bets'),
+        # 🟢 2026-10-26: 推奨の単位はコース。読者が実際に読んだのはこちら。
+        'courses': tickets.get('courses'),
+        'alternatives': tickets.get('alternatives'),
+        'course_note': tickets.get('course_note'),
+        'alternative_note': tickets.get('alternative_note'),
+        # ⚠ 全券種にまたがる配分はもう作っていない（空で入る）。
+        #    キーを消すと schema 2 のスナップショットと形が変わるので残す。
         'allocation_ratio': tickets.get('allocation_ratio'),
         'allocation_examples': tickets.get('allocation_examples'),
         # 記事に載せた文面もそのまま残す（§10 各自調整・§11 なぜこの券種か）。
@@ -143,7 +154,8 @@ def load_snapshot(base_dir, date_str, race_id):
 _FROZEN_KEYS = (
     'published_at', 'race_id', 'conf', 'stars', 'verdict', 'skip_reason',
     'ranks', 'danger_favorites', 'horse_comments', 'race_comment',
-    'bets', 'allocation_ratio', 'allocation_examples',
+    'bets', 'courses', 'alternatives', 'course_note', 'alternative_note',
+    'allocation_ratio', 'allocation_examples',
     'allocation_note', 'bet_type_reasons', 'input_fingerprint',
 )
 

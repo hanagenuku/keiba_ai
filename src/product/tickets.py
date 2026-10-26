@@ -30,6 +30,34 @@
 🔴 傾斜配分で期待値は動かない（総期待値 = 各EVの加重平均。全EV<1ならどう配分しても<1）。
 配分を示すのは分散を抑えるためであって、「配分で勝てる」とは書かない。
 
+🟢 **2026-10-26 にユーザーが「全部の買い目は推奨しない」と決めた。**
+「固くいきたい人は単複のみでよい。大きく勝ちたい人は連系を買う。2種程度を推奨する」
+という指示を受け、**9行を1つの塊として出すのをやめ、2つのコースに分けた**。
+
+- **堅実コース** = 単勝・複勝
+- **勝負コース** = 連系（馬連・ワイド・三連複・三連単）から**グループごとに本線1行だけ**
+
+🔴 **コースは「選ぶもの」で「両方買うもの」ではない。** 記事にもそう書く
+   （`COURSE_NOTE`）。全券種にまたがる配分は出さない（出すと結局全部買う形になる）。
+
+🔴 **残りの3行（三連複(2頭軸)・三連単マルチ・三連単フォーメーション）は
+   コースに入れず「同じ券種の別の組み方」として参考に置く。**
+   これは好みの問題ではなく**算数の問題**で、実データで確かめてある
+   （相手5頭のとき）:
+   - 三連複(2頭軸) 4点は 三連複(流し) 10点の**完全な部分集合**
+   - 三連単フォーメーション 6点は 三連単(流し) 20点の**完全な部分集合**
+   - 三連単マルチ 24点のうち 8点が 三連単(流し) と**重複**
+   → 並べて全部買うと**同じ当たり組を二重に買う**。合計点数も回収率も
+     その分だけ嘘になる。コースには各グループ1行しか入れない。
+
+⚠ **どちらのコースも「勝てる」ことを示していない。** コース分けは
+   「全部買う前提をやめる」ための構成の変更であって、回収率を上げる変更ではない。
+   どの券種も実測は100%未満（`REASON_*` 参照）。
+⚠ **コースの中身を成績を見てから選び直さない。** 2026-10-25 の実績（13レース）は
+   N が小さすぎて券種の取捨の根拠にならない（North Star #7）。
+   いまの割り当ては**構造**だけで決めてある——単複は点数が少なく3着までで当たる側、
+   連系は配当が大きい側、という定義上の区別。
+
 🔴 **中穴の定義を商品側で発明しない。** 固め／中穴の境界は本番の
 `src/betting/axis_bets.py`（2026-08-08 導入・実測でオッズ帯を比べて決めた値）を
 そのまま import する。7〜30倍を使う根拠もそこに実測表がある。
@@ -76,7 +104,9 @@ CONF_LIGHT = 55    # これ以上: 単勝・複勝・馬連・ワイド・三連
 #    内訳は 単勝・複勝・馬連・ワイド・三連複・三連複(2頭軸)・
 #    三連単・三連単マルチ・三連単フォーメーション の9行。
 # ⚠ これは「9券種を買え」ではない。読者が選べるように**並べる**上限。
-#    記事には点数と100円均等での総額も必ず出す（§10 各自調整）。
+# 🟢 2026-10-26: 並べる上限は変えていないが、**推奨の単位はコースに変わった**。
+#    9行のうちコースに入るのは最大6行で、残り3行は参考（上の冒頭を読む）。
+#    点数と100円均等の総額は**コースごとに**出す（§10 各自調整）。
 MAX_BET_TYPES = 9
 
 # 単勝オッズの下限。JRAの単勝は 1.0 倍未満が存在しないので、それ未満は「未取得」
@@ -138,6 +168,65 @@ ALLOCATION_NOTE_SHORT = (
 )
 
 
+# ── 推奨コース ───────────────────────────────────────────────────────────
+# 🟢 2026-10-26 ユーザー指示「全部の買い目は推奨しない。固くいきたい人は単複のみで
+#    よい。大きく勝ちたい人は連系を買う。2種程度を推奨する」。
+#
+# 🔴 どの券種をどちらに入れるかは**構造だけ**で決めてある。成績では決めていない。
+#    - 堅実 = 単勝・複勝。点数が最小で、複勝は3着までで当たる（定義）。控除率も20%で最小。
+#    - 勝負 = 連系。相手を絡める以上、当たりにくく配当は大きい（定義）。
+#    ⚠ 実測ではどの券種も100%未満で、コース間の優劣は測っていない。
+#    ⚠ 2026-10-25 の13レースのような小さい N を見て中身を入れ替えない（North Star #7）。
+#
+# 🔴 コースに入れるのは**グループごとに本線1行だけ**。同じグループの別の行
+#    （三連複(2頭軸)・三連単マルチ・三連単フォーメーション）は重複するので
+#    コースに入れない（冒頭の算数を参照）。
+COURSES = (
+    {
+        'key': 'steady',
+        'name': '堅実コース',
+        'lead': '固く当てにいきたい人向け',
+        'groups': ('単勝', '複勝'),
+    },
+    {
+        'key': 'aggressive',
+        'name': '勝負コース',
+        'lead': '連系で大きく取りにいきたい人向け',
+        'groups': ('馬連', 'ワイド', '三連複', '三連単'),
+    },
+)
+
+# コースの扱いを必ず添える。記事・アーカイブの両方にこの文のまま載せる。
+# 🔴 「両方買う」と読まれたら元の全部買う形に戻ってしまうので、ここは落とさない。
+COURSE_NOTE = (
+    'コースは**どちらか一方を選ぶ**ためのものです。両方を足して買う前提では'
+    'ありません。どちらのコースも、回収率が100%を超えることを確認できては'
+    'いません（券種ごとの実測は下に書いたとおり、いずれも100%未満です）。'
+)
+
+# コースに入らなかった行の説明。
+# 🔴 ここは好みではなく算数。相手5頭のときの実測値をそのまま書く。
+ALTERNATIVE_NOTE = (
+    '以下は**同じ券種を点数を絞って買う場合の組み方**です。'
+    '上のコースと重ねて買うものではありません。'
+    '三連複(2頭軸)の買い目は三連複(流し)に完全に含まれ、'
+    '三連単フォーメーションの買い目は三連単(流し)に完全に含まれます。'
+    '三連単マルチも三連単(流し)と一部が重なります。'
+    '重ねて買うと同じ当たりを二重に買うことになります。'
+)
+
+REASON_COURSES = (
+    '買い目は**2つのコースに分けて**出しています。'
+    '全部を並べて「どれも買ってください」という形にはしません。'
+    '**堅実コース（単勝・複勝）**は点数が最小で控除率も20%と最も低く、'
+    '複勝は3着までで当たります。'
+    '**勝負コース（連系）**は相手を絡めるぶん当たりにくく、そのかわり配当が'
+    '大きくなります。'
+    'この振り分けは券種の作りから決めたもので、'
+    '**どちらのほうが回収率が高いかを測って決めたものではありません。**'
+)
+
+
 # 券種を選んだ理由（§11「この予想なら、なぜこの券種なのか」まで説明する）。
 #
 # 🔴 出どころは全部「過去データで買い方を総当たりした測定」で、こちらの成績ではない。
@@ -179,13 +268,17 @@ REASON_QUINELLA = (
     '（60.5% vs 71.4%）。相手の選び方そのものに優位は確認できていません。'
 )
 REASON_TRIO = (
-    '三連複は◎からの流しと、◎＋相手筆頭の2頭軸の2通りを並べています。'
+    'コースに入れている三連複は◎からの流し1本です。'
+    '◎＋相手筆頭の2頭軸は「点数を絞る場合の組み方」として参考に置いています'
+    '（2頭軸の買い目は流しに完全に含まれるので、重ねて買うものではありません）。'
     '控除率は25%です。実測で6点流しが一度だけ収支トントンに見えたことがありますが、'
     '**万馬券1本（¥97,560）を除くと58.9%**まで落ち、期間を前後に割っても'
     '崩れました。高配当1本に乗っていただけの数字として扱っています。'
 )
 REASON_TRIFECTA = (
-    '三連単は1着固定の流し・2頭軸マルチ・フォーメーションの3通りです。'
+    'コースに入れている三連単は1着◎固定の流し1本だけです。'
+    '2頭軸マルチとフォーメーションは、点数を絞る／着順の自由度を上げる場合の'
+    '組み方として参考に置いています（流しと買い目が重なります）。'
     '控除率は27.5%で、扱っている券種のなかで最も高くなります。'
     '三連単そのものの回収率はこちらで測っていません'
     '（実配当が揃っているのが2026-06以降しかなく、大規模な検証ができていません）。'
@@ -224,7 +317,7 @@ def bet_type_reason(tickets):
     kinds = {b.get('group') or b['type'] for b in tickets.get('bets', [])}
     if not kinds:
         return []
-    out = [REASON_SPREAD, REASON_BALANCE, REASON_FUKUSHO]
+    out = [REASON_COURSES, REASON_SPREAD, REASON_BALANCE, REASON_FUKUSHO]
     if 'ワイド' in kinds:
         out.append(REASON_WIDE)
     if '馬連' in kinds:
@@ -464,6 +557,54 @@ def build_bet_lines(axis_num, partners, solid, ana, allow_trifecta):
     return bets
 
 
+def build_courses(bets, base_ratios):
+    """並べた買い目を2つのコースに振り分けて返す。
+
+    返り値は (courses, alternatives)。
+
+    - courses: `COURSES` の順。各グループの**本線1行だけ**が入る。
+      行が1つも無いコースは返さない（空のコースを記事に出さない）。
+    - alternatives: コースに入らなかった行（同じ券種の絞り込み版）。
+
+    🔴 コースをまたいだ配分は作らない。コースは選ぶものなので、
+       配分は**コースの中**だけで意味を持つ。
+    """
+    used = set()
+    courses = []
+    for spec in COURSES:
+        lines = []
+        for g in spec['groups']:
+            for b in bets:
+                if (b.get('group') or b['type']) != g:
+                    continue
+                lines.append(b)
+                used.add(id(b))
+                break          # 同じグループからは本線1行だけ
+        if not lines:
+            continue
+        ratios = {g: base_ratios[g] for g in spec['groups']
+                  if g in base_ratios
+                  and any((b.get('group') or b['type']) == g for b in lines)}
+        total = sum(ratios.values()) or 1.0
+        ratios = {k: round(v / total, 2) for k, v in ratios.items()}
+        pts = sum(b['points'] for b in lines)
+        courses.append({
+            'key': spec['key'],
+            'name': spec['name'],
+            'lead': spec['lead'],
+            'lines': lines,
+            'types': [b['type'] for b in lines],
+            'points': pts,
+            'flat_unit_total': pts * 100,
+            'allocation_ratio': ratios,
+            'allocation_examples': {
+                amt: allocate(amt, ratios) for amt in AMOUNT_EXAMPLES
+            } if len(ratios) >= 2 else {},
+        })
+    alternatives = [b for b in bets if id(b) not in used]
+    return courses, alternatives
+
+
 def build_tickets(race, horses):
     """買い目・配分・見送り判断を返す。
 
@@ -497,6 +638,10 @@ def build_tickets(race, horses):
         'stars': confidence_stars(conf),
         'verdict': v,
         'bets': [],
+        'courses': [],
+        'alternatives': [],
+        'course_note': None,
+        'alternative_note': None,
         'partners': [],
         'solid_partners': [],
         'ana_partners': [],
@@ -594,20 +739,26 @@ def build_tickets(race, horses):
     bets = build_bet_lines(axis_num, partners, solid, ana,
                            allow_trifecta=(v == 'strong'))
     result['bets'] = bets[:MAX_BET_TYPES]
+    # ⚠ 並べた行をそのまま足した点数。**記事には出さない**（2026-10-26）。
+    #    三連複(2頭軸)は三連複(流し)の部分集合、三連単フォーメーションは
+    #    三連単(流し)の部分集合なので、この合計は同じ当たり組を二重に数えている。
+    #    読者に出すのは**コースごとの点数**（courses[].points）。
     result['total_points'] = sum(b['points'] for b in result['bets'])
-    # 全部を1点100円で買ったときの総額。点数が多いので必ず出す（§10 各自調整）
     result['flat_unit_total'] = result['total_points'] * 100
 
     base = dict(ALLOC_STRONG) if v == 'strong' else dict(ALLOC_LIGHT)
-    # 実際に作られた券種（グループ）だけを残す
-    kinds = {b.get('group') or b['type'] for b in result['bets']}
-    ratios = {k: val for k, val in base.items() if k in kinds}
-    total_ratio = sum(ratios.values()) or 1.0
-    ratios = {k: round(val / total_ratio, 2) for k, val in ratios.items()}
-    result['allocation_ratio'] = ratios
-    result['allocation_examples'] = {
-        amt: allocate(amt, ratios) for amt in AMOUNT_EXAMPLES
-    }
+    courses, alternatives = build_courses(result['bets'], base)
+    result['courses'] = courses
+    result['alternatives'] = alternatives
+    # コースが1つしか組めないとき（相手が1頭も取れない等）に
+    # 「どちらか一方を選ぶ」と書くと意味が通らない。
+    result['course_note'] = COURSE_NOTE if len(courses) >= 2 else None
+    result['alternative_note'] = ALTERNATIVE_NOTE if alternatives else None
+    # 🔴 2026-10-26: 全券種にまたがる配分は作らない。コースは選ぶものなので、
+    #    またいだ比率を出すと結局「全部買う」形に戻る。配分は各コースが持つ。
+    #    キー自体は残す（アーカイブの _FROZEN_KEYS と既存スナップショットの互換）。
+    result['allocation_ratio'] = {}
+    result['allocation_examples'] = {}
     result['allocation_note'] = ALLOCATION_NOTE
     result['bet_type_reasons'] = bet_type_reason(result)
     return result
