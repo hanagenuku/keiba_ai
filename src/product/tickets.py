@@ -63,6 +63,7 @@
 そのまま import する。7〜30倍を使う根拠もそこに実測表がある。
 """
 
+import math
 from itertools import combinations
 
 from src.betting.axis_bets import ANA_ODDS_MAX, ANA_ODDS_MIN
@@ -149,6 +150,9 @@ ALLOC_LIGHT = {'複勝': 0.40, 'ワイド': 0.20, '馬連': 0.15,
 # 金額は「比率を円に直したときの換算例」であって推奨額ではない。
 AMOUNT_EXAMPLES = (1000, 3000, 5000)
 
+# 多点のコースで示す「1点あたりの単価」。総額は 点数 × 単価 になる。
+UNIT_PRICES = (100, 200, 300)
+
 # 配分に必ず添える注記。記事・アーカイブの両方へこの文のまま載せる。
 # 🔴 2026-08-18③: 総期待値 = 各EVの加重平均。全EV<1ならどう配分しても<1。
 #    配分は分散を変えるだけで期待値を1ミリも動かさない（算数で決着している）。
@@ -166,6 +170,54 @@ ALLOCATION_NOTE = (
 ALLOCATION_NOTE_SHORT = (
     '配分は目安です。オッズと手持ち資金に応じて各自調整してください。'
 )
+
+# ── 掛け金の配分（2026-10-26②） ──────────────────────────────────────────
+# 🟢 ユーザー指示「掛け金を最適な配分にしてください」。
+#
+# 🔴 **回収率を上げる「最適配分」は存在しない。** 総期待値は各買い目の期待値の
+#    加重平均なので、全部の期待値が1未満ならどう振り分けても1未満になる。
+#    Kelly も `f* = (p·o − 1)/(o − 1)` が負＝「賭けるな」を返す。
+#    2026-08-18③（43セル）と 2026-08-20（541レース・傾斜を総当たり。行き先は
+#    3本抜きで 66%→74% ＝**損が減るだけ**）で測って閉じており、CLAUDE.md の
+#    「もう提案しなくていいこと」に入っている。**この方向に戻らないこと。**
+#    配分で変えられるのは当たったときの手元の形（分散）だけ。
+#
+# 🔴 そこで実データを当てたら、現在の配分に**算数の defect が2つ**あった。
+#    どちらも測定ではなく算数なので、新しい検証なしで直せる。
+#
+#    (A) 堅実コースは「当たったのに損をする」配分になっていた。
+#        2026-10-25 の27レースで ◎が2〜3着（＝複勝だけ的中）の手元を計算すると
+#        **元本割れ 12/27レース。勝負度 strong は 9/9 すべて元本割れ**
+#        （最悪 0.781 ＝ 当たって **−21.9%**）。機序は単純で、複勝1.1倍に対して
+#        単勝へ29%回すと 0.71 × 1.1 = 0.781 にしかならない。
+#        複勝だけ当たって元本を割らない条件は
+#          複勝の比率 × 複勝オッズ >= 1  ⇔  単勝の比率 <= 1 − 1/複勝オッズ
+#        （複勝 1.1倍→単勝は最大 9% / 1.4倍→28% / 2.9倍→65%）。
+#        ⚠ **上限としてしか使わない**（上へ引き上げない）。堅実コースは
+#          「固く当てにいきたい人向け」なので、複勝が高いからといって単勝へ
+#          寄せるのは趣旨に反する。`ALLOC_*` の値は**1つも変えていない**——
+#          従来の比率が上限側の基準として残り、オッズが低いときだけ下へ動く。
+#        ⚠ 比率ではなく**金額（100円単位）で**決める。比率を丸めてから配ると
+#          `allocate` が各券種に最低1単位を置くため、1,000円・複勝1.1倍で
+#          複勝900/単勝100 ＝ 990円 となり取りガミが復活する。
+#        ⚠ 複勝オッズは発売中は**幅**で出るが、latest.json に入るのはその中央値。
+#          どの馬が3着内に入るかで下限寄りになりうるので、保証は
+#          「記事作成時点の表示値での」話。記事にそう書く。
+#        ⚠ 連系（勝負コース）に同じ計算は当てない。組み合わせ券種の配当は
+#          **推定値**しか無く、推定で配分を決めると推定が甘い券種ほど厚くなる
+#          （2026-08-08 に決済で同じ罠を踏んでいる）。
+#
+#    (B) 換算例の金額が**買えない額**だった。1,000/3,000/5,000円 を全コースに
+#        当てていたが、37点の勝負コースは1点100円でも 3,700円 かかる。
+#        券種ごとの金額を点数で割ると100円未満になり「結局何円で買うのか」が
+#        決まらない。→ 換算例の先頭を**そのコースの最低額（点数×100円）**にする。
+#
+# 🟡 直していない非整合を1つ記録する（判断が要るため勝手に変えない）。
+#    勝負コースの ワイド と 三連複 の厚さの**順序が勝負度で入れ替わる**
+#    （strong: 三連複 0.20 > ワイド 0.15 → 31%/23% ／
+#      light: ワイド 0.20 > 三連複 0.15 → 40%/30%）。根拠は文書に無い。
+#    旧来の1ブロック表示では薄まっていたが、コース分割で表に出た。
+#    どちらが正しいかは測っていないので、こちらでは決めない。
 
 
 # ── 推奨コース ───────────────────────────────────────────────────────────
@@ -296,6 +348,22 @@ REASON_LIGHT_ONLY = (
 REASON_NARROW_FIELD = (
     '⚠ 相手に取れる頭数が少ないため、点数の多い券種は組めた分だけになっています。'
 )
+# 🔴 これは**記事末尾に1回だけ**出す文（`commentary.disclaimer()` が出す）。
+#    `bet_type_reason()` に入れると1記事に7回以上くり返されるので入れない
+#    （2026-09-29 §19 の決定。テストで固定してある）。
+REASON_ALLOC = (
+    '掛け金の配分について。**資金配分で期待値は動きません。**'
+    '全体の期待値は各買い目の期待値の加重平均なので、'
+    'どう振り分けても平均より上には行きません（過去に2回測って確認しています）。'
+    'そのうえで配分には1つだけ意味があり、**当たったのに損をする形を避ける**ことです。'
+    '複勝が1.1倍のときに単勝へ3割回すと、◎が2〜3着に来て複勝が当たっても'
+    '手元は 0.71 × 1.1 = 0.78 ＝ **約2割の損**になります。'
+    'そこで単勝に回す比率は「1 − 1÷複勝オッズ」を超えないようにしています'
+    '（複勝1.1倍なら最大9%、1.4倍なら28%）。'
+    '連系のコースは組み合わせ券種の配当が推定値しか無く、'
+    '券種ごとに単価を変える根拠が作れないため1点の単価をそろえています。'
+)
+
 REASON_CAVEAT = (
     'なお、ここに挙げた回収率はいずれも100%を下回っています。'
     '券種の選び方で控除率を超えられるとは考えていません。'
@@ -414,6 +482,76 @@ def allocate(total, ratios, unit=100):
         else:
             break
     return {k: base[k] * unit for k in keys}
+
+
+def win_share_cap(fuku_odds):
+    """単勝に回してよい比率の上限。複勝だけ当たっても元本を割らない水準。
+
+    `1 − 1/複勝オッズ`。複勝オッズが無い／1.0倍以下なら 0.0（単勝を混ぜない）。
+    """
+    try:
+        fo = float(fuku_odds)
+    except (TypeError, ValueError):
+        return 0.0
+    if fo <= 1.0:
+        return 0.0
+    return max(0.0, 1.0 - 1.0 / fo)
+
+
+def steady_split(total, fuku_odds, base_win_share, unit=100):
+    """堅実コース（単勝・複勝）の金額配分。100円単位・端数なし。
+
+    🔴 比率を丸めてから配るのではなく**単位数で直接決める**。比率経由だと
+       `allocate` が最低1単位を置くため、1,000円・複勝1.1倍で複勝900/単勝100
+       ＝ 990円 となり「当たったのに元本割れ」が復活する。
+    返り値は常に両方のキーを持つ（単勝は 0 になりうる）。
+    """
+    units = int(total // unit)
+    if units <= 0:
+        return {}
+    share = min(max(float(base_win_share), 0.0), win_share_cap(fuku_odds))
+    w = int(math.floor(units * share + 1e-9))
+    w = max(0, min(w, units - 1))          # 複勝を必ず1単位残す
+    return {'複勝': (units - w) * unit, '単勝': w * unit}
+
+
+def steady_outcomes(amounts, fuku_odds, win_odds):
+    """堅実コースの手元（実額）。{'total','win','place','lose'}。
+
+    win   = ◎が1着（単勝・複勝とも的中）
+    place = ◎が2〜3着（複勝だけ的中）
+    lose  = ◎が4着以下
+    オッズが欠けていれば None を返す（作り話をしない）。
+    ⚠ 複勝オッズは表示値（幅の中央）なので、実際の払戻は下限寄りになりうる。
+    """
+    if not amounts:
+        return None
+    try:
+        fo = float(fuku_odds)
+        to = float(win_odds)
+    except (TypeError, ValueError):
+        return None
+    if fo <= 1.0 or to <= 1.0:
+        return None
+    f = amounts.get('複勝', 0)
+    w = amounts.get('単勝', 0)
+    return {
+        'total': sum(amounts.values()),
+        'win': int(round(f * fo + w * to)),
+        'place': int(round(f * fo)),
+        'lose': 0,
+    }
+
+
+def course_example_totals(points):
+    """コースの換算例に使う金額。**最低額（点数×100円）を必ず先頭に置く。**
+
+    🔴 従来は 1,000/3,000/5,000円 を全コースに当てていたが、37点の勝負コースは
+       1点100円でも 3,700円 かかるので、1,000円・3,000円の内訳は**買えない額**
+       だった（券種ごとの金額を点数で割ると100円未満になる）。
+    """
+    low = max(int(points), 1) * 100
+    return tuple(([low] + [a for a in AMOUNT_EXAMPLES if a > low])[:3])
 
 
 def _partner_candidates(horses, axis_num):
@@ -557,7 +695,7 @@ def build_bet_lines(axis_num, partners, solid, ana, allow_trifecta):
     return bets
 
 
-def build_courses(bets, base_ratios):
+def build_courses(bets, base_ratios, axis=None):
     """並べた買い目を2つのコースに振り分けて返す。
 
     返り値は (courses, alternatives)。
@@ -582,12 +720,44 @@ def build_courses(bets, base_ratios):
                 break          # 同じグループからは本線1行だけ
         if not lines:
             continue
+        have = {(b.get('group') or b['type']) for b in lines}
         ratios = {g: base_ratios[g] for g in spec['groups']
-                  if g in base_ratios
-                  and any((b.get('group') or b['type']) == g for b in lines)}
+                  if g in base_ratios and g in have}
         total = sum(ratios.values()) or 1.0
         ratios = {k: round(v / total, 2) for k, v in ratios.items()}
         pts = sum(b['points'] for b in lines)
+        totals = course_example_totals(pts)
+
+        if spec['key'] == 'steady' and {'単勝', '複勝'} <= have:
+            # 🔴 金額（100円単位）で決める。複勝だけ当たっても元本を割らない
+            #    上限まで単勝に寄せる（上へは引き上げない）。モジュール冒頭 (A)。
+            fo = (axis or {}).get('fukusho_odds')
+            cap = win_share_cap(fo)
+            base_w = ratios.get('単勝', 0.0)
+            w_share = min(base_w, cap)
+            ratios = {'複勝': round(1.0 - w_share, 2), '単勝': round(w_share, 2)}
+            examples = {amt: steady_split(amt, fo, base_w) for amt in totals}
+            outcomes = {amt: steady_outcomes(examples[amt], fo, usable_odds(axis or {}))
+                        for amt in totals}
+            outcomes = {a: o for a, o in outcomes.items() if o}
+        else:
+            # 🔴 多点のコースは「金額」ではなく**1点あたりの単価**でしか配分できない。
+            #    従来の比率を 3,700円 に当てると三連単が 900円 ÷ 17点 = 53円/点 で、
+            #    **100円単位では買えない額**だった（モジュール冒頭 (B)）。
+            #    券種ごとに単価を変える根拠も無い——連系どうしの優劣は測っておらず、
+            #    ワイドと三連複の順序が勝負度で入れ替わっていたこと自体が
+            #    根拠の無さの証拠（同 🟡）。よって**1点100円で揃える**。
+            #    厚くしたいときは単価ごと上げる（総額が点数ぶん増える）。
+            examples = {}
+            for up in UNIT_PRICES:
+                examples[pts * up] = {
+                    (b.get('group') or b['type']): b['points'] * up for b in lines
+                }
+            ratios = {(b.get('group') or b['type']): round(b['points'] / pts, 2)
+                      for b in lines}
+            totals = tuple(sorted(examples))
+            outcomes = {}
+
         courses.append({
             'key': spec['key'],
             'name': spec['name'],
@@ -596,10 +766,10 @@ def build_courses(bets, base_ratios):
             'types': [b['type'] for b in lines],
             'points': pts,
             'flat_unit_total': pts * 100,
+            'min_total': pts * 100,
             'allocation_ratio': ratios,
-            'allocation_examples': {
-                amt: allocate(amt, ratios) for amt in AMOUNT_EXAMPLES
-            } if len(ratios) >= 2 else {},
+            'allocation_examples': examples,
+            'outcomes': outcomes,
         })
     alternatives = [b for b in bets if id(b) not in used]
     return courses, alternatives
@@ -747,7 +917,7 @@ def build_tickets(race, horses):
     result['flat_unit_total'] = result['total_points'] * 100
 
     base = dict(ALLOC_STRONG) if v == 'strong' else dict(ALLOC_LIGHT)
-    courses, alternatives = build_courses(result['bets'], base)
+    courses, alternatives = build_courses(result['bets'], base, axis=axis)
     result['courses'] = courses
     result['alternatives'] = alternatives
     # コースが1つしか組めないとき（相手が1頭も取れない等）に
