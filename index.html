@@ -2406,31 +2406,83 @@ function renderStats(S) {
     h += '</div>';
 
     const _pct = v => (v == null ? '—' : v + '%');
-    for (const g of sa.groups) {
-      if (!g.races) continue;
-      h += `<div style="margin-bottom:12px">`;
-      h += `<div style="font-size:12px;font-weight:700;margin-bottom:4px">${g.label}`
-         + `<span style="font-weight:400;color:var(--sub)">　${g.races}R</span></div>`;
-      h += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px">';
-      h += '<tr style="color:var(--sub)"><th style="text-align:left;padding:2px 4px">券種</th>'
+
+    // 券種テーブル1つ分。当日分と累計で同じ形にする（読み替えが要らないように）
+    const _betTable = g => {
+      let t = '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px">';
+      t += '<tr style="color:var(--sub)"><th style="text-align:left;padding:2px 4px">券種</th>'
          + '<th style="padding:2px 4px">的中</th><th style="padding:2px 4px">的中率</th>'
          + '<th style="padding:2px 4px">回収率</th><th style="padding:2px 4px">3本抜き</th></tr>';
       for (const b of (g.bets || [])) {
         const na = b.na ? `<span style="color:var(--sub);font-size:9px"> 不能${b.na}</span>` : '';
-        h += `<tr><td style="padding:3px 4px">${b.type}</td>`
+        t += `<tr><td style="padding:3px 4px">${b.type}</td>`
            + `<td style="padding:3px 4px;text-align:center">${b.hit}/${b.races}${na}</td>`
            + `<td style="padding:3px 4px;text-align:center">${_pct(b.hit_rate)}</td>`
            + `<td style="padding:3px 4px;text-align:center;color:var(--sub)">${_pct(b.roi)}</td>`
            + `<td style="padding:3px 4px;text-align:center;color:var(--sub)">${_pct(b.roi_cut3)}</td></tr>`;
       }
-      const t = g.total || {};
-      h += `<tr style="border-top:1px solid #e5e0d6;font-weight:700">`
-         + `<td style="padding:3px 4px">${t.type || '累計'}</td>`
-         + `<td style="padding:3px 4px;text-align:center">${t.hit}/${t.races}</td>`
-         + `<td style="padding:3px 4px;text-align:center">${_pct(t.hit_rate)}</td>`
-         + `<td style="padding:3px 4px;text-align:center;color:var(--sub)">${_pct(t.roi)}</td>`
+      const t2 = g.total || {};
+      t += `<tr style="border-top:1px solid #e5e0d6;font-weight:700">`
+         + `<td style="padding:3px 4px">${t2.type || '累計'}</td>`
+         + `<td style="padding:3px 4px;text-align:center">${t2.hit}/${t2.races}</td>`
+         + `<td style="padding:3px 4px;text-align:center">${_pct(t2.hit_rate)}</td>`
+         + `<td style="padding:3px 4px;text-align:center;color:var(--sub)">${_pct(t2.roi)}</td>`
          + `<td style="padding:3px 4px;text-align:center;color:var(--sub)">—</td></tr>`;
-      h += '</table></div></div>';
+      return t + '</table></div>';
+    };
+
+    // 日付を「2026-10-31(土)」に。UTC で組み立てて端末のタイムゾーンでずらさない
+    const _ymdw = d => {
+      if (!d) return '?';
+      const m = String(d).match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (!m) return String(d);
+      const w = '日月火水木金土'[new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])).getUTCDay()];
+      return `${m[1]}-${m[2]}-${m[3]}(${w})`;
+    };
+
+    // ── 当日分（最新の開催日）──────────────────────────────────
+    // ユーザー依頼（2026-10-31）:「累計は累計、当日分は日付など一目でわかるように」
+    const ld = sa.latest_day;
+    if (ld && ld.races) {
+      h += '<div style="border:2px solid #117a65;border-radius:8px;padding:8px 10px;margin-bottom:14px">';
+      h += `<div style="font-size:13px;font-weight:700;color:#117a65;margin-bottom:2px">`
+         + `📅 当日分　${_ymdw(ld.date)}</div>`;
+      h += `<div style="font-size:11px;color:var(--sub);margin-bottom:8px">`
+         + `${(ld.venues || []).join('・')}　${ld.races}レース`
+         + `（うち商品の対象 ${ld.scope_races}R）</div>`;
+      if (!ld.settled) {
+        // 🔴 払戻がまだ無い日に 0% を並べない。外れたと誤読させる
+        h += '<div style="font-size:11px;color:#b9770e;font-weight:700;padding:6px 0">'
+           + '⏳ 結果待ち（夜の結果取得がまだ走っていません）。'
+           + '<span style="font-weight:400">的中・回収率はまだ出せません。</span></div>';
+      } else {
+        for (const g of (ld.groups || [])) {
+          if (!g.races) continue;
+          h += `<div style="margin-bottom:10px">`;
+          h += `<div style="font-size:12px;font-weight:700;margin-bottom:4px">${g.label}`
+             + `<span style="font-weight:400;color:var(--sub)">　${g.races}R</span></div>`;
+          h += _betTable(g);
+          h += '</div>';
+        }
+        h += '<div style="font-size:10px;color:var(--sub);line-height:1.6">'
+           + '⚠ <b>1日分は母数が10〜20レースしかありません。</b>この日の数字から買い方を変えないでください'
+           + '（2026-07-27 に本番4開催日の182.8%を信じて、2,000レースで71.3%と判明しています）。</div>';
+      }
+      h += '</div>';
+    }
+
+    // ── 累計 ─────────────────────────────────────────────────
+    h += `<div style="font-size:13px;font-weight:700;margin-bottom:2px">📊 累計</div>`
+       + `<div style="font-size:11px;color:var(--sub);margin-bottom:8px">`
+       + `${_ymdw(pf)} 〜 ${_ymdw(pt)} の ${sa.races}レース</div>`;
+
+    for (const g of sa.groups) {
+      if (!g.races) continue;
+      h += `<div style="margin-bottom:12px">`;
+      h += `<div style="font-size:12px;font-weight:700;margin-bottom:4px">${g.label}`
+         + `<span style="font-weight:400;color:var(--sub)">　${g.races}R</span></div>`;
+      h += _betTable(g);
+      h += '</div>';
     }
 
     h += `<div style="font-size:10px;color:var(--sub);margin-top:2px;line-height:1.6">`
@@ -2444,6 +2496,34 @@ function renderStats(S) {
        + `アプリの★推奨（その日の上位6本）とは別物です。<br>`
        + `⚠ この期間にモデルを2回入れ替えています（8/21・9/15）。累積は今のモデルの実力そのものではありません。`
        + '</div>';
+
+    // 日別（直近12開催日）。どこからどこまでが1日分かを一目で分かるようにする
+    if ((sa.daily || []).length) {
+      h += '<div style="margin-top:14px;font-size:11px;font-weight:700;color:var(--sub);margin-bottom:6px">日別（直近12開催日・全レース・全券種を1点ずつ買った場合）</div>';
+      h += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px">';
+      h += '<tr style="color:var(--sub)"><th style="text-align:left;padding:2px 4px">開催日</th>'
+         + '<th style="text-align:left;padding:2px 4px">会場</th>'
+         + '<th style="padding:2px 4px">R数</th><th style="padding:2px 4px">対象</th>'
+         + '<th style="padding:2px 4px">的中率</th><th style="padding:2px 4px">回収率</th></tr>';
+      for (const d of sa.daily) {
+        const top = (d === sa.daily[0]);
+        const bg  = top ? 'background:#eafaf1;' : '';
+        h += `<tr style="${bg}"><td style="padding:3px 4px;${top ? 'font-weight:700' : ''}">${_ymdw(d.date)}</td>`
+           + `<td style="padding:3px 4px;color:var(--sub)">${(d.venues || []).join('・')}</td>`
+           + `<td style="padding:3px 4px;text-align:center">${d.races}</td>`
+           + `<td style="padding:3px 4px;text-align:center">${d.scope_races}</td>`;
+        if (!d.settled) {
+          h += `<td colspan="2" style="padding:3px 4px;text-align:center;color:#b9770e">⏳ 結果待ち</td></tr>`;
+        } else {
+          h += `<td style="padding:3px 4px;text-align:center">${_pct(d.hit_rate)}</td>`
+             + `<td style="padding:3px 4px;text-align:center;color:var(--sub)">${_pct(d.roi)}</td></tr>`;
+        }
+      }
+      h += '</table></div>';
+      h += '<div style="font-size:10px;color:var(--sub);margin-top:4px">'
+         + '⚠ 1日は10〜35レース。<b>日単位の上下はほぼ運です。</b>並べているのは'
+         + '「いつの分か」を見分けるためで、良い日を選んで買うための表ではありません。</div>';
+    }
 
     // 月別（単月と累計）
     if ((sa.monthly || []).length) {

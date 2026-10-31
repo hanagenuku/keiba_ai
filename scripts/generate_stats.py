@@ -265,6 +265,59 @@ def calc_scope_accuracy(conn):
             'cum_roi':  round(cum_pay / (cum_n * 100) * 100, 1) if cum_n else None,
         })
 
+    # ── 当日分（最新の開催日）と日別サマリ ───────────────────────────
+    # ユーザー依頼（2026-10-31）:「累計は累計、当日分は日付など一目でわかるように」。
+    # これまでカード全体が累計で、日付はグレーの小さな期間表記しか無かった。
+    #
+    # 🔴 払戻をまだ1件も引けていない日は「全部ハズレ」ではなく **結果待ち**。
+    #    夜の結果取得が走る前に 0% と出すと、当日朝に見た人が外れたと誤読する。
+    #    `settled` で区別し、画面側はそのとき数字を出さない。
+    day_dates = sorted({r['date'] for r in usable if r['date']})
+
+    def _day_rows(d):
+        return [r for r in usable if r['date'] == d]
+
+    def _venues_of(rs):
+        return sorted({r['racecourse'] or '不明' for r in rs})
+
+    def _settled(rs):
+        return any(divs.get(r['race_id']) for r in rs)
+
+    daily = []
+    for d in reversed(day_dates[-12:]):          # 新しい順・直近12開催日
+        rs = _day_rows(d)
+        gt = _group(rs, divs, d)['total']
+        daily.append({
+            'date':        d,
+            'venues':      _venues_of(rs),
+            'races':       len(rs),
+            'scope_races': len([r for r in rs if _is_main(r) or _is_rec(r)]),
+            'bets':        gt['races'],
+            'hit':         gt['hit'],
+            'hit_rate':    gt['hit_rate'],
+            'roi':         gt['roi'],
+            'settled':     _settled(rs),
+        })
+
+    latest_day = None
+    if day_dates:
+        d = day_dates[-1]
+        rs = _day_rows(d)
+        dmain = [r for r in rs if _is_main(r)]
+        latest_day = {
+            'date':        d,
+            'venues':      _venues_of(rs),
+            'races':       len(rs),
+            'scope_races': len([r for r in rs if _is_main(r) or _is_rec(r)]),
+            'settled':     _settled(rs),
+            'groups': [
+                _group(dmain, divs, '9〜11R 全体'),
+                _group([r for r in dmain if _is_rec(r)], divs,
+                       f'　うち推奨（信頼度{thr}以上）'),
+                _group(rs, divs, '全レース'),
+            ],
+        }
+
     # 直近の対象レース一覧（9〜11R か 推奨）。★が付いた行が推奨レース。
     recent = []
     for r in reversed(usable):
@@ -301,6 +354,8 @@ def calc_scope_accuracy(conn):
         'groups':      groups,
         'by_venue':    by_venue,
         'monthly':     monthly,
+        'latest_day':  latest_day,
+        'daily':       daily,
         'recent':      recent,
     }
 

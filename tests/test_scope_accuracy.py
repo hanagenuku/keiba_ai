@@ -374,3 +374,107 @@ class TestAppRendering:
                     'divergence_analysis'):
             assert key not in html, f'{key} の表示が残っている'
             assert f"stats['{key}']" not in src, f'{key} を stats.json に出している'
+
+
+class TestLatestDayIsSeparateFromCumulative:
+    """ユーザー依頼（2026-10-31）:「累計は累計、当日分は日付など一目でわかるように」。
+
+    それまでカード全体が累計で、日付はグレーの小さな期間表記しか無かった。
+    ここで固定するのは「当日分と累計が混ざらないこと」と
+    「結果がまだ無い日に 0% を出さないこと」の2点。
+    """
+
+    @staticmethod
+    def _two_days(tmp_path):
+        """2開催日ぶん。古い日は全部的中、新しい日は全部ハズレにして取り違えを検出する。"""
+        conn = _db(tmp_path)
+        # 10-24: 9R/10R とも軸が的中（複勝のみ払戻あり）
+        for num in (9, 10):
+            _race(conn, f'20261024_05_{num:02d}', '東京', num, 0.70, rl=(1, 2, 3),
+                  pays=_all_pays((1, 2, 3), fukusho=200), date='2026-10-24')
+        # 10-31: 払戻表に軸が載っていない＝ハズレ
+        for num in (9, 10):
+            _race(conn, f'20261031_05_{num:02d}', '京都', num, 0.70, rl=(1, 2, 3),
+                  pays={'fukusho': {'7': 200}}, date='2026-10-31')
+        return conn
+
+    def test_latest_day_is_the_newest_race_day(self, tmp_path):
+        sa = calc_scope_accuracy(self._two_days(tmp_path))
+        assert sa['latest_day']['date'] == '2026-10-31'
+        assert sa['latest_day']['venues'] == ['京都']
+        assert sa['latest_day']['races'] == 2
+
+    def test_latest_day_does_not_mix_in_other_days(self, tmp_path):
+        """当日分に前の開催日の的中が混ざらないこと（この取り違えが一番こわい）。"""
+        sa = calc_scope_accuracy(self._two_days(tmp_path))
+        main = sa['latest_day']['groups'][0]
+        fuku = [b for b in main['bets'] if b['type'] == '複勝'][0]
+        assert fuku['races'] == 2
+        assert fuku['hit'] == 0, '10-24 の的中が 10-31 に混ざっている'
+        # 累計のほうは両日ぶん入っている
+        cum = [g for g in sa['groups'] if g['label'] == '9〜11R 全体'][0]
+        cum_fuku = [b for b in cum['bets'] if b['type'] == '複勝'][0]
+        assert cum_fuku['races'] == 4 and cum_fuku['hit'] == 2
+
+    def test_cumulative_period_still_covers_every_day(self, tmp_path):
+        sa = calc_scope_accuracy(self._two_days(tmp_path))
+        assert sa['period'] == {'from': '2026-10-24', 'to': '2026-10-31'}
+        assert sa['races'] == 4
+
+    def test_day_without_payouts_is_marked_unsettled_not_zero(self, tmp_path):
+        """🔴 夜の結果取得前に「的中0%」と出さない。外れたと誤読させるため。"""
+        conn = _db(tmp_path)
+        _race(conn, '20261024_05_09', '東京', 9, 0.70, rl=(1, 2, 3),
+              pays=_all_pays((1, 2, 3), fukusho=200), date='2026-10-24')
+        _race(conn, '20261031_05_09', '京都', 9, 0.70, rl=(1, 2, 3),
+              pays=None, date='2026-10-31')          # 払戻がまだ1件も無い
+        sa = calc_scope_accuracy(conn)
+        assert sa['latest_day']['date'] == '2026-10-31'
+        assert sa['latest_day']['settled'] is False
+        assert sa['daily'][0]['settled'] is False
+        # 結果が入っている日は True
+        assert [d for d in sa['daily'] if d['date'] == '2026-10-24'][0]['settled'] is True
+
+    def test_daily_is_newest_first_and_counts_match(self, tmp_path):
+        sa = calc_scope_accuracy(self._two_days(tmp_path))
+        dates = [d['date'] for d in sa['daily']]
+        assert dates == sorted(dates, reverse=True), '日別は新しい順'
+        assert sum(d['races'] for d in sa['daily']) == sa['races']
+
+    def test_daily_counts_the_product_scope_separately(self, tmp_path):
+        """対象（9〜11R＋推奨）とその日の全レースを別に数えること。"""
+        conn = _db(tmp_path)
+        _race(conn, '20261031_05_09', '東京', 9, 0.70, rl=(1, 2, 3),
+              pays=_all_pays((1, 2, 3), fukusho=200), date='2026-10-31')
+        _race(conn, '20261031_05_01', '東京', 1, 0.40, rl=(1, 2, 3),   # 平場・信頼度40
+              pays=_all_pays((1, 2, 3), fukusho=200), date='2026-10-31')
+        sa = calc_scope_accuracy(conn)
+        assert sa['latest_day']['races'] == 2
+        assert sa['latest_day']['scope_races'] == 1, '信頼度40の平場は対象外'
+
+
+class TestPageSeparatesTodayFromCumulative:
+    @staticmethod
+    def _html():
+        with open(os.path.join(BASE, 'index.html'), encoding='utf-8') as f:
+            return f.read()
+
+    def test_today_block_is_labelled_with_the_date(self):
+        html = self._html()
+        assert '📅 当日分' in html
+        assert 'sa.latest_day' in html
+        assert '_ymdw(ld.date)' in html, '当日分の見出しに日付を出すこと'
+
+    def test_cumulative_block_says_it_is_cumulative(self):
+        assert '📊 累計' in self._html()
+
+    def test_unsettled_day_shows_waiting_not_a_rate(self):
+        """結果待ちの日に的中率を出さないこと。"""
+        html = self._html()
+        assert 'ld.settled' in html
+        assert '結果待ち' in html
+
+    def test_daily_table_exists_with_dates(self):
+        html = self._html()
+        assert 'sa.daily' in html
+        assert '開催日' in html
