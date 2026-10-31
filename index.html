@@ -2440,13 +2440,23 @@ function renderStats(S) {
       return `${m[1]}-${m[2]}-${m[3]}(${w})`;
     };
 
+    // 端末のタイムゾーンに関係なく JST の「今日」を YYYY-MM-DD で返す
+    const _todayJst = () => new Date(Date.now() + 9 * 3600 * 1000)
+                              .toISOString().slice(0, 10);
+
     // ── 当日分（最新の開催日）──────────────────────────────────
     // ユーザー依頼（2026-10-31）:「累計は累計、当日分は日付など一目でわかるように」
     const ld = sa.latest_day;
     if (ld && ld.races) {
       h += '<div style="border:2px solid #117a65;border-radius:8px;padding:8px 10px;margin-bottom:14px">';
+      // 🔴 `shadow_bets` は夜の結果取得でしか書かれない。開催日の朝は
+      //    最新＝前回の開催日なので、そこを「当日分」と呼ぶと嘘になる。
+      //    日付と一致するときだけ「当日分」と書く（2026-09-27 の RL/CL と同じ、
+      //    ラベルが中身とずれる事故を繰り返さないため）。
+      const _isToday = ld.date === _todayJst();
       h += `<div style="font-size:13px;font-weight:700;color:#117a65;margin-bottom:2px">`
-         + `📅 当日分　${_ymdw(ld.date)}</div>`;
+         + `📅 ${_isToday ? '当日分' : '最新の開催日'}　${_ymdw(ld.date)}`
+         + `${_isToday ? '' : '<span style="font-weight:400;font-size:11px;color:var(--sub)">（本日はまだ結果が入っていません）</span>'}</div>`;
       h += `<div style="font-size:11px;color:var(--sub);margin-bottom:8px">`
          + `${(ld.venues || []).join('・')}　${ld.races}レース`
          + `（うち商品の対象 ${ld.scope_races}R）</div>`;

@@ -461,9 +461,28 @@ class TestPageSeparatesTodayFromCumulative:
 
     def test_today_block_is_labelled_with_the_date(self):
         html = self._html()
-        assert '📅 当日分' in html
+        assert '当日分' in html
         assert 'sa.latest_day' in html
-        assert '_ymdw(ld.date)' in html, '当日分の見出しに日付を出すこと'
+        assert '_ymdw(ld.date)' in html, '見出しに日付を出すこと'
+
+    def test_block_is_not_called_today_when_it_is_an_older_race_day(self):
+        """🔴 `shadow_bets` は夜の結果取得でしか書かれない。開催日の朝は
+        最新＝前回の開催日なので「当日分」と書くと嘘になる。
+
+        2026-09-27 に、アプリの `RL` 列が実は市場込みだった（ラベルが中身と
+        ずれていた）件と同型なので、日付と一致するときだけ「当日分」と書く。
+        """
+        html = self._html()
+        assert '_todayJst' in html, 'JST の今日と突き合わせること'
+        # ⚠ 「最新の開催日」はコメントにも出てくるので、文字列の有無では
+        #    常に「当日分」と書く実装でも素通りする（実際に素通りした）。
+        #    見出しを作っている三項演算子そのものに当てる。
+        assert "_isToday ? '当日分' : '最新の開催日'" in html, \
+            '日付が今日と一致するときだけ「当日分」と書くこと'
+        # 端末のタイムゾーンに引きずられない実装であること。
+        # ⚠ '9 * 3600 * 1000' だけだと無関係な既存行（最終実行時刻の表示）に
+        #    当たって素通りする（実際に素通りした）。式そのものに当てる。
+        assert 'new Date(Date.now() + 9 * 3600 * 1000)' in html
 
     def test_cumulative_block_says_it_is_cumulative(self):
         assert '📊 累計' in self._html()
