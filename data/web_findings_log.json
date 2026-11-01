@@ -1,6 +1,6 @@
 {
  "schema_version": 2,
- "updated_at": "2026-10-25T18:55:39.897366+09:00",
+ "updated_at": "2026-11-01T11:12:01.114185+09:00",
  "entries": [
   {
    "date": "2026-10-10",
@@ -4874,6 +4874,414 @@
     "fukusho_payout": 370,
     "fukusho_sold": true
    }
+  },
+  {
+   "date": "2026-11-01",
+   "race_id": "20261101_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-11-01T09:08:45+09:00",
+   "race_sources": [
+    "https://www.keibanomiryoku.com/article/tenno-sho-autumn-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "1",
+   "said": {
+    "note": "1週前は2週前より動き出しと反応が良くなったと調教師が評価。最終追い切りで鞍上が「状態も良かったですし」とし、去年より操縦性が良くなったと話している。",
+    "direction": null,
+    "grade": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/tenno-sho-autumn-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-01",
+   "race_id": "20261101_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-11-01T09:08:45+09:00",
+   "race_sources": [
+    "https://www.keibanomiryoku.com/article/tenno-sho-autumn-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "10",
+   "said": {
+    "note": "1週前は調教師が「追い切るごとに上向いてくる馬」と評価し、体重は前走より増えたとしている。最終追い切りはポテンシャルはG1でも引けを取らないとする一方、相手の強さを考えると現状でどこまでやれるかとも述べている。",
+    "direction": null,
+    "grade": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/tenno-sho-autumn-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-01",
+   "race_id": "20261101_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-11-01T09:08:45+09:00",
+   "race_sources": [
+    "https://www.keibanomiryoku.com/article/tenno-sho-autumn-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "11",
+   "said": {
+    "note": "1週前は鞍上が「反応が良くなり、動くようになっています」と評価。最終追い切りは馬なりで、調教師が1週前を想定以上の動きとし「雰囲気が変わってきたね」と述べている。",
+    "direction": "up",
+    "grade": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/tenno-sho-autumn-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-01",
+   "race_id": "20261101_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-11-01T09:08:45+09:00",
+   "race_sources": [
+    "https://www.keibanomiryoku.com/article/tenno-sho-autumn-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "12",
+   "said": {
+    "note": "1週前はWで一杯に追い、調教師は前走を「かみ合わなかった」と振り返る。最終追い切りは坂路で時計と最後の伸び脚が良かったとし、叩いて良くなる馬なので前走より状態はいいとしている。",
+    "direction": null,
+    "grade": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/tenno-sho-autumn-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-01",
+   "race_id": "20261101_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-11-01T09:08:45+09:00",
+   "race_sources": [
+    "https://www.keibanomiryoku.com/article/tenno-sho-autumn-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "13",
+   "said": {
+    "note": "1週前は鞍上が「いい動きだった」と評価し、調教師は使った上積みは大きいとしている。最終追い切りは鞍上が「すごくいいフィニッシュ」で確実に上向いていると評価。",
+    "direction": "up",
+    "grade": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/tenno-sho-autumn-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-01",
+   "race_id": "20261101_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-11-01T09:08:45+09:00",
+   "race_sources": [
+    "https://www.keibanomiryoku.com/article/tenno-sho-autumn-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "14",
+   "said": {
+    "note": "1週前は鞍上が「いい動きだった」と評価し、調教師は「動きも張りも全然違うし、変わっている」としている。最終追い切りは馬なりで、雰囲気が良くなったと述べている。",
+    "direction": null,
+    "grade": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/tenno-sho-autumn-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-01",
+   "race_id": "20261101_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-11-01T09:08:45+09:00",
+   "race_sources": [
+    "https://www.keibanomiryoku.com/article/tenno-sho-autumn-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "15",
+   "said": {
+    "note": "1週前は馬なりで、調教師は力は足りるとしつつ折り合いが難しいと指摘。最終追い切りは鞍上が折り合いや力みはかなり取れてきたと評価。左のモタれは残る可能性があるとしている。",
+    "direction": null,
+    "grade": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/tenno-sho-autumn-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-01",
+   "race_id": "20261101_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-11-01T09:08:45+09:00",
+   "race_sources": [
+    "https://www.keibanomiryoku.com/article/tenno-sho-autumn-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "16",
+   "said": {
+    "note": "1週前は鞍上が気持ち良く走っていたと評価し、調教師は動きの質が一段階良くなったとしている。最終追い切りは調教師が「G1に臨むにふさわしい状態」と述べている。",
+    "direction": "up",
+    "grade": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/tenno-sho-autumn-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-01",
+   "race_id": "20261101_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-11-01T09:08:45+09:00",
+   "race_sources": [
+    "https://www.keibanomiryoku.com/article/tenno-sho-autumn-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "17",
+   "said": {
+    "note": "1週前は鞍上が先週より上向いている感じと評価。最終追い切りは調教師が2週前のバランスが悪かった頃より良くなっているとしつつ、宝塚記念時と比べると改善の余地もあるとしている。",
+    "direction": null,
+    "grade": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/tenno-sho-autumn-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-01",
+   "race_id": "20261101_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-11-01T09:08:45+09:00",
+   "race_sources": [
+    "https://www.keibanomiryoku.com/article/tenno-sho-autumn-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "2",
+   "said": {
+    "note": "1週前はCW7Fでしまい強めに追い、鞍上が「いい追い切りができましたね」と評価。調教師はテンの出脚がもたつく点を挙げ、距離延長を期待している。",
+    "direction": null,
+    "grade": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/tenno-sho-autumn-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-01",
+   "race_id": "20261101_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-11-01T09:08:45+09:00",
+   "race_sources": [
+    "https://www.keibanomiryoku.com/article/tenno-sho-autumn-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "3",
+   "said": {
+    "note": "1週前は鞍上が「思っていたイメージと違った」としつつフットワークは良かったと評価。最終追い切りは調教師が「いつもいい動き」としている。",
+    "direction": null,
+    "grade": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/tenno-sho-autumn-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-01",
+   "race_id": "20261101_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-11-01T09:08:45+09:00",
+   "race_sources": [
+    "https://www.keibanomiryoku.com/article/tenno-sho-autumn-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "4",
+   "said": {
+    "note": "1週前・最終ともCWの馬なり。調教師は「状態は良くなっている」と評価し、助手は最近のレース内容から力を付けているとしている。",
+    "direction": null,
+    "grade": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/tenno-sho-autumn-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-01",
+   "race_id": "20261101_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-11-01T09:08:45+09:00",
+   "race_sources": [
+    "https://www.keibanomiryoku.com/article/tenno-sho-autumn-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "5",
+   "said": {
+    "note": "1週前は調教師が「手応えがもう少し」と記述。最終追い切りでは体調も動きも良いとしつつ、精神面が気がかりだと述べている。",
+    "direction": "down",
+    "grade": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/tenno-sho-autumn-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-01",
+   "race_id": "20261101_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-11-01T09:08:45+09:00",
+   "race_sources": [
+    "https://www.keibanomiryoku.com/article/tenno-sho-autumn-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "6",
+   "said": {
+    "note": "1週前は最後まで余裕を残した良い動きと調教師が評価。最終追い切りは道中の反応がすごく良かったとし「ベストと言える状態でいける」と述べている。",
+    "direction": "up",
+    "grade": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/tenno-sho-autumn-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-01",
+   "race_id": "20261101_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-11-01T09:08:45+09:00",
+   "race_sources": [
+    "https://www.keibanomiryoku.com/article/tenno-sho-autumn-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "7",
+   "said": {
+    "note": "1週前は調教師が予定通りで去年より行きっぷりが良くなったと評価。最終追い切りは坂路の馬なりで時計は遅めだったと認めつつ、息の整い具合から十分に仕上がっているとしている。",
+    "direction": null,
+    "grade": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/tenno-sho-autumn-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-01",
+   "race_id": "20261101_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-11-01T09:08:45+09:00",
+   "race_sources": [
+    "https://www.keibanomiryoku.com/article/tenno-sho-autumn-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "8",
+   "said": {
+    "note": "1週前・最終とも坂路の馬なり。調教師は「具合も良さそう」とし、動きは前走と同じような感じと述べている。年齢的にズブくなっているがこの距離はプラスとしている。",
+    "direction": null,
+    "grade": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/tenno-sho-autumn-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-01",
+   "race_id": "20261101_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-11-01T09:08:45+09:00",
+   "race_sources": [
+    "https://www.keibanomiryoku.com/article/tenno-sho-autumn-2026-work-out.html"
+   ],
+   "kind": "horse",
+   "key": "9",
+   "said": {
+    "note": "1週前は調教師が前走よりさらに状態はいいと評価。最終追い切りは鞍上が「自信を持った走りをしていました」とし、どんどん上向いていると述べている。",
+    "direction": "up",
+    "grade": null
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/tenno-sho-autumn-2026-work-out.html"
+   ],
+   "hosts": [
+    "keibanomiryoku.com"
+   ],
+   "result": null
   }
  ]
 }
