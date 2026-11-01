@@ -77,7 +77,7 @@
         "races": 11
       }
     ],
-    "workflow_run_at": "2026-10-31T09:49:37Z",
+    "workflow_run_at": "2026-10-31T10:52:18Z",
     "workflow_result": "success"
   },
   "web_sources": {
@@ -2156,6 +2156,395 @@
         "cum_roi": 89.6
       }
     ],
+    "latest_day": {
+      "date": "2026-10-31",
+      "venues": [
+        "京都",
+        "東京"
+      ],
+      "races": 23,
+      "scope_races": 11,
+      "settled": true,
+      "groups": [
+        {
+          "label": "9〜11R 全体",
+          "races": 6,
+          "bets": [
+            {
+              "type": "単勝",
+              "races": 6,
+              "hit": 1,
+              "hit_rate": 16.7,
+              "roi": 30.0,
+              "roi_cut1": 0.0,
+              "roi_cut3": 0.0,
+              "na": 0,
+              "top_pay": 180
+            },
+            {
+              "type": "複勝",
+              "races": 6,
+              "hit": 3,
+              "hit_rate": 50.0,
+              "roi": 58.3,
+              "roi_cut1": 38.3,
+              "roi_cut3": 0.0,
+              "na": 0,
+              "top_pay": 120
+            },
+            {
+              "type": "馬連",
+              "races": 6,
+              "hit": 1,
+              "hit_rate": 16.7,
+              "roi": 31.7,
+              "roi_cut1": 0.0,
+              "roi_cut3": 0.0,
+              "na": 0,
+              "top_pay": 190
+            },
+            {
+              "type": "ワイド",
+              "races": 6,
+              "hit": 2,
+              "hit_rate": 33.3,
+              "roi": 71.7,
+              "roi_cut1": 21.7,
+              "roi_cut3": 0.0,
+              "na": 0,
+              "top_pay": 300
+            },
+            {
+              "type": "三連複",
+              "races": 6,
+              "hit": 0,
+              "hit_rate": 0.0,
+              "roi": 0.0,
+              "roi_cut1": 0.0,
+              "roi_cut3": 0.0,
+              "na": 0,
+              "top_pay": null
+            }
+          ],
+          "total": {
+            "type": "累計（全券種）",
+            "races": 30,
+            "hit": 7,
+            "hit_rate": 23.3,
+            "roi": 38.3
+          }
+        },
+        {
+          "label": "　うち推奨（信頼度66以上）",
+          "races": 1,
+          "bets": [
+            {
+              "type": "単勝",
+              "races": 1,
+              "hit": 0,
+              "hit_rate": 0.0,
+              "roi": 0.0,
+              "roi_cut1": 0.0,
+              "roi_cut3": 0.0,
+              "na": 0,
+              "top_pay": null
+            },
+            {
+              "type": "複勝",
+              "races": 1,
+              "hit": 1,
+              "hit_rate": 100.0,
+              "roi": 110.0,
+              "roi_cut1": 0.0,
+              "roi_cut3": 0.0,
+              "na": 0,
+              "top_pay": 110
+            },
+            {
+              "type": "馬連",
+              "races": 1,
+              "hit": 1,
+              "hit_rate": 100.0,
+              "roi": 190.0,
+              "roi_cut1": 0.0,
+              "roi_cut3": 0.0,
+              "na": 0,
+              "top_pay": 190
+            },
+            {
+              "type": "ワイド",
+              "races": 1,
+              "hit": 1,
+              "hit_rate": 100.0,
+              "roi": 130.0,
+              "roi_cut1": 0.0,
+              "roi_cut3": 0.0,
+              "na": 0,
+              "top_pay": 130
+            },
+            {
+              "type": "三連複",
+              "races": 1,
+              "hit": 0,
+              "hit_rate": 0.0,
+              "roi": 0.0,
+              "roi_cut1": 0.0,
+              "roi_cut3": 0.0,
+              "na": 0,
+              "top_pay": null
+            }
+          ],
+          "total": {
+            "type": "累計（全券種）",
+            "races": 5,
+            "hit": 3,
+            "hit_rate": 60.0,
+            "roi": 86.0
+          }
+        },
+        {
+          "label": "全レース",
+          "races": 23,
+          "bets": [
+            {
+              "type": "単勝",
+              "races": 23,
+              "hit": 10,
+              "hit_rate": 43.5,
+              "roi": 97.0,
+              "roi_cut1": 73.5,
+              "roi_cut3": 46.1,
+              "na": 0,
+              "top_pay": 540
+            },
+            {
+              "type": "複勝",
+              "races": 23,
+              "hit": 18,
+              "hit_rate": 78.3,
+              "roi": 108.7,
+              "roi_cut1": 96.1,
+              "roi_cut3": 77.8,
+              "na": 0,
+              "top_pay": 290
+            },
+            {
+              "type": "馬連",
+              "races": 23,
+              "hit": 6,
+              "hit_rate": 26.1,
+              "roi": 153.0,
+              "roi_cut1": 95.2,
+              "roi_cut3": 32.2,
+              "na": 0,
+              "top_pay": 1330
+            },
+            {
+              "type": "ワイド",
+              "races": 23,
+              "hit": 9,
+              "hit_rate": 39.1,
+              "roi": 103.5,
+              "roi_cut1": 76.1,
+              "roi_cut3": 43.9,
+              "na": 0,
+              "top_pay": 630
+            },
+            {
+              "type": "三連複",
+              "races": 23,
+              "hit": 1,
+              "hit_rate": 4.3,
+              "roi": 32.6,
+              "roi_cut1": 0.0,
+              "roi_cut3": 0.0,
+              "na": 0,
+              "top_pay": 750
+            }
+          ],
+          "total": {
+            "type": "累計（全券種）",
+            "races": 115,
+            "hit": 44,
+            "hit_rate": 38.3,
+            "roi": 99.0
+          }
+        }
+      ]
+    },
+    "daily": [
+      {
+        "date": "2026-10-31",
+        "venues": [
+          "京都",
+          "東京"
+        ],
+        "races": 23,
+        "scope_races": 11,
+        "bets": 115,
+        "hit": 44,
+        "hit_rate": 38.3,
+        "roi": 99.0,
+        "settled": true
+      },
+      {
+        "date": "2026-10-25",
+        "venues": [
+          "京都",
+          "新潟",
+          "東京"
+        ],
+        "races": 35,
+        "scope_races": 17,
+        "bets": 174,
+        "hit": 42,
+        "hit_rate": 24.1,
+        "roi": 45.1,
+        "settled": true
+      },
+      {
+        "date": "2026-10-24",
+        "venues": [
+          "京都",
+          "新潟",
+          "東京"
+        ],
+        "races": 35,
+        "scope_races": 14,
+        "bets": 172,
+        "hit": 47,
+        "hit_rate": 27.3,
+        "roi": 72.3,
+        "settled": true
+      },
+      {
+        "date": "2026-10-18",
+        "venues": [
+          "京都",
+          "新潟",
+          "東京"
+        ],
+        "races": 34,
+        "scope_races": 13,
+        "bets": 169,
+        "hit": 67,
+        "hit_rate": 39.6,
+        "roi": 135.9,
+        "settled": true
+      },
+      {
+        "date": "2026-10-17",
+        "venues": [
+          "京都",
+          "新潟",
+          "東京"
+        ],
+        "races": 35,
+        "scope_races": 16,
+        "bets": 175,
+        "hit": 63,
+        "hit_rate": 36.0,
+        "roi": 117.8,
+        "settled": true
+      },
+      {
+        "date": "2026-10-12",
+        "venues": [
+          "京都",
+          "東京"
+        ],
+        "races": 23,
+        "scope_races": 10,
+        "bets": 113,
+        "hit": 46,
+        "hit_rate": 40.7,
+        "roi": 96.1,
+        "settled": true
+      },
+      {
+        "date": "2026-10-11",
+        "venues": [
+          "京都",
+          "東京"
+        ],
+        "races": 23,
+        "scope_races": 6,
+        "bets": 115,
+        "hit": 39,
+        "hit_rate": 33.9,
+        "roi": 105.7,
+        "settled": true
+      },
+      {
+        "date": "2026-10-10",
+        "venues": [
+          "京都",
+          "東京"
+        ],
+        "races": 20,
+        "scope_races": 8,
+        "bets": 100,
+        "hit": 27,
+        "hit_rate": 27.0,
+        "roi": 61.2,
+        "settled": true
+      },
+      {
+        "date": "2026-10-03",
+        "venues": [
+          "京都",
+          "東京"
+        ],
+        "races": 23,
+        "scope_races": 7,
+        "bets": 115,
+        "hit": 34,
+        "hit_rate": 29.6,
+        "roi": 79.1,
+        "settled": true
+      },
+      {
+        "date": "2026-09-27",
+        "venues": [
+          "中山",
+          "阪神"
+        ],
+        "races": 23,
+        "scope_races": 10,
+        "bets": 115,
+        "hit": 35,
+        "hit_rate": 30.4,
+        "roi": 93.7,
+        "settled": true
+      },
+      {
+        "date": "2026-09-26",
+        "venues": [
+          "中山",
+          "阪神"
+        ],
+        "races": 22,
+        "scope_races": 7,
+        "bets": 110,
+        "hit": 40,
+        "hit_rate": 36.4,
+        "roi": 92.9,
+        "settled": true
+      },
+      {
+        "date": "2026-09-22",
+        "venues": [
+          "中山"
+        ],
+        "races": 11,
+        "scope_races": 6,
+        "bets": 55,
+        "hit": 15,
+        "hit_rate": 27.3,
+        "roi": 65.6,
+        "settled": true
+      }
+    ],
     "recent": [
       {
         "date": "2026-10-31",
@@ -3225,5 +3614,5 @@
       "top3_rate": 16.7
     }
   },
-  "generated_at": "2026-10-31 10:52"
+  "generated_at": "2026-11-01 00:04"
 }
