@@ -96,9 +96,20 @@ from . import marks as _marks
 #  CONF_LIGHT  = 55 : `ev_filter.MIN_AXIS_FUKU_PROB = 0.55` と同じ。
 #                     本番が「そもそも買い目を出すか」を判定している閾値で、
 #                     根拠は 2026-08-08②（軸の複勝確率が下位半分の帯はROIが一貫して悪い）
-CONF_STRONG = 66   # これ以上: 全券種（三連単まで）
+CONF_STRONG = 66   # これ以上: 全券種（三連単まで）＝**推奨レース**（有料記事の対象）
 CONF_LIGHT = 55    # これ以上: 単勝・複勝・馬連・ワイド・三連複（三連単は出さない）
 # CONF_LIGHT 未満: 見送り
+
+#  CONF_GRADE_S = 72 : 推奨レースの中で S（自信あり）と A（次点）を分ける境界。
+#                     🟢 **2026-11-04 のユーザー指示「推奨レースの中でも自信のある
+#                     レースをS、次点をAとして表示」に対して、新しい閾値を1つも
+#                     発明していない。** この 72 は `confidence_stars()` が
+#                     ★★★★★ と ★★★★☆ を分けるために**以前から持っていた値**で、
+#                     ここに名前を付けて共有しただけ（値は1ミリも変えていない）。
+#                     🔴 結果を見てから動かさない。閾値を後から当てにいくのは
+#                     このプロジェクトが何度も事故にしている形
+#                     （2026-07-27 / 08-15 / 08-20）。
+CONF_GRADE_S = 72
 
 # 1レースに並べる買い目の行数の上限。
 # 🟢 2026-10-15 にユーザーが「全券種を記載する」と決めたので 2 → 9 に変えた。
@@ -421,7 +432,7 @@ def confidence_stars(conf):
     """conf → 勝負度の星。conf が無ければ None（作り話をしない）。"""
     if conf is None:
         return None
-    if conf >= 72:
+    if conf >= CONF_GRADE_S:
         return 5
     if conf >= CONF_STRONG:
         return 4
@@ -430,6 +441,27 @@ def confidence_stars(conf):
     if conf >= 46:
         return 2
     return 1
+
+
+def grade(conf):
+    """推奨レースの格付け。S（自信あり）/ A（次点）/ 推奨外なら None。
+
+    🔴 **推奨かどうかの境界は `CONF_STRONG`（=66）そのもの**で、ここで別の
+       閾値を作らない。S/A の境界 `CONF_GRADE_S`（=72）も
+       `confidence_stars()` が元から持っていた値の再利用。
+
+    ⚠ S は「当たる」という意味ではない。conf は**軸の3着内確率**で、
+      0.65 を超えた帯は予測 0.758 に対し実測 0.566 と**過信がある**
+      （2026-08-20 実測）。S/A はレース間の相対的な並びとして読むもので、
+      S だから回収率が100%を超えるという根拠は無い。
+    """
+    if conf is None:
+        return None
+    if conf >= CONF_GRADE_S:
+        return 'S'
+    if conf >= CONF_STRONG:
+        return 'A'
+    return None
 
 
 def verdict(conf):
