@@ -87,12 +87,14 @@ def _iter_races(data, wanted=None):
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument('--base-dir', default='.')
-    ap.add_argument('--free', action='store_true', help='無料版を作る')
+    ap.add_argument('--free', action='store_true',
+                    help='無料版（9〜11Rのうち推奨でないレース）を作る。'
+                         '既定は有料版（推奨レース＝レース信頼度66以上）')
     ap.add_argument('--publish', action='store_true',
                     help='公開スナップショットを prediction_archive/ に保存する')
     ap.add_argument('--races', default='', help='例: 中山9,阪神9')
     ap.add_argument('--all-races', action='store_true',
-                    help='対象範囲（9R〜11R＋自信のある平場）を無視して全レース出す')
+                    help='有料／無料の振り分けを無視して全レース出す')
     ap.add_argument('--only-recommended', action='store_true',
                     help='見送りにならないレースだけ')
     ap.add_argument('--out', default='', help='記事の出力先ファイル')
@@ -151,12 +153,16 @@ def main(argv=None):
         horses = race.get('horses') or []
         if not horses:
             continue
-        # 対象範囲（ユーザー指示: 各競馬場9R〜11R ＋ 自信のある平場）。
+        # どちらの記事に載せるか（2026-11-04 のユーザー改正）。
+        #   有料 = 推奨（conf >= 66）。レース番号は問わない
+        #   無料 = 9〜11R のうち推奨でないもの
+        #   どちらでもない = 記事にしない
         # --races で明示指定された場合と --all-races では適用しない。
         if not wanted and not args.all_races:
-            ok, why = scope.in_scope(race)
-            if not ok:
-                out_of_scope.append(f"{race['_venue']}{race.get('r')}R({why})")
+            kind, why = scope.article_kind(race)
+            if kind != (scope.FREE if args.free else scope.PAID):
+                label = {scope.PAID: '有料', scope.FREE: '無料'}.get(kind, '対象外')
+                out_of_scope.append(f"{race['_venue']}{race.get('r')}R({label}:{why})")
                 continue
         verdict = tickets.verdict(race.get('conf'))
         if args.only_recommended and verdict == 'skip':
@@ -179,8 +185,11 @@ def main(argv=None):
         if web_view:
             n_web += 1
 
+        # 🔴 無料版も**中身は有料と同じ**（2026-11-04 ユーザー指示
+        #    「無料記事も有料と同じ（買い目まで全部）」）。無料版の意味は
+        #    「内容を削った版」ではなく「推奨しなかったレースの版」になった。
         sec = article.build_race_section(race, horses, facts_by_num,
-                                         paid=not args.free,
+                                         paid=True,
                                          n_comment_marks=args.comment_marks,
                                          web_view=web_view)
         sections.append(sec)
@@ -205,7 +214,8 @@ def main(argv=None):
                 print(f'⚠ {e}', file=sys.stderr)
 
     if not sections:
-        print('対象レースがありません', file=sys.stderr)
+        kind_label = '無料（9〜11Rの推奨漏れ）' if args.free else '有料（推奨レース）'
+        print(f'{kind_label}に該当するレースがありません', file=sys.stderr)
         return 1
 
     label = target_date
@@ -226,8 +236,8 @@ def main(argv=None):
     if web_findings is not None:
         print(f'web見解を載せたレース: {n_web}件', file=sys.stderr)
     if out_of_scope:
-        print(f'対象外 {len(out_of_scope)}件: {", ".join(out_of_scope)}',
-              file=sys.stderr)
+        print(f'この記事に載せなかった {len(out_of_scope)}件: '
+              f'{", ".join(out_of_scope)}', file=sys.stderr)
     return 0
 
 

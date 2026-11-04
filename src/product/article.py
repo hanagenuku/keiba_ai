@@ -1,7 +1,19 @@
 """note 用の記事（無料版／有料版）を組み立てる。
 
 構成は Phase 4 §11 の順序に合わせてある。
-無料版と有料版の差は **質ではなく量**（無料は1レースだけ・買い目なし）。
+
+🟢 **2026-11-04 のユーザー改正で、無料版と有料版の差が変わった。**
+    改正前: 差は**量**（無料は◎の理由だけ・比較表と買い目なし）
+    改正後: 差は**どのレースか**
+            有料 = AIが推奨したレース（conf >= tickets.CONF_STRONG）
+            無料 = 9〜11R のうち推奨しなかったレース
+            中身（印・根拠・比較表・買い目）は**どちらも同じ**
+            （ユーザー指示「無料記事も有料と同じ（買い目まで全部）」）
+    振り分けは `scope.article_kind()`。
+
+⚠ `build_race_section(paid=False)` の「中身を削る」経路はコード上まだ残っているが、
+  `scripts/build_product_article.py` はもう使っていない（常に paid=True で組む）。
+  `build_article(paid=False)` が変えるのは**見出しとリード文だけ**。
 """
 
 from . import commentary as _cm
@@ -196,7 +208,17 @@ def build_race_section(race, horses, facts_by_num, *, paid=True,
     title = f"## {venue}{race.get('r')}R　{race.get('name') or ''}　{race.get('dist') or ''}"
 
     parts = [title, '']
-    parts.append(f"**AI評価　{_stars(tickets.get('stars'))}**（レース信頼度 {race.get('conf')}）")
+    # 🟢 2026-11-04: 推奨レース（conf >= CONF_STRONG）は S/A を表に出す。
+    #    S/A の境界は `tickets.CONF_GRADE_S`（=72）＝★5の境界の再利用で、
+    #    **新しい閾値は作っていない**。推奨外のレース（無料記事）は従来どおり
+    #    「AI評価」のまま＝格付けを与えない（推奨していないものに等級を付けない）。
+    grade = _tk.grade(race.get('conf'))
+    if grade:
+        parts.append(f"**推奨度 {grade}**　{_stars(tickets.get('stars'))}"
+                     f"（レース信頼度 {race.get('conf')}）")
+    else:
+        parts.append(f"**AI評価　{_stars(tickets.get('stars'))}**"
+                     f"（レース信頼度 {race.get('conf')}）")
     parts.append('')
     parts.append('### 印')
     parts.append('')
@@ -291,17 +313,60 @@ def build_race_section(race, horses, facts_by_num, *, paid=True,
         'rows': rows,
         'dangers': dangers,
         'tickets': tickets,
+        'grade': grade,
+        'conf': race.get('conf'),
+        'heading': f"{venue}{race.get('r')}R　{race.get('name') or ''}".strip(),
     }
 
 
+def grade_index(sections):
+    """有料記事の先頭に出す S/A の一覧。推奨が無ければ空リスト。"""
+    graded = [s for s in sections if s.get('grade')]
+    if not graded:
+        return []
+    n_s = sum(1 for s in graded if s['grade'] == 'S')
+    n_a = sum(1 for s in graded if s['grade'] == 'A')
+    out = [f'**本日の推奨レース（S {n_s}本 / A {n_a}本）**', '']
+    for g in ('S', 'A'):
+        # 同じ等級の中は信頼度の高い順（表示の並びだけ。判定には使わない）
+        for s in sorted((x for x in graded if x['grade'] == g),
+                        key=lambda x: (x.get('conf') is None, -(x.get('conf') or 0))):
+            out.append(f"- **{g}**　{s.get('heading') or ''}"
+                       f"（レース信頼度 {s.get('conf')}）")
+    out.append('')
+    # 🔴 S を「当たる」と読ませない。conf は軸の3着内確率で、上の帯には
+    #    過信がある（0.65超の帯は予測0.758に対し実測0.566・2026-08-20 実測）。
+    out.append('※ S・A はレース信頼度（◎が3着以内に来る確率としてAIが出した数字）の'
+               '並びです。⚠ この数字は上の帯で過信があり（0.65を超えた帯は'
+               '予測0.758に対し実測0.566）、**S だから回収率が100%を超えるという'
+               '根拠はありません**。レース間の相対的な並びとして読んでください。')
+    out.append('')
+    return out
+
+
 def build_article(day_label, sections, *, paid=True, has_web_info=False):
-    """1日ぶんの記事。"""
+    """1日ぶんの記事。
+
+    🟢 2026-11-04 の改正で、無料版は「量を減らした版」ではなく
+       **9〜11R のうち AI が推奨しなかったレース**を指すようになった。
+       中身（印・根拠・比較表・買い目）は有料版と同じ構成で出す
+       （ユーザー指示「無料記事も有料と同じ（買い目まで全部）」）。
+    """
     kind = '有料版' if paid else '無料版'
     head = [f'# {day_label} AI競馬分析　{kind}', '']
     if paid:
-        head.append('AIが過去データと今回の条件を分析し、印・根拠・買い目までまとめています。')
+        head.append('AIが推奨したレースだけをまとめています。'
+                    '印・根拠・買い目まで載せています。')
+        head.append('')
+        head += grade_index(sections)
     else:
-        head.append('AIが本命にした理由だけを無料で公開します。')
+        head.append('AIが**推奨しなかった**レースのうち、各競馬場9R〜11Rを'
+                    '無料で公開します。印・根拠・買い目の構成は有料版と同じです。')
+        head.append('')
+        head.append('🔴 ここに載っているのは、レース信頼度が推奨の基準に届かなかった'
+                    'レースです。**有料版より当たりやすいという意味ではありません。**'
+                    '軸の3着内確率が下位の帯は回収率が一貫して悪い、というのが'
+                    'こちらの実測です（だから推奨していません）。')
     head.append('')
     head.append('---')
     head.append('')
