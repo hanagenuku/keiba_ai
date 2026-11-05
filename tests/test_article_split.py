@@ -172,15 +172,48 @@ class TestArticleText:
         assert 'AIが推奨したレースだけをまとめています' in md
 
     def test_free_article_says_these_are_not_recommended(self):
-        """🔴 無料版を「お得な版」と誤読させない。"""
+        """🔴 無料版を「お得な版」と誤読させない。
+
+        初版は「有料版より当たりやすいという意味ではありません」という
+        二重否定で、ユーザーから「意味が分からない」と指摘された（2026-11-05）。
+        **誰もしない誤読を打ち消していた**ので何も伝わらなかった。
+        向きを実測で確かめたうえで事実を正面から書く形に直した
+        （直近6開催: 推奨41R 累計的中 47.8% vs 推奨漏れ40R 23.2%）。
+        """
         secs = [{'markdown': '## 東京9R', 'grade': None, 'conf': 54,
                  'heading': '東京9R'}]
         md = article.build_article('2026-11-01', secs, paid=False)
         assert '無料版' in md
         assert '推奨しなかった' in md
-        assert '有料版より当たりやすいという意味ではありません' in md
+        assert '推奨レースより当たりにくいと思って読んでください' in md
         # 無料版には S/A の一覧を出さない（推奨していないものに等級を付けない）
         assert '本日の推奨レース' not in md
+
+    def test_free_article_does_not_claim_it_hits_as_often_as_paid(self):
+        """🔴 実測と逆のことを書かない。
+
+        ユーザーが例示した「有料版より当たらないという意味ではありません」は、
+        直近6開催の実測（累計的中 47.8% vs 23.2%・単勝 46.3→17.5・
+        複勝 87.8→47.5・ワイド 61.0→26.3）と**逆**なので採用しない。
+        将来これを書き戻したらここで落ちる。
+        """
+        secs = [{'markdown': '## 東京9R', 'grade': None, 'conf': 54,
+                 'heading': '東京9R'}]
+        md = article.build_article('2026-11-01', secs, paid=False)
+        assert '当たらないという意味ではありません' not in md
+        assert '有料版より当たりやすいという意味ではありません' not in md
+
+    def test_free_article_does_not_imply_it_is_the_better_buy(self):
+        """🔴 「当たりにくいが回収率は上」と読ませない。
+
+        直近6開催の無料側の累計回収 102.7% は 三連複 199.2%（3本抜きで 4.8%）と
+        馬連 122.0%（同 35.2%）が作った数字で、高配当1〜2本に乗っているだけ。
+        記事では必ず「どちらも100%超は確認できていない」と並べて書く。
+        """
+        secs = [{'markdown': '## 東京9R', 'grade': None, 'conf': 54,
+                 'heading': '東京9R'}]
+        md = article.build_article('2026-11-01', secs, paid=False)
+        assert '回収率が100%を超えることは確認できていません' in md
 
 
 class TestRaceHeading:
