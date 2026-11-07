@@ -1,6 +1,6 @@
 {
  "schema_version": 1,
- "updated_at": "2026-11-07T09:09:46.904684+09:00",
+ "updated_at": "2026-11-07T11:55:58.945352+09:00",
  "entries": [
   {
    "date": "2026-10-10",
@@ -1715,6 +1715,27 @@
    "snapshot": "2026-11-07T08:55:15.954600+09:00",
    "odds_coverage": 1.0,
    "recorded_at": "2026-11-07T09:09:46.904481+09:00",
+   "result": null
+  },
+  {
+   "date": "2026-11-07",
+   "race_id": "20261107_03_10",
+   "venue": "福島",
+   "race_num": 10,
+   "race_name": "飯坂温泉特別",
+   "num": 1,
+   "name": "デアリングエア",
+   "pop": 1,
+   "solo_rank": 10,
+   "rl_rank": 1,
+   "odds": 5.7,
+   "conf": 50,
+   "verdict": "skip",
+   "in_scope": true,
+   "scope_reason": "10R（各競馬場9R〜11Rは対象）",
+   "snapshot": "2026-11-07T11:34:59.955050+09:00",
+   "odds_coverage": 1.0,
+   "recorded_at": "2026-11-07T11:55:58.945090+09:00",
    "result": null
   },
   {

@@ -1,6 +1,6 @@
 {
  "schema_version": 2,
- "updated_at": "2026-11-01T18:52:20.686013+09:00",
+ "updated_at": "2026-11-07T11:55:59.067396+09:00",
  "entries": [
   {
    "date": "2026-10-10",
@@ -5435,6 +5435,448 @@
     "fukusho_payout": null,
     "fukusho_sold": true
    }
+  },
+  {
+   "date": "2026-11-07",
+   "race_id": "20261107_03_10",
+   "venue": "福島",
+   "race_num": 10,
+   "collected_at": "2026-11-07T09:11:56+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/06/190000"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": "やや重",
+    "expected": "良〜やや重。枠はフラット〜外、直線の伸びはフラット〜やや外、前後は前〜差しと想定。想定時計は雨が降らなければ −1.3〜±0秒、降れば −1.2〜+1.5秒",
+    "expected_state": "重",
+    "summary": "福島芝は金曜昼時点の発表がやや重。水〜金曜昼までに32.5mmの雨が降っており、枠はフラット〜外・前後は前〜差しと想定されている。追い切りを無料で出している媒体は見つからなかった。"
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/06/190000"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-07",
+   "race_id": "20261107_03_11",
+   "venue": "福島",
+   "race_num": 11,
+   "collected_at": "2026-11-07T09:11:56+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/06/190000"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": "やや重",
+    "expected": "良〜やや重。枠はフラット〜外、直線の伸びはフラット〜やや外、前後は前〜差しと想定。想定時計は雨が降らなければ −1.3〜±0秒、降れば −1.2〜+1.5秒",
+    "expected_state": "重",
+    "summary": "キビタキS。福島芝は金曜昼時点の発表がやや重で、想定は良〜やや重。金曜午後から土曜の想定雨量は0〜5mm。重賞以外の追い切りを無料で出している媒体は見つからず、調教メモは取れなかった。"
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/06/190000"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-07",
+   "race_id": "20261107_05_10",
+   "venue": "東京",
+   "race_num": 10,
+   "collected_at": "2026-11-07T09:11:56+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/06/190000"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": "良",
+    "expected": "馬場の硬さは標準位。枠はフラット〜外、直線の伸びはフラット〜やや外、前後は展開次第〜差しと想定。想定時計 −2.5〜−2.2秒",
+    "expected_state": null,
+    "summary": "東京芝は金曜昼時点の発表が良。枠はフラット〜外、直線の伸びはフラット〜やや外、前後は展開次第〜差しと想定されている。この距離・クラスの追い切りを無料で出している媒体は見つからず、調教メモは1件も取れなかった。"
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/06/190000"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-07",
+   "race_id": "20261107_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-11-07T09:11:56+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/06/190000",
+    "https://www.keibanomiryoku.com/article/keio-hai-nisai-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22204"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": "良",
+    "expected": "馬場の硬さは標準位。枠はフラット〜外、直線の伸びはフラット〜やや外、前後は展開次第〜差しと想定。想定時計 −2.5〜−2.2秒",
+    "expected_state": null,
+    "summary": "京王杯2歳S。全10頭の1週前・最終追い切りのタイムと陣営コメントが無料で読めた。東京芝は金曜昼時点の発表が良で、枠はフラット〜外・前後は展開次第〜差しと想定されている。"
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/06/190000",
+    "https://www.keibanomiryoku.com/article/keio-hai-nisai-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22204"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "keibanomiryoku.com",
+    "umasiru.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-07",
+   "race_id": "20261107_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-11-07T09:11:56+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/06/190000",
+    "https://www.keibanomiryoku.com/article/keio-hai-nisai-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22204"
+   ],
+   "kind": "horse",
+   "key": "1",
+   "said": {
+    "note": "最終は美浦ウッドを単走で5F70.8の馬なり。時計は目立たないが動きに元気があるとされる。手塚徳調教師は折り合い重視で田辺騎手に感触を確かめてもらったとし、力まずに走れればとしている。",
+    "direction": null,
+    "grade": "B"
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/keio-hai-nisai-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22204"
+   ],
+   "hosts": [
+    "keibanomiryoku.com",
+    "umasiru.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-07",
+   "race_id": "20261107_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-11-07T09:11:56+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/06/190000",
+    "https://www.keibanomiryoku.com/article/keio-hai-nisai-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22204"
+   ],
+   "kind": "horse",
+   "key": "10",
+   "said": {
+    "note": "最終は栗東CW4F52.5を馬なりで僚馬を楽に交わし0.1秒先着。反応が良く瞬発力を生かせる展開が向くとされる。前川調教師は落ち着かせることを中心に調整し、輸送も意識して体を増やしたとしている。",
+    "direction": null,
+    "grade": "B"
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/keio-hai-nisai-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22204"
+   ],
+   "hosts": [
+    "keibanomiryoku.com",
+    "umasiru.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-07",
+   "race_id": "20261107_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-11-07T09:11:56+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/06/190000",
+    "https://www.keibanomiryoku.com/article/keio-hai-nisai-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22204"
+   ],
+   "kind": "horse",
+   "key": "2",
+   "said": {
+    "note": "1週前は美浦ウッドで6F80.9の自己ベストを僚馬と併入、最終は5F68.2を馬なりで僚馬に0.1秒先着。伊藤圭調教師は順調で体調も良く動きは絶好、東京1400mの条件は良いとしている。",
+    "direction": "up",
+    "grade": "S"
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/keio-hai-nisai-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22204"
+   ],
+   "hosts": [
+    "keibanomiryoku.com",
+    "umasiru.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-07",
+   "race_id": "20261107_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-11-07T09:11:56+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/06/190000",
+    "https://www.keibanomiryoku.com/article/keio-hai-nisai-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22204"
+   ],
+   "kind": "horse",
+   "key": "3",
+   "said": {
+    "note": "最終は美浦坂路800m54.4の馬なり。動きは軽快だがどこかふわふわした内容で物足りないとされる。千葉調教師はまだ線が細いためサラッと仕上げたとし、マイルより1400mの方が競馬をしやすいとしている。",
+    "direction": "down",
+    "grade": "C"
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/keio-hai-nisai-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22204"
+   ],
+   "hosts": [
+    "keibanomiryoku.com",
+    "umasiru.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-07",
+   "race_id": "20261107_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-11-07T09:11:56+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/06/190000",
+    "https://www.keibanomiryoku.com/article/keio-hai-nisai-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22204"
+   ],
+   "kind": "horse",
+   "key": "4",
+   "said": {
+    "note": "最終は美浦坂路800m52.0の自己ベストを一杯に追って僚馬と併入。パワーがあり当日の馬場次第で激走も期待できるとされる。高柳瑞調教師は体が幼く成長はゆるやかだが1400mの条件は良いとしている。",
+    "direction": null,
+    "grade": "B"
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/keio-hai-nisai-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22204"
+   ],
+   "hosts": [
+    "keibanomiryoku.com",
+    "umasiru.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-07",
+   "race_id": "20261107_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-11-07T09:11:56+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/06/190000",
+    "https://www.keibanomiryoku.com/article/keio-hai-nisai-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22204"
+   ],
+   "kind": "horse",
+   "key": "5",
+   "said": {
+    "note": "最終は美浦ウッド6F82.4を強めで僚馬に0.4秒先着。発汗が見られ万全ではない様子とされる一方、仕上がりは良好とも評価。高柳瑞調教師は時計がかかったが問題なく前走の好調を維持としている。",
+    "direction": null,
+    "grade": "B"
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/keio-hai-nisai-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22204"
+   ],
+   "hosts": [
+    "keibanomiryoku.com",
+    "umasiru.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-07",
+   "race_id": "20261107_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-11-07T09:11:56+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/06/190000",
+    "https://www.keibanomiryoku.com/article/keio-hai-nisai-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22204"
+   ],
+   "kind": "horse",
+   "key": "6",
+   "said": {
+    "note": "最終は栗東坂路800m54.3を馬なりで僚馬を0.9秒追走し0.1秒先着。序盤に少し右へもたれたが立て直した。高橋亮調教師は能力は高いとし、左回りも合いそうだとしている。",
+    "direction": "up",
+    "grade": "A"
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/keio-hai-nisai-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22204"
+   ],
+   "hosts": [
+    "keibanomiryoku.com",
+    "umasiru.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-07",
+   "race_id": "20261107_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-11-07T09:11:56+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/06/190000",
+    "https://www.keibanomiryoku.com/article/keio-hai-nisai-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22204"
+   ],
+   "kind": "horse",
+   "key": "7",
+   "said": {
+    "note": "最終は美浦坂路800m55.9の馬なり。動きは安定するが馬体は細めとされる。黒崎助手は背中の状態が良く距離はもちそうだとしている。",
+    "direction": null,
+    "grade": "B"
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/keio-hai-nisai-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22204"
+   ],
+   "hosts": [
+    "keibanomiryoku.com",
+    "umasiru.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-07",
+   "race_id": "20261107_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-11-07T09:11:56+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/06/190000",
+    "https://www.keibanomiryoku.com/article/keio-hai-nisai-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22204"
+   ],
+   "kind": "horse",
+   "key": "8",
+   "said": {
+    "note": "1週前は美浦ウッド6F81.3の自己ベストで併入、最終は5F69.5を馬なりで僚馬に0.3秒先着。伊藤圭調教師は順調で最終の動きが良いとし、距離延長に期待を示している。",
+    "direction": "up",
+    "grade": "A"
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/keio-hai-nisai-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22204"
+   ],
+   "hosts": [
+    "keibanomiryoku.com",
+    "umasiru.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-07",
+   "race_id": "20261107_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-11-07T09:11:56+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/06/190000",
+    "https://www.keibanomiryoku.com/article/keio-hai-nisai-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22204"
+   ],
+   "kind": "horse",
+   "key": "9",
+   "said": {
+    "note": "約3か月ぶりの実戦で馬体はやや太めとされる。最終は美浦坂路6F85.6の馬なりでやや掛かり気味だったが踏み込みに力強さがあり良化を見せたと評価。菅原助手は精神面に不安があったが成長しているとしている。",
+    "direction": null,
+    "grade": "B"
+   },
+   "sources": [
+    "https://www.keibanomiryoku.com/article/keio-hai-nisai-stakes-2026-work-out.html",
+    "https://umasiru.com/archives/22204"
+   ],
+   "hosts": [
+    "keibanomiryoku.com",
+    "umasiru.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-07",
+   "race_id": "20261107_08_10",
+   "venue": "京都",
+   "race_num": 10,
+   "collected_at": "2026-11-07T09:11:56+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/06/190000"
+   ],
+   "kind": "going",
+   "key": "ダート",
+   "said": {
+    "surface": "ダート",
+    "state": "良",
+    "expected": "含水率は7%台で良馬場としては水分量が多い。枠は内〜フラット、直線の伸びはフラット、前後は展開次第と想定。想定時計 −1.6〜−1.0秒",
+    "expected_state": "良",
+    "summary": "京都ダートは金曜昼時点の発表が良だが含水率は7%台で水分量が多い。枠は内〜フラット、直線の伸びはフラット、前後は展開次第と想定されている。追い切りを無料で出している媒体は見つからなかった。"
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/06/190000"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-07",
+   "race_id": "20261107_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-11-07T09:11:56+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/06/190000"
+   ],
+   "kind": "going",
+   "key": "ダート",
+   "said": {
+    "surface": "ダート",
+    "state": "良",
+    "expected": "含水率は7%台で良馬場としては水分量が多い。枠は内〜フラット、直線の伸びはフラット、前後は展開次第と想定。想定時計 −1.6〜−1.0秒",
+    "expected_state": "良",
+    "summary": "室町S。京都ダートは金曜昼時点の発表が良だが含水率は7%台で水分量が多く、土曜は乾燥が進みそうとされている。重賞以外の追い切りを無料で出している媒体は見つからず、調教メモは取れなかった。"
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/06/190000"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work"
+   ],
+   "result": null
   }
  ]
 }
