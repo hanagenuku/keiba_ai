@@ -81,7 +81,7 @@
         "races": 10
       }
     ],
-    "workflow_run_at": "2026-11-08T09:34:35Z",
+    "workflow_run_at": "2026-11-08T12:04:28Z",
     "workflow_result": "success"
   },
   "web_sources": {
@@ -812,211 +812,7 @@
     },
     "groups": [
       {
-        "label": "9〜11R 全体",
-        "races": 289,
-        "bets": [
-          {
-            "type": "単勝",
-            "races": 289,
-            "hit": 72,
-            "hit_rate": 24.9,
-            "roi": 65.4,
-            "roi_cut1": 62.6,
-            "roi_cut3": 58.7,
-            "na": 0,
-            "top_pay": 830
-          },
-          {
-            "type": "複勝",
-            "races": 289,
-            "hit": 150,
-            "hit_rate": 51.9,
-            "roi": 73.5,
-            "roi_cut1": 72.2,
-            "roi_cut3": 70.3,
-            "na": 0,
-            "top_pay": 360
-          },
-          {
-            "type": "馬連",
-            "races": 289,
-            "hit": 26,
-            "hit_rate": 9.0,
-            "roi": 55.1,
-            "roi_cut1": 48.9,
-            "roi_cut3": 40.8,
-            "na": 0,
-            "top_pay": 1770
-          },
-          {
-            "type": "ワイド",
-            "races": 279,
-            "hit": 63,
-            "hit_rate": 22.6,
-            "roi": 67.0,
-            "roi_cut1": 63.7,
-            "roi_cut3": 59.4,
-            "na": 10,
-            "top_pay": 920
-          },
-          {
-            "type": "三連複",
-            "races": 289,
-            "hit": 23,
-            "hit_rate": 8.0,
-            "roi": 102.9,
-            "roi_cut1": 91.7,
-            "roi_cut3": 72.9,
-            "na": 0,
-            "top_pay": 3240
-          }
-        ],
-        "total": {
-          "type": "累計（全券種）",
-          "races": 1435,
-          "hit": 334,
-          "hit_rate": 23.3,
-          "roi": 72.8
-        }
-      },
-      {
-        "label": "　うち推奨（信頼度66以上）",
-        "races": 54,
-        "bets": [
-          {
-            "type": "単勝",
-            "races": 54,
-            "hit": 19,
-            "hit_rate": 35.2,
-            "roi": 76.5,
-            "roi_cut1": 68.7,
-            "roi_cut3": 56.9,
-            "na": 0,
-            "top_pay": 420
-          },
-          {
-            "type": "複勝",
-            "races": 54,
-            "hit": 34,
-            "hit_rate": 63.0,
-            "roi": 81.5,
-            "roi_cut1": 77.0,
-            "roi_cut3": 70.6,
-            "na": 0,
-            "top_pay": 240
-          },
-          {
-            "type": "馬連",
-            "races": 54,
-            "hit": 12,
-            "hit_rate": 22.2,
-            "roi": 112.2,
-            "roi_cut1": 89.1,
-            "roi_cut3": 59.8,
-            "na": 0,
-            "top_pay": 1250
-          },
-          {
-            "type": "ワイド",
-            "races": 52,
-            "hit": 20,
-            "hit_rate": 38.5,
-            "roi": 108.5,
-            "roi_cut1": 90.8,
-            "roi_cut3": 70.6,
-            "na": 2,
-            "top_pay": 920
-          },
-          {
-            "type": "三連複",
-            "races": 54,
-            "hit": 9,
-            "hit_rate": 16.7,
-            "roi": 127.2,
-            "roi_cut1": 97.8,
-            "roi_cut3": 56.3,
-            "na": 0,
-            "top_pay": 1590
-          }
-        ],
-        "total": {
-          "type": "累計（全券種）",
-          "races": 268,
-          "hit": 94,
-          "hit_rate": 35.1,
-          "roi": 101.1
-        }
-      },
-      {
-        "label": "　うち推奨以外",
-        "races": 235,
-        "bets": [
-          {
-            "type": "単勝",
-            "races": 235,
-            "hit": 53,
-            "hit_rate": 22.6,
-            "roi": 62.9,
-            "roi_cut1": 59.4,
-            "roi_cut3": 54.6,
-            "na": 0,
-            "top_pay": 830
-          },
-          {
-            "type": "複勝",
-            "races": 235,
-            "hit": 116,
-            "hit_rate": 49.4,
-            "roi": 71.6,
-            "roi_cut1": 70.1,
-            "roi_cut3": 67.7,
-            "na": 0,
-            "top_pay": 360
-          },
-          {
-            "type": "馬連",
-            "races": 235,
-            "hit": 14,
-            "hit_rate": 6.0,
-            "roi": 41.9,
-            "roi_cut1": 34.4,
-            "roi_cut3": 25.1,
-            "na": 0,
-            "top_pay": 1770
-          },
-          {
-            "type": "ワイド",
-            "races": 227,
-            "hit": 43,
-            "hit_rate": 18.9,
-            "roi": 57.4,
-            "roi_cut1": 54.7,
-            "roi_cut3": 49.8,
-            "na": 8,
-            "top_pay": 620
-          },
-          {
-            "type": "三連複",
-            "races": 235,
-            "hit": 14,
-            "hit_rate": 6.0,
-            "roi": 97.4,
-            "roi_cut1": 83.6,
-            "roi_cut3": 60.4,
-            "na": 0,
-            "top_pay": 3240
-          }
-        ],
-        "total": {
-          "type": "累計（全券種）",
-          "races": 1167,
-          "hit": 240,
-          "hit_rate": 20.6,
-          "roi": 66.3
-        }
-      },
-      {
-        "label": "推奨レース 全体（信頼度66以上）",
+        "label": "推奨レース（信頼度66以上）",
         "races": 264,
         "bets": [
           {
@@ -1081,6 +877,74 @@
           "hit": 446,
           "hit_rate": 33.9,
           "roi": 115.6
+        }
+      },
+      {
+        "label": "　うち9〜11R",
+        "races": 54,
+        "bets": [
+          {
+            "type": "単勝",
+            "races": 54,
+            "hit": 19,
+            "hit_rate": 35.2,
+            "roi": 76.5,
+            "roi_cut1": 68.7,
+            "roi_cut3": 56.9,
+            "na": 0,
+            "top_pay": 420
+          },
+          {
+            "type": "複勝",
+            "races": 54,
+            "hit": 34,
+            "hit_rate": 63.0,
+            "roi": 81.5,
+            "roi_cut1": 77.0,
+            "roi_cut3": 70.6,
+            "na": 0,
+            "top_pay": 240
+          },
+          {
+            "type": "馬連",
+            "races": 54,
+            "hit": 12,
+            "hit_rate": 22.2,
+            "roi": 112.2,
+            "roi_cut1": 89.1,
+            "roi_cut3": 59.8,
+            "na": 0,
+            "top_pay": 1250
+          },
+          {
+            "type": "ワイド",
+            "races": 52,
+            "hit": 20,
+            "hit_rate": 38.5,
+            "roi": 108.5,
+            "roi_cut1": 90.8,
+            "roi_cut3": 70.6,
+            "na": 2,
+            "top_pay": 920
+          },
+          {
+            "type": "三連複",
+            "races": 54,
+            "hit": 9,
+            "hit_rate": 16.7,
+            "roi": 127.2,
+            "roi_cut1": 97.8,
+            "roi_cut3": 56.3,
+            "na": 0,
+            "top_pay": 1590
+          }
+        ],
+        "total": {
+          "type": "累計（全券種）",
+          "races": 268,
+          "hit": 94,
+          "hit_rate": 35.1,
+          "roi": 101.1
         }
       },
       {
@@ -1149,6 +1013,74 @@
           "hit": 352,
           "hit_rate": 33.6,
           "roi": 119.3
+        }
+      },
+      {
+        "label": "9〜11R の推奨漏れ",
+        "races": 235,
+        "bets": [
+          {
+            "type": "単勝",
+            "races": 235,
+            "hit": 53,
+            "hit_rate": 22.6,
+            "roi": 62.9,
+            "roi_cut1": 59.4,
+            "roi_cut3": 54.6,
+            "na": 0,
+            "top_pay": 830
+          },
+          {
+            "type": "複勝",
+            "races": 235,
+            "hit": 116,
+            "hit_rate": 49.4,
+            "roi": 71.6,
+            "roi_cut1": 70.1,
+            "roi_cut3": 67.7,
+            "na": 0,
+            "top_pay": 360
+          },
+          {
+            "type": "馬連",
+            "races": 235,
+            "hit": 14,
+            "hit_rate": 6.0,
+            "roi": 41.9,
+            "roi_cut1": 34.4,
+            "roi_cut3": 25.1,
+            "na": 0,
+            "top_pay": 1770
+          },
+          {
+            "type": "ワイド",
+            "races": 227,
+            "hit": 43,
+            "hit_rate": 18.9,
+            "roi": 57.4,
+            "roi_cut1": 54.7,
+            "roi_cut3": 49.8,
+            "na": 8,
+            "top_pay": 620
+          },
+          {
+            "type": "三連複",
+            "races": 235,
+            "hit": 14,
+            "hit_rate": 6.0,
+            "roi": 97.4,
+            "roi_cut1": 83.6,
+            "roi_cut3": 60.4,
+            "na": 0,
+            "top_pay": 3240
+          }
+        ],
+        "total": {
+          "type": "累計（全券種）",
+          "races": 1167,
+          "hit": 240,
+          "hit_rate": 20.6,
+          "roi": 66.3
         }
       },
       {
@@ -2208,102 +2140,34 @@
       "settled": true,
       "groups": [
         {
-          "label": "9〜11R 全体",
-          "races": 9,
+          "label": "推奨レース（信頼度66以上）",
+          "races": 5,
           "bets": [
             {
               "type": "単勝",
-              "races": 9,
-              "hit": 3,
-              "hit_rate": 33.3,
-              "roi": 135.6,
-              "roi_cut1": 73.3,
-              "roi_cut3": 0.0,
-              "na": 0,
-              "top_pay": 560
-            },
-            {
-              "type": "複勝",
-              "races": 9,
-              "hit": 5,
-              "hit_rate": 55.6,
-              "roi": 91.1,
-              "roi_cut1": 61.1,
-              "roi_cut3": 24.4,
-              "na": 0,
-              "top_pay": 270
-            },
-            {
-              "type": "馬連",
-              "races": 9,
+              "races": 5,
               "hit": 1,
-              "hit_rate": 11.1,
-              "roi": 30.0,
+              "hit_rate": 20.0,
+              "roi": 40.0,
               "roi_cut1": 0.0,
               "roi_cut3": 0.0,
               "na": 0,
-              "top_pay": 270
+              "top_pay": 200
             },
             {
-              "type": "ワイド",
-              "races": 8,
-              "hit": 3,
-              "hit_rate": 37.5,
-              "roi": 96.2,
-              "roi_cut1": 50.0,
-              "roi_cut3": 0.0,
-              "na": 1,
-              "top_pay": 370
-            },
-            {
-              "type": "三連複",
-              "races": 9,
+              "type": "複勝",
+              "races": 5,
               "hit": 2,
-              "hit_rate": 22.2,
-              "roi": 333.3,
-              "roi_cut1": 78.9,
-              "roi_cut3": 0.0,
-              "na": 0,
-              "top_pay": 2290
-            }
-          ],
-          "total": {
-            "type": "累計（全券種）",
-            "races": 44,
-            "hit": 14,
-            "hit_rate": 31.8,
-            "roi": 138.2
-          }
-        },
-        {
-          "label": "　うち推奨（信頼度66以上）",
-          "races": 2,
-          "bets": [
-            {
-              "type": "単勝",
-              "races": 2,
-              "hit": 0,
-              "hit_rate": 0.0,
-              "roi": 0.0,
-              "roi_cut1": 0.0,
-              "roi_cut3": 0.0,
-              "na": 0,
-              "top_pay": null
-            },
-            {
-              "type": "複勝",
-              "races": 2,
-              "hit": 1,
-              "hit_rate": 50.0,
-              "roi": 55.0,
-              "roi_cut1": 0.0,
+              "hit_rate": 40.0,
+              "roi": 44.0,
+              "roi_cut1": 22.0,
               "roi_cut3": 0.0,
               "na": 0,
               "top_pay": 110
             },
             {
               "type": "馬連",
-              "races": 2,
+              "races": 5,
               "hit": 0,
               "hit_rate": 0.0,
               "roi": 0.0,
@@ -2314,10 +2178,10 @@
             },
             {
               "type": "ワイド",
-              "races": 1,
+              "races": 4,
               "hit": 1,
-              "hit_rate": 100.0,
-              "roi": 230.0,
+              "hit_rate": 25.0,
+              "roi": 57.5,
               "roi_cut1": 0.0,
               "roi_cut3": 0.0,
               "na": 1,
@@ -2325,10 +2189,10 @@
             },
             {
               "type": "三連複",
-              "races": 2,
+              "races": 5,
               "hit": 1,
-              "hit_rate": 50.0,
-              "roi": 355.0,
+              "hit_rate": 20.0,
+              "roi": 142.0,
               "roi_cut1": 0.0,
               "roi_cut3": 0.0,
               "na": 0,
@@ -2337,10 +2201,78 @@
           ],
           "total": {
             "type": "累計（全券種）",
-            "races": 9,
-            "hit": 3,
-            "hit_rate": 33.3,
-            "roi": 116.7
+            "races": 24,
+            "hit": 5,
+            "hit_rate": 20.8,
+            "roi": 56.7
+          }
+        },
+        {
+          "label": "9〜11R の推奨漏れ",
+          "races": 7,
+          "bets": [
+            {
+              "type": "単勝",
+              "races": 7,
+              "hit": 3,
+              "hit_rate": 42.9,
+              "roi": 174.3,
+              "roi_cut1": 94.3,
+              "roi_cut3": 0.0,
+              "na": 0,
+              "top_pay": 560
+            },
+            {
+              "type": "複勝",
+              "races": 7,
+              "hit": 4,
+              "hit_rate": 57.1,
+              "roi": 101.4,
+              "roi_cut1": 62.9,
+              "roi_cut3": 15.7,
+              "na": 0,
+              "top_pay": 270
+            },
+            {
+              "type": "馬連",
+              "races": 7,
+              "hit": 1,
+              "hit_rate": 14.3,
+              "roi": 38.6,
+              "roi_cut1": 0.0,
+              "roi_cut3": 0.0,
+              "na": 0,
+              "top_pay": 270
+            },
+            {
+              "type": "ワイド",
+              "races": 7,
+              "hit": 2,
+              "hit_rate": 28.6,
+              "roi": 77.1,
+              "roi_cut1": 24.3,
+              "roi_cut3": 0.0,
+              "na": 0,
+              "top_pay": 370
+            },
+            {
+              "type": "三連複",
+              "races": 7,
+              "hit": 1,
+              "hit_rate": 14.3,
+              "roi": 327.1,
+              "roi_cut1": 0.0,
+              "roi_cut3": 0.0,
+              "na": 0,
+              "top_pay": 2290
+            }
+          ],
+          "total": {
+            "type": "累計（全券種）",
+            "races": 35,
+            "hit": 11,
+            "hit_rate": 31.4,
+            "roi": 143.7
           }
         },
         {
@@ -3658,5 +3590,5 @@
       "top3_rate": 16.4
     }
   },
-  "generated_at": "2026-11-08 12:04"
+  "generated_at": "2026-11-08 21:15"
 }
