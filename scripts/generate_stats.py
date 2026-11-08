@@ -149,7 +149,25 @@ def _axis_conf_map(conn):
 
 
 def calc_scope_accuracy(conn):
-    """商品の対象範囲（各競馬場9〜11R ＋ 自信のある推奨レース）の的中実績。
+    """商品の対象範囲（推奨レース ＋ 9〜11R）の的中実績。
+
+    🟢 **2026-11-08 にユーザーが「その日全体からの推奨レース表示に変えてください」**
+       と指示した（成績ページの「うち推奨（信頼度66以上）」が 9〜11R の**入れ子**に
+       なっていて、その日の推奨レースのうち 9〜11R に入るものしか出ていなかった）。
+       実例 2026-11-08: その日の推奨は 5本あるのに、カードには 2本しか出ていなかった。
+
+       🔴 これは 2026-11-04 の改正（`scope.article_kind`）への**追従漏れ**。
+          あのとき記事側は「有料＝推奨（レース番号を問わない）／
+          無料＝9〜11R の推奨漏れ」に変えたのに、集計側はこの関数が
+          2026-10-20 に作った 9〜11R 中心の入れ子のままだった。
+          → グループを `article_kind` の3分岐と同じ形に揃える:
+              推奨レース（レース番号を問わない）／9〜11R の推奨漏れ／全レース
+
+       ⚠ `scope.in_scope()` は**触っていない**（集合として同一のまま）。
+          `danger_log` が `in_scope` を上書き禁止の台帳に書いているため、
+          意味が動くと過去の記録と黙って比べられなくなる（row 40 と同じ理由）。
+       ⚠ `scope_races`（＝カードの「うち商品の対象 N R」）も変わらない。
+          対象 = 推奨 ∪ 9〜11R で、改正前後で同じ集合。
 
     ユーザー依頼（2026-10-19 → 10-20 に全券種へ拡張）:
         「各競馬場9から11レース及び自信のある推奨レースの的中実績、
@@ -209,14 +227,15 @@ def calc_scope_accuracy(conn):
 
     main = [r for r in usable if _is_main(r)]
     rec  = [r for r in usable if _is_rec(r)]
+    # 9〜11R のうち推奨に入らなかったぶん（＝ article_kind の FREE）
+    missed = [r for r in main if not _is_rec(r)]
     thr  = scope.FLAT_MIN_CONF
 
     groups = [
-        _group(main, divs, '9〜11R 全体'),
-        _group([r for r in main if _is_rec(r)], divs, f'　うち推奨（信頼度{thr}以上）'),
-        _group([r for r in main if not _is_rec(r)], divs, '　うち推奨以外'),
-        _group(rec, divs, f'推奨レース 全体（信頼度{thr}以上）'),
+        _group(rec, divs, f'推奨レース（信頼度{thr}以上）'),
+        _group([r for r in rec if _is_main(r)], divs, '　うち9〜11R'),
         _group([r for r in rec if not _is_main(r)], divs, '　うち平場（9〜11R以外）'),
+        _group(missed, divs, '9〜11R の推奨漏れ'),
         _group(usable, divs, '全レース'),
     ]
 
@@ -303,7 +322,6 @@ def calc_scope_accuracy(conn):
     if day_dates:
         d = day_dates[-1]
         rs = _day_rows(d)
-        dmain = [r for r in rs if _is_main(r)]
         latest_day = {
             'date':        d,
             'venues':      _venues_of(rs),
@@ -311,9 +329,10 @@ def calc_scope_accuracy(conn):
             'scope_races': len([r for r in rs if _is_main(r) or _is_rec(r)]),
             'settled':     _settled(rs),
             'groups': [
-                _group(dmain, divs, '9〜11R 全体'),
-                _group([r for r in dmain if _is_rec(r)], divs,
-                       f'　うち推奨（信頼度{thr}以上）'),
+                _group([r for r in rs if _is_rec(r)], divs,
+                       f'推奨レース（信頼度{thr}以上）'),
+                _group([r for r in rs if _is_main(r) and not _is_rec(r)], divs,
+                       '9〜11R の推奨漏れ'),
                 _group(rs, divs, '全レース'),
             ],
         }

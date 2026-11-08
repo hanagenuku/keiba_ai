@@ -257,11 +257,10 @@ class TestGrouping:
 
         sa = calc_scope_accuracy(conn)
         g = {x['label'].strip(): x for x in sa['groups']}
-        assert g['9〜11R 全体']['races'] == 3
-        assert g[f'うち推奨（信頼度{scope.FLAT_MIN_CONF}以上）']['races'] == 1
-        assert g['うち推奨以外']['races'] == 2
-        assert g[f'推奨レース 全体（信頼度{scope.FLAT_MIN_CONF}以上）']['races'] == 2
+        assert g[f'推奨レース（信頼度{scope.FLAT_MIN_CONF}以上）']['races'] == 2
+        assert g['うち9〜11R']['races'] == 1
         assert g['うち平場（9〜11R以外）']['races'] == 1
+        assert g['9〜11R の推奨漏れ']['races'] == 2
         assert g['全レース']['races'] == 5
 
         venue = {v['venue']: v for v in sa['by_venue']}['東京']
@@ -280,7 +279,7 @@ class TestGrouping:
         _race(conn, '20261018_05_01', '東京', 1, scope.FLAT_MIN_CONF / 100.0,
               rl=rl, pays=_all_pays(rl, fukusho=110))
         sa = calc_scope_accuracy(conn)
-        rec = [g for g in sa['groups'] if g['label'].startswith('推奨レース 全体')][0]
+        rec = [g for g in sa['groups'] if g['label'].startswith('推奨レース')][0]
         assert rec['races'] == 1
         assert scope.in_scope({'r': 1, 'conf': scope.FLAT_MIN_CONF})[0] is True
 
@@ -302,8 +301,9 @@ class TestEvaluableRowsOnly:
         sa = calc_scope_accuracy(conn)
         assert sa['excluded']['no_axis'] == 1
         assert sa['races'] == 1
-        main = [g for g in sa['groups'] if g['label'] == '9〜11R 全体'][0]
-        fuku = [b for b in main['bets'] if b['type'] == '複勝'][0]
+        # 信頼度60（66未満）の9Rなので「9〜11R の推奨漏れ」に入る
+        miss = [g for g in sa['groups'] if g['label'] == '9〜11R の推奨漏れ'][0]
+        fuku = [b for b in miss['bets'] if b['type'] == '複勝'][0]
         assert fuku['races'] == 1 and fuku['hit_rate'] == 100.0
 
     def test_race_without_conf_is_excluded(self, tmp_path):
@@ -407,12 +407,14 @@ class TestLatestDayIsSeparateFromCumulative:
     def test_latest_day_does_not_mix_in_other_days(self, tmp_path):
         """当日分に前の開催日の的中が混ざらないこと（この取り違えが一番こわい）。"""
         sa = calc_scope_accuracy(self._two_days(tmp_path))
-        main = sa['latest_day']['groups'][0]
-        fuku = [b for b in main['bets'] if b['type'] == '複勝'][0]
+        top = sa['latest_day']['groups'][0]
+        assert top['label'].startswith('推奨レース')
+        fuku = [b for b in top['bets'] if b['type'] == '複勝'][0]
         assert fuku['races'] == 2
         assert fuku['hit'] == 0, '10-24 の的中が 10-31 に混ざっている'
         # 累計のほうは両日ぶん入っている
-        cum = [g for g in sa['groups'] if g['label'] == '9〜11R 全体'][0]
+        cum = [g for g in sa['groups']
+               if g['label'].startswith('推奨レース')][0]
         cum_fuku = [b for b in cum['bets'] if b['type'] == '複勝'][0]
         assert cum_fuku['races'] == 4 and cum_fuku['hit'] == 2
 
@@ -497,3 +499,112 @@ class TestPageSeparatesTodayFromCumulative:
         html = self._html()
         assert 'sa.daily' in html
         assert '開催日' in html
+
+
+class TestRecommendedIsDayWide:
+    """🟢 2026-11-08 ユーザー指示「その日全体からの推奨レース表示に変えてください」。
+
+    それまで成績ページの推奨は「9〜11R 全体」の**入れ子**で、その日の推奨のうち
+    9〜11R に入るものしか出ていなかった（実例 2026-11-08: 推奨5本中2本しか
+    出ていない）。2026-11-04 に記事側（`scope.article_kind`）を
+    「有料＝推奨・レース番号を問わない／無料＝9〜11R の推奨漏れ」に改めたのに、
+    集計側が追従していなかったための食い違い。
+
+    ここで固定するのは**どの集合を数えているか**であって数字ではない。
+    """
+
+    @staticmethod
+    def _one_day(tmp_path):
+        """同じ日に4パターンを置く。
+
+            9R  信頼度70 → 推奨（9〜11R）        複勝のみ払戻
+            3R  信頼度70 → 推奨（平場）          複勝＋単勝の払戻  ← 入れ子だと落ちる
+            10R 信頼度50 → 9〜11R の推奨漏れ      複勝のみ払戻
+            2R  信頼度40 → 記事にしない          複勝のみ払戻
+        """
+        conn = _db(tmp_path)
+        rl = (1, 2, 3)
+        d = '2026-11-08'
+        _race(conn, '20261108_05_09', '東京', 9, 0.70, rl=rl,
+              pays=_all_pays(rl, fukusho=130), date=d)
+        _race(conn, '20261108_05_03', '東京', 3, 0.70, rl=rl,
+              pays=_all_pays(rl, fukusho=140, tansho=320), date=d)
+        _race(conn, '20261108_05_10', '東京', 10, 0.50, rl=rl,
+              pays=_all_pays(rl, fukusho=150), date=d)
+        _race(conn, '20261108_05_02', '東京', 2, 0.40, rl=rl,
+              pays=_all_pays(rl, fukusho=160), date=d)
+        return conn
+
+    def test_latest_day_recommended_group_covers_the_whole_day(self, tmp_path):
+        """当日分の先頭が「推奨レース」で、平場の推奨も入っていること。"""
+        sa = calc_scope_accuracy(self._one_day(tmp_path))
+        g0 = sa['latest_day']['groups'][0]
+        assert g0['label'] == f'推奨レース（信頼度{scope.FLAT_MIN_CONF}以上）'
+        assert g0['races'] == 2, '9〜11R の中だけを数えている（入れ子のまま）'
+
+        # 単勝の払戻を持つのは平場3Rだけ。ここが 1 なら平場の推奨が入っている
+        tan = [b for b in g0['bets'] if b['type'] == '単勝'][0]
+        assert tan['hit'] == 1 and tan['races'] == 1
+
+    def test_latest_day_shows_the_missed_main_races_separately(self, tmp_path):
+        sa = calc_scope_accuracy(self._one_day(tmp_path))
+        labels = [g['label'] for g in sa['latest_day']['groups']]
+        assert labels == [f'推奨レース（信頼度{scope.FLAT_MIN_CONF}以上）',
+                          '9〜11R の推奨漏れ', '全レース']
+        g = {x['label']: x for x in sa['latest_day']['groups']}
+        assert g['9〜11R の推奨漏れ']['races'] == 1
+        assert g['全レース']['races'] == 4
+
+    def test_no_group_is_nested_under_the_main_races_any_more(self, tmp_path):
+        """「うち推奨」という 9〜11R 入れ子のラベルが残っていないこと。"""
+        sa = calc_scope_accuracy(self._one_day(tmp_path))
+        for g in sa['groups'] + sa['latest_day']['groups']:
+            assert 'うち推奨' not in g['label'], g['label']
+
+    def test_cumulative_puts_the_recommended_group_first(self, tmp_path):
+        sa = calc_scope_accuracy(self._one_day(tmp_path))
+        labels = [g['label'] for g in sa['groups']]
+        assert labels[0].startswith('推奨レース')
+        assert labels.index('9〜11R の推奨漏れ') > 0
+        g = {x['label'].strip(): x for x in sa['groups']}
+        assert g[f'推奨レース（信頼度{scope.FLAT_MIN_CONF}以上）']['races'] == 2
+        assert g['うち9〜11R']['races'] == 1
+        assert g['うち平場（9〜11R以外）']['races'] == 1
+
+    def test_groups_match_article_kind_race_by_race(self, tmp_path):
+        """🔑 集計の分け方が `scope.article_kind` と一致すること。
+
+        記事の振り分けと成績の集計が2箇所に分かれて静かにずれるのを防ぐ
+        （2026-10-16「危険な人気馬」で同じ形の食い違いを踏んでいる）。
+        """
+        conn = self._one_day(tmp_path)
+        confs = _axis_conf_map(conn)
+        rows = conn.execute(
+            'SELECT race_id, race_num FROM shadow_bets').fetchall()
+        paid, free = set(), set()
+        for r in rows:
+            kind, _ = scope.article_kind(
+                {'r': r['race_num'], 'conf': confs[r['race_id']]})
+            if kind == scope.PAID:
+                paid.add(r['race_num'])
+            elif kind == scope.FREE:
+                free.add(r['race_num'])
+        assert paid == {9, 3} and free == {10}
+
+        g = {x['label']: x for x in calc_scope_accuracy(conn)['latest_day']['groups']}
+        assert g[f'推奨レース（信頼度{scope.FLAT_MIN_CONF}以上）']['races'] == len(paid)
+        assert g['9〜11R の推奨漏れ']['races'] == len(free)
+
+    def test_scope_races_is_unchanged(self, tmp_path):
+        """⚠ 対象 = 推奨 ∪ 9〜11R は改正前後で同じ集合。ここは動かさない。"""
+        sa = calc_scope_accuracy(self._one_day(tmp_path))
+        assert sa['latest_day']['scope_races'] == 3      # 9R・3R・10R
+        g = {x['label']: x for x in sa['latest_day']['groups']}
+        assert (g[f'推奨レース（信頼度{scope.FLAT_MIN_CONF}以上）']['races']
+                + g['9〜11R の推奨漏れ']['races']
+                == sa['latest_day']['scope_races'])
+
+    def test_page_explains_that_recommended_is_day_wide(self):
+        html = open(os.path.join(BASE, 'index.html'), encoding='utf-8').read()
+        assert 'その日の全レースから拾います' in html
+        assert '9〜11R の推奨漏れ' in html
