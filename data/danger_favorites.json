@@ -1,6 +1,6 @@
 {
  "schema_version": 1,
- "updated_at": "2026-11-08T09:06:50.215457+09:00",
+ "updated_at": "2026-11-08T11:27:28.590752+09:00",
  "entries": [
   {
    "date": "2026-10-10",
@@ -2015,6 +2015,27 @@
    "snapshot": "2026-11-08T08:52:04.735927+09:00",
    "odds_coverage": 0.971,
    "recorded_at": "2026-11-08T09:06:50.215192+09:00",
+   "result": null
+  },
+  {
+   "date": "2026-11-08",
+   "race_id": "20261108_03_12",
+   "venue": "福島",
+   "race_num": 12,
+   "race_name": "3歳以上1勝クラス",
+   "num": 9,
+   "name": "ジェムシリカ",
+   "pop": 1,
+   "solo_rank": 10,
+   "rl_rank": 1,
+   "odds": 3.9,
+   "conf": 50,
+   "verdict": "skip",
+   "in_scope": false,
+   "scope_reason": "平場でレース信頼度50（66未満）",
+   "snapshot": "2026-11-08T11:06:23.525005+09:00",
+   "odds_coverage": 1.0,
+   "recorded_at": "2026-11-08T11:27:28.590576+09:00",
    "result": null
   },
   {
