@@ -1111,6 +1111,28 @@ function updateOddsAndEV(race, freshOdds) {
     allHorses.slice()
       .sort((a, b) => (b.tan_pct || 0) - (a.tan_pct || 0))
       .forEach((h, i) => { h.rl_rank = i + 1; });
+
+    // 🔴 2026-11-08 追加。RL順位を振り直したら ◎本命 も振り直す。
+    //   ここが漏れていたため、直前オッズを押したあと ◎ と行ハイライトが
+    //   「朝のRL1」に貼り付いたまま残っていた。実例: 2026-11-08 福島12R。
+    //   朝11:06 は #9 ジェムシリカ 3.9倍・1番人気でRL1だったが、15:56 には
+    //   8.5倍・4番人気まで流れてRL4になり、RL1は #6 に移っていた。
+    //   それでも ◎ は #9 のままで、AI+市列のツールチップ
+    //   「◎が付いている馬がこの列の1位です」が嘘になっていた。
+    //   2026-07-26② で勝率・複勝率・EVの据え置きを直したときの漏れ。
+    //   ⚠ 買い目は honmei を読まない（recalcGumbelBets は rl_rank を読む）ので
+    //     これは表示だけの修正。買い目・軸・推奨の判定は1つも変わらない。
+    if (race.honmei) {
+      const h1 = allHorses.find(h => h.rl_rank === 1);
+      if (h1) {
+        if (race._morning_honmei == null) race._morning_honmei = race.honmei.n;
+        race.honmei = Object.assign({}, race.honmei, {
+          n: h1.n, name: h1.name,
+          odds: h1.odds || 0,
+          style: h1.style || race.honmei.style,
+        });
+      }
+    }
   }
 
   for (const h of allHorses) {
