@@ -173,6 +173,27 @@ for (const c of fx.cases) {
   assert.strictEqual(recalcAxisBets(r3), false, 'オッズ2頭で組み直した');
   same(r3.gumbel_bets, morning, 'オッズ2頭で朝の買い目を壊した');
 
+  // 軸(RL1)のオッズが取れていない（取消等）。ここは guard を通り抜けて
+  // buildAxisBetsJS まで行くが、軸を含むペアの推定配当が1つも作れないので
+  // total_points が 0 になる。空の買い目で朝の買い目を上書きしてはいけない。
+  const r3b = { horses: [
+      { n: 1, name: 'A', rl_rank: 1, odds: 0,    ability_margin: 0.9 },
+      { n: 2, name: 'B', rl_rank: 2, odds: 3.0,  ability_margin: 0.4 },
+      { n: 3, name: 'C', rl_rank: 3, odds: 9.0,  ability_margin: -0.3 },
+      { n: 4, name: 'D', rl_rank: 4, odds: 14.0, ability_margin: -0.7 }],
+    gumbel_bets: morning, _ax_bms: [0, 0, 0, 0] };
+  assert.strictEqual(recalcAxisBets(r3b), false, '軸のオッズ欠損で組み直した');
+  same(r3b.gumbel_bets, morning, '軸のオッズ欠損で朝の買い目を壊した');
+
+  // rl_rank が無い（サーバが順位を出していない古い latest.json）
+  const r3c = { horses: [
+      { n: 1, rl_rank: null, odds: 3.0,  ability_margin: 0.4 },
+      { n: 2, rl_rank: null, odds: 9.0,  ability_margin: -0.3 },
+      { n: 3, rl_rank: null, odds: 14.0, ability_margin: -0.7 }],
+    gumbel_bets: morning, _ax_bms: [0, 0, 0] };
+  assert.strictEqual(recalcAxisBets(r3c), false, 'rl_rank なしで組み直した');
+  same(r3c.gumbel_bets, morning, 'rl_rank なしで朝の買い目を壊した');
+
   // サーバが軸1頭ベース買い目を出していないレース（gumbel_bets が無い）
   const r4 = { horses: [{ n: 1, rl_rank: 1, odds: 2.0, ability_margin: 0.5 },
                         { n: 2, rl_rank: 2, odds: 9.0, ability_margin: -0.5 },
