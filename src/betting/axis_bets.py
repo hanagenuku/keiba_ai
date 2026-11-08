@@ -52,6 +52,16 @@
 表示には必ず「検証中」と明記すること。
 """
 
+# 🔴 ここから下の定数と選び方は index.html の JS にも**移植してある**
+#   （`recalcAxisBets` / `buildAxisBetsJS`。直前オッズ取得後に軸が入れ替わっても
+#    買い目が朝の軸のまま凍結される問題を 2026-11-08 に直したため）。
+#   二重実装なので、**片方だけ変えると黙って食い違う**（2026-08-09 に実際に
+#   起きた事故）。歯止めを2つ置いてある:
+#     tests/test_axis_bets_exact.py  … 定数をソースレベルで突合
+#     tests/test_axis_bets_resync.mjs … 買い目そのものを 1e-9 まで突合
+#   値を変えるときは Python / JS / フィクスチャ（tests/make_axis_bets_crosscheck.py）
+#   の3つを同時に直すこと。
+
 # ── 中穴の定義 ───────────────────────────────────────────────────────────
 # 実測したオッズ帯（ワイド1点の回収率 / 高配当1本抜き）:
 #   3〜7倍   71.8% / 67.9%     7〜15倍  99.2% / 82.6%
@@ -264,13 +274,37 @@ def build_axis_bets(scored, probs, odds_map,
 
 
 def make_axis_bets(scored, race, base_dir=None, market_odds_map=None,
-                   n_sims=3000):
-    """軸1頭ベースの買い目を、シミュレーションと推定配当込みで組む。
+                   n_sims=None):
+    """軸1頭ベースの買い目を、券種確率と推定配当込みで組む。
 
     `make_bets_v2` と同じ入力で呼べるようにしてある。
+
+    🔴 2026-11-08: 券種確率・推定配当をモンテカルロから **Plackett-Luce の
+    厳密式** に替えた（`src/betting/pl_exact.py`）。理由2つ:
+      ① 同じ入力で実行ごとに答えが変わっていた（`simulate_race` は
+         `seed=None`）。実測（2026-11-08 の34レース・各5回）で三連複の
+         順序は5/5回ばらつき、推定配当は三連複で中央値 10.4% / 最大 362%
+         ずれ、合成オッズも 1.2倍/1.3倍と揺れていた。**商品の画面に出る
+         数字が再現しない**のは精度の話ではなく記録の話として許容できない
+         （2026-10-07 の脚質 PYTHONHASHSEED と同じ扱い）。
+      ② 直前オッズ取得後にクライアント側（index.html）で軸ごと組み直す
+         には、JS と Python が**同じ数字**を出せなければならない。乱数が
+         違えば原理的に突合できず、「二重実装が黙って食い違う」
+         （2026-08-09 に実際に起きた事故）を検出する手段が無い。
+
+    ⚠ 変えたのは確率の計算方法だけ。買い目の選び方（軸=RL1 / 中穴=単勝
+      7〜30倍の cal_prob 降順 / 合成オッズ3.0 / 点数上限）は1つも変えて
+      いない。閾値も動かしていない。
+    ⚠ 実測の差（2026-11-08・34レース）: 三連複とワイドの**点の集合は
+      34/34レースで一致**。馬連だけ 6/34レースで1点入れ替わった——
+      あちらは確率の降順で貪欲に採るので、MC の誤差が候補間の差より
+      大きく**どの組を買うかがノイズで決まっていた**。
+    ⚠ 回収率が上がる根拠はない。ばらつきを消しただけで期待値は動かない。
+
+    `n_sims` は後方互換のために受け取るが使わない。
     """
-    from src.betting.race_simulator import simulate_race, calc_ticket_probabilities
-    from src.betting.payout_estimator import estimate_payouts_from_win_odds
+    from src.betting.pl_exact import (exact_ticket_probabilities,
+                                      exact_payouts_from_win_odds)
     from src.betting.bet_optimizer import (_load_gumbel_rating_temperature,
                                            DEFAULT_GUMBEL_RATING_T)
 
@@ -279,8 +313,7 @@ def make_axis_bets(scored, race, base_dir=None, market_odds_map=None,
     T = (_load_gumbel_rating_temperature(base_dir) if base_dir
          else DEFAULT_GUMBEL_RATING_T)
     ratings = [float(h.get('rating', 0.0) or 0.0) / T for h in scored]
-    orders = simulate_race(ratings, n_sims=n_sims)
-    probs = calc_ticket_probabilities(orders, horse_nums)
+    probs = exact_ticket_probabilities(ratings, horse_nums)
 
     real = (market_odds_map or {}).get(race.get('id', ''), {})
     if real:
@@ -288,6 +321,6 @@ def make_axis_bets(scored, race, base_dir=None, market_odds_map=None,
                     if i.get('tansho', 0) > 0}
     else:
         win_odds = {_num(h): _win_odds(h) for h in scored if _win_odds(h) > 0}
-    odds_map = estimate_payouts_from_win_odds(win_odds, n_sims=min(n_sims, 10000))
+    odds_map = exact_payouts_from_win_odds(win_odds)
 
     return build_axis_bets(scored, probs, odds_map), probs, odds_map

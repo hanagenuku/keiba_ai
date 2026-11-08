@@ -247,9 +247,13 @@ def test_notes_do_not_change_probabilities_or_bets(tmp_path):
         assert a.get(key) == b.get(key), f'web見解が {key} を変えている'
     assert a['horses'] == b['horses'], 'web見解が馬ごとの数字を変えている'
 
-    # gumbel_bets（軸1頭ベース）は make_axis_bets が 3,000回のモンテカルロを
-    # 回すので、推定配当・推定確率は**この層と無関係に**実行ごとに揺れる。
-    # 比較するのは「どの馬を何点いくらで買うか」＝決定的な部分だけにする。
+    # gumbel_bets（軸1頭ベース）は 2026-11-08 に Plackett-Luce の厳密式へ
+    # 替えて決定的になった（それまでは make_axis_bets が seed なしの
+    # モンテカルロを回すので推定配当・推定確率が実行ごとに揺れ、
+    # 「どの馬を何点いくらで買うか」だけを比べるしかなかった）。
+    # いまは推定配当・推定確率まで含めて丸ごと一致しなければならない。
+    assert a['gumbel_bets'] == b['gumbel_bets'], \
+        'web見解が軸1頭ベース買い目を変えている'
     assert _picks(a['gumbel_bets']) == _picks(b['gumbel_bets']), \
         'web見解が買い目の選択を変えている'
 

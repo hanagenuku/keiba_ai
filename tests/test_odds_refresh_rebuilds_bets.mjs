@@ -1,19 +1,33 @@
-// 「直前オッズ取得」を押しても軸1頭ベース買い目（gumbel_bets）が
-// 作り変わらないことを検証する。
+// 「直前オッズ取得」を押したとき、軸1頭ベース買い目（gumbel_bets）が
+// **サーバと同じ規則で**組み直されることを検証する。
 //
-// 2026-08-09 の実害: サーバは新潟5Rに
+// 🔴 このファイルは 2026-11-08 に意味が反転した。
+// 旧版（test_odds_refresh_keeps_bets.mjs）は「押しても買い目を作り変えない」
+// ことを固定していた。2026-08-09 の実害がひどかったためで、その内容は今も
+// 読む価値がある——サーバは新潟5Rに
 //   三連複(13点) 軸#12 / 2列目 #3 #11 / 3列目 8頭
 //   ワイド(3点) #12-#3・#11・#10 ／ 馬連(8点) 合成3.8倍
 // を出していたのに、ボタンを押した瞬間クライアント側 recalcGumbelBets() が
 // 全部作り直し、**RL1〜5（＝人気1〜5）のボックス10点**に置き換わっていた。
-// 単勝・ワイド・馬連は「除外」の取り消し線になった。
-// さらにその選別根拠のEVは、三連複だけ cal_prob（複勝＝3着内確率）を
-// 単勝勝率の位置に入れており「確率」が3.5を超えていた（EV8.81の正体）。
+// 単勝・ワイド・馬連は「除外」の取り消し線になった。さらにその選別根拠のEVは、
+// 三連複だけ cal_prob（複勝＝3着内確率）を単勝勝率の位置に入れており
+// 「確率」が3.5を超えていた（EV8.81の正体）。
+//
+// 🔴 しかし「作り変えない」は別の実害を生んでいた。直前オッズでAI+市の1位
+// （＝軸）が入れ替わっても買い目は朝の軸のまま凍結されていた。
+// 実例 2026-11-08 福島12R: 朝11:06 は #9 が3.9倍・1番人気でRL1だったが、
+// 15:56 には8.5倍・4番人気まで流れてRL4になり、RL1は #6 に移っていた。
+// それでも買い目の軸は #9 のままだった。
+//
+// → 2026-11-08 に組み直しを戻した。ただし 2026-08-09 の形には戻さない:
+//    ① 選び方はサーバ側 axis_bets.py の移植（軸=RL1 / 中穴=単勝7〜30倍 /
+//       合成オッズ3.0）。EVによる選別は持ち込まない
+//    ② 確率はモンテカルロではなく Plackett-Luce の厳密式なので、
+//       tests/test_axis_bets_resync.mjs が Python と 1e-9 まで突合できる
+// このファイルが固定するのは「押したあとの形」側（②〜⑤は旧版のまま）。
 //
 // 実行方法（pytest の対象外。JSなので node で直接動かす）:
-//     node tests/test_odds_refresh_keeps_bets.mjs
-//
-// 旧コード（recalcGumbelBets があった版）に対して実行すると失敗することを確認済み。
+//     node tests/test_odds_refresh_rebuilds_bets.mjs
 import fs from 'fs';
 import path from 'path';
 import vm from 'vm';
@@ -58,6 +72,7 @@ const SERVER_BETS = [
 function makeRace() {
   return {
     race_id: '20260809_04_05', r: 5, name: '3歳以上1勝クラス', rec: true,
+    honmei: { n: 12, name: 'シュヴァルツシルト', odds: 3.8, style: '先行' },
     horses: JSON.parse(JSON.stringify(HORSES)),
     bets: [], gumbel_bets: JSON.parse(JSON.stringify(SERVER_BETS)),
   };
@@ -107,15 +122,53 @@ const before = JSON.stringify(race.gumbel_bets);
 
 await ctx.__fetchFreshOdds('k', { textContent: '', disabled: false });
 
-// ── ① 買い目がまるごと保たれていること（今回の事故の回帰テスト） ──────────
-assert.strictEqual(JSON.stringify(race.gumbel_bets), before,
-  '直前オッズ取得で gumbel_bets が作り変わっている（サーバの軸1頭ベース買い目が失われる）');
+// ── ① 買い目が組み直されていること（2026-11-08 福島12R の回帰テスト） ─────
+assert.strictEqual(race._ax_rebuilt, true,
+  '直前オッズ取得で軸1頭ベース買い目が組み直されていない');
+// 朝の買い目は捨てずに残す（何が変わったか後から言えるようにする）
+assert.strictEqual(JSON.stringify(race._morning_gumbel_bets), before,
+  '朝の買い目が _morning_gumbel_bets に残っていない');
+// このデータは全馬のオッズを一律1.25倍にしてあるので順位は動かない。
+// よって軸は #12 のまま（＝組み直しても軸の規則がRL1であること）。
+assert.strictEqual(race._ax_axis, 12, '組み直し後の軸が RL1(#12) でない');
+const rl1 = race.horses.find(h => h.rl_rank === 1);
+assert.strictEqual(race._ax_axis, rl1.n, '軸が RL1 と一致していない');
+// 中穴帯(7〜30倍)の顔ぶれは一律1.25倍で変わるので、買い目は朝と同一では
+// ないはず（同一なら組み直しが効いていない）。
+assert.notStrictEqual(JSON.stringify(race.gumbel_bets), before,
+  'オッズが動いたのに買い目が朝と1字も変わっていない');
+// 全部の相手が軸とのペアであること（ボックスに化けていない）
+for (const b of race.gumbel_bets) {
+  if (b.axis !== undefined) {
+    assert.strictEqual(b.axis, 12, b.label + ' の軸が #12 でない');
+    for (const m of (b.mates || [])) {
+      assert.notStrictEqual(m.n, 12, b.label + ' の相手に軸自身が入っている');
+    }
+  }
+}
+
+// ── ①-b ◎本命と買い目の軸が一致すること ─────────────────────────────────
+// PR #326 で ◎ だけ直前オッズに追従させたため、◎ と買い目の軸が食い違う
+// 状態を一度作ってしまった（◎は新しいRL1・買い目は朝の軸）。両方そろえる。
+assert.strictEqual(race.honmei.n, race._ax_axis,
+  `◎(#${race.honmei.n}) と買い目の軸(#${race._ax_axis}) が食い違っている`);
+assert.ok(race.gumbel_bets[0].horse.startsWith('#' + race.honmei.n + ' '),
+  '単勝の軸が ◎ と違う: ' + race.gumbel_bets[0].horse);
 
 // ── ② 三連複がフォーメーションのまま（RL1-5ボックスに化けていない） ────────
 const trio = race.gumbel_bets.find(b => b.tag === 'sanfuku');
 assert.strictEqual(trio.trio_type, 'formation', '三連複がボックスに化けている');
-assert.deepStrictEqual(trio.legs[0], [12], '三連複の軸が変わっている');
-assert.strictEqual(trio.combos.length, 13, '三連複の点数が変わっている');
+// ⚠ vm.createContext のオブジェクトは別realmで prototype が違うため
+//    deepStrictEqual は中身が同じでも落ちる。JSON化して比べる。
+assert.strictEqual(JSON.stringify(trio.legs[0]), '[12]', '三連複の軸が変わっている');
+// 点数は中穴帯の顔ぶれで変わるが、A-中穴2-(RL2..9＋中穴) の形は保つ。
+assert.ok(trio.combos.length >= 4 && trio.combos.length <= 24,
+  `三連複の点数が構造から外れている: ${trio.combos.length}点`);
+for (const c of trio.combos) {
+  assert.ok(c.split('-').map(Number).includes(12),
+    `三連複に軸#12を含まない点がある: ${c}`);
+}
+assert.strictEqual(trio.legs[1].length, 2, '三連複の2列目が中穴2頭でない');
 // 事故の形そのもの: RL1〜5のボックス（12,2,9,3,11の10点）になっていないこと
 const box5 = [2, 3, 9, 11, 12];
 assert.ok(!(trio.nums.length === 5 && box5.every(n => trio.nums.includes(n))),
@@ -139,4 +192,4 @@ assert.notStrictEqual(axis.odds, 3.8, '直前オッズが馬表に反映され�
 assert.strictEqual(race._update_time, '11:28', '更新時刻が入っていない');
 assert.strictEqual(race._odds_refreshed, true, '_odds_refreshed が立っていない');
 
-console.log('✅ test_odds_refresh_keeps_bets: 5件すべて通過');
+console.log('✅ test_odds_refresh_rebuilds_bets: 6群すべて通過');
