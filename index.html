@@ -1043,6 +1043,379 @@ function _harvilleTop3(winProbs) {
   return top2.map((t2, i) => [t2, top3[i]]);
 }
 
+// ── 軸1頭ベース買い目の組み直し（直前オッズ取得後） ───────────────────────
+// 🔴 ここはサーバ側 src/betting/axis_bets.py ＋ src/betting/pl_exact.py ＋
+//    src/betting/app_json.py::_format_axis_bets の**移植**。
+//    2026-08-09 に一度「クライアント側で買い目を作り直す」のを取り消して
+//    いる（サーバと食い違った・EVが壊れていた・EV選別自体が否定済み）。
+//    今回それを戻したのは、直前オッズでRL順位が入れ替わるのに軸が朝の馬に
+//    貼り付いたままだったため（実例 2026-11-08 福島12R: 朝 #9 3.9倍→RL1 が
+//    15:56 に 8.5倍・RL4 まで流れ、RL1は #6 に移っていたのに買い目は #9 軸）。
+//
+// 🔑 2026-08-09 の失敗を繰り返さないために変えたこと:
+//    ① サーバ側の確率をモンテカルロから **Plackett-Luce の厳密式** に替えた
+//       （pl_exact.py）。乱数が無いので JS と Python が同じ数字を出せる。
+//    ② EVによる選別は**持ち込まない**。ここで組むのは axis_bets.py と同じ
+//       「軸=RL1 / 中穴=単勝7〜30倍 / 合成オッズ3.0」だけ。EVで買い目を
+//       選ぶ方向は 2026-07-05・07-30・08-31 の3回とも否定されている。
+//    ③ tests/test_axis_bets_resync.mjs が、Python が同じ入力で出した
+//       買い目（tests/fixtures/axis_bets_crosscheck.json）と 1e-9 まで
+//       一致することを確かめる。どちらかを変えればテストが落ちる。
+//
+// ⚠ 閾値は1つも発明していない。下の定数は axis_bets.py からの写し。
+// ⚠ 回収率が上がる根拠はない。軸を今の順位に合わせるだけで期待値は動かない。
+
+const AX_ANA_ODDS_MIN = 7.0, AX_ANA_ODDS_MAX = 30.0;
+const AX_WIDE_MAX_POINTS = 3, AX_TRIO_MAX_POINTS = 24;
+const AX_TRIO_SECOND_LEG = 2, AX_TRIO_THIRD_LEG_RL_MAX = 9;
+const AX_QUINELLA_MIN_SYN_ODDS = 3.0, AX_UNIT = 100;
+// Gumbel温度。data/rating_temperature.json の calibration.gumbel_rating.T が
+// 無ければ bet_optimizer.DEFAULT_GUMBEL_RATING_T=1.0。JSはJSONを読めないので
+// 1.0 を直書きし、tests/test_axis_bets_exact.py が「本当に1.0のままか」を
+// 固定する（誰かが温度を設定したらそのテストが落ちてここを直す合図になる）。
+const AX_GUMBEL_T = 1.0;
+const AX_TAKEOUT = { quinella: 0.225, wide: 0.225, trio: 0.225 };
+
+// Python の round() は「ちょうど半分」を偶数側へ丸める。JS の Math.round は
+// 上へ丸めるので、1.25 のような2進で厳密な半分でだけ食い違う。確率から出る
+// 値でこれが起きるのは稀だが、起きたら突合テストが落ちて原因が分からなく
+// なるので、ここで同じ規則にしておく。
+function _axRound(x, nd) {
+  const f = Math.pow(10, nd);
+  const y = x * f;
+  const fl = Math.floor(y);
+  if (y - fl === 0.5) return ((fl % 2 === 0) ? fl : fl + 1) / f;
+  return Math.round(y) / f;
+}
+
+function _axYen(v) {
+  return '¥' + String(Math.trunc(v)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+// ── Plackett-Luce の厳密式（src/betting/pl_exact.py と同じ） ──────────────
+function _axWeightsFromRatings(ratings) {
+  const m = ratings.length ? Math.max(...ratings) : 0;
+  return ratings.map(r => Math.exp(r - m));
+}
+
+function _axWeightsFromWinOdds(odds) {
+  const inv = odds.map(o => (o && o > 0) ? 1 / o : 0);
+  const s = inv.reduce((a, b) => a + b, 0);
+  return s > 0 ? inv.map(x => x / s) : odds.map(() => 0);
+}
+
+function _axPOrder(w, total, idx) {
+  let p = 1, rest = total;
+  for (const i of idx) {
+    if (rest <= 0) return 0;
+    p *= w[i] / rest;
+    rest -= w[i];
+  }
+  return p;
+}
+
+function _axTop2SetProb(w, t, i, j) {
+  return _axPOrder(w, t, [i, j]) + _axPOrder(w, t, [j, i]);
+}
+
+function _axTop3SetProb(w, t, i, j, k) {
+  return _axPOrder(w, t, [i, j, k]) + _axPOrder(w, t, [i, k, j])
+       + _axPOrder(w, t, [j, i, k]) + _axPOrder(w, t, [j, k, i])
+       + _axPOrder(w, t, [k, i, j]) + _axPOrder(w, t, [k, j, i]);
+}
+
+function _axBothInTop3Prob(w, t, i, j) {
+  let s = 0;
+  for (let k = 0; k < w.length; k++) {
+    if (k === i || k === j) continue;
+    s += _axTop3SetProb(w, t, i, j, k);
+  }
+  return s;
+}
+
+function _axTicketProbs(w, nums) {
+  const total = w.reduce((a, b) => a + b, 0);
+  const n = nums.length;
+  const out = { win: {}, wide: {}, quinella: {}, trio: {} };
+  if (!(total > 0) || n < 2) return out;
+  for (let i = 0; i < n; i++) out.win[nums[i]] = w[i] / total;
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j < n; j++) {
+      const k = _axPairKey(nums[i], nums[j]);
+      out.quinella[k] = _axTop2SetProb(w, total, i, j);
+      out.wide[k] = _axBothInTop3Prob(w, total, i, j);
+    }
+  }
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j < n; j++) {
+      for (let k = j + 1; k < n; k++) {
+        out.trio[_axTrioKey(nums[i], nums[j], nums[k])] =
+          _axTop3SetProb(w, total, i, j, k);
+      }
+    }
+  }
+  return out;
+}
+
+// Python のタプルキーに相当する文字列キー（昇順で結合）
+function _axPairKey(a, b) { return (a < b) ? a + ',' + b : b + ',' + a; }
+function _axTrioKey(a, b, c) { return [a, b, c].sort((x, y) => x - y).join(','); }
+
+function _axExactPayouts(winOddsMap) {
+  const nums = Object.keys(winOddsMap).map(Number);
+  const odds = nums.map(n => winOddsMap[n]);
+  const probs = _axTicketProbs(_axWeightsFromWinOdds(odds), nums);
+  const out = {};
+  for (const bt of Object.keys(AX_TAKEOUT)) {
+    out[bt] = {};
+    const src = probs[bt] || {};
+    for (const key of Object.keys(src)) {
+      const p = src[key];
+      if (p > 1e-6) {
+        out[bt][key] = Math.max(1.0, _axRound((1.0 - AX_TAKEOUT[bt]) / p, 1));
+      }
+    }
+  }
+  return out;
+}
+
+// ── 買い目の組み立て（src/betting/axis_bets.py と同じ） ───────────────────
+function _axSyntheticOdds(oddsList) {
+  const inv = oddsList.reduce((a, o) => a + ((o && o > 0) ? 1 / o : 0), 0);
+  return inv > 0 ? 1 / inv : 0;
+}
+
+// 中穴 = 単勝7〜30倍のうち3着内確率の高い順。
+// 🔑 本家は cal_prob（Isotonic較正済みの複勝確率）で並べるが、JSは較正器を
+//    再現できない。Isotonic回帰は**単調非減少**なので cal_prob の順位は
+//    rating（= ability_margin + base_margin）の順位と一致する（較正が
+//    平らな帯の同値を除く）。実測（2026-11-08・34レース）でも、ワイドと
+//    三連複2列目が使う**先頭3頭は34/34レースで一致**した。馬連は
+//    select_anas の順序を使わず probs で並べ直すので集合しか効かない。
+function _axSelectAnas(horses, axisNum, n) {
+  return horses
+    .filter(h => h.n !== axisNum && h._ax_odds >= AX_ANA_ODDS_MIN
+                 && h._ax_odds < AX_ANA_ODDS_MAX)
+    .slice()
+    .sort((a, b) => b._ax_rating - a._ax_rating)
+    .slice(0, n);
+}
+
+function _axEntry(tag, label, key, prob, odds) {
+  return { tag, label, key, prob, odds, amount: AX_UNIT,
+           ev: odds ? _axRound(prob * odds, 2) : 0.0 };
+}
+
+function buildAxisBetsJS(horses, probs, oddsMap) {
+  const out = { win: [], wide: [], quinella: [], trio: [], summary: {} };
+  const axis = horses.find(h => h.rl_rank === 1);
+  if (!axis) return out;
+  const a = axis.n;
+
+  // ① 単勝: 軸1点
+  const wOdds = axis._ax_odds;
+  if (wOdds > 0) {
+    const wp = probs.win[a];
+    out.win.push(_axEntry('tan', '単勝', a, wp ? _axRound(wp, 4) : 0.0,
+                          _axRound(wOdds, 1)));
+  }
+
+  // ② ワイド: 軸 × 中穴（3着内確率順）
+  for (const h of _axSelectAnas(horses, a, AX_WIDE_MAX_POINTS)) {
+    const k = _axPairKey(a, h.n);
+    const p = probs.wide[k], o = (oddsMap.wide || {})[k];
+    if (p && o) out.wide.push(_axEntry('wide', 'ワイド', k, _axRound(p, 4),
+                                       _axRound(o, 1)));
+  }
+
+  // ③ 馬連: 合成オッズ >= 3.0 を保つ範囲で追加
+  const qc = [];
+  for (const h of _axSelectAnas(horses, a, horses.length)) {
+    const k = _axPairKey(a, h.n);
+    const p = probs.quinella[k], o = (oddsMap.quinella || {})[k];
+    if (p && o) qc.push([p, o, k]);
+  }
+  // Python の tuple 比較と同じ: prob降順 → odds降順 → キー降順
+  qc.sort((x, y) => (y[0] - x[0]) || (y[1] - x[1]) || _axCmpKey(y[2], x[2]));
+  const picked = [];
+  for (const [p, o, k] of qc) {
+    if (_axSyntheticOdds(picked.map(x => x[1]).concat([o]))
+        < AX_QUINELLA_MIN_SYN_ODDS) break;
+    picked.push([p, o, k]);
+  }
+  for (const [p, o, k] of picked) {
+    out.quinella.push(_axEntry('umaren', '馬連', k, _axRound(p, 4),
+                               _axRound(o, 1)));
+  }
+  if (picked.length) {
+    out.summary.quinella_syn_odds =
+      _axRound(_axSyntheticOdds(picked.map(x => x[1])), 1);
+  }
+
+  // ④ 三連複: A - 中穴2 - (RL2..9 ＋ 中穴)
+  const g2 = _axSelectAnas(horses, a, AX_TRIO_SECOND_LEG).map(h => h.n);
+  if (g2.length >= 2) {
+    const g3 = horses.filter(h => h.rl_rank)
+      .slice().sort((x, y) => x.rl_rank - y.rl_rank)
+      .filter(h => h.n !== a && h.rl_rank <= AX_TRIO_THIRD_LEG_RL_MAX)
+      .map(h => h.n);
+    for (const x of g2) if (!g3.includes(x)) g3.push(x);
+    const seen = new Set(), combos = [];
+    for (const x of g2) {
+      for (const y of g3) {
+        if (x === y) continue;
+        const k = _axPairKey(x, y);
+        if (seen.has(k)) continue;
+        seen.add(k);
+        const t = _axTrioKey(a, x, y);
+        combos.push([probs.trio[t] || 0, (oddsMap.trio || {})[t] || 0, t]);
+      }
+    }
+    combos.sort((x, y) => (y[0] - x[0]) || (y[1] - x[1]) || _axCmpKey(y[2], x[2]));
+    for (const [p, o, t] of combos.slice(0, AX_TRIO_MAX_POINTS)) {
+      if (p > 0 && o > 0) {
+        out.trio.push(_axEntry('sanfuku', '三連複', t, _axRound(p, 5),
+                               _axRound(o, 1)));
+      }
+    }
+    if (out.trio.length) {
+      const oddsL = out.trio.map(b => b.odds);
+      // 実際に採用された点だけから列を復元する（点数上限で切ると
+      // 宣言した g2/g3 に一度も使われない馬が残り、画面と買い目が食い違う）。
+      const used = out.trio.map(b => b.key.split(',').map(Number)
+                                      .filter(n => n !== a));
+      const leg2 = g2.filter(x => used.some(u => u.includes(x)))
+                     .sort((p, q) => p - q);
+      const leg3 = Array.from(new Set([].concat(...used)))
+                        .sort((p, q) => p - q);
+      Object.assign(out.summary, {
+        trio_legs: [[a], leg2, leg3],
+        trio_points: out.trio.length,
+        trio_syn_odds: _axRound(_axSyntheticOdds(oddsL), 1),
+        payout_min: Math.trunc(Math.min(...oddsL) * AX_UNIT),
+        payout_max: Math.trunc(Math.max(...oddsL) * AX_UNIT),
+      });
+    }
+  }
+
+  const pts = out.win.length + out.wide.length + out.quinella.length
+            + out.trio.length;
+  out.summary.total_points = pts;
+  out.summary.total_amount = pts * AX_UNIT;
+  out.summary.axis = a;
+  return out;
+}
+
+// Python の tuple の辞書順比較（キーは "2,6" / "2,6,10" の形）
+function _axCmpKey(x, y) {
+  const a = x.split(',').map(Number), b = y.split(',').map(Number);
+  for (let i = 0; i < Math.min(a.length, b.length); i++) {
+    if (a[i] !== b[i]) return a[i] - b[i];
+  }
+  return a.length - b.length;
+}
+
+// ── 表示リストへの変換（src/betting/app_json.py::_format_axis_bets と同じ） ─
+function formatAxisBetsJS(ab, horses) {
+  if (!ab) return [];
+  const nameMap = {};
+  for (const h of horses) nameMap[h.n] = h.name || '';
+  const res = [], s = ab.summary || {}, axis = s.axis;
+
+  for (const b of ab.win) {
+    res.push({ tag: 'tan', label: '単勝（軸）',
+               horse: '#' + b.key + ' ' + (nameMap[b.key] || ''),
+               est: b.odds.toFixed(1) + '倍', amt: '¥' + b.amount });
+  }
+
+  const grouped = (items, tag, label, syn) => {
+    if (!items.length) return null;
+    const mates = [], legs = [];
+    for (const b of items) {
+      const [x, y] = b.key.split(',').map(Number);
+      const m = (x === axis) ? y : x;
+      mates.push(m);
+      legs.push({ n: m, name: nameMap[m] || '', odds: b.odds, prob: b.prob });
+    }
+    const lo = Math.min(...items.map(b => b.odds));
+    const hi = Math.max(...items.map(b => b.odds));
+    const e = {
+      tag, label: label + '(' + items.length + '点)', axis,
+      horse: '#' + axis + ' - ' + mates.map(m => '#' + m).join('・'),
+      mates: legs,
+      est: (lo === hi) ? lo.toFixed(1) + '倍'
+                       : lo.toFixed(1) + '〜' + hi.toFixed(1) + '倍',
+      amt: '¥' + (items.length * 100),
+    };
+    if (syn) e.syn_odds = syn;
+    return e;
+  };
+
+  for (const e of [grouped(ab.wide, 'wide', 'ワイド'),
+                   grouped(ab.quinella, 'umaren', '馬連',
+                           s.quinella_syn_odds)]) {
+    if (e) res.push(e);
+  }
+
+  if (ab.trio.length) {
+    const combos = ab.trio.map(b => b.key.split(',').join('-'));
+    const nums = Array.from(new Set([].concat(
+      ...ab.trio.map(b => b.key.split(',').map(Number))))).sort((a, b) => a - b);
+    res.push({
+      tag: 'sanfuku', label: '三連複(' + ab.trio.length + '点)',
+      trio_type: 'formation', legs: s.trio_legs,
+      nums, combos,
+      est: _axYen(s.payout_min || 0) + '〜' + _axYen(s.payout_max || 0),
+      syn_odds: s.trio_syn_odds,
+      amt: '¥' + (ab.trio.length * 100),
+    });
+  }
+  return res;
+}
+
+// 直前オッズ取得後に軸1頭ベース買い目を組み直す。
+// 組み直せない条件（残差モデルでない・オッズが足りない・軸が取れない）では
+// **何もせず**サーバの結果を残す。朝の買い目のほうがまだ根拠があるため。
+function recalcAxisBets(race) {
+  const hs = race.horses || [];
+  if (!hs.length || !Array.isArray(race.gumbel_bets)) return false;
+  if (!hs.every(h => h.ability_margin != null && h.rl_rank)) return false;
+  // base_margin は updateOddsAndEV が決めた土台と同じものを使う。
+  const bms = race._ax_bms;
+  if (!bms || bms.length !== hs.length) return false;
+  hs.forEach((h, i) => {
+    h._ax_odds = (h.odds && h.odds > 0) ? h.odds : 0;
+    h._ax_rating = (h.ability_margin + bms[i]) / AX_GUMBEL_T;
+  });
+  const nums = hs.map(h => h.n);
+  const probs = _axTicketProbs(_axWeightsFromRatings(hs.map(h => h._ax_rating)),
+                               nums);
+  const winOdds = {};
+  for (const h of hs) if (h._ax_odds > 0) winOdds[h.n] = h._ax_odds;
+  if (Object.keys(winOdds).length < 3) return false;
+  const ab = buildAxisBetsJS(hs, probs, _axExactPayouts(winOdds));
+  if (!ab.summary.total_points) return false;
+  if (race._morning_gumbel_bets == null) {
+    race._morning_gumbel_bets = race.gumbel_bets;
+    // 朝の軸は**朝の買い目から**読む（ab.summary.axis は組み直した後の軸）。
+    // ワイド・馬連の行が axis を持っているのでそれを使い、無ければ
+    // 単勝の "#9 ジェムシリカ" から馬番を取る。
+    let ma = null;
+    for (const b of race.gumbel_bets) {
+      if (b.axis != null) { ma = b.axis; break; }
+    }
+    if (ma == null) {
+      const m = (race.gumbel_bets.find(b => b.tag === 'tan') || {}).horse;
+      const mm = m && /^#(\d+)/.exec(m);
+      if (mm) ma = Number(mm[1]);
+    }
+    race._morning_axis = ma;
+  }
+  race.gumbel_bets = formatAxisBetsJS(ab, hs);
+  race._ax_axis = ab.summary.axis;
+  return true;
+}
+
 function updateOddsAndEV(race, freshOdds) {
   for (const h of (race.horses || [])) {
     const od = freshOdds[String(h.n)];
@@ -1091,6 +1464,7 @@ function updateOddsAndEV(race, freshOdds) {
     else              { const f = _flatBaseMargin(n); bms = allHorses.map(() => f);
                         anchor = 'flat'; }
     race._anchor = anchor;
+    race._ax_bms = bms;   // 軸1頭ベース買い目の組み直しが同じ土台を使う
     const totals = allHorses.map((h, i) => {
       const rawProb = 1 / (1 + Math.exp(-(h.ability_margin + bms[i])));
       return rawProb * 10;
@@ -1120,8 +1494,12 @@ function updateOddsAndEV(race, freshOdds) {
     //   それでも ◎ は #9 のままで、AI+市列のツールチップ
     //   「◎が付いている馬がこの列の1位です」が嘘になっていた。
     //   2026-07-26② で勝率・複勝率・EVの据え置きを直したときの漏れ。
-    //   ⚠ 買い目は honmei を読まない（recalcGumbelBets は rl_rank を読む）ので
-    //     これは表示だけの修正。買い目・軸・推奨の判定は1つも変わらない。
+    //   ⚠ 2026-11-08 訂正: ここに「買い目は honmei を読まないので表示だけの
+    //     修正」と書いたのは**誤り**だった。`recalcGumbelBets()` は
+    //     2026-08-09 に refresh 経路から外してあり、軸1頭ベース買い目は
+    //     朝の軸のまま凍結されていた。◎ だけ動かした結果、◎ と買い目の軸が
+    //     食い違う状態を作ってしまった。下の recalcAxisBets() で買い目側も
+    //     同じ軸に揃える。
     if (race.honmei) {
       const h1 = allHorses.find(h => h.rl_rank === 1);
       if (h1) {
@@ -1145,8 +1523,11 @@ function updateOddsAndEV(race, freshOdds) {
   }
 
   // AI強気ペアは「市場人気 vs AI順位」で決まるので、人気が変われば選び直す必要がある。
-  // rl_rank はルールベース特徴量から算出され市場に依存しないため据え置きでよい。
   recalcAiPairBets(race);
+
+  // 軸1頭ベース買い目も軸(RL1)が入れ替わったら組み直す。
+  // 組み直せない条件では何もせずサーバの結果を残す（上の recalcAxisBets 参照）。
+  race._ax_rebuilt = recalcAxisBets(race);
 }
 
 // ── AI強気ペア(A×D)の選び直し ─────────────────────────────────────────
@@ -1796,11 +2177,22 @@ function render() {
       }
       if (hasGumbel) {
         html += '<div class="sec" style="margin-top:12px;font-size:11px;color:#117a65">🎯 軸1頭ベース買い目';
-        // 直前オッズを取得しても買い目は作り直さない（サーバの結果を保つ）。
-        // 上の馬表のオッズ・勝率だけが新しくなるので、そのズレを明示する。
-        if (race._odds_refreshed) {
+        // 直前オッズを取得したら軸1頭ベース買い目も組み直す（2026-11-08）。
+        // 組み直せたかどうかで表示を分ける。黙って朝のままにしない。
+        if (race._ax_rebuilt) {
+          const _axMoved = (race._morning_axis != null && race._ax_axis != null
+                            && race._morning_axis !== race._ax_axis);
+          html += ' <span style="font-size:10px;color:#117a65;font-weight:400" '
+                + 'title="直前オッズでAI+市の1位（軸）を取り直し、中穴・点数・推定配当まで組み直しました。'
+                + '選び方（軸=AI+市1位 / 相手=単勝7〜30倍 / 合成オッズ3.0以上）は予想生成時と同じです。'
+                + '回収率が上がる根拠はありません。">'
+                + '（直前オッズで組み直し'
+                + (_axMoved ? '・軸 #' + race._morning_axis + '→#' + race._ax_axis : '')
+                + '）</span>';
+        } else if (race._odds_refreshed) {
           html += ' <span style="font-size:10px;color:#888;font-weight:400" '
-                + 'title="買い目は予想生成時点のまま固定です。上の馬表のオッズ・勝率は直前オッズで更新されています。">'
+                + 'title="オッズが揃っていない等で買い目を組み直せなかったため、予想生成時点のまま出しています。'
+                + '上の馬表のオッズ・勝率は直前オッズで更新されています。">'
                 + '（予想生成時点のまま）</span>';
         }
         html += '</div>';

@@ -7,7 +7,11 @@
 // AI+市列のツールチップ「◎が付いている馬がこの列の1位です」が嘘になっていた。
 // 2026-07-26② で勝率・複勝率・EVの据え置きを直したときの漏れ。
 //
-// ⚠ 買い目は honmei を読まない（recalcGumbelBets は rl_rank を読む）。表示だけの話。
+// 🔴 2026-11-08 訂正: ここに「買い目は honmei を読まないので表示だけの話」と
+//    書いたのは**誤り**だった。recalcGumbelBets() は 2026-08-09 に refresh 経路
+//    から外してあり、軸1頭ベース買い目は朝の軸のまま凍結されていた。◎ だけ
+//    動かした結果、◎ と買い目の軸が食い違う状態を作ってしまった。
+//    同日 recalcAxisBets() を入れて買い目側も同じ軸にそろえた（最後のテスト）。
 //
 // 実行方法（pytest の対象外。JSなので node で直接動かす）:
 //     node tests/test_honmei_resync.mjs
@@ -93,6 +97,44 @@ t('honmei が無いレースでも落ちない', () => {
   delete race.honmei;
   updateOddsAndEV(race, fresh({ 9: 8.5, 6: 3.1, 4: 5.4, 1: 6.9, 5: 13.1 }));
   assert.ok(!race.honmei);
+});
+
+// ── 軸1頭ベース買い目の軸と ◎ が食い違わないこと ────────────────────────
+// PR #326 で ◎ だけ追従させたときに作ってしまった食い違いの回帰テスト。
+t('◎ と軸1頭ベース買い目の軸が一致する', () => {
+  const race = mkRace([3.9, 4.6, 6.0, 8.0, 14.0]);
+  // 軸1頭ベース買い目が出ているレースにする（朝の軸は #9）
+  race.gumbel_bets = [{ tag: 'tan', label: '単勝（軸）', horse: '#9 ジェムシリカ',
+                        est: '3.9倍', amt: '¥100' }];
+  // 中穴(単勝7〜30倍)が2頭以上要るので #1 #5 をその帯に置く
+  updateOddsAndEV(race, fresh({ 9: 8.5, 6: 3.1, 4: 5.4, 1: 9.2, 5: 14.8 }));
+  const rl1 = race.horses.find(h => h.rl_rank === 1);
+  assert.strictEqual(race.honmei.n, rl1.n, '◎ が RL1 と違う');
+  assert.strictEqual(race._ax_rebuilt, true, '買い目が組み直されていない');
+  assert.strictEqual(race._ax_axis, rl1.n,
+    `買い目の軸(#${race._ax_axis}) が RL1(#${rl1.n}) と違う`);
+  assert.strictEqual(race.honmei.n, race._ax_axis,
+    `◎(#${race.honmei.n}) と買い目の軸(#${race._ax_axis}) が食い違っている`);
+  assert.ok(race.gumbel_bets[0].horse.startsWith('#' + rl1.n + ' '),
+    '単勝の軸が ◎ と違う: ' + race.gumbel_bets[0].horse);
+  // 朝の軸は**朝の買い目から**読む（組み直した後の軸を入れてはいけない）。
+  // ここは単勝の "#9 ..." から馬番を取るフォールバック経路。
+  assert.strictEqual(race._morning_axis, 9,
+    `朝の軸が #9 になっていない: #${race._morning_axis}`);
+  assert.strictEqual(JSON.stringify(race._morning_gumbel_bets[0].horse),
+    '"#9 ジェムシリカ"', '朝の買い目が残っていない');
+});
+
+t('朝の軸は ワイド/馬連の axis から読む（主経路）', () => {
+  const race = mkRace([3.9, 4.6, 6.0, 8.0, 14.0]);
+  race.gumbel_bets = [
+    { tag: 'tan', label: '単勝（軸）', horse: '#9 ジェムシリカ', est: '3.9倍', amt: '¥100' },
+    { tag: 'wide', label: 'ワイド(2点)', axis: 9, horse: '#9 - #1・#5',
+      mates: [{ n: 1 }, { n: 5 }], est: '5.0〜9.0倍', amt: '¥200' },
+  ];
+  updateOddsAndEV(race, fresh({ 9: 8.5, 6: 3.1, 4: 5.4, 1: 9.2, 5: 14.8 }));
+  assert.strictEqual(race._morning_axis, 9, '朝の軸を axis から読めていない');
+  assert.strictEqual(race._ax_axis, 6, '組み直し後の軸が #6 でない');
 });
 
 console.log(`\n${pass} tests passed`);

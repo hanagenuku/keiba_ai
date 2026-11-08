@@ -1,0 +1,2272 @@
+{
+ "_note": "tests/make_axis_bets_crosscheck.py が生成する。手で書き換えないこと。",
+ "cases": [
+  {
+   "axis_bets": {
+    "quinella": [
+     {
+      "amount": 100,
+      "ev": 0.69,
+      "key": "2,6",
+      "label": "馬連",
+      "odds": 12.4,
+      "prob": 0.0557,
+      "tag": "umaren"
+     },
+     {
+      "amount": 100,
+      "ev": 0.68,
+      "key": "6,11",
+      "label": "馬連",
+      "odds": 14.8,
+      "prob": 0.0462,
+      "tag": "umaren"
+     },
+     {
+      "amount": 100,
+      "ev": 0.7,
+      "key": "5,6",
+      "label": "馬連",
+      "odds": 18.2,
+      "prob": 0.0383,
+      "tag": "umaren"
+     },
+     {
+      "amount": 100,
+      "ev": 0.78,
+      "key": "6,8",
+      "label": "馬連",
+      "odds": 24.6,
+      "prob": 0.0318,
+      "tag": "umaren"
+     },
+     {
+      "amount": 100,
+      "ev": 0.77,
+      "key": "6,13",
+      "label": "馬連",
+      "odds": 30.5,
+      "prob": 0.0254,
+      "tag": "umaren"
+     },
+     {
+      "amount": 100,
+      "ev": 0.78,
+      "key": "6,10",
+      "label": "馬連",
+      "odds": 38.6,
+      "prob": 0.0201,
+      "tag": "umaren"
+     }
+    ],
+    "summary": {
+     "axis": 6,
+     "payout_max": 13130,
+     "payout_min": 1670,
+     "quinella_syn_odds": 3.3,
+     "total_amount": 2300,
+     "total_points": 23,
+     "trio_legs": [
+      [
+       6
+      ],
+      [
+       2,
+       11
+      ],
+      [
+       2,
+       4,
+       5,
+       8,
+       9,
+       10,
+       11,
+       13
+      ]
+     ],
+     "trio_points": 13,
+     "trio_syn_odds": 3.2
+    },
+    "trio": [
+     {
+      "amount": 100,
+      "ev": 0.56,
+      "key": "2,4,6",
+      "label": "三連複",
+      "odds": 16.7,
+      "prob": 0.03339,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.55,
+      "key": "4,6,11",
+      "label": "三連複",
+      "odds": 20.0,
+      "prob": 0.02738,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.64,
+      "key": "2,6,9",
+      "label": "三連複",
+      "odds": 23.9,
+      "prob": 0.02677,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.63,
+      "key": "6,9,11",
+      "label": "三連複",
+      "odds": 28.7,
+      "prob": 0.02195,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.73,
+      "key": "2,6,11",
+      "label": "三連複",
+      "odds": 40.7,
+      "prob": 0.01791,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.75,
+      "key": "2,5,6",
+      "label": "三連複",
+      "odds": 50.6,
+      "prob": 0.01473,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.84,
+      "key": "2,6,8",
+      "label": "三連複",
+      "odds": 68.9,
+      "prob": 0.01216,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.73,
+      "key": "5,6,11",
+      "label": "三連複",
+      "odds": 60.7,
+      "prob": 0.01208,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.82,
+      "key": "6,8,11",
+      "label": "三連複",
+      "odds": 82.7,
+      "prob": 0.00996,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.83,
+      "key": "2,6,13",
+      "label": "三連複",
+      "odds": 86.0,
+      "prob": 0.00964,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.82,
+      "key": "6,11,13",
+      "label": "三連複",
+      "odds": 103.2,
+      "prob": 0.0079,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.83,
+      "key": "2,6,10",
+      "label": "三連複",
+      "odds": 109.4,
+      "prob": 0.00758,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.82,
+      "key": "6,10,11",
+      "label": "三連複",
+      "odds": 131.3,
+      "prob": 0.00622,
+      "tag": "sanfuku"
+     }
+    ],
+    "wide": [
+     {
+      "amount": 100,
+      "ev": 0.69,
+      "key": "2,6",
+      "label": "ワイド",
+      "odds": 4.6,
+      "prob": 0.1502,
+      "tag": "wide"
+     },
+     {
+      "amount": 100,
+      "ev": 0.69,
+      "key": "6,11",
+      "label": "ワイド",
+      "odds": 5.5,
+      "prob": 0.1263,
+      "tag": "wide"
+     },
+     {
+      "amount": 100,
+      "ev": 0.7,
+      "key": "5,6",
+      "label": "ワイド",
+      "odds": 6.6,
+      "prob": 0.1061,
+      "tag": "wide"
+     }
+    ],
+    "win": [
+     {
+      "amount": 100,
+      "ev": 0.68,
+      "key": 6,
+      "label": "単勝",
+      "odds": 2.8,
+      "prob": 0.2425,
+      "tag": "tan"
+     }
+    ]
+   },
+   "formatted": [
+    {
+     "amt": "¥100",
+     "est": "2.8倍",
+     "horse": "#6 F",
+     "label": "単勝（軸）",
+     "tag": "tan"
+    },
+    {
+     "amt": "¥300",
+     "axis": 6,
+     "est": "4.6〜6.6倍",
+     "horse": "#6 - #2・#11・#5",
+     "label": "ワイド(3点)",
+     "mates": [
+      {
+       "n": 2,
+       "name": "B",
+       "odds": 4.6,
+       "prob": 0.1502
+      },
+      {
+       "n": 11,
+       "name": "K",
+       "odds": 5.5,
+       "prob": 0.1263
+      },
+      {
+       "n": 5,
+       "name": "E",
+       "odds": 6.6,
+       "prob": 0.1061
+      }
+     ],
+     "tag": "wide"
+    },
+    {
+     "amt": "¥600",
+     "axis": 6,
+     "est": "12.4〜38.6倍",
+     "horse": "#6 - #2・#11・#5・#8・#13・#10",
+     "label": "馬連(6点)",
+     "mates": [
+      {
+       "n": 2,
+       "name": "B",
+       "odds": 12.4,
+       "prob": 0.0557
+      },
+      {
+       "n": 11,
+       "name": "K",
+       "odds": 14.8,
+       "prob": 0.0462
+      },
+      {
+       "n": 5,
+       "name": "E",
+       "odds": 18.2,
+       "prob": 0.0383
+      },
+      {
+       "n": 8,
+       "name": "H",
+       "odds": 24.6,
+       "prob": 0.0318
+      },
+      {
+       "n": 13,
+       "name": "M",
+       "odds": 30.5,
+       "prob": 0.0254
+      },
+      {
+       "n": 10,
+       "name": "J",
+       "odds": 38.6,
+       "prob": 0.0201
+      }
+     ],
+     "syn_odds": 3.3,
+     "tag": "umaren"
+    },
+    {
+     "amt": "¥1300",
+     "combos": [
+      "2-4-6",
+      "4-6-11",
+      "2-6-9",
+      "6-9-11",
+      "2-6-11",
+      "2-5-6",
+      "2-6-8",
+      "5-6-11",
+      "6-8-11",
+      "2-6-13",
+      "6-11-13",
+      "2-6-10",
+      "6-10-11"
+     ],
+     "est": "¥1,670〜¥13,130",
+     "label": "三連複(13点)",
+     "legs": [
+      [
+       6
+      ],
+      [
+       2,
+       11
+      ],
+      [
+       2,
+       4,
+       5,
+       8,
+       9,
+       10,
+       11,
+       13
+      ]
+     ],
+     "nums": [
+      2,
+      4,
+      5,
+      6,
+      8,
+      9,
+      10,
+      11,
+      13
+     ],
+     "syn_odds": 3.2,
+     "tag": "sanfuku",
+     "trio_type": "formation"
+    }
+   ],
+   "horses": [
+    {
+     "n": 1,
+     "name": "A",
+     "odds": 42.7,
+     "rating": -1.9,
+     "rl_rank": 11
+    },
+    {
+     "n": 2,
+     "name": "B",
+     "odds": 9.4,
+     "rating": -0.42,
+     "rl_rank": 4
+    },
+    {
+     "n": 3,
+     "name": "C",
+     "odds": 97.2,
+     "rating": -2.55,
+     "rl_rank": 15
+    },
+    {
+     "n": 4,
+     "name": "D",
+     "odds": 5.1,
+     "rating": -0.05,
+     "rl_rank": 2
+    },
+    {
+     "n": 5,
+     "name": "E",
+     "odds": 13.6,
+     "rating": -0.78,
+     "rl_rank": 6
+    },
+    {
+     "n": 6,
+     "name": "F",
+     "odds": 2.8,
+     "rating": 0.52,
+     "rl_rank": 1
+    },
+    {
+     "n": 7,
+     "name": "G",
+     "odds": 61.0,
+     "rating": -2.18,
+     "rl_rank": 13
+    },
+    {
+     "n": 8,
+     "name": "H",
+     "odds": 18.2,
+     "rating": -0.96,
+     "rl_rank": 7
+    },
+    {
+     "n": 9,
+     "name": "I",
+     "odds": 6.9,
+     "rating": -0.24,
+     "rl_rank": 3
+    },
+    {
+     "n": 10,
+     "name": "J",
+     "odds": 28.4,
+     "rating": -1.41,
+     "rl_rank": 9
+    },
+    {
+     "n": 11,
+     "name": "K",
+     "odds": 11.1,
+     "rating": -0.6,
+     "rl_rank": 5
+    },
+    {
+     "n": 12,
+     "name": "L",
+     "odds": 148.3,
+     "rating": -2.94,
+     "rl_rank": 17
+    },
+    {
+     "n": 13,
+     "name": "M",
+     "odds": 22.5,
+     "rating": -1.18,
+     "rl_rank": 8
+    },
+    {
+     "n": 14,
+     "name": "N",
+     "odds": 33.9,
+     "rating": -1.63,
+     "rl_rank": 10
+    },
+    {
+     "n": 15,
+     "name": "O",
+     "odds": 50.8,
+     "rating": -2.04,
+     "rl_rank": 12
+    },
+    {
+     "n": 16,
+     "name": "P",
+     "odds": 78.6,
+     "rating": -2.37,
+     "rl_rank": 14
+    },
+    {
+     "n": 17,
+     "name": "Q",
+     "odds": 118.0,
+     "rating": -2.74,
+     "rl_rank": 16
+    },
+    {
+     "n": 18,
+     "name": "R",
+     "odds": 199.5,
+     "rating": -3.2,
+     "rl_rank": 18
+    }
+   ],
+   "name": "18頭・東京11R相当"
+  },
+  {
+   "axis_bets": {
+    "quinella": [
+     {
+      "amount": 100,
+      "ev": 0.69,
+      "key": "1,2",
+      "label": "馬連",
+      "odds": 8.2,
+      "prob": 0.0845,
+      "tag": "umaren"
+     },
+     {
+      "amount": 100,
+      "ev": 0.76,
+      "key": "2,7",
+      "label": "馬連",
+      "odds": 11.7,
+      "prob": 0.0652,
+      "tag": "umaren"
+     },
+     {
+      "amount": 100,
+      "ev": 0.82,
+      "key": "2,3",
+      "label": "馬連",
+      "odds": 16.3,
+      "prob": 0.0504,
+      "tag": "umaren"
+     },
+     {
+      "amount": 100,
+      "ev": 0.91,
+      "key": "2,9",
+      "label": "馬連",
+      "odds": 25.9,
+      "prob": 0.0353,
+      "tag": "umaren"
+     }
+    ],
+    "summary": {
+     "axis": 2,
+     "payout_max": 26500,
+     "payout_min": 640,
+     "quinella_syn_odds": 3.3,
+     "total_amount": 2100,
+     "total_points": 21,
+     "trio_legs": [
+      [
+       2
+      ],
+      [
+       1,
+       7
+      ],
+      [
+       1,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ]
+     ],
+     "trio_points": 13,
+     "trio_syn_odds": 1.8
+    },
+    "trio": [
+     {
+      "amount": 100,
+      "ev": 0.65,
+      "key": "1,2,4",
+      "label": "三連複",
+      "odds": 6.4,
+      "prob": 0.10085,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.71,
+      "key": "2,4,7",
+      "label": "三連複",
+      "odds": 9.3,
+      "prob": 0.07674,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.7,
+      "key": "1,2,6",
+      "label": "三連複",
+      "odds": 12.1,
+      "prob": 0.05818,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.78,
+      "key": "2,6,7",
+      "label": "三連複",
+      "odds": 17.6,
+      "prob": 0.04422,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.7,
+      "key": "1,2,7",
+      "label": "三連複",
+      "odds": 25.9,
+      "prob": 0.02691,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.75,
+      "key": "1,2,3",
+      "label": "三連複",
+      "odds": 36.6,
+      "prob": 0.02057,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.84,
+      "key": "2,3,7",
+      "label": "三連複",
+      "odds": 53.5,
+      "prob": 0.01562,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.84,
+      "key": "1,2,9",
+      "label": "三連複",
+      "odds": 59.0,
+      "prob": 0.01423,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.93,
+      "key": "2,7,9",
+      "label": "三連複",
+      "odds": 86.3,
+      "prob": 0.0108,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.85,
+      "key": "1,2,5",
+      "label": "三連複",
+      "odds": 102.2,
+      "prob": 0.00831,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.94,
+      "key": "2,5,7",
+      "label": "三連複",
+      "odds": 149.6,
+      "prob": 0.00631,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.92,
+      "key": "1,2,8",
+      "label": "三連複",
+      "odds": 181.0,
+      "prob": 0.0051,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 1.03,
+      "key": "2,7,8",
+      "label": "三連複",
+      "odds": 265.0,
+      "prob": 0.00387,
+      "tag": "sanfuku"
+     }
+    ],
+    "wide": [
+     {
+      "amount": 100,
+      "ev": 0.7,
+      "key": "1,2",
+      "label": "ワイド",
+      "odds": 3.0,
+      "prob": 0.2342,
+      "tag": "wide"
+     },
+     {
+      "amount": 100,
+      "ev": 0.76,
+      "key": "2,7",
+      "label": "ワイド",
+      "odds": 4.1,
+      "prob": 0.1845,
+      "tag": "wide"
+     },
+     {
+      "amount": 100,
+      "ev": 0.81,
+      "key": "2,3",
+      "label": "ワイド",
+      "odds": 5.6,
+      "prob": 0.1448,
+      "tag": "wide"
+     }
+    ],
+    "win": [
+     {
+      "amount": 100,
+      "ev": 0.74,
+      "key": 2,
+      "label": "単勝",
+      "odds": 2.1,
+      "prob": 0.3513,
+      "tag": "tan"
+     }
+    ]
+   },
+   "formatted": [
+    {
+     "amt": "¥100",
+     "est": "2.1倍",
+     "horse": "#2 B",
+     "label": "単勝（軸）",
+     "tag": "tan"
+    },
+    {
+     "amt": "¥300",
+     "axis": 2,
+     "est": "3.0〜5.6倍",
+     "horse": "#2 - #1・#7・#3",
+     "label": "ワイド(3点)",
+     "mates": [
+      {
+       "n": 1,
+       "name": "A",
+       "odds": 3.0,
+       "prob": 0.2342
+      },
+      {
+       "n": 7,
+       "name": "G",
+       "odds": 4.1,
+       "prob": 0.1845
+      },
+      {
+       "n": 3,
+       "name": "C",
+       "odds": 5.6,
+       "prob": 0.1448
+      }
+     ],
+     "tag": "wide"
+    },
+    {
+     "amt": "¥400",
+     "axis": 2,
+     "est": "8.2〜25.9倍",
+     "horse": "#2 - #1・#7・#3・#9",
+     "label": "馬連(4点)",
+     "mates": [
+      {
+       "n": 1,
+       "name": "A",
+       "odds": 8.2,
+       "prob": 0.0845
+      },
+      {
+       "n": 7,
+       "name": "G",
+       "odds": 11.7,
+       "prob": 0.0652
+      },
+      {
+       "n": 3,
+       "name": "C",
+       "odds": 16.3,
+       "prob": 0.0504
+      },
+      {
+       "n": 9,
+       "name": "I",
+       "odds": 25.9,
+       "prob": 0.0353
+      }
+     ],
+     "syn_odds": 3.3,
+     "tag": "umaren"
+    },
+    {
+     "amt": "¥1300",
+     "combos": [
+      "1-2-4",
+      "2-4-7",
+      "1-2-6",
+      "2-6-7",
+      "1-2-7",
+      "1-2-3",
+      "2-3-7",
+      "1-2-9",
+      "2-7-9",
+      "1-2-5",
+      "2-5-7",
+      "1-2-8",
+      "2-7-8"
+     ],
+     "est": "¥640〜¥26,500",
+     "label": "三連複(13点)",
+     "legs": [
+      [
+       2
+      ],
+      [
+       1,
+       7
+      ],
+      [
+       1,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ]
+     ],
+     "nums": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9
+     ],
+     "syn_odds": 1.8,
+     "tag": "sanfuku",
+     "trio_type": "formation"
+    }
+   ],
+   "horses": [
+    {
+     "n": 1,
+     "name": "A",
+     "odds": 7.8,
+     "rating": -0.55,
+     "rl_rank": 4
+    },
+    {
+     "n": 2,
+     "name": "B",
+     "odds": 2.1,
+     "rating": 0.8,
+     "rl_rank": 1
+    },
+    {
+     "n": 3,
+     "name": "C",
+     "odds": 15.2,
+     "rating": -1.05,
+     "rl_rank": 6
+    },
+    {
+     "n": 4,
+     "name": "D",
+     "odds": 3.4,
+     "rating": 0.31,
+     "rl_rank": 2
+    },
+    {
+     "n": 5,
+     "name": "E",
+     "odds": 41.0,
+     "rating": -1.92,
+     "rl_rank": 8
+    },
+    {
+     "n": 6,
+     "name": "F",
+     "odds": 5.6,
+     "rating": -0.12,
+     "rl_rank": 3
+    },
+    {
+     "n": 7,
+     "name": "G",
+     "odds": 11.0,
+     "rating": -0.8,
+     "rl_rank": 5
+    },
+    {
+     "n": 8,
+     "name": "H",
+     "odds": 72.0,
+     "rating": -2.4,
+     "rl_rank": 9
+    },
+    {
+     "n": 9,
+     "name": "I",
+     "odds": 24.0,
+     "rating": -1.4,
+     "rl_rank": 7
+    }
+   ],
+   "name": "9頭"
+  },
+  {
+   "axis_bets": {
+    "quinella": [
+     {
+      "amount": 100,
+      "ev": 0.79,
+      "key": "2,3",
+      "label": "馬連",
+      "odds": 7.3,
+      "prob": 0.1087,
+      "tag": "umaren"
+     },
+     {
+      "amount": 100,
+      "ev": 0.84,
+      "key": "2,6",
+      "label": "馬連",
+      "odds": 12.0,
+      "prob": 0.0698,
+      "tag": "umaren"
+     }
+    ],
+    "summary": {
+     "axis": 2,
+     "payout_max": 11070,
+     "payout_min": 420,
+     "quinella_syn_odds": 4.5,
+     "total_amount": 1200,
+     "total_points": 12,
+     "trio_legs": [
+      [
+       2
+      ],
+      [
+       3,
+       6
+      ],
+      [
+       1,
+       3,
+       4,
+       5,
+       6
+      ]
+     ],
+     "trio_points": 7,
+     "trio_syn_odds": 1.6
+    },
+    "trio": [
+     {
+      "amount": 100,
+      "ev": 0.75,
+      "key": "1,2,3",
+      "label": "三連複",
+      "odds": 4.2,
+      "prob": 0.17975,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.8,
+      "key": "1,2,6",
+      "label": "三連複",
+      "odds": 7.1,
+      "prob": 0.11297,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.78,
+      "key": "2,3,4",
+      "label": "三連複",
+      "odds": 8.6,
+      "prob": 0.09061,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.83,
+      "key": "2,4,6",
+      "label": "三連複",
+      "odds": 14.6,
+      "prob": 0.05674,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.85,
+      "key": "2,3,6",
+      "label": "三連複",
+      "odds": 27.5,
+      "prob": 0.03079,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.91,
+      "key": "2,3,5",
+      "label": "三連複",
+      "odds": 64.9,
+      "prob": 0.01403,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.97,
+      "key": "2,5,6",
+      "label": "三連複",
+      "odds": 110.7,
+      "prob": 0.00875,
+      "tag": "sanfuku"
+     }
+    ],
+    "wide": [
+     {
+      "amount": 100,
+      "ev": 0.79,
+      "key": "2,3",
+      "label": "ワイド",
+      "odds": 2.5,
+      "prob": 0.3152,
+      "tag": "wide"
+     },
+     {
+      "amount": 100,
+      "ev": 0.82,
+      "key": "2,6",
+      "label": "ワイド",
+      "odds": 3.9,
+      "prob": 0.2092,
+      "tag": "wide"
+     }
+    ],
+    "win": [
+     {
+      "amount": 100,
+      "ev": 0.81,
+      "key": 2,
+      "label": "単勝",
+      "odds": 1.9,
+      "prob": 0.4284,
+      "tag": "tan"
+     }
+    ]
+   },
+   "formatted": [
+    {
+     "amt": "¥100",
+     "est": "1.9倍",
+     "horse": "#2 B",
+     "label": "単勝（軸）",
+     "tag": "tan"
+    },
+    {
+     "amt": "¥200",
+     "axis": 2,
+     "est": "2.5〜3.9倍",
+     "horse": "#2 - #3・#6",
+     "label": "ワイド(2点)",
+     "mates": [
+      {
+       "n": 3,
+       "name": "C",
+       "odds": 2.5,
+       "prob": 0.3152
+      },
+      {
+       "n": 6,
+       "name": "F",
+       "odds": 3.9,
+       "prob": 0.2092
+      }
+     ],
+     "tag": "wide"
+    },
+    {
+     "amt": "¥200",
+     "axis": 2,
+     "est": "7.3〜12.0倍",
+     "horse": "#2 - #3・#6",
+     "label": "馬連(2点)",
+     "mates": [
+      {
+       "n": 3,
+       "name": "C",
+       "odds": 7.3,
+       "prob": 0.1087
+      },
+      {
+       "n": 6,
+       "name": "F",
+       "odds": 12.0,
+       "prob": 0.0698
+      }
+     ],
+     "syn_odds": 4.5,
+     "tag": "umaren"
+    },
+    {
+     "amt": "¥700",
+     "combos": [
+      "1-2-3",
+      "1-2-6",
+      "2-3-4",
+      "2-4-6",
+      "2-3-6",
+      "2-3-5",
+      "2-5-6"
+     ],
+     "est": "¥420〜¥11,070",
+     "label": "三連複(7点)",
+     "legs": [
+      [
+       2
+      ],
+      [
+       3,
+       6
+      ],
+      [
+       1,
+       3,
+       4,
+       5,
+       6
+      ]
+     ],
+     "nums": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+     ],
+     "syn_odds": 1.6,
+     "tag": "sanfuku",
+     "trio_type": "formation"
+    }
+   ],
+   "horses": [
+    {
+     "n": 1,
+     "name": "A",
+     "odds": 3.1,
+     "rating": 0.4,
+     "rl_rank": 2
+    },
+    {
+     "n": 2,
+     "name": "B",
+     "odds": 1.9,
+     "rating": 0.95,
+     "rl_rank": 1
+    },
+    {
+     "n": 3,
+     "name": "C",
+     "odds": 8.9,
+     "rating": -0.62,
+     "rl_rank": 4
+    },
+    {
+     "n": 4,
+     "name": "D",
+     "odds": 5.2,
+     "rating": -0.1,
+     "rl_rank": 3
+    },
+    {
+     "n": 5,
+     "name": "E",
+     "odds": 33.0,
+     "rating": -1.8,
+     "rl_rank": 6
+    },
+    {
+     "n": 6,
+     "name": "F",
+     "odds": 14.5,
+     "rating": -1.05,
+     "rl_rank": 5
+    }
+   ],
+   "name": "6頭"
+  },
+  {
+   "axis_bets": {
+    "quinella": [],
+    "summary": {
+     "axis": 1,
+     "total_amount": 100,
+     "total_points": 1
+    },
+    "trio": [],
+    "wide": [],
+    "win": [
+     {
+      "amount": 100,
+      "ev": 0.81,
+      "key": 1,
+      "label": "単勝",
+      "odds": 1.8,
+      "prob": 0.4483,
+      "tag": "tan"
+     }
+    ]
+   },
+   "formatted": [
+    {
+     "amt": "¥100",
+     "est": "1.8倍",
+     "horse": "#1 A",
+     "label": "単勝（軸）",
+     "tag": "tan"
+    }
+   ],
+   "horses": [
+    {
+     "n": 1,
+     "name": "A",
+     "odds": 1.8,
+     "rating": 1.1,
+     "rl_rank": 1
+    },
+    {
+     "n": 2,
+     "name": "B",
+     "odds": 3.0,
+     "rating": 0.45,
+     "rl_rank": 2
+    },
+    {
+     "n": 3,
+     "name": "C",
+     "odds": 4.4,
+     "rating": 0.05,
+     "rl_rank": 3
+    },
+    {
+     "n": 4,
+     "name": "D",
+     "odds": 6.2,
+     "rating": -0.35,
+     "rl_rank": 4
+    },
+    {
+     "n": 5,
+     "name": "E",
+     "odds": 35.0,
+     "rating": -1.85,
+     "rl_rank": 5
+    },
+    {
+     "n": 6,
+     "name": "F",
+     "odds": 60.0,
+     "rating": -2.3,
+     "rl_rank": 6
+    },
+    {
+     "n": 7,
+     "name": "G",
+     "odds": 88.0,
+     "rating": -2.7,
+     "rl_rank": 7
+    },
+    {
+     "n": 8,
+     "name": "H",
+     "odds": 120.0,
+     "rating": -3.05,
+     "rl_rank": 8
+    }
+   ],
+   "name": "中穴が1頭もいない（全馬7倍未満か30倍以上）"
+  },
+  {
+   "axis_bets": {
+    "quinella": [
+     {
+      "amount": 100,
+      "ev": 0.88,
+      "key": "1,4",
+      "label": "馬連",
+      "odds": 9.2,
+      "prob": 0.0956,
+      "tag": "umaren"
+     }
+    ],
+    "summary": {
+     "axis": 1,
+     "quinella_syn_odds": 9.2,
+     "total_amount": 300,
+     "total_points": 3
+    },
+    "trio": [],
+    "wide": [
+     {
+      "amount": 100,
+      "ev": 0.84,
+      "key": "1,4",
+      "label": "ワイド",
+      "odds": 2.9,
+      "prob": 0.2913,
+      "tag": "wide"
+     }
+    ],
+    "win": [
+     {
+      "amount": 100,
+      "ev": 0.84,
+      "key": 1,
+      "label": "単勝",
+      "odds": 1.7,
+      "prob": 0.4938,
+      "tag": "tan"
+     }
+    ]
+   },
+   "formatted": [
+    {
+     "amt": "¥100",
+     "est": "1.7倍",
+     "horse": "#1 A",
+     "label": "単勝（軸）",
+     "tag": "tan"
+    },
+    {
+     "amt": "¥100",
+     "axis": 1,
+     "est": "2.9倍",
+     "horse": "#1 - #4",
+     "label": "ワイド(1点)",
+     "mates": [
+      {
+       "n": 4,
+       "name": "D",
+       "odds": 2.9,
+       "prob": 0.2913
+      }
+     ],
+     "tag": "wide"
+    },
+    {
+     "amt": "¥100",
+     "axis": 1,
+     "est": "9.2倍",
+     "horse": "#1 - #4",
+     "label": "馬連(1点)",
+     "mates": [
+      {
+       "n": 4,
+       "name": "D",
+       "odds": 9.2,
+       "prob": 0.0956
+      }
+     ],
+     "syn_odds": 9.2,
+     "tag": "umaren"
+    }
+   ],
+   "horses": [
+    {
+     "n": 1,
+     "name": "A",
+     "odds": 1.7,
+     "rating": 1.2,
+     "rl_rank": 1
+    },
+    {
+     "n": 2,
+     "name": "B",
+     "odds": 2.9,
+     "rating": 0.5,
+     "rl_rank": 2
+    },
+    {
+     "n": 3,
+     "name": "C",
+     "odds": 4.1,
+     "rating": 0.1,
+     "rl_rank": 3
+    },
+    {
+     "n": 4,
+     "name": "D",
+     "odds": 12.0,
+     "rating": -0.85,
+     "rl_rank": 4
+    },
+    {
+     "n": 5,
+     "name": "E",
+     "odds": 40.0,
+     "rating": -2.0,
+     "rl_rank": 5
+    },
+    {
+     "n": 6,
+     "name": "F",
+     "odds": 66.0,
+     "rating": -2.45,
+     "rl_rank": 6
+    }
+   ],
+   "name": "中穴が1頭だけ（三連複が組めない）"
+  },
+  {
+   "axis_bets": {
+    "quinella": [
+     {
+      "amount": 100,
+      "ev": 0.7,
+      "key": "1,2",
+      "label": "馬連",
+      "odds": 7.8,
+      "prob": 0.0901,
+      "tag": "umaren"
+     },
+     {
+      "amount": 100,
+      "ev": 0.7,
+      "key": "1,3",
+      "label": "馬連",
+      "odds": 8.3,
+      "prob": 0.0845,
+      "tag": "umaren"
+     }
+    ],
+    "summary": {
+     "axis": 1,
+     "payout_max": 12990,
+     "payout_min": 1510,
+     "quinella_syn_odds": 4.0,
+     "total_amount": 1900,
+     "total_points": 19,
+     "trio_legs": [
+      [
+       1
+      ],
+      [
+       2,
+       3
+      ],
+      [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ]
+     ],
+     "trio_points": 13,
+     "trio_syn_odds": 1.8
+    },
+    "trio": [
+     {
+      "amount": 100,
+      "ev": 0.74,
+      "key": "1,2,3",
+      "label": "三連複",
+      "odds": 15.1,
+      "prob": 0.04922,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.74,
+      "key": "1,2,4",
+      "label": "三連複",
+      "odds": 16.0,
+      "prob": 0.04594,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.73,
+      "key": "1,2,5",
+      "label": "三連複",
+      "odds": 16.9,
+      "prob": 0.0429,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.73,
+      "key": "1,3,4",
+      "label": "三連複",
+      "odds": 17.0,
+      "prob": 0.04284,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.71,
+      "key": "1,2,6",
+      "label": "三連複",
+      "odds": 17.8,
+      "prob": 0.04009,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.72,
+      "key": "1,3,5",
+      "label": "三連複",
+      "odds": 18.0,
+      "prob": 0.04001,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.7,
+      "key": "1,2,7",
+      "label": "三連複",
+      "odds": 18.7,
+      "prob": 0.03749,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.71,
+      "key": "1,3,6",
+      "label": "三連複",
+      "odds": 19.0,
+      "prob": 0.03739,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.7,
+      "key": "1,3,7",
+      "label": "三連複",
+      "odds": 19.9,
+      "prob": 0.03496,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.72,
+      "key": "1,2,8",
+      "label": "三連複",
+      "odds": 63.4,
+      "prob": 0.01138,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.72,
+      "key": "1,3,8",
+      "label": "三連複",
+      "odds": 67.5,
+      "prob": 0.01061,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.71,
+      "key": "1,2,9",
+      "label": "三連複",
+      "odds": 122.0,
+      "prob": 0.00585,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.71,
+      "key": "1,3,9",
+      "label": "三連複",
+      "odds": 129.9,
+      "prob": 0.00545,
+      "tag": "sanfuku"
+     }
+    ],
+    "wide": [
+     {
+      "amount": 100,
+      "ev": 0.73,
+      "key": "1,2",
+      "label": "ワイド",
+      "odds": 3.1,
+      "prob": 0.237,
+      "tag": "wide"
+     },
+     {
+      "amount": 100,
+      "ev": 0.72,
+      "key": "1,3",
+      "label": "ワイド",
+      "odds": 3.2,
+      "prob": 0.2243,
+      "tag": "wide"
+     },
+     {
+      "amount": 100,
+      "ev": 0.72,
+      "key": "1,4",
+      "label": "ワイド",
+      "odds": 3.4,
+      "prob": 0.2122,
+      "tag": "wide"
+     }
+    ],
+    "win": [
+     {
+      "amount": 100,
+      "ev": 0.72,
+      "key": 1,
+      "label": "単勝",
+      "odds": 2.6,
+      "prob": 0.2786,
+      "tag": "tan"
+     }
+    ]
+   },
+   "formatted": [
+    {
+     "amt": "¥100",
+     "est": "2.6倍",
+     "horse": "#1 A",
+     "label": "単勝（軸）",
+     "tag": "tan"
+    },
+    {
+     "amt": "¥300",
+     "axis": 1,
+     "est": "3.1〜3.4倍",
+     "horse": "#1 - #2・#3・#4",
+     "label": "ワイド(3点)",
+     "mates": [
+      {
+       "n": 2,
+       "name": "B",
+       "odds": 3.1,
+       "prob": 0.237
+      },
+      {
+       "n": 3,
+       "name": "C",
+       "odds": 3.2,
+       "prob": 0.2243
+      },
+      {
+       "n": 4,
+       "name": "D",
+       "odds": 3.4,
+       "prob": 0.2122
+      }
+     ],
+     "tag": "wide"
+    },
+    {
+     "amt": "¥200",
+     "axis": 1,
+     "est": "7.8〜8.3倍",
+     "horse": "#1 - #2・#3",
+     "label": "馬連(2点)",
+     "mates": [
+      {
+       "n": 2,
+       "name": "B",
+       "odds": 7.8,
+       "prob": 0.0901
+      },
+      {
+       "n": 3,
+       "name": "C",
+       "odds": 8.3,
+       "prob": 0.0845
+      }
+     ],
+     "syn_odds": 4.0,
+     "tag": "umaren"
+    },
+    {
+     "amt": "¥1300",
+     "combos": [
+      "1-2-3",
+      "1-2-4",
+      "1-2-5",
+      "1-3-4",
+      "1-2-6",
+      "1-3-5",
+      "1-2-7",
+      "1-3-6",
+      "1-3-7",
+      "1-2-8",
+      "1-3-8",
+      "1-2-9",
+      "1-3-9"
+     ],
+     "est": "¥1,510〜¥12,990",
+     "label": "三連複(13点)",
+     "legs": [
+      [
+       1
+      ],
+      [
+       2,
+       3
+      ],
+      [
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9
+      ]
+     ],
+     "nums": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9
+     ],
+     "syn_odds": 1.8,
+     "tag": "sanfuku",
+     "trio_type": "formation"
+    }
+   ],
+   "horses": [
+    {
+     "n": 1,
+     "name": "A",
+     "odds": 2.6,
+     "rating": 0.6,
+     "rl_rank": 1
+    },
+    {
+     "n": 2,
+     "name": "B",
+     "odds": 7.2,
+     "rating": -0.18,
+     "rl_rank": 2
+    },
+    {
+     "n": 3,
+     "name": "C",
+     "odds": 7.6,
+     "rating": -0.24,
+     "rl_rank": 3
+    },
+    {
+     "n": 4,
+     "name": "D",
+     "odds": 8.0,
+     "rating": -0.3,
+     "rl_rank": 4
+    },
+    {
+     "n": 5,
+     "name": "E",
+     "odds": 8.4,
+     "rating": -0.36,
+     "rl_rank": 5
+    },
+    {
+     "n": 6,
+     "name": "F",
+     "odds": 8.8,
+     "rating": -0.42,
+     "rl_rank": 6
+    },
+    {
+     "n": 7,
+     "name": "G",
+     "odds": 9.2,
+     "rating": -0.48,
+     "rl_rank": 7
+    },
+    {
+     "n": 8,
+     "name": "H",
+     "odds": 29.0,
+     "rating": -1.6,
+     "rl_rank": 8
+    },
+    {
+     "n": 9,
+     "name": "I",
+     "odds": 55.0,
+     "rating": -2.25,
+     "rl_rank": 9
+    },
+    {
+     "n": 10,
+     "name": "J",
+     "odds": 80.0,
+     "rating": -2.6,
+     "rl_rank": 10
+    }
+   ],
+   "name": "中穴が低めに密集（馬連の合成オッズ3.0で打ち切られる）"
+  },
+  {
+   "axis_bets": {
+    "quinella": [],
+    "summary": {
+     "axis": 1,
+     "total_amount": 200,
+     "total_points": 2
+    },
+    "trio": [],
+    "wide": [
+     {
+      "amount": 100,
+      "ev": 0.99,
+      "key": "1,2",
+      "label": "ワイド",
+      "odds": 1.0,
+      "prob": 0.9855,
+      "tag": "wide"
+     }
+    ],
+    "win": [
+     {
+      "amount": 100,
+      "ev": 1.11,
+      "key": 1,
+      "label": "単勝",
+      "odds": 1.2,
+      "prob": 0.9265,
+      "tag": "tan"
+     }
+    ]
+   },
+   "formatted": [
+    {
+     "amt": "¥100",
+     "est": "1.2倍",
+     "horse": "#1 A",
+     "label": "単勝（軸）",
+     "tag": "tan"
+    },
+    {
+     "amt": "¥100",
+     "axis": 1,
+     "est": "1.0倍",
+     "horse": "#1 - #2",
+     "label": "ワイド(1点)",
+     "mates": [
+      {
+       "n": 2,
+       "name": "B",
+       "odds": 1.0,
+       "prob": 0.9855
+      }
+     ],
+     "tag": "wide"
+    }
+   ],
+   "horses": [
+    {
+     "n": 1,
+     "name": "A",
+     "odds": 1.2,
+     "rating": 2.6,
+     "rl_rank": 1
+    },
+    {
+     "n": 2,
+     "name": "B",
+     "odds": 7.5,
+     "rating": -0.1,
+     "rl_rank": 2
+    },
+    {
+     "n": 3,
+     "name": "C",
+     "odds": 60.0,
+     "rating": -2.4,
+     "rl_rank": 3
+    },
+    {
+     "n": 4,
+     "name": "D",
+     "odds": 120.0,
+     "rating": -3.1,
+     "rl_rank": 4
+    },
+    {
+     "n": 5,
+     "name": "E",
+     "odds": 200.0,
+     "rating": -3.6,
+     "rl_rank": 5
+    }
+   ],
+   "name": "5頭・軸が抜けている（ワイドの推定配当が床1.0に当たる）"
+  },
+  {
+   "axis_bets": {
+    "quinella": [
+     {
+      "amount": 100,
+      "ev": 0.68,
+      "key": "2,5",
+      "label": "馬連",
+      "odds": 7.0,
+      "prob": 0.097,
+      "tag": "umaren"
+     },
+     {
+      "amount": 100,
+      "ev": 0.7,
+      "key": "2,3",
+      "label": "馬連",
+      "odds": 10.3,
+      "prob": 0.0675,
+      "tag": "umaren"
+     },
+     {
+      "amount": 100,
+      "ev": 0.84,
+      "key": "2,8",
+      "label": "馬連",
+      "odds": 20.8,
+      "prob": 0.0404,
+      "tag": "umaren"
+     }
+    ],
+    "summary": {
+     "axis": 2,
+     "payout_max": 6450,
+     "payout_min": 459,
+     "quinella_syn_odds": 3.5,
+     "total_amount": 1400,
+     "total_points": 14,
+     "trio_legs": [
+      [
+       2
+      ],
+      [
+       3,
+       5
+      ],
+      [
+       1,
+       3,
+       4,
+       5,
+       8
+      ]
+     ],
+     "trio_points": 7,
+     "trio_syn_odds": 1.5
+    },
+    "trio": [
+     {
+      "amount": 100,
+      "ev": 0.57,
+      "key": "2,4,5",
+      "label": "三連複",
+      "odds": 4.6,
+      "prob": 0.12303,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.57,
+      "key": "2,3,4",
+      "label": "三連複",
+      "odds": 6.8,
+      "prob": 0.0838,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.61,
+      "key": "1,2,5",
+      "label": "三連複",
+      "odds": 8.4,
+      "prob": 0.07316,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.63,
+      "key": "1,2,3",
+      "label": "三連複",
+      "odds": 12.7,
+      "prob": 0.04975,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.64,
+      "key": "2,3,5",
+      "label": "三連複",
+      "odds": 20.5,
+      "prob": 0.03113,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.78,
+      "key": "2,5,8",
+      "label": "三連複",
+      "odds": 42.8,
+      "prob": 0.01828,
+      "tag": "sanfuku"
+     },
+     {
+      "amount": 100,
+      "ev": 0.8,
+      "key": "2,3,8",
+      "label": "三連複",
+      "odds": 64.5,
+      "prob": 0.01241,
+      "tag": "sanfuku"
+     }
+    ],
+    "wide": [
+     {
+      "amount": 100,
+      "ev": 0.65,
+      "key": "2,5",
+      "label": "ワイド",
+      "odds": 2.4,
+      "prob": 0.269,
+      "tag": "wide"
+     },
+     {
+      "amount": 100,
+      "ev": 0.68,
+      "key": "2,3",
+      "label": "ワイド",
+      "odds": 3.5,
+      "prob": 0.193,
+      "tag": "wide"
+     },
+     {
+      "amount": 100,
+      "ev": 0.81,
+      "key": "2,8",
+      "label": "ワイド",
+      "odds": 6.8,
+      "prob": 0.1186,
+      "tag": "wide"
+     }
+    ],
+    "win": [
+     {
+      "amount": 100,
+      "ev": 0.87,
+      "key": 2,
+      "label": "単勝",
+      "odds": 2.4,
+      "prob": 0.3642,
+      "tag": "tan"
+     }
+    ]
+   },
+   "formatted": [
+    {
+     "amt": "¥100",
+     "est": "2.4倍",
+     "horse": "#2 B",
+     "label": "単勝（軸）",
+     "tag": "tan"
+    },
+    {
+     "amt": "¥300",
+     "axis": 2,
+     "est": "2.4〜6.8倍",
+     "horse": "#2 - #5・#3・#8",
+     "label": "ワイド(3点)",
+     "mates": [
+      {
+       "n": 5,
+       "name": "E",
+       "odds": 2.4,
+       "prob": 0.269
+      },
+      {
+       "n": 3,
+       "name": "C",
+       "odds": 3.5,
+       "prob": 0.193
+      },
+      {
+       "n": 8,
+       "name": "H",
+       "odds": 6.8,
+       "prob": 0.1186
+      }
+     ],
+     "tag": "wide"
+    },
+    {
+     "amt": "¥300",
+     "axis": 2,
+     "est": "7.0〜20.8倍",
+     "horse": "#2 - #5・#3・#8",
+     "label": "馬連(3点)",
+     "mates": [
+      {
+       "n": 5,
+       "name": "E",
+       "odds": 7.0,
+       "prob": 0.097
+      },
+      {
+       "n": 3,
+       "name": "C",
+       "odds": 10.3,
+       "prob": 0.0675
+      },
+      {
+       "n": 8,
+       "name": "H",
+       "odds": 20.8,
+       "prob": 0.0404
+      }
+     ],
+     "syn_odds": 3.5,
+     "tag": "umaren"
+    },
+    {
+     "amt": "¥700",
+     "combos": [
+      "2-4-5",
+      "2-3-4",
+      "1-2-5",
+      "1-2-3",
+      "2-3-5",
+      "2-5-8",
+      "2-3-8"
+     ],
+     "est": "¥459〜¥6,450",
+     "label": "三連複(7点)",
+     "legs": [
+      [
+       2
+      ],
+      [
+       3,
+       5
+      ],
+      [
+       1,
+       3,
+       4,
+       5,
+       8
+      ]
+     ],
+     "nums": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      8
+     ],
+     "syn_odds": 1.5,
+     "tag": "sanfuku",
+     "trio_type": "formation"
+    }
+   ],
+   "horses": [
+    {
+     "n": 1,
+     "name": "A",
+     "odds": 6.0,
+     "rating": -0.2,
+     "rl_rank": 3
+    },
+    {
+     "n": 2,
+     "name": "B",
+     "odds": 2.4,
+     "rating": 0.7,
+     "rl_rank": 1
+    },
+    {
+     "n": 3,
+     "name": "C",
+     "odds": 13.0,
+     "rating": -0.95,
+     "rl_rank": 5
+    },
+    {
+     "n": 4,
+     "name": "D",
+     "odds": 3.8,
+     "rating": 0.2,
+     "rl_rank": 2
+    },
+    {
+     "n": 5,
+     "name": "E",
+     "odds": 9.0,
+     "rating": -0.6,
+     "rl_rank": 4
+    },
+    {
+     "n": 6,
+     "name": "F",
+     "odds": 0.0,
+     "rating": -1.7,
+     "rl_rank": 6
+    },
+    {
+     "n": 7,
+     "name": "G",
+     "odds": 0.0,
+     "rating": -2.1,
+     "rl_rank": 7
+    },
+    {
+     "n": 8,
+     "name": "H",
+     "odds": 26.0,
+     "rating": -1.45,
+     "rl_rank": 8
+    }
+   ],
+   "name": "オッズ欠損あり（2頭が0倍）"
+  }
+ ]
+}
