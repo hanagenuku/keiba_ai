@@ -24,7 +24,7 @@ LATEST = os.path.join(BASE, 'data', 'latest.json')
 
 
 def _real_main_race():
-    """latest.json から web見解の対象（10R/11R）を1つ返す。"""
+    """latest.json から web見解の対象レースを1つ返す。"""
     with open(LATEST, encoding='utf-8') as f:
         d = json.load(f)
     for venue, rs in (d.get('races') or {}).items():
@@ -33,7 +33,7 @@ def _real_main_race():
                 r = dict(r)
                 r['_venue'] = venue
                 return r
-    pytest.skip('latest.json に 10R/11R が無い')
+    pytest.skip('latest.json にレースが無い')
 
 
 def _findings_for(race, *, with_sources=True, extra_horses=None):
@@ -198,12 +198,16 @@ class TestStaleFindings:
             race['race_id'], race['r'], race['horses'], f,
             race_date=str(race['race_id'])[:8]) is None
 
-    def test_non_main_race_is_refused(self):
-        """10R/11R 以外には web見解を出さない（対象を広げていないこと）。"""
+    def test_any_race_number_gets_the_view_since_2026_11_10(self):
+        """2026-11-10 に 10R/11R → 全レースへ広げた（平場の推奨レースにも載せるため）。
+        レース番号として成り立たない値だけ落とす。"""
         race = _real_main_race()
         f = _findings_for(race)
         assert claude_web.build_claude_view(
             race['race_id'], 3, race['horses'], f,
+            race_date=str(race['race_id'])[:8]) is not None
+        assert claude_web.build_claude_view(
+            race['race_id'], 13, race['horses'], f,
             race_date=str(race['race_id'])[:8]) is None
 
 

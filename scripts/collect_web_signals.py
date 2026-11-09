@@ -202,14 +202,18 @@ def _save(conn, url, date, venue, rows, meta, status):
     conn.commit()
 
 
-# 台帳がこの status を付けた情報源は収集しない。
-# 🔑 「不採用」「取得不可」と決めたものを毎週取りに行かない
-#    （相手のサーバに無駄な負荷をかけないため）。
-# ⚠ 台帳に**載っていない**情報源は止めない。未登録は「決定していない」だけで、
-#   「集めないと決めた」ではない。測る前はデータが無いと測れないので
-#   untested / measuring も集める。
-NON_COLLECTABLE_STATUS = ('rejected', 'unusable', 'blocked_pending_user',
-                          'closed_unmeasured')
+# 台帳がこの status を付けた情報源は収集しない。**取得してはいけない／できないもの**だけ。
+#
+# 🔴 2026-11-10 に `rejected` / `closed_unmeasured` を外した（ユーザー指示）。
+#    「不採用」は**本番モデルに入れない**という判定で、「集めない」という判定ではない。
+#    ユーザーの方針は「いまは広く集める段階。実績が溜まってから信頼できる情報源を見極める」。
+#    以前は不採用にした時点で収集も止めていたので、蓄積が 2026-09-28 で止まり、
+#    しかも成果物の無い成功runを復元元に選び続けて**6週連続で失敗していた**
+#    （2026-10-05〜11-09。docs/sessions/2026-11-10_web収集の拡大.md）。
+# 🔑 本番に届くかどうかは別の関門（`src/utils/source_registry.py` と
+#    `web_signals.attach_for_adopted`）が決める。ここを広げても予想は1つも変わらない。
+# ⚠ 相手のサーバへの負荷は budget・実時間上限・リクエスト間隔で抑える（North Star #4）。
+NON_COLLECTABLE_STATUS = ('unusable', 'blocked_pending_user')
 
 
 def _status_of(base_dir, source):
@@ -229,8 +233,8 @@ def collect(base_dir='.', start_ym='202301', end_ym='202609',
     st = _status_of(base_dir, SOURCE_NAME)
     if not force and st in NON_COLLECTABLE_STATUS:
         print(f'⏭ {SOURCE_NAME} は台帳の status={st} なので収集しない'
-              f'（{"/".join(NON_COLLECTABLE_STATUS)} は集めない）')
-        print('   別の問いのために集め直すなら --force')
+              f'（{"/".join(NON_COLLECTABLE_STATUS)} は取得不可なので集めない）')
+        print('   それでも集めるなら --force')
         return {'total': 0, 'done': 0, 'todo': 0, 'fetched': 0, 'rows': 0,
                 'failed': 0, 'left': 0, 'skipped_reason': f'status={st}'}
     db_path = os.path.join(base_dir, DB_REL)

@@ -45,13 +45,40 @@ def _notes(**over):
 HORSES = [{'num': n} for n in (9, 13, 14, 15)]
 
 
-def test_target_races_are_10_and_11_only():
-    assert WEB_RACE_NUMS == (10, 11)
+def test_target_races_are_all_races():
+    """2026-11-10: 10R/11R だけ → 全レースへ広げた（ユーザー指示「今はより多くの情報を
+    web から取り込む段階」）。有料記事は 2026-11-04 からレース番号を問わないのに、
+    web 見解だけ 10R/11R のままで平場の推奨レースに1件も載らなかった。"""
+    assert WEB_RACE_NUMS == tuple(range(1, 13))
 
 
-def test_other_race_numbers_get_nothing():
+def test_any_race_number_with_findings_gets_a_view():
     for rno in (1, 5, 9, 12):
-        assert build_claude_view(RID, rno, HORSES, _notes(), '20260927') is None, rno
+        assert build_claude_view(RID, rno, HORSES, _notes(), '20260927') is not None, rno
+
+
+def test_race_without_findings_still_gets_nothing():
+    assert build_claude_view('20260927_06_03', 3, HORSES, _notes(), '20260927') is None
+
+
+def test_picks_never_reach_the_screen_or_the_article():
+    """🔴 予想家の印は台帳にだけ流す。view に入れると AI の印と並んでしまう。"""
+    n = _notes()
+    n['races'][RID]['picks'] = [{'source': 'https://example.com/a', 'marks': {'9': '◎'}}]
+    v = build_claude_view(RID, 11, HORSES, n, '20260927')
+    assert 'picks' not in v
+
+
+def test_clean_picks_requires_a_source_url_and_valid_marks():
+    from src.features.claude_web import clean_picks
+    picks, dropped = clean_picks([
+        {'source': 'https://example.com/a', 'tipster': 'A', 'marks': {'9': '◎', '13': '?', 'x': '○'}},
+        {'source': '', 'marks': {'9': '◎'}},
+        {'source': 'https://example.com/b', 'marks': {}},
+        'not a dict',
+    ])
+    assert picks == [{'source': 'https://example.com/a', 'tipster': 'A', 'marks': {9: '◎'}}]
+    assert len(dropped) == 5
 
 
 def test_view_is_built_for_target_race():
