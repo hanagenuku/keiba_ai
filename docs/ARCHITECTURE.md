@@ -51,11 +51,11 @@
 | `commentary.py` | 見解の文章。`FORBIDDEN_PATTERNS` で陣営・調教・パドックに触れる文を落とす |
 | `tickets.py` | 買い目。堅実コース／勝負コースの2コース。`CONF_STRONG = 66` |
 | `article.py` | 記事の組み立て |
-| `web_block.py` | Claude の web 見解の別枠表示（AI の数字は変えない） |
+| `web_block.py` | Claude の web 見解の別枠表示（AI の数字は変えない）。全レース対象（2026-11-10〜） |
 | `archive.py` | 公開スナップショット（`prediction_archive/`・上書き拒否） |
 | `results.py` | 公開済みの予想に結果を追記 |
 | `danger_log.py` | 「市場の支持ほど…」の警告と着順の台帳（`data/danger_favorites.json`） |
-| `web_log.py` | web 見解と結果を情報源ごとに残す台帳（`data/web_findings_log.json`） |
+| `web_log.py` | web 見解と結果を情報源ごとに残す台帳（`data/web_findings_log.json`）。馬場・馬メモ・予想家の印（`pick`） |
 
 入口は `scripts/build_product_article.py`（`--free` で無料版、`--publish` でスナップショット保存）。
 
@@ -67,7 +67,7 @@
 |---|---|---|
 | `weekend.yml` | 予想の生成・更新（`--mode saturday / sunday / refresh`） | Routine から dispatch（朝）＋ cron 08:00 / 11:30 / 14:00 JST（追い更新） |
 | `sunday-results.yml` | 結果取得・`history.db` 保存・オッズ／メモ取り込み・PL 更新・商品の結果追記 | Routine から dispatch（夜） |
-| `collect-web-signals.yml` | web 由来シグナルの収集（採用0件なので本番には届いていない） | cron 日曜 |
+| `collect-web-signals.yml` | web 由来シグナル（kayochin 指数・全レース全馬）の蓄積。非公開DBを artifact で持ち回る。採用0件なので本番には届かない。2026-10-05〜11-09 は失敗していた（11-10 修正） | cron 月曜朝 |
 | `collect-odds.yml` | オッズ時系列の収集 | cron 金土・土日 |
 | `test.yml` | テスト（PR の CI） | push / PR |
 | `deploy-pages.yml` | アプリ（`index.html`）の公開 | main の `index.html`・`data/latest.json`・`data/stats.json` などが変わったとき |

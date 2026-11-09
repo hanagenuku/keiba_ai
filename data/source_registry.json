@@ -40,8 +40,10 @@
     "delta_auc_windows": [
      0.00333,
      0.00247,
-     0.001
-    ],
+     0.001,
+    "⚠ 2026-11-10: status は「本番モデルに採用するか」の記録。収集を止めるのは unusable / blocked_pending_user だけ。",
+    "   rejected / closed_unmeasured の情報源も集め続ける（ユーザー方針: いまは広く集める段階。見極めは蓄積のあと）。"
+  ],
     "delta_auc_mean_subset": 0.00384,
     "control_random_rank": -0.0001,
     "solo_auc": [

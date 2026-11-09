@@ -180,23 +180,39 @@ if __name__ == '__main__':
 
 
 class TestCollectionAlsoRespectsTheLedger(unittest.TestCase):
-    """🔑 台帳は「本番に届くもの」だけでなく「集めるもの」も決める。
+    """🔑 台帳は「取得してよいか」で収集を止める。「採用したか」では止めない。
 
-    不採用と決めた情報源を毎週取りに行くと、相手のサーバに無駄な負荷をかける。
-    逆に、測る前の情報源はデータが無いと測れないので untested も集める。
+    2026-11-10 まで: 不採用（rejected）にした情報源は収集も止めていた。
+    ユーザーの方針は「いまは広く集める段階。実績が溜まってから見極める」なので、
+    止めるのは**取得不可**（robots・規約・到達不能）だけにした。
+    本番に届くかどうかは `TestAdoptionRequiresEvidence` 側の関門が別に守っている。
     """
 
-    def test_rejected_source_is_not_collected(self):
+    def _collect_with_status(self, status):
+        import json
+        import tempfile
         from scripts.collect_web_signals import collect
-        r = collect(BASE, dry_run=True)
-        self.assertEqual(r['skipped_reason'], 'status=rejected')
-        self.assertEqual(r['fetched'], 0)
+        with tempfile.TemporaryDirectory() as d:
+            os.makedirs(os.path.join(d, 'data'))
+            with open(os.path.join(d, 'data', 'source_registry.json'), 'w',
+                      encoding='utf-8') as f:
+                json.dump({'version': 1, 'sources': [
+                    {'source': 'kayochinkeiba', 'status': status}]}, f)
+            return collect(d, dry_run=True)
 
-    def test_only_decided_against_statuses_block_collection(self):
+    def test_access_denied_source_is_not_collected(self):
+        for st in ('unusable', 'blocked_pending_user'):
+            r = self._collect_with_status(st)
+            self.assertEqual(r['skipped_reason'], f'status={st}')
+            self.assertEqual(r['fetched'], 0)
+
+    def test_rejection_does_not_stop_collection(self):
+        """不採用＝本番に入れない。集めるのは続ける（見極めは蓄積のあと）。"""
         from scripts.collect_web_signals import NON_COLLECTABLE_STATUS
-        self.assertIn('rejected', NON_COLLECTABLE_STATUS)
+        self.assertNotIn('rejected', NON_COLLECTABLE_STATUS)
+        self.assertNotIn('closed_unmeasured', NON_COLLECTABLE_STATUS)
         self.assertIn('unusable', NON_COLLECTABLE_STATUS)
-        self.assertIn('closed_unmeasured', NON_COLLECTABLE_STATUS)
+        self.assertIn('blocked_pending_user', NON_COLLECTABLE_STATUS)
         self.assertNotIn('untested', NON_COLLECTABLE_STATUS)
         self.assertNotIn('measuring', NON_COLLECTABLE_STATUS)
         self.assertNotIn('adopted', NON_COLLECTABLE_STATUS)
@@ -227,3 +243,30 @@ class TestCollectionAlsoRespectsTheLedger(unittest.TestCase):
         up = next(s for s in steps
                   if str(s.get('uses', '')).startswith('actions/upload-artifact'))
         self.assertEqual(up['with']['if-no-files-found'], 'warn')
+
+
+class TestRestoreSourceAlwaysHasAnArtifact(unittest.TestCase):
+    """🔴 2026-10-05〜11-09 の6週連続失敗の再発防止。
+
+    収集対象ゼロの回は成果物を作らずに成功する。復元元を「直近の成功run」で選ぶと
+    その回が選ばれ、以後は「成功runがあるのに復元できない」で永久に失敗する。
+    復元元は**成果物そのもの**から逆引きする。
+    """
+
+    def setUp(self):
+        import yaml
+        with open(os.path.join(BASE, '.github/workflows/collect-web-signals.yml'),
+                  encoding='utf-8') as f:
+            self.steps = yaml.safe_load(f)['jobs']['collect']['steps']
+        self.find = next(s for s in self.steps if s.get('id') == 'last')
+
+    def test_restore_source_is_looked_up_from_artifacts_not_from_run_status(self):
+        run = self.find['run']
+        self.assertIn('actions/artifacts?name=web-signals-db', run)
+        self.assertIn('.expired == false', run)
+        self.assertNotIn('--status success', run)
+
+    def test_no_artifact_means_first_run_not_failure(self):
+        verify = next(s for s in self.steps if 'Verify restore' in str(s.get('name')))
+        self.assertIn('if [ -z "$RID" ]', verify['run'])
+        self.assertIn('exit 0', verify['run'])

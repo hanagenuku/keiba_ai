@@ -1,6 +1,7 @@
 name: Collect Web Signals
 
 # web由来の情報（いまは kayochinkeiba の能力指数）を集めて蓄積する。
+# 🔑 集めるかどうかは「取得してよいか」で決まる。「採用したか」では止めない（2026-11-10）。
 #
 # ■ なぜ artifact で持ち回るのか
 #   取得データは他所のものなので `data/private/`（.gitignore 済み）に置き、
@@ -68,21 +69,26 @@ jobs:
       - name: Install deps
         run: pip install requests beautifulsoup4 lxml
 
-      - name: Find last successful run
+      # 🔴 2026-11-10: 「直近の成功run」ではなく「成果物を実際に持っているrun」を探す。
+      #   以前は成功runの ID を取っていたが、収集対象ゼロ（台帳が「集めない」）の回は
+      #   **成果物を作らずに成功する**。その回が復元元に選ばれ、以後は
+      #   「前回の成功runがあるのに復元できない」で毎週失敗し続けた
+      #   （2026-10-05〜11-09 の6週連続。誰も気づかなかった）。
+      - name: Find last run that has the DB artifact
         id: last
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          # 直近の成功runのIDを取る。無ければ空（初回）
-          RID=$(gh run list --workflow collect-web-signals.yml --status success \
-                  --limit 1 --json databaseId --jq '.[0].databaseId // ""' \
-                  -R "${{ github.repository }}" || echo "")
+          # 期限切れでない web-signals-db のうち最新のものを持つ run。無ければ空（初回）
+          RID=$(gh api "repos/${{ github.repository }}/actions/artifacts?name=web-signals-db&per_page=30" \
+                  --jq '[.artifacts[] | select(.expired == false)] | sort_by(.created_at) | last | .workflow_run.id // ""' \
+                  || echo "")
           echo "run_id=$RID" >> "$GITHUB_OUTPUT"
           if [ -n "$RID" ]; then
-            echo "前回の成功run: $RID から復元を試みる"
+            echo "成果物を持つ直近のrun: $RID から復元を試みる"
           else
-            echo "前回の成功runが無い（初回）"
+            echo "::warning::復元できる成果物が1つも無い。0件から集め直す（初回、または保存期間切れ）"
           fi
 
       - name: Restore accumulated DB
@@ -105,7 +111,7 @@ jobs:
             exit 0
           fi
           if [ ! -f "$DB" ]; then
-            echo "::error::前回の成功run($RID)があるのに $DB を復元できなかった。"
+            echo "::error::成果物を持つrun($RID)があるのに $DB を復元できなかった。"
             echo "::error::このまま走らせると毎回同じ記事を取り直す（2026-08-25 D-2①）。"
             exit 1
           fi
@@ -124,7 +130,7 @@ jobs:
           python scripts/collect_web_signals.py \
             --start '${{ inputs.start || '2023-01' }}' \
             --end "$END" \
-            --budget '${{ inputs.budget || '120' }}' \
+            --budget '${{ inputs.budget || '300' }}' \
             --time-budget 1800
 
       - name: Report accumulated state

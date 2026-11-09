@@ -18,20 +18,26 @@ ROI予測150%）。したがってこの層は **model の数字を1つも変え
   よって **この層に上乗せを期待しない**。作ってあるのは
   「AI単体 vs AI＋web」を**同じ条件で測れる形にする**ためで、採否は実配当で決める。
 
-＝＝ 何が入ってよいか ＝＝
+＝＝ 何が入ってよいか（2026-11-10 にユーザー指示で広げた）＝＝
 
-web で取れて DB に無い次元だけを入れる。実際に残っているのは2つ:
-  1. **馬場状態・トラックバイアス**（`f_track_cond` は推論時 0.0=良 固定で、
-     `going.py` は当日1レース目が終わるまで効かない）
-  2. **調教タイム・陣営コメント**（2026-08-16 に「丸ごと欠けている唯一の次元」と確定）
-市場オッズの言い換え（web の印の平均・人気分析）は**入れない**。
+ユーザーの方針は「**今はより多くの情報を web から取り込む段階**。実績が溜まったら
+信頼できる情報源を見極める」。それまでこの層は入口を 10R/11R・2次元に絞っていたので、
+台帳が1日6レースしか増えず、見極めに必要な件数が永久に溜まらなかった。
+
+  1. **馬場状態・トラックバイアス**
+  2. **調教（追い切り）の評価・タイム**。情報源が序列を付けていれば `grade` に必ず入れる
+  3. **予想家・予想サイトの印**（`picks`。出典ごとに分けて持つ。2026-11-10 に追加）
+
+🔴 広げたのは**集めて台帳に残す範囲**だけ。この層が model の数字を1つも変えない点は
+   上のとおり変えていない。`picks` は画面にも記事にも出さず、台帳（`web_log`）にだけ流す
+   （web の印を AI の印と並べない・2026-10-07 の決定）。
 
 ＝＝ 対象レース ＝＝
 
-各会場の **10R・11R のみ**（`WEB_RACE_NUMS`）。理由は2つ:
-  - web の記事が存在するのは特別・重賞だけで、未勝利・新馬には情報が無い
-  - 2026-08-18 実測で **OPだけAIの上乗せがマイナス（−0.0039）** ＝ 情報がある母集団が
-    「磨いても取れない」と測られた母集団と一致する。だから**広げない**
+**全レース**（`WEB_RACE_NUMS` は 1〜12）。findings に入っているレースだけが出る。
+2026-11-09 までは 10R・11R のみだった。理由にしていた「記事があるのは特別・重賞だけ」は
+`yosounohone`（全レースに★）等で成り立たなくなっており、2026-11-04 に有料記事の対象が
+「レース番号を問わない推奨レース」になったのに、ここだけ 10R/11R のままだった。
 """
 
 import json
@@ -39,8 +45,9 @@ import os
 
 SCHEMA_VERSION = 1
 
-# 各会場でこのレース番号だけ Claude の見解を出す。広げないこと（docstring 参照）。
-WEB_RACE_NUMS = (10, 11)
+# Claude の見解を出してよいレース番号。2026-11-10 に 10R/11R → 全レースへ広げた
+# （docstring 参照）。findings に入っていないレースは従来どおり None。
+WEB_RACE_NUMS = tuple(range(1, 13))
 
 # ⚠ このファイル名は意図的に `data/claude_web_findings.json`。2026-09-15 に作った
 #   「記録専用の層」（src/utils 配下）を守る grep ガード（tests の
@@ -98,6 +105,51 @@ def _clean_marks(raw, valid_nums):
     return out, dropped
 
 
+#: 予想家の名前（任意）の最大長。これより長ければ自由文が紛れ込んだと見なして切る
+TIPSTER_MAX_LEN = 40
+
+
+def clean_picks(raw):
+    """findings の `picks`（予想家・予想サイトの印。出典ごと）を検証して返す。
+
+    形: `[{"source": "https://…", "tipster": "名前(任意)", "marks": {"3": "◎", "7": "○"}}]`
+
+    🔴 **画面にも記事にも出さない**（`build_claude_view` の戻り値に入れない）。
+       行き先は台帳（`src/product/web_log.py`）だけで、「どこの印がどれだけ当たったか」を
+       情報源ごとに後から数えるためにある。web の印を AI の印と並べない（2026-10-07）。
+    🔴 出典 URL の無い印は捨てる（出典が「どこの情報か」の単位なので、無いと数えられない）。
+
+    Returns:
+        (picks, dropped)。picks は `{'source','tipster','marks':{int: 印}}` のリスト。
+    """
+    out, dropped = [], []
+    for p in raw or []:
+        if not isinstance(p, dict):
+            dropped.append('picks の要素が dict ではない')
+            continue
+        url = str(p.get('source') or '').strip()
+        if not url.startswith(('http://', 'https://')):
+            dropped.append('出典 URL の無い印')
+            continue
+        marks = {}
+        for k, v in (p.get('marks') or {}).items():
+            try:
+                num = int(k)
+            except (TypeError, ValueError):
+                dropped.append(f'印のキー{k!r}が馬番として読めない')
+                continue
+            if v not in _VALID_MARKS:
+                dropped.append(f'#{num}の印{v!r}は未定義')
+                continue
+            marks[num] = v
+        if not marks:
+            dropped.append(f'{url} の印が1つも読めない')
+            continue
+        tipster = str(p.get('tipster') or '').strip()[:TIPSTER_MAX_LEN] or None
+        out.append({'source': url, 'tipster': tipster, 'marks': marks})
+    return out, dropped
+
+
 def _has_going(going):
     """`going` が記事・画面に出せる中身を持っているか。
 
@@ -116,7 +168,7 @@ def build_claude_view(race_id, race_num, horses, notes, race_date=None):
 
     Args:
         race_id:   `20260927_06_11` 形式。
-        race_num:  レース番号。`WEB_RACE_NUMS` 以外は必ず None を返す。
+        race_num:  レース番号。`WEB_RACE_NUMS`（1〜12）以外は必ず None を返す。
         horses:    そのレースの馬（`num` を持つ dict のリスト）。
         notes:     `load_findings()` の戻り値。
         race_date: `20260927` 形式。notes の date と一致しなければ None を返す

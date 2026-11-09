@@ -88,7 +88,8 @@ RESULT_SOURCE = ('history.db:race_history.track_condition（確定馬場） / '
                  'keiba.db:race_dividends（複勝払戻） / '
                  'keiba.db:race_schedule（発走時刻）')
 
-KINDS = ('going', 'horse', 'mark')
+# 'pick' は予想家・予想サイトの印（出典ごと）。2026-11-10 に追加
+KINDS = ('going', 'horse', 'mark', 'pick')
 
 # JRA の馬場状態。`expected`（自由文の想定）からこの語を拾えたときだけ
 # 「予想が当たったか」を書く。
@@ -291,6 +292,20 @@ def collect_from_findings(findings):
                             said={'mark': mk},
                             sources=list(e.get('sources') or []),
                             hosts=_hosts(e.get('sources')), result=None))
+
+        # 予想家・予想サイトの印。**出典ごと**に1頭1行（同じ馬に複数の出典が印を
+        # 付けたら、その数だけ行になる）。検証は claude_web.clean_picks の1箇所
+        from src.features.claude_web import clean_picks
+        picks, _ = clean_picks(e.get('picks'))
+        for p in picks:
+            host = source_host(p['source']) or '?'
+            who = f"/{p['tipster']}" if p['tipster'] else ''
+            for num, mk in sorted(p['marks'].items()):
+                out.append(dict(base, kind='pick', key=f'{num}@{host}{who}',
+                                # 🔑 結果の照合は `num` で行う（key は出典込みなので馬番ではない）
+                                num=str(num),
+                                said={'mark': mk, 'tipster': p['tipster']},
+                                sources=[p['source']], hosts=[host], result=None))
     return out
 
 
@@ -364,13 +379,15 @@ def build_result(entry, hist_conn, keiba_conn, payouts, now=None):
     if payouts is None:
         # 🔴 払戻が1行も無い＝まだ結果を取っていない。空で埋めない
         return None
-    fact = _horse_fact(hist_conn, rid, entry.get('key'))
+    # 'pick' は key が「馬番@出典」なので、馬番は `num` に別に持っている
+    num = entry.get('num') if entry.get('num') is not None else entry.get('key')
+    fact = _horse_fact(hist_conn, rid, num)
     if fact is None:
         return None
     place = fact['place']
-    pay = payouts.get(('fukusho', str(entry.get('key'))))
+    pay = payouts.get(('fukusho', str(num)))
     if pay is None:
-        pay = payouts.get(('fukusho', int(entry.get('key'))))
+        pay = payouts.get(('fukusho', int(num)))
     return dict(common, place=place, top3=bool(1 <= place <= 3),
                 popularity=fact['popularity'], horse_name=fact['horse_name'],
                 # 🔑 的中と払戻は払戻表を正とする（着順から自分で判定しない。
@@ -440,7 +457,8 @@ def summarize(base_dir):
                 'mentions_per_race': None, '_per_race': {}})
             k['n'] += 1
             if e.get('kind') != 'going':
-                if said.get('grade'):
+                # 印（◎○▲…）は情報源が付けた序列そのものなので grade と同じに数える
+                if said.get('grade') or said.get('mark'):
                     k['with_grade'] += 1
                 if said.get('direction') in ('up', 'down'):
                     k['with_direction'] += 1
@@ -475,8 +493,7 @@ def summarize(base_dir):
         'dates': sorted({str(e.get('date')) for e in entries}),
         'by_host': by_host,
         # 🔴 N が小さいので率を読まないこと（North Star #7）。
-        'caveat': ('週2日・10R/11R だけなので N は年間100件程度しか増えない。'
-                   'これ単独では「どの情報源が有効か」の答えにならない。'
+        'caveat': ('N が小さいうちは率を読まない（情報源ごとの N を必ず並べる）。'
                    '回収率は出していない（事実だけ）。'
                    '🔴 going の stable は「収集時点の馬場と確定馬場が同じだったか」で、'
                    '**予想の精度ではない**（予想は expected 側で、'

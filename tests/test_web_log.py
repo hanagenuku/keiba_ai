@@ -351,3 +351,60 @@ def test_a_v1_ledger_is_read_without_touching_its_rows(base):
     assert len(loaded['entries']) == len(d['entries'])
     s = web_log.summarize(base)
     assert s['by_host']['keibanomiryoku.com']['horse']['with_grade'] == 0
+
+
+# ───────────────────────── 予想家の印（picks・2026-11-10）─────────────────────────
+
+def _with_picks(base):
+    import copy
+    f = copy.deepcopy(FINDINGS)
+    f['races']['20261018_08_11']['picks'] = [
+        {'source': 'https://tipster-a.example.com/1018', 'tipster': '甲',
+         'marks': {'6': '◎', '9': '○'}},
+        # 同じ馬に別の出典が印を付ける。出典ごとに別の行にならないと数えられない
+        {'source': 'https://www.tipster-b.example.com/x', 'marks': {'6': '▲'}},
+        # 出典の無い印は捨てる
+        {'source': '', 'marks': {'9': '◎'}},
+    ]
+    with open(os.path.join(base, 'data', 'claude_web_findings.json'), 'w',
+              encoding='utf-8') as fh:
+        json.dump(f, fh, ensure_ascii=False)
+    return f
+
+
+def test_picks_are_recorded_one_row_per_source_per_horse(base):
+    f = _with_picks(base)
+    es = [e for e in web_log.collect_from_findings(f) if e['kind'] == 'pick']
+    assert sorted(e['key'] for e in es) == [
+        '6@tipster-a.example.com/甲', '6@tipster-b.example.com',
+        '9@tipster-a.example.com/甲']
+    a6 = next(e for e in es if e['key'] == '6@tipster-a.example.com/甲')
+    assert a6['num'] == '6'
+    assert a6['said'] == {'mark': '◎', 'tipster': '甲'}
+    assert a6['hosts'] == ['tipster-a.example.com']
+    assert a6['sources'] == ['https://tipster-a.example.com/1018']
+
+
+def test_pick_result_is_attached_by_horse_number_not_by_key(base, tmp_path):
+    """key は「馬番@出典」なので、そのまま馬番として引くと結果が永久に付かない。"""
+    _with_picks(base)
+    web_log.record(base)
+    hist, keiba = _hist(tmp_path, place_9=5), _keiba(tmp_path)
+    web_log.attach_results(base, hist, keiba)
+    by = {e['key']: e for e in web_log.load(base)['entries'] if e['kind'] == 'pick'}
+    r = by['6@tipster-a.example.com/甲']['result']
+    assert r['place'] == 2 and r['top3'] is True and r['fukusho_payout'] == 210
+    assert by['6@tipster-b.example.com']['result']['top3'] is True
+    assert by['9@tipster-a.example.com/甲']['result']['top3'] is False
+
+
+def test_summary_counts_picks_per_source_and_treats_the_mark_as_a_grade(base, tmp_path):
+    _with_picks(base)
+    web_log.record(base)
+    hist, keiba = _hist(tmp_path, place_9=5), _keiba(tmp_path)
+    web_log.attach_results(base, hist, keiba)
+    s = web_log.summarize(base)['by_host']
+    a = s['tipster-a.example.com']['pick']
+    assert (a['n'], a['with_result'], a['top3'], a['top3_of']) == (2, 2, 1, 2)
+    assert a['with_grade'] == 2
+    assert s['tipster-b.example.com']['pick']['n'] == 1
