@@ -30,7 +30,7 @@
    主な部品: スピード指数（`speed_index.py`）・PLレーティング（`pl_rating.py`）・展開（`race_shape.py`・学習も推論もこの1本）・コース／距離（`data/course_*.json`）・騎手／調教師のベイズ縮小レート・近走（`f_recent`）・枠（`f_post`）など。
    🔴 市場オッズは特徴量に入れない（North Star #1）。
 2. **モデル**: XGBoost の**残差学習**（`data/xgb_fukusho_model_residual.pkl`）。市場の人気から作る `base_margin` を土台にして、**市場からのずれだけ**を学習する。
-   現行: `trained_at 2026-09-15`・train_end 2026-06-30・学習155,187行・val AUC 0.7846。木は10本程度で飽和する（再学習しても良くならない・2026-10-19）。
+   現行: `trained_at 2026-09-15`・train_end 2026-06-30・学習155,187行・val AUC 0.7846。木は61本（`best_iteration` は10だが、これは切片の通過で決まる値で信号の飽和ではない → `hitrate/INSTRUCTIONS.md` §1-2）。再学習は測って不採用（2026-10-19）。
    オッズが全滅したときは `base_margin` を中立化し、`ability_margin`（市場ゼロのAI評価）だけで順位を付ける。
 3. **較正と確率**: `data/xgb_calibrator.pkl` で3着内確率に較正 → softmax で勝率。買い目側の Gumbel 温度は T=1.0（`data/rating_temperature.json`）。
 4. **画面の3列**: `AI単`（`solo_rank`・市場ゼロ）／`適性`（`src/features/aptitude.py`）／`AI+市`（買い目と軸に使う）。
