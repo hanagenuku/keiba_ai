@@ -49,8 +49,6 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
 .rc-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0}
 .conf{background:var(--gold);color:#fff;font-size:11px;font-weight:800;padding:3px 9px;border-radius:8px}
 .rec-lbl{font-size:10px;color:var(--gold);font-weight:700}
-.new-rec-alert{font-size:10px;color:#fff;font-weight:800;background:#e74c3c;padding:2px 8px;border-radius:4px;animation:rec-pulse 1.2s ease-in-out infinite;display:inline-block}
-@keyframes rec-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(1.08)}}
 .arr{font-size:11px;color:var(--sub);transition:transform .2s;display:inline-block}
 .arr.open{transform:rotate(180deg)}
 .hstrip{padding:0 14px 10px;display:flex;align-items:center;gap:8px;cursor:pointer}
@@ -711,7 +709,6 @@ async function fetchFreshOdds(raceKey, btn) {
     if (!race._morning_bets) {
       race._morning_bets = JSON.parse(JSON.stringify(race.bets || []));
       race._morning_ev = {};
-      race._morning_rec = race.rec;
       for (const h of (race.horses || [])) {
         race._morning_ev[h.n] = h.sim_ev;
         h._morning_odds = h.odds || null;
@@ -719,7 +716,11 @@ async function fetchFreshOdds(raceKey, btn) {
       }
     }
     updateOddsAndEV(race, data.odds || {});
-    updateRecFlag(race);
+    // 🔴 推奨フラグ(rec)はサーバの値を据え置く（2026-11-10 ユーザー判断「①EV判定ごと外す」）。
+    //   旧 updateRecFlag 関数は RL1 のオッズ<1.5倍 / EV<0.8 / EV>=1.2 で推奨を付け外しして
+    //   いたが、根拠が `sim_ev`（= AI確率 × オッズ）だった。EV による選別は
+    //   2026-07-05・07-30・08-31 の3回とも否定されている（North Star #9）。
+    //   recalcAxisBets() が EV を使わないのと同じ理由でここも使わない。
     const rawBets = recalcBets(race);
     race._change_type = classifyChange(race._morning_bets, rawBets);
 
@@ -1579,43 +1580,6 @@ function recalcAiPairBets(race) {
   };
 }
 
-function updateRecFlag(race) {
-  // RL1のEVが直前オッズで大きく変動した場合に推奨フラグを更新
-  const horses = (race.horses || []).slice()
-    .filter(h => h.odds > 0)
-    .sort((a, b) => (a.rl_rank || 99) - (b.rl_rank || 99));
-  if (horses.length === 0) return;
-  const rl1 = horses[0];
-  const rl1Ev = rl1.sim_ev || 0;
-  const rl1Odds = rl1.tansho_odds || rl1.odds || 0;
-  const wasRec = race._morning_rec != null ? race._morning_rec : race.rec;
-
-  // 推奨外し: RL1のオッズが1.5倍未満（ガチガチ本命＝妙味なし）
-  // または RL上位3頭全員のEVが0.8未満（買い目が全滅）
-  const rl3Evs = horses.slice(0, 3).map(h => h.sim_ev || 0);
-  const allLowEv = rl3Evs.every(ev => ev < 0.8);
-  if (wasRec && (rl1Odds < 1.5 || allLowEv)) {
-    race.rec = false;
-    race._rec_reason = rl1Odds < 1.5
-      ? 'RL1が' + rl1Odds.toFixed(1) + '倍（妙味なし）'
-      : 'RL上位のEVが低下';
-    return;
-  }
-
-  // 推奨追加: 元々非推奨だが直前でRL1-3に妙味が出た
-  if (!wasRec) {
-    const hasValue = horses.slice(0, 3).some(h => {
-      const o = h.tansho_odds || h.odds || 0;
-      return (h.sim_ev || 0) >= 1.2 && o >= 2.0 && o <= 30.0;
-    });
-    if (hasValue) {
-      race.rec = true;
-      race._rec_reason = '直前オッズでRL上位に妙味発生';
-      return;
-    }
-  }
-}
-
 function estimatePayout(bet, horsesMap) {
   const getOdds = (n) => {
     const h = horsesMap[n];
@@ -1869,22 +1833,13 @@ function render() {
     const isRec = race.rec;
     // 推奨フラグ変更の表示
     let recLabel = '';
-    let nameAlert = '';
     if (isRec) {
       recLabel = _confBadge(race)+'<span class="rec-lbl">★推奨</span>';
-    }
-    if (race._morning_rec != null && race._morning_rec !== race.rec) {
-      if (!race.rec && race._morning_rec) {
-        recLabel = '<span style="font-size:9px;color:#c0392b;font-weight:700;background:rgba(192,57,43,0.1);padding:1px 6px;border-radius:3px">推奨取消</span>';
-      } else if (race.rec && !race._morning_rec) {
-        recLabel = _confBadge(race);
-        nameAlert = ' <span class="new-rec-alert">NEW推奨</span>';
-      }
     }
     // パドック採点済みなら見出しにバッジ（開かなくても一覧で分かる）
     const padBadge = padCoverCount(race)
       ? '<span class="pad-done" title="パドック評価 入力済み '+padCoverCount(race)+'頭">🐎'+padCoverCount(race)+'</span>' : '';
-    html += '<div class="rc'+(isRec?' rec':'')+'"><div class="rc-head" onclick="toggle(\''+k+'\')"><div class="rc-num">'+race.r+'</div><div class="rc-info"><div class="rc-name">'+race.name+nameAlert+padBadge+'</div><div class="rc-meta">'+race.dist+'</div></div><div class="rc-right">'+recLabel+'<span class="arr'+(isOpen?' open':'')+'">▼</span></div></div>';
+    html += '<div class="rc'+(isRec?' rec':'')+'"><div class="rc-head" onclick="toggle(\''+k+'\')"><div class="rc-num">'+race.r+'</div><div class="rc-info"><div class="rc-name">'+race.name+padBadge+'</div><div class="rc-meta">'+race.dist+'</div></div><div class="rc-right">'+recLabel+'<span class="arr'+(isOpen?' open':'')+'">▼</span></div></div>';
     // 上位3頭（結果が出ていれば着順・配当も重ねる）。
     // 従来は◎本命1頭だけだったが、一覧のまま「AIが誰を並べたか」を読めるようにする。
     const _t3 = _top3Strip(race, k);
@@ -1910,12 +1865,8 @@ function render() {
       if (race._update_time) {
         const surgeHorses = (race.horses || []).filter(h => h._odds_surge === 'hot');
         const warmHorses = (race.horses || []).filter(h => h._odds_surge === 'warm');
-        if (surgeHorses.length > 0 || (race._morning_rec != null && race._morning_rec !== race.rec)) {
+        if (surgeHorses.length > 0) {
           html += '<div style="padding:4px 0 8px;font-size:11px;border-left:3px solid #e74c3c;padding-left:8px;margin-bottom:4px">';
-          if (race._rec_reason) {
-            const rcColor = race.rec ? '#27ae60' : '#c0392b';
-            html += '<div style="color:'+rcColor+';font-weight:700">' + (race.rec ? '+ ' : '- ') + race._rec_reason + '</div>';
-          }
           if (surgeHorses.length > 0) {
             html += '<div style="color:#e74c3c;font-weight:600">人気急上昇: '
               + surgeHorses.map(h => '#' + h.n + ' ' + h.name + '(' + (h._morning_odds||0).toFixed(1) + '→' + h.odds.toFixed(1) + ')').join(', ')
