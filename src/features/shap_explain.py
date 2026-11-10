@@ -136,7 +136,12 @@ def compute_ability_breakdown(booster, X_pred, feature_cols, base_margin):
     """
     dmat = xgb.DMatrix(X_pred, feature_names=list(feature_cols))
     dmat.set_base_margin([base_margin])
-    contribs = booster.predict(dmat, pred_contribs=True)[0]
+    # 木の本数は版の既定に任せず明示する（engine.py の raw_margin と同じ本数で
+    # 分解しないと、カテゴリ寄与の合計が ability_margin と一致しなくなる。
+    # 機序と実測は hitrate/RESULTS_B.md）
+    contribs = booster.predict(
+        dmat, pred_contribs=True,
+        iteration_range=(0, booster.num_boosted_rounds()))[0]
     feature_contribs = contribs[:-1]
     tree_bias = float(contribs[-1]) - base_margin
 
