@@ -1,0 +1,684 @@
+{
+  "windows": {
+    "M": {
+      "42": {
+        "n_races": 3442,
+        "n_switch": 1,
+        "same_fav": 3411,
+        "n_mid": 30,
+        "common01": 3429,
+        "common012": 3429,
+        "R0": {
+          "n": 3429,
+          "hit": 2049,
+          "rate": 59.76,
+          "roi": 85.09,
+          "cut3": 84.43,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "R1": {
+          "n": 3429,
+          "hit": 2048,
+          "rate": 59.73,
+          "roi": 85.06,
+          "cut3": 84.4,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "G0": {
+          "n": 3429,
+          "hit": 2049,
+          "rate": 59.76,
+          "roi": 85.09,
+          "cut3": 84.43,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "G1": {
+          "n": 3429,
+          "hit": 2048,
+          "rate": 59.73,
+          "roi": 85.06,
+          "cut3": 84.4,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "G2": {
+          "n": 3429,
+          "hit": 2037,
+          "rate": 59.41,
+          "roi": 85.02,
+          "cut3": 84.18,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "MID": {
+          "n": 3429,
+          "hit": 2038,
+          "rate": 59.43,
+          "roi": 85.05,
+          "cut3": 84.21,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "auc": 0.7931
+      },
+      "7": {
+        "n_races": 3442,
+        "n_switch": 0,
+        "same_fav": 3409,
+        "n_mid": 33,
+        "common01": 3429,
+        "common012": 3429,
+        "R0": {
+          "n": 3429,
+          "hit": 2043,
+          "rate": 59.58,
+          "roi": 84.65,
+          "cut3": 83.98,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "R1": {
+          "n": 3429,
+          "hit": 2043,
+          "rate": 59.58,
+          "roi": 84.65,
+          "cut3": 83.98,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "G0": {
+          "n": 3429,
+          "hit": 2043,
+          "rate": 59.58,
+          "roi": 84.65,
+          "cut3": 83.98,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "G1": {
+          "n": 3429,
+          "hit": 2043,
+          "rate": 59.58,
+          "roi": 84.65,
+          "cut3": 83.98,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "G2": {
+          "n": 3429,
+          "hit": 2037,
+          "rate": 59.41,
+          "roi": 85.02,
+          "cut3": 84.18,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "MID": {
+          "n": 3429,
+          "hit": 2037,
+          "rate": 59.41,
+          "roi": 85.02,
+          "cut3": 84.18,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "auc": 0.7937
+      },
+      "2026": {
+        "n_races": 3442,
+        "n_switch": 0,
+        "same_fav": 3413,
+        "n_mid": 29,
+        "common01": 3430,
+        "common012": 3429,
+        "R0": {
+          "n": 3430,
+          "hit": 2050,
+          "rate": 59.77,
+          "roi": 85.1,
+          "cut3": 84.44,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "R1": {
+          "n": 3430,
+          "hit": 2050,
+          "rate": 59.77,
+          "roi": 85.1,
+          "cut3": 84.44,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "G0": {
+          "n": 3429,
+          "hit": 2049,
+          "rate": 59.76,
+          "roi": 85.09,
+          "cut3": 84.43,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "G1": {
+          "n": 3429,
+          "hit": 2049,
+          "rate": 59.76,
+          "roi": 85.09,
+          "cut3": 84.43,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "G2": {
+          "n": 3429,
+          "hit": 2037,
+          "rate": 59.41,
+          "roi": 85.02,
+          "cut3": 84.18,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "MID": {
+          "n": 3429,
+          "hit": 2037,
+          "rate": 59.41,
+          "roi": 85.02,
+          "cut3": 84.18,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "auc": 0.7939
+      },
+      "avg": {
+        "d_rate": -0.010000000000005116,
+        "d_roi": -0.010000000000005116,
+        "d_cut3": -0.010000000000019327,
+        "R0_rate": 59.70333333333334,
+        "R1_rate": 59.693333333333335,
+        "R0_roi": 84.94666666666667,
+        "R1_roi": 84.93666666666667,
+        "R0_cut3": 84.28333333333335,
+        "R1_cut3": 84.27333333333333,
+        "G0_rate": 59.699999999999996,
+        "G1_rate": 59.69,
+        "G2_rate": 59.41,
+        "G0_roi": 84.94333333333334,
+        "G1_roi": 84.93333333333334,
+        "G2_roi": 85.02,
+        "G2_cut3": 84.18,
+        "MID_rate": 59.416666666666664,
+        "MID_roi": 85.02999999999999,
+        "n_switch": 0.3333333333333333
+      }
+    },
+    "C": {
+      "42": {
+        "n_races": 2961,
+        "n_switch": 0,
+        "same_fav": 2925,
+        "n_mid": 36,
+        "common01": 2948,
+        "common012": 2948,
+        "R0": {
+          "n": 2948,
+          "hit": 1802,
+          "rate": 61.13,
+          "roi": 86.73,
+          "cut3": 85.71,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "R1": {
+          "n": 2948,
+          "hit": 1802,
+          "rate": 61.13,
+          "roi": 86.73,
+          "cut3": 85.71,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "G0": {
+          "n": 2948,
+          "hit": 1802,
+          "rate": 61.13,
+          "roi": 86.73,
+          "cut3": 85.71,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "G1": {
+          "n": 2948,
+          "hit": 1802,
+          "rate": 61.13,
+          "roi": 86.73,
+          "cut3": 85.71,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "G2": {
+          "n": 2948,
+          "hit": 1788,
+          "rate": 60.65,
+          "roi": 86.16,
+          "cut3": 85.14,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "MID": {
+          "n": 2948,
+          "hit": 1788,
+          "rate": 60.65,
+          "roi": 86.16,
+          "cut3": 85.14,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "auc": 0.7933
+      },
+      "7": {
+        "n_races": 2961,
+        "n_switch": 0,
+        "same_fav": 2933,
+        "n_mid": 28,
+        "common01": 2948,
+        "common012": 2948,
+        "R0": {
+          "n": 2948,
+          "hit": 1800,
+          "rate": 61.06,
+          "roi": 86.74,
+          "cut3": 85.73,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "R1": {
+          "n": 2948,
+          "hit": 1800,
+          "rate": 61.06,
+          "roi": 86.74,
+          "cut3": 85.73,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "G0": {
+          "n": 2948,
+          "hit": 1800,
+          "rate": 61.06,
+          "roi": 86.74,
+          "cut3": 85.73,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "G1": {
+          "n": 2948,
+          "hit": 1800,
+          "rate": 61.06,
+          "roi": 86.74,
+          "cut3": 85.73,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "G2": {
+          "n": 2948,
+          "hit": 1788,
+          "rate": 60.65,
+          "roi": 86.16,
+          "cut3": 85.14,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "MID": {
+          "n": 2948,
+          "hit": 1788,
+          "rate": 60.65,
+          "roi": 86.16,
+          "cut3": 85.14,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "auc": 0.7921
+      },
+      "2026": {
+        "n_races": 2961,
+        "n_switch": 0,
+        "same_fav": 2930,
+        "n_mid": 31,
+        "common01": 2948,
+        "common012": 2948,
+        "R0": {
+          "n": 2948,
+          "hit": 1797,
+          "rate": 60.96,
+          "roi": 86.51,
+          "cut3": 85.49,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "R1": {
+          "n": 2948,
+          "hit": 1797,
+          "rate": 60.96,
+          "roi": 86.51,
+          "cut3": 85.49,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "G0": {
+          "n": 2948,
+          "hit": 1797,
+          "rate": 60.96,
+          "roi": 86.51,
+          "cut3": 85.49,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "G1": {
+          "n": 2948,
+          "hit": 1797,
+          "rate": 60.96,
+          "roi": 86.51,
+          "cut3": 85.49,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "G2": {
+          "n": 2948,
+          "hit": 1788,
+          "rate": 60.65,
+          "roi": 86.16,
+          "cut3": 85.14,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "MID": {
+          "n": 2948,
+          "hit": 1788,
+          "rate": 60.65,
+          "roi": 86.16,
+          "cut3": 85.14,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "auc": 0.7922
+      },
+      "avg": {
+        "d_rate": 0.0,
+        "d_roi": 0.0,
+        "d_cut3": 0.0,
+        "R0_rate": 61.050000000000004,
+        "R1_rate": 61.050000000000004,
+        "R0_roi": 86.66000000000001,
+        "R1_roi": 86.66000000000001,
+        "R0_cut3": 85.64333333333333,
+        "R1_cut3": 85.64333333333333,
+        "G0_rate": 61.050000000000004,
+        "G1_rate": 61.050000000000004,
+        "G2_rate": 60.65,
+        "G0_roi": 86.66000000000001,
+        "G1_roi": 86.66000000000001,
+        "G2_roi": 86.16000000000001,
+        "G2_cut3": 85.14,
+        "MID_rate": 60.65,
+        "MID_roi": 86.16000000000001,
+        "n_switch": 0.0
+      }
+    },
+    "R": {
+      "42": {
+        "n_races": 2705,
+        "n_switch": 2,
+        "same_fav": 2667,
+        "n_mid": 36,
+        "common01": 2652,
+        "common012": 2652,
+        "R0": {
+          "n": 2652,
+          "hit": 1545,
+          "rate": 58.26,
+          "roi": 83.85,
+          "cut3": 82.71,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "R1": {
+          "n": 2652,
+          "hit": 1545,
+          "rate": 58.26,
+          "roi": 83.85,
+          "cut3": 82.71,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "G0": {
+          "n": 2652,
+          "hit": 1545,
+          "rate": 58.26,
+          "roi": 83.85,
+          "cut3": 82.71,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "G1": {
+          "n": 2652,
+          "hit": 1545,
+          "rate": 58.26,
+          "roi": 83.85,
+          "cut3": 82.71,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "G2": {
+          "n": 2652,
+          "hit": 1533,
+          "rate": 57.81,
+          "roi": 84.08,
+          "cut3": 82.32,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "MID": {
+          "n": 2652,
+          "hit": 1533,
+          "rate": 57.81,
+          "roi": 84.08,
+          "cut3": 82.32,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "auc": 0.7892
+      },
+      "7": {
+        "n_races": 2705,
+        "n_switch": 3,
+        "same_fav": 2668,
+        "n_mid": 34,
+        "common01": 2652,
+        "common012": 2652,
+        "R0": {
+          "n": 2652,
+          "hit": 1543,
+          "rate": 58.18,
+          "roi": 83.86,
+          "cut3": 82.73,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "R1": {
+          "n": 2652,
+          "hit": 1543,
+          "rate": 58.18,
+          "roi": 83.86,
+          "cut3": 82.73,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "G0": {
+          "n": 2652,
+          "hit": 1543,
+          "rate": 58.18,
+          "roi": 83.86,
+          "cut3": 82.73,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "G1": {
+          "n": 2652,
+          "hit": 1543,
+          "rate": 58.18,
+          "roi": 83.86,
+          "cut3": 82.73,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "G2": {
+          "n": 2652,
+          "hit": 1533,
+          "rate": 57.81,
+          "roi": 84.08,
+          "cut3": 82.32,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "MID": {
+          "n": 2652,
+          "hit": 1533,
+          "rate": 57.81,
+          "roi": 84.08,
+          "cut3": 82.32,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "auc": 0.7894
+      },
+      "2026": {
+        "n_races": 2705,
+        "n_switch": 1,
+        "same_fav": 2668,
+        "n_mid": 36,
+        "common01": 2652,
+        "common012": 2652,
+        "R0": {
+          "n": 2652,
+          "hit": 1542,
+          "rate": 58.14,
+          "roi": 83.51,
+          "cut3": 82.38,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "R1": {
+          "n": 2652,
+          "hit": 1542,
+          "rate": 58.14,
+          "roi": 83.51,
+          "cut3": 82.38,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "G0": {
+          "n": 2652,
+          "hit": 1542,
+          "rate": 58.14,
+          "roi": 83.51,
+          "cut3": 82.38,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "G1": {
+          "n": 2652,
+          "hit": 1542,
+          "rate": 58.14,
+          "roi": 83.51,
+          "cut3": 82.38,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "G2": {
+          "n": 2652,
+          "hit": 1533,
+          "rate": 57.81,
+          "roi": 84.08,
+          "cut3": 82.32,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "MID": {
+          "n": 2652,
+          "hit": 1533,
+          "rate": 57.81,
+          "roi": 84.08,
+          "cut3": 82.32,
+          "unevaluable": 0,
+          "no_result": 0
+        },
+        "auc": 0.7892
+      },
+      "avg": {
+        "d_rate": 0.0,
+        "d_roi": 0.0,
+        "d_cut3": 0.0,
+        "R0_rate": 58.19333333333333,
+        "R1_rate": 58.19333333333333,
+        "R0_roi": 83.74,
+        "R1_roi": 83.74,
+        "R0_cut3": 82.60666666666667,
+        "R1_cut3": 82.60666666666667,
+        "G0_rate": 58.19333333333333,
+        "G1_rate": 58.19333333333333,
+        "G2_rate": 57.81,
+        "G0_roi": 83.74,
+        "G1_roi": 83.74,
+        "G2_roi": 84.08,
+        "G2_cut3": 82.32,
+        "MID_rate": 57.81,
+        "MID_roi": 84.08,
+        "n_switch": 2.0
+      }
+    }
+  },
+  "half": {
+    "前半": {
+      "n": 1716,
+      "d_rate": -0.060000000000002274,
+      "d_roi": -0.06999999999999318,
+      "d_cut3": -0.060000000000002274
+    },
+    "後半": {
+      "n": 1713,
+      "d_rate": 0.0,
+      "d_roi": 0.0,
+      "d_cut3": 0.0
+    }
+  },
+  "controlA": {
+    "mean": -0.00015000000000000568,
+    "std": 0.0021160103969499627,
+    "p5": 0.0,
+    "p95": 0.0,
+    "observed": -0.030000000000001137,
+    "p": 1.0
+  },
+  "controlB": {
+    "B1_delta": 20.0,
+    "B2_ok": true,
+    "B2_expect": 0.0,
+    "B2_actual": 0.0
+  },
+  "conf": {
+    "switch_total": 1,
+    "switch_conf66": 0,
+    "switch_conf55": 0,
+    "all_races": 3442,
+    "all_conf66": 398
+  },
+  "verdict": {
+    "c1": false,
+    "c2": false,
+    "c3": false,
+    "c4": false,
+    "c5": true,
+    "c6": true,
+    "adopt": false
+  }
+}
