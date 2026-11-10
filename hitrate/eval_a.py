@@ -119,14 +119,23 @@ def main():
     con.close()
 
     # ── 学習（印字はまだしない）──────────────────────────────────────
-    preds, masks, stop = {}, {}, []
+    preds, masks, lastd, stop = {}, {}, {}, []
     for name, te, v0, v1, _role in WINDOWS:
         te, v0, v1 = map(pd.Timestamp, (te, v0, v1))
-        inner_from = te - pd.Timedelta(days=INNER_DAYS)
+        # 🔴 内側HOの起点は「学習期間に**実在する最後の日**」から42日前に取る。
+        # カードは「学習期間の末尾42日」と登録したが、`train_end` から素朴に42日引くと
+        # データの穴に当たる。実測: `history.db` には **2024-11-25〜2024-12-31 が1レースも無い**
+        # （2024-12 は全期間で唯一まるごと欠けている月）。そのため M 窓の内側HOが
+        # 661行になり、登録した中止条件3（1,000行以上）が1回目の実行で発火した。
+        # **合格線は下げず、起点の取り方だけを穴に強い形に直した**（2026-10-21 と同じ扱い）。
+        # 穴が無い窓では登録どおりの切り方とほぼ同じになる。結果は1行も読んでいない。
+        last_tr = pd.Timestamp(d[d <= np.datetime64(te)].max())
+        inner_from = last_tr - pd.Timedelta(days=INNER_DAYS)
         m_fit = d <= np.datetime64(inner_from)
         m_in = (d > np.datetime64(inner_from)) & (d <= np.datetime64(te))
         m_va = (d >= np.datetime64(v0)) & (d <= np.datetime64(v1))
         masks[name] = (m_fit, m_in, m_va)
+        lastd[name] = (last_tr, inner_from)
         spw = round((1 - y[m_fit].mean()) / max(y[m_fit].mean(), 0.01), 2)
         params = dict(HP, objective='binary:logistic', eval_metric='logloss',
                       scale_pos_weight=spw, nthread=-1)
@@ -156,8 +165,11 @@ def main():
           'このハーネスは data/ に1バイトも書かない。')
     for name, te, v0, v1, role in WINDOWS:
         m_fit, m_in, m_va = masks[name]
+        last_tr, inner_from = lastd[name]
         leak = bool((d[m_fit | m_in] > np.datetime64(pd.Timestamp(te))).any())
         ov = bool((m_fit & m_va).any() or (m_in & m_va).any())
+        print(f'       （{name} 学習期間の実在最終日 {last_tr.date()} → 内側HO は'
+              f' {(inner_from + pd.Timedelta(days=1)).date()}〜{last_tr.date()}）')
         print(f'  2-3. {name}({role}) 学習 {m_fit.sum():,} / 内側HO {m_in.sum():,} /'
               f' 評価 {m_va.sum():,}  学習に評価窓の行: {leak}  重なり: {ov}'
               f'  内側HO<1000: {m_in.sum() < 1000}')
