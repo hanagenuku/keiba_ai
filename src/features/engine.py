@@ -3078,7 +3078,19 @@ def calc_all(race, bias_data=None):
                     # 2026-07-26セッションで、output_margin未指定のままraw_marginと
                     # 呼んでいたため、直後のsigmoidで2重適用になっていたバグを発見・修正
                     # （SHAP寄与度分解の検証中に数値不整合から発覚）。
-                    raw_margin = float(_XGB_FUKUSHO_MODEL.predict(_dmat, output_margin=True)[0])
+                    # 🔴 iteration_range も必須: 木の本数を版の既定に任せない。
+                    # 本番の残差モデルは early stopping が **切片**で 10本目に止まり
+                    # （信号の飽和ではない。機序は hitrate/RESULTS_B.md）、そのあとの
+                    # 50本が順位の信号を担っている。実測で
+                    #   全木 61本 → プール AUC 0.7879 / best_iteration まで → 0.7799
+                    # と **0.008** 違う。`Booster.predict()` の既定が将来の版で
+                    # best_iteration までに変わると、本番の精度がこの幅で静かに落ちる
+                    # （requirements.txt は `xgboost>=1.7` で版を固定していない）。
+                    # いまの挙動（全木）を明示して固定する。
+                    # tests/test_predict_tree_count.py が既定＝全木であることを守る。
+                    _ntree = _XGB_FUKUSHO_MODEL.num_boosted_rounds()
+                    raw_margin = float(_XGB_FUKUSHO_MODEL.predict(
+                        _dmat, output_margin=True, iteration_range=(0, _ntree))[0])
                     prob   = 1 / (1 + math.exp(-raw_margin))
                     raw_prob = prob
                     rating = raw_margin
