@@ -1,0 +1,88 @@
+name: Confirm kayochin (web 指数の確認測定・手動)
+
+# 事前登録カード websig/CRITERIA_CONFIRM_kayochin.md の測定を1回だけ行う。
+# 指数DB（data/private/web_signals.db）は collect-web-signals.yml の artifact にしか無いので、
+# ここで復元して測る。🔴 本番の data/ には何も書かない・コミットしない。結果はログに出す。
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: confirm-kayochin
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  confirm:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+
+      - name: Download required files via LFS
+        run: git lfs pull --include="data/*.db,data/*.pkl"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Find the run that has the index DB
+        id: last
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          RID=$(gh api "repos/${{ github.repository }}/actions/artifacts?name=web-signals-db&per_page=30" \
+                  --jq '[.artifacts[] | select(.expired == false)] | sort_by(.created_at) | last | .workflow_run.id // ""')
+          if [ -z "$RID" ]; then echo "::error::指数DBの artifact が無い"; exit 1; fi
+          echo "run_id=$RID" >> "$GITHUB_OUTPUT"
+
+      - name: Restore index DB
+        uses: actions/download-artifact@v4
+        with:
+          name: web-signals-db
+          path: data/private
+          run-id: ${{ steps.last.outputs.run_id }}
+          github-token: ${{ github.token }}
+
+      - name: Report index DB (件数だけ)
+        run: |
+          python3 - <<'PY'
+          import sqlite3
+          c = sqlite3.connect('data/private/web_signals.db')
+          print('指数', c.execute('SELECT COUNT(*), COUNT(DISTINCT race_id), MIN(date), MAX(date) FROM web_signals').fetchone())
+          print('取得', c.execute('SELECT status, COUNT(*) FROM web_fetch_log GROUP BY status').fetchall())
+          PY
+
+      - name: md5 of production model files (before)
+        run: md5sum data/xgb_fukusho_model_residual.pkl data/xgb_calibrator.pkl | tee /tmp/md5_before.txt
+
+      - name: Build training data
+        run: |
+          python3 - <<'PY'
+          import sys
+          sys.path.insert(0, '.')
+          from src.tools.build_training_data import build_training_data
+          build_training_data('.')
+          PY
+
+      - name: Measure (1回)
+        run: python3 websig/confirm_kayochin.py
+
+      - name: md5 of production model files (after)
+        run: |
+          md5sum data/xgb_fukusho_model_residual.pkl data/xgb_calibrator.pkl | tee /tmp/md5_after.txt
+          diff /tmp/md5_before.txt /tmp/md5_after.txt && echo "本番モデル・較正器は不変"
+
+      - name: Result JSON
+        if: always()
+        run: cat confirm_kayochin_result.json || true
