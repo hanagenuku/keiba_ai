@@ -93,6 +93,38 @@ def _assign_marks(scored, by_odds):
     return marks
 
 
+def _build_star(scored):
+    """レースに1頭だけ付く ☆ を決める。該当なしなら None。
+
+    🔴 ☆は**表示専用**。◎○▲△・`rl_rank`・買い目・確率・推奨の範囲
+    （`article_kind`）を1つも変えない。買い目（`axis_bets.py`）にも入れない。
+    🔴 ☆は買い推奨ではない。出すときは `star.STAR_NOTE` を必ず併記する。
+
+    根拠は `hitrate/RESULTS_C_RERUN.md` / `hitrate/RESULTS_STAR.md`。
+    未読の2024年で 複勝率 56.07% vs 1番人気 35.04%（+21.03pt）・
+    複勝回収 78.82% vs 77.87%（+0.95pt）。🔴 **回収率は改善していない。**
+    """
+    try:
+        from src.features.star import STAR_NOTE, STAR_TAU, pick_star
+    except Exception:
+        return None
+    probs = [h.get('star_prob') for h in scored]
+    if not any(p is not None for p in probs):
+        return None
+    num, prob = pick_star([h['num'] for h in scored], probs)
+    if num is None:
+        return None
+    h = next((x for x in scored if x['num'] == num), None)
+    return {
+        'n': num,
+        'name': h['name'] if h else '',
+        'prob': prob,
+        # 記事・アプリに出すときの文面（省略不可）
+        'note': STAR_NOTE,
+        'tau': STAR_TAU,
+    }
+
+
 def _build_solo_ranks(scored):
     """市場ゼロAI順位（ability_margin 降順）を {horse_num: rank} で返す。
 
@@ -239,6 +271,11 @@ def _build_horses_list(scored, top1, by_odds, odds_lookup=None, base_dir=None):
             # _build_solo_ranks のdocstring（当てる力では rl_rank に劣る）。
             # 非残差モデル時はNone → アプリ側で列ごと非表示にする。
             'solo_rank': solo_ranks.get(h['num']),
+            # ☆（市場1番人気を着順で上回る可能性）の較正済み確率。
+            # 🔴 表示専用。買い目・軸・集計・推奨の範囲には使わない。
+            #    ☆を付ける1頭は _build_star() がレース単位で決める（star.STAR_TAU）。
+            #    モデルが無ければ None → アプリ側で列ごと非表示。
+            'star_prob': h.get('star_prob'),
             # コース・馬場適性の順位（Gate 0 で事前登録した適性軸5列のレース内z平均）。
             # 🔴 表示専用。買い目・軸・レース選択には使わない。効果の67〜81%が
             #    市場評価の言い換えで、回収率は36マスすべて100%未満（Step 1・2026-09-22）。
@@ -774,6 +811,7 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
                 'style': top1.get('running_style', '差し'),
             },
             'horses':       _horses_list,
+            'star':         _build_star(scored),
             'bets':         _build_bet_list(bets),
             'gumbel_bets':  _gumbel_bets,
             'ai_pair_bets': _build_ai_pair_bets(scored),
@@ -903,6 +941,7 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
                 'style': top1.get('running_style', '差し'),
             },
             'horses':      _horses_list2,
+            'star':         _build_star(scored),
             'bets':        _build_bet_list(bets2),
             'gumbel_bets': _gumbel_bets2,
             'ai_pair_bets': _build_ai_pair_bets(scored),
