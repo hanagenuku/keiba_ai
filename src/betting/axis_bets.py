@@ -127,29 +127,8 @@ def synthetic_odds(odds_list):
     return (1.0 / inv) if inv > 0 else 0.0
 
 
-def select_axis(scored, star_num=None):
-    """軸を選ぶ。既定は RL1。`star_num` があればその馬を軸にする。
-
-    🔴 2026-11-11 ユーザー決定「◎を動かす」。☆（市場1番人気を着順で上回る
-    可能性が比較的高い馬・`src/features/star.py`）が出たレースでは、
-    **◎と買い目の軸を一緒にその馬へ移す**。
-
-    ⚠ **◎だけ動かして軸を据え置くのは禁止。** 2026-11-08 に実際にやって
-    「◎と買い目の軸が食い違う」状態を作り、同日に直した
-    （`tests/test_honmei_resync.mjs` の経緯）。だから軸の決定はここ1箇所に閉じ、
-    呼び出し側は `star_num` を渡すだけにする。
-
-    ⚠ **☆の馬を軸にした組み合わせ券種（馬連・ワイド・三連複・三連単）の
-    回収率は測っていない。原理的に測れない**——`keiba.db` に残るのは的中した
-    組み合わせの払戻だけで、全組み合わせのオッズ盤が無い。測れているのは
-    「☆の馬の複勝率が1番人気より +16.5〜+21.2pt 高い／複勝回収は
-    −0.45〜+2.00pt」という単勝・複勝の話だけ（`hitrate/RESULTS_STAR.md`）。
-    軸を動かす判断は**その測れている性質**に基づく。
-    """
-    if star_num is not None:
-        for h in scored:
-            if _num(h) == int(star_num):
-                return h
+def select_axis(scored):
+    """軸 = RL1（能力・脚質・展開はXGBの129特徴量に既に織り込まれている）。"""
     for h in scored:
         if h.get('rl_rank') == 1:
             return h
@@ -176,8 +155,7 @@ def _entry(tag, label, key, prob, odds, amount=UNIT):
 
 def build_axis_bets(scored, probs, odds_map,
                     wide_points=WIDE_MAX_POINTS,
-                    trio_max_points=TRIO_MAX_POINTS,
-                    star_num=None):
+                    trio_max_points=TRIO_MAX_POINTS):
     """軸1頭ベースの買い目を組む。
 
     Parameters
@@ -193,7 +171,7 @@ def build_axis_bets(scored, probs, odds_map,
     空のレース（軸が取れない・中穴がいない等）では該当券種を空で返す。
     """
     out = {'win': [], 'wide': [], 'quinella': [], 'trio': [], 'summary': {}}
-    axis = select_axis(scored, star_num=star_num)
+    axis = select_axis(scored)
     if not axis:
         return out
     a = _num(axis)
@@ -296,7 +274,7 @@ def build_axis_bets(scored, probs, odds_map,
 
 
 def make_axis_bets(scored, race, base_dir=None, market_odds_map=None,
-                   n_sims=None, star_num=None):
+                   n_sims=None):
     """軸1頭ベースの買い目を、券種確率と推定配当込みで組む。
 
     `make_bets_v2` と同じ入力で呼べるようにしてある。
@@ -345,5 +323,4 @@ def make_axis_bets(scored, race, base_dir=None, market_odds_map=None,
         win_odds = {_num(h): _win_odds(h) for h in scored if _win_odds(h) > 0}
     odds_map = exact_payouts_from_win_odds(win_odds)
 
-    return (build_axis_bets(scored, probs, odds_map, star_num=star_num),
-            probs, odds_map)
+    return build_axis_bets(scored, probs, odds_map), probs, odds_map
