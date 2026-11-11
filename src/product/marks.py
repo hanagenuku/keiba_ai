@@ -51,34 +51,63 @@ def _rank(horse, key):
     return None
 
 
-def assign_marks(horses):
-    """rl_rank に基づいて印を割り当てた新しいリストを返す。
+def assign_marks(horses, star_num=None):
+    """印を割り当てた新しいリストを返す。入力の dict は変更しない。
 
-    入力の dict は変更しない（本番の予想を書き換えないため）。
+    既定は `rl_rank` の順（◎=1位 / ○=2位 / ▲=3位 / △=4,5位）。
+
+    🔴 2026-11-11 ユーザー決定「◎を動かす」。`star_num`（☆＝市場1番人気を
+    着順で上回る可能性が比較的高い馬）が渡されたレースでは **◎をその馬に移し**、
+    残りを `rl_rank` 順に ○▲△ で詰める（`rl_rank` 1位は ○ になる）。
+
+    ⚠ ◎を動かすときは**買い目の軸も一緒に動く**（`axis_bets.select_axis` に
+    同じ `star_num` が渡る）。◎だけ動かす形は 2026-11-08 に実害を出して直した。
+    ⚠ `conf`（レース信頼度）は動かさない。定義は RL1 の3着内確率のまま
+    （理由は `hitrate/RESULTS_STAR.md` §8）。
+    ⚠ ☆の根拠は**着順比較**であって回収率ではない。記事では必ず
+    `star.STAR_NOTE` を併記する（複勝回収率は改善していない）。
     """
-    out = []
+    star_num = int(star_num) if star_num is not None else None
+    rest = MARKS[1:] + (SUB_MARK, SUB_MARK)      # ○ ▲ △ △
+    out, ranked = [], []
     for h in horses:
         h2 = dict(h)
-        r = _rank(h2, 'rl_rank')
-        if r == 1:
-            h2['product_mark'] = MARKS[0]
-        elif r == 2:
-            h2['product_mark'] = MARKS[1]
-        elif r == 3:
-            h2['product_mark'] = MARKS[2]
-        elif r in (4, 5):
-            h2['product_mark'] = SUB_MARK
-        else:
-            h2['product_mark'] = ''
+        h2['product_mark'] = ''
         out.append(h2)
+        if star_num is not None and _rank(h2, 'num') == star_num:
+            continue
+        r = _rank(h2, 'rl_rank')
+        if r is not None:
+            ranked.append((r, h2))
+    if star_num is not None:
+        hit = [h2 for h2 in out if _rank(h2, 'num') == star_num]
+        if hit:
+            hit[0]['product_mark'] = MARKS[0]
+        else:
+            star_num = None                       # ☆の馬が居ない → 従来どおり
+    ranked.sort(key=lambda x: x[0])
+    marks_left = list(rest) if star_num is not None else list(MARKS) + [SUB_MARK,
+                                                                        SUB_MARK]
+    for (_r, h2) in ranked:
+        if not marks_left:
+            break
+        h2['product_mark'] = marks_left.pop(0)
     return out
 
 
 def axis_horse(horses):
-    """◎（rl_rank 1）。見つからなければ None。
+    """◎の馬。`assign_marks` を通した後なら印から探す。
 
+    🔴 2026-11-11 以降、◎は `rl_rank` 1位とは限らない（☆の馬に移る）。
+    だから **まず `product_mark` が ◎ の馬を探し**、印が付いていないリスト
+    （`assign_marks` を通していない）だけ従来どおり `rl_rank` 1位に落とす。
     `scored[0]` とは限らないので明示的に探す（ev_filter と同じ規約）。
     """
+    for h in horses:
+        if h.get('product_mark') == MARKS[0]:
+            return h
+    if any(h.get('product_mark') for h in horses):
+        return None          # 印は付いているが ◎ が無い＝該当なし
     for h in horses:
         if _rank(h, 'rl_rank') == 1:
             return h

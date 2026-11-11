@@ -146,9 +146,9 @@ class TestDisplayOnly:
     def test_article_emits_note_with_star(self):
         """記事で ☆ の見出しを出す箇所に併記文が必ず付く。"""
         src = self._src('src/product/article.py')
-        i = src.find('1番人気を上回る可能性がある馬')
+        i = src.find('本命は1番人気ではありません')
         assert i > 0, '☆の見出しが article.py に無い'
-        block = src[i:i + 1600]
+        block = src[i:i + 2200]
         assert "_star.get('note')" in block, '併記文を出していない'
 
     def test_app_json_exposes_star_without_touching_marks(self):
@@ -344,3 +344,98 @@ class TestEndToEndThroughCalcAll:
         key = lambda xs: [(h['num'], h.get('rl_rank'), h.get('ai_rank'),  # noqa: E731
                            round(h['total'], 6)) for h in xs]
         assert key(before) == key(after), '☆を入れたら順位・スコアが動いた'
+
+
+class TestHonmeiMovesToStar:
+    """🔴 2026-11-11 ユーザー決定「◎を動かす」の固定。
+
+    守ること:
+      1. ☆が出たレースでは ◎ がその馬に移る（○▲△ は rl_rank 順で詰まる）
+      2. **買い目の軸も同じ馬に移る**（◎だけ動かす形は 2026-11-08 に実害を出した）
+      3. `conf`（レース信頼度）は動かさない＝ RL1 の3着内確率のまま
+      4. 有料／無料の振り分け（`article_kind`）は ☆ を読まない
+      5. クライアント側（直前オッズ）は ☆ があるレースの ◎ と軸を動かさない
+    """
+
+    def _src(self, rel):
+        with open(os.path.join(BASE, rel), encoding='utf-8') as f:
+            return f.read()
+
+    def test_mark_moves_to_star_and_rest_shift(self):
+        from src.product import marks
+        hs = [{'num': 1, 'rl_rank': 1}, {'num': 2, 'rl_rank': 2},
+              {'num': 7, 'rl_rank': 4}, {'num': 9, 'rl_rank': 3}]
+        got = {h['num']: h['product_mark']
+               for h in marks.assign_marks(hs, star_num=7)}
+        assert got[7] == '◎', '◎が☆の馬に移っていない'
+        assert got[1] == '○' and got[2] == '▲' and got[9] == '△'
+
+    def test_marks_unchanged_without_star(self):
+        from src.product import marks
+        hs = [{'num': 1, 'rl_rank': 1}, {'num': 2, 'rl_rank': 2},
+              {'num': 9, 'rl_rank': 3}]
+        got = {h['num']: h['product_mark'] for h in marks.assign_marks(hs)}
+        assert got == {1: '◎', 2: '○', 9: '▲'}
+
+    def test_axis_horse_follows_the_mark(self):
+        from src.product import marks
+        hs = [{'num': 1, 'rl_rank': 1}, {'num': 7, 'rl_rank': 3}]
+        m = marks.assign_marks(hs, star_num=7)
+        assert marks.axis_horse(m)['num'] == 7
+        # 印を付けていないリストは従来どおり rl_rank 1位
+        assert marks.axis_horse(hs)['num'] == 1
+
+    def test_unknown_star_num_falls_back_to_rl1(self):
+        from src.product import marks
+        hs = [{'num': 1, 'rl_rank': 1}, {'num': 2, 'rl_rank': 2}]
+        got = {h['num']: h['product_mark']
+               for h in marks.assign_marks(hs, star_num=99)}
+        assert got[1] == '◎', '☆の馬が居ないのに ◎ が消えた'
+
+    def test_bet_axis_moves_with_the_mark(self):
+        """🔴 買い目の軸も ☆ に動くこと（◎だけ動かすのは禁止）。"""
+        from src.betting.axis_bets import select_axis
+        scored = [{'num': 1, 'horse_num': 1, 'rl_rank': 1},
+                  {'num': 7, 'horse_num': 7, 'rl_rank': 3}]
+        assert select_axis(scored)['num'] == 1
+        assert select_axis(scored, star_num=7)['num'] == 7
+        # 居ない馬番なら RL1 に落ちる
+        assert select_axis(scored, star_num=99)['num'] == 1
+
+    def test_app_json_passes_star_to_the_axis(self):
+        src = self._src('src/betting/app_json.py')
+        assert src.count('star_num=(_star or {}).get(\'n\')') == 1
+        assert src.count('star_num=(_star2 or {}).get(\'n\')') == 1
+
+    def test_conf_is_not_recomputed_for_the_new_honmei(self):
+        """🔴 conf は RL1 の3着内確率のまま（有料/無料の振り分けを動かさない）。"""
+        import ast
+        src = self._src('src/betting/app_json.py')
+        fn = next(n for n in ast.walk(ast.parse(src))
+                  if isinstance(n, ast.FunctionDef) and n.name == 'race_confidence')
+        body = ast.unparse(fn)
+        assert "rl_rank') == 1" in body, 'race_confidence が RL1 を見ていない'
+        for bad in ('star', 'honmei_h'):
+            assert bad not in body, f'race_confidence が {bad} を読んでいる'
+
+    def test_article_kind_does_not_read_star(self):
+        src = self._src('src/product/scope.py')
+        for bad in ('star_prob', 'STAR_TAU', "get('star')", 'from_star'):
+            assert bad not in src, f'scope.py が {bad} を読んでいる'
+
+    def test_client_does_not_move_honmei_when_star_exists(self):
+        html = self._src('index.html')
+        assert 'if (race.honmei && !(race.star && race.star.n))' in html, \
+            '☆があるレースで ◎ を RL1 に戻してしまう'
+        assert 'buildAxisBetsJS(hs, probs, _axExactPayouts(winOdds),' in html, \
+            'クライアントの買い目が ☆ を軸にしていない'
+
+    def test_conf_badge_label_is_not_a_lie(self):
+        """◎が☆に移るので「軸3着内」は嘘になる。ラベルを直してあること。"""
+        html = self._src('index.html')
+        assert '軸3着内 ' not in html
+        assert '当てやすさ ' in html
+
+    def test_article_states_that_honmei_is_the_star(self):
+        src = self._src('src/product/article.py')
+        assert '◎ と買い目の軸はこの馬にしています' in src

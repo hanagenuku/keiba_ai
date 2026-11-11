@@ -337,10 +337,14 @@ def summarize(base_dir, scope_only=False, include_late=False):
     top3 = [e for e in done if (e['result'] or {}).get('top3')]
     payouts = sorted(p for p in ((e['result'] or {}).get('fukusho_payout')
                                  for e in top3) if p)
-    # 🔴 ◎ 自身かどうかで分ける（2026-10-15）。実測で 11件のうち9件が
-    #    `rl_rank == 1` ＝ その記事が軸に推している馬だった。
+    # 🔴 AI+市1位（`rl_rank == 1`）自身かどうかで分ける（2026-10-15）。
+    #    実測で 11件のうち9件が `rl_rank == 1` だった。
     #    `danger_favorites()` は `rl_rank` を見ないので構造的にこうなる。
     #    毎回この内訳が見えないと、同じことに次も気づけない。
+    # ⚠ 2026-11-11 訂正: これを「◎自身」と呼ばない。☆が出たレースでは
+    #    ◎ が別の馬に移るので（`marks.assign_marks(star_num=)`）、
+    #    `rl_rank == 1` は ◎ とは限らない。台帳は `rl_rank` を記録しており
+    #    ◎ は記録していないので、この内訳は **AI+市1位かどうか**の分割である。
     axis = [e for e in done if e.get('rl_rank') == 1]
     other = [e for e in done if e.get('rl_rank') != 1]
     _t3 = lambda g: sum(1 for e in g if (e['result'] or {}).get('top3'))

@@ -1213,9 +1213,12 @@ function _axEntry(tag, label, key, prob, odds) {
            ev: odds ? _axRound(prob * odds, 2) : 0.0 };
 }
 
-function buildAxisBetsJS(horses, probs, oddsMap) {
+// 🔴 axisNum を渡すとその馬を軸にする（☆＝サーバが決めた本命）。
+//    Python 側 axis_bets.select_axis(scored, star_num=) と同じ規約。
+function buildAxisBetsJS(horses, probs, oddsMap, axisNum) {
   const out = { win: [], wide: [], quinella: [], trio: [], summary: {} };
-  const axis = horses.find(h => h.rl_rank === 1);
+  const axis = (axisNum != null ? horses.find(h => h.n === axisNum) : null)
+            || horses.find(h => h.rl_rank === 1);
   if (!axis) return out;
   const a = axis.n;
 
@@ -1400,7 +1403,10 @@ function recalcAxisBets(race) {
   const winOdds = {};
   for (const h of hs) if (h._ax_odds > 0) winOdds[h.n] = h._ax_odds;
   if (Object.keys(winOdds).length < 3) return false;
-  const ab = buildAxisBetsJS(hs, probs, _axExactPayouts(winOdds));
+  // 🔴 ☆が出ているレースは軸を動かさない。☆はサーバ側のモデル（star.py）で
+  //    決まり、クライアントでは再計算できないので、朝の☆をそのまま軸に使う。
+  const ab = buildAxisBetsJS(hs, probs, _axExactPayouts(winOdds),
+                             (race.star && race.star.n) || null);
   if (!ab.summary.total_points) return false;
   if (race._morning_gumbel_bets == null) {
     race._morning_gumbel_bets = race.gumbel_bets;
@@ -1507,7 +1513,12 @@ function updateOddsAndEV(race, freshOdds) {
     //     朝の軸のまま凍結されていた。◎ だけ動かした結果、◎ と買い目の軸が
     //     食い違う状態を作ってしまった。下の recalcAxisBets() で買い目側も
     //     同じ軸に揃える。
-    if (race.honmei) {
+    // 🔴 2026-11-11: ☆が出ているレースの ◎ は動かさない。
+    //   ◎ は ☆（サーバ側 star.py の較正モデル）で決まっており、
+    //   クライアントは ☆ を再計算できない。RL1 に戻すと「朝に☆として
+    //   出した馬」と ◎ が食い違い、買い目の軸（recalcAxisBets も ☆ を使う）
+    //   とも食い違う。朝の判断をそのまま据え置くのが正しい。
+    if (race.honmei && !(race.star && race.star.n)) {
       const h1 = allHorses.find(h => h.rl_rank === 1);
       if (h1) {
         if (race._morning_honmei == null) race._morning_honmei = race.honmei.n;
@@ -1820,14 +1831,22 @@ function render() {
   let html = '';
   for (const race of races) {
     const k = venue+race.r;
-  // 自信度バッジ。数字の意味は「軸(RL1)が3着内に入る確率」。
+  // 自信度バッジ。数字の意味は「**AI+市1位（≒市場1番人気）が3着内に入る確率**」。
+  // 🔴 2026-11-11 にラベルを直した。◎が☆の馬に移るようになったので
+  //    「軸3着内」は嘘になる（conf は RL1 の値で、◎の値ではない）。
+  //    conf を◎で再計算しない理由は hitrate/RESULTS_STAR.md §8:
+  //    ①有料レースが5→2本に減る ②モデルは☆の馬を実測より低く見ている。
+  //    conf は「このレースが当てやすいか」というレース単位の目安として据え置く
+  //    （AUC 0.6041 の実測もRL1を軸にした値）。
   // ⚠ 当てやすさであって儲けやすさではない（最上位帯でも複勝回収89.3%）。
   //    高いから買う、ではなく低いから見送る、という使い方をする。
   function _confBadge(race) {
     if (race.conf == null) return '';
-    const t = '軸が3着内に入る確率 ' + race.conf + '%（当てやすさの目安。'
-            + '高くても回収率は控除率を超えません）';
-    return '<span class="conf" title="' + t + '">軸3着内 ' + race.conf + '%</span>';
+    const t = 'AI+市1位（ほぼ市場1番人気）が3着内に入る確率 ' + race.conf + '%。'
+            + 'このレースが当てやすいかの目安で、◎の的中率ではありません。'
+            + '高くても回収率は控除率を超えません';
+    return '<span class="conf" title="' + t + '">当てやすさ ' + race.conf
+         + '%</span>';
   }
 
     const isOpen = opened[k];

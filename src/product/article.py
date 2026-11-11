@@ -198,7 +198,10 @@ def build_race_section(race, horses, facts_by_num, *, paid=True,
     🔴 **印・比較表・買い目の計算に一切渡さない。** 記事の末尾に別枠で足すだけ。
     `None` なら出力は従来と完全に同じ。
     """
-    marked = _marks.assign_marks(horses)
+    # 🔴 ☆が出たレースは ◎ をその馬に移す（2026-11-11 ユーザー決定）。
+    #   買い目の軸も同じ馬に動いている（axis_bets.select_axis）。
+    _star_for_marks = (race.get('star') or {}) if isinstance(race, dict) else {}
+    marked = _marks.assign_marks(horses, star_num=_star_for_marks.get('n'))
     rows = _marks.rank_table(marked)
     dangers = _marks.danger_favorites(marked)
     tickets = _tk.build_tickets(race, marked)
@@ -265,7 +268,7 @@ def build_race_section(race, horses, facts_by_num, *, paid=True,
         _star = race.get('star') if isinstance(race, dict) else None
         if _star and _star.get('n'):
             _sp = _star.get('prob')
-            parts.append('### ☆ 1番人気を上回る可能性がある馬')
+            parts.append('### ☆ 本命は1番人気ではありません')
             parts.append('')
             _sh = next((h for h in marked if h.get('n') == _star['n']), None)
             _bits = []
@@ -282,6 +285,10 @@ def build_race_section(race, horses, facts_by_num, *, paid=True,
                 #    （hitrate/CRITERIA_STAR.md §4「記事に書く確率」）
                 _head += f"：1番人気を上回る可能性は{int(_sp * 100 // 5 * 5)}%以上"
             parts.append(_head + '。')
+            parts.append('')
+            # 🔴 ◎と買い目の軸はこの馬に移っている（2026-11-11 ユーザー決定）。
+            #   ◎だけ動かして軸を据え置く形は 2026-11-08 に実害を出して直した。
+            parts.append('このレースの ◎ と買い目の軸はこの馬にしています。')
             parts.append('')
             parts.append(_star.get('note') or '')
             parts.append('')

@@ -729,6 +729,23 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
         # 本命はAI確率（win_prob）1位の馬（EVではなく能力基準）
         top1   = max(scored, key=lambda h: h.get('pn', 0))
         c['top1'] = top1
+        # 🔴 ☆が出たレースでは **◎（本命）と買い目の軸を一緒に** その馬へ移す
+        #   （2026-11-11 ユーザー決定「◎を動かす」）。
+        #   ⚠ ◎だけ動かして軸を据え置くのは禁止。2026-11-08 に実際にやって
+        #     「◎と買い目の軸が食い違う」状態を作り、同日に直した
+        #     （`tests/test_honmei_resync.mjs` の経緯）。
+        #   ⚠ conf（レース信頼度・有料無料の振り分け）は **動かさない**。
+        #     定義は `race_confidence` のとおり RL1 の3着内確率のままにする。
+        #     ①再計算すると有料レースが 5→2本に減る（2026-11-08 の34レースで実測）
+        #     ②モデルは☆の馬を実測より低く見ている（モデル基準 −11.6pt なのに
+        #       実測の複勝率は 56.07% vs 1番人気 35.04%）ので、再計算した数字は
+        #       測って分かっている事実と矛盾する（`hitrate/RESULTS_STAR.md` §8）
+        #   ⚠ top1 自体は触らない（gap / pop_rank / c_ref が読んでいる）。
+        _star = _build_star(scored)
+        c['star'] = _star
+        honmei_h = top1
+        if _star and _star.get('n'):
+            honmei_h = next((h for h in scored if h['num'] == _star['n']), top1)
         rc     = race['racecourse']
         if rc not in races_by_venue:
             races_by_venue[rc] = []
@@ -761,8 +778,8 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
         bets = make_bets(c, _race_odds or None)
         if not bets:
             _fb_odds = top1.get('win_odds', 0) or 0
-            bets = [{'type': '複勝', 'nums': [top1['num']],
-                     'horse_name': top1.get('name', ''),
+            bets = [{'type': '複勝', 'nums': [honmei_h['num']],
+                     'horse_name': honmei_h.get('name', ''),
                      'odds': _fb_odds,
                      'odds_est': 0, 'amount': 500,
                      'ev': None if _fb_odds == 0 else 0.0,
@@ -790,7 +807,8 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
             # だったため置き換えた。詳細は src/betting/axis_bets.py 冒頭。
             from src.betting.axis_bets import make_axis_bets as _mab
             _ab, _, _ = _mab(scored, race, base_dir,
-                             market_odds_map=market_odds_map, n_sims=3000)
+                             market_odds_map=market_odds_map, n_sims=3000,
+                             star_num=(_star or {}).get('n'))
             _gumbel_bets = _format_axis_bets(_ab, scored)
         except Exception:
             _gumbel_bets = []
@@ -804,14 +822,16 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
             'rec':  True,
             'conf': conf,
             'honmei': {
-                'n':     top1['num'],
-                'name':  top1['name'],
-                'odds':  top1.get('win_odds', 0) or 0,
-                'score': top1['total'],
-                'style': top1.get('running_style', '差し'),
+                'n':     honmei_h['num'],
+                'name':  honmei_h['name'],
+                'odds':  honmei_h.get('win_odds', 0) or 0,
+                'score': honmei_h['total'],
+                'style': honmei_h.get('running_style', '差し'),
+                # ◎が ☆ 由来かどうか（表示側が文面を変えるため）
+                'from_star': bool(_star and _star.get('n') == honmei_h['num']),
             },
             'horses':       _horses_list,
-            'star':         _build_star(scored),
+            'star':         _star,
             'bets':         _build_bet_list(bets),
             'gumbel_bets':  _gumbel_bets,
             'ai_pair_bets': _build_ai_pair_bets(scored),
@@ -840,6 +860,22 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
         if not scored:
             continue
         top1  = scored[0]
+        # 🔴 ☆が出たレースでは **◎（本命）と買い目の軸を一緒に** その馬へ移す
+        #   （2026-11-11 ユーザー決定「◎を動かす」）。
+        #   ⚠ ◎だけ動かして軸を据え置くのは禁止。2026-11-08 に実際にやって
+        #     「◎と買い目の軸が食い違う」状態を作り、同日に直した
+        #     （`tests/test_honmei_resync.mjs` の経緯）。
+        #   ⚠ conf（レース信頼度・有料無料の振り分け）は **動かさない**。
+        #     定義は `race_confidence` のとおり RL1 の3着内確率のままにする。
+        #     ①再計算すると有料レースが 5→2本に減る（2026-11-08 の34レースで実測）
+        #     ②モデルは☆の馬を実測より低く見ている（モデル基準 −11.6pt なのに
+        #       実測の複勝率は 56.07% vs 1番人気 35.04%）ので、再計算した数字は
+        #       測って分かっている事実と矛盾する（`hitrate/RESULTS_STAR.md` §8）
+        #   ⚠ top1 自体は触らない（gap / pop_rank / c_ref が読んでいる）。
+        _star2 = _build_star(scored)
+        honmei_h2 = top1
+        if _star2 and _star2.get('n'):
+            honmei_h2 = next((h for h in scored if h['num'] == _star2['n']), top1)
         odds  = top1.get('win_odds') or 99
         gap   = top1['total'] - scored[1]['total'] if len(scored) > 1 else 0
         _num_horses2 = race.get('num_horses', len(scored))
@@ -893,8 +929,8 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
         bets2 = make_bets(c_ref, _race_odds2 or None)
         if not bets2:
             _fb_odds2 = top1.get('win_odds', 0) or 0
-            bets2 = [{'type': '複勝', 'nums': [top1['num']],
-                      'horse_name': top1.get('name', ''),
+            bets2 = [{'type': '複勝', 'nums': [honmei_h2['num']],
+                      'horse_name': honmei_h2.get('name', ''),
                       'odds': _fb_odds2,
                       'odds_est': 0, 'amount': 500,
                       'ev': None if _fb_odds2 == 0 else 0.0,
@@ -915,7 +951,8 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
         try:
             from src.betting.axis_bets import make_axis_bets as _mab
             _ab2, _, _ = _mab(scored, race, base_dir,
-                              market_odds_map=market_odds_map, n_sims=3000)
+                              market_odds_map=market_odds_map, n_sims=3000,
+                              star_num=(_star2 or {}).get('n'))
             _gumbel_bets2 = _format_axis_bets(_ab2, scored)
         except Exception:
             _gumbel_bets2 = []
@@ -934,14 +971,15 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
             'value_horses': _vh_list2,
             'bet_reason':  _bet_reason2,
             'honmei': {
-                'n':     top1['num'],
-                'name':  top1['name'],
-                'odds':  top1.get('win_odds', 0) or 0,
-                'score': top1['total'],
-                'style': top1.get('running_style', '差し'),
+                'n':     honmei_h2['num'],
+                'name':  honmei_h2['name'],
+                'odds':  honmei_h2.get('win_odds', 0) or 0,
+                'score': honmei_h2['total'],
+                'style': honmei_h2.get('running_style', '差し'),
+                'from_star': bool(_star2 and _star2.get('n') == honmei_h2['num']),
             },
             'horses':      _horses_list2,
-            'star':         _build_star(scored),
+            'star':         _star2,
             'bets':        _build_bet_list(bets2),
             'gumbel_bets': _gumbel_bets2,
             'ai_pair_bets': _build_ai_pair_bets(scored),
