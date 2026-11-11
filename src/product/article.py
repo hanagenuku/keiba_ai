@@ -258,6 +258,34 @@ def build_race_section(race, horses, facts_by_num, *, paid=True,
             parts.append('※適性順位はこの日の生成には含まれていません。')
             parts.append('')
 
+        # ── ☆（市場1番人気を着順で上回る可能性）────────────────────────
+        # 🔴 表示だけ。◎○▲△・買い目・確率を1つも変えていない。
+        #    併記文（star.STAR_NOTE）は**省略不可**（biz/S4_HITRATE_AXIS.md）。
+        #    「妙味」「狙い目」「☆の回収率は◯%」は書かない。
+        _star = race.get('star') if isinstance(race, dict) else None
+        if _star and _star.get('n'):
+            _sp = _star.get('prob')
+            parts.append('### ☆ 1番人気を上回る可能性がある馬')
+            parts.append('')
+            _sh = next((h for h in marked if h.get('n') == _star['n']), None)
+            _bits = []
+            if _sh:
+                if _sh.get('pop'):
+                    _bits.append(f"市場{_sh['pop']}番人気")
+                if _sh.get('odds'):
+                    _bits.append(_odds_text(_sh['odds']))
+            _head = f"- **{_star['n']}{_star.get('name', '')}**"
+            if _bits:
+                _head += '（' + '・'.join(_bits) + '）'
+            if isinstance(_sp, (int, float)):
+                # 🔴 宣言値そのものではなく5%刻みで切り下げた値を書く
+                #    （hitrate/CRITERIA_STAR.md §4「記事に書く確率」）
+                _head += f"：1番人気を上回る可能性は{int(_sp * 100 // 5 * 5)}%以上"
+            parts.append(_head + '。')
+            parts.append('')
+            parts.append(_star.get('note') or '')
+            parts.append('')
+
         if dangers:
             # 🔴 2026-10-16: 「危険な人気馬」という断定的な見出しをやめた。
             #    B期間6,077レースで測った3着内率は 48.6%（半分近く来る）で、

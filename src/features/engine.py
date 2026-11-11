@@ -3166,6 +3166,28 @@ def calc_all(race, bias_data=None):
     if not out:
         return out
 
+    # ── ☆（市場1番人気を着順で上回る可能性）────────────────────────────
+    # 🔴 表示専用。◎○▲△・rl_rank・買い目・確率・推奨の範囲を1つも変えない。
+    #    モデルが無ければ全頭 None（☆を出さない）。根拠と文面の制約は
+    #    src/features/star.py と biz/S4_HITRATE_AXIS.md。
+    #    xfeats は horse_data に残っているのでここで使う（latest.json には出さない。
+    #    134列×全頭をJSONに入れると肥大するため、確率だけを持たせる）。
+    if use_xgb and _XGB_RESIDUAL:
+        try:
+            from src.features import star as _star
+            _sp = _star.star_probs([xf for _, _, _, xf in horse_data],
+                                   [h_.get('popularity') for h_, _, _, _ in horse_data],
+                                   _BASE_DIR or '.')
+            for _o, _p in zip(out, _sp):
+                _o['star_prob'] = round(_p, 4) if _p is not None else None
+        except Exception as _e:
+            print(f'  ⚠ ☆の算出に失敗したので☆なしで続けます: {_e}')
+            for _o in out:
+                _o['star_prob'] = None
+    else:
+        for _o in out:
+            _o['star_prob'] = None
+
     n          = len(out)
     scores     = [h['total'] for h in out]
     max_score  = max(scores)
