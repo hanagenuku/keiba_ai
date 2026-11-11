@@ -118,6 +118,15 @@ jobs:
       - name: Attach results to danger favorites (非ブロッキング)
         run: python scripts/record_danger_favorites.py --base-dir . --attach-results || true
 
+      # ☆（1番人気を上回る可能性）も同じ形で台帳に残す（data/star_log.json）。
+      # 🔴 予想時点の確率を残さないと「☆は当たっているのか」に後から答えられない。
+      #   一度記録した ☆ は上書きしないので、refresh で ☆ が動いても朝の分が残る。
+      - name: Record star picks (非ブロッキング)
+        run: python scripts/record_star.py --base-dir . || true
+
+      - name: Attach results to star picks (非ブロッキング)
+        run: python scripts/record_star.py --base-dir . --attach-results || true
+
       # 朝に web から集めた見解を情報源ごとに台帳へ残す（data/web_findings_log.json）。
       # ⚠ この時点のリポジトリにある `data/claude_web_findings.json` は**前回の開催日**の
       #   ものかもしれない（Routine は weekend.yml の refresh が終わってから findings を
