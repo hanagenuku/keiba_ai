@@ -2346,7 +2346,13 @@ def calc_features_for_xgb(h, race):
         _bv = POST_BIAS_BY_ZONE.get(rc, {}).get(_zone)
     if _bv is None:
         _bv = -POST_BIAS.get(rc, 0)  # 旧設定は外枠正値なので符号反転
-    num = int(h.get('horse_num', 1) or 1)
+    # 🔴 2026-11-13: 馬番のキーは経路で違う。学習（build_training_data）は 'horse_num'、
+    #    本番の出馬表（parser.parse_horse）は 'num' と 'post_position' しか持たない。
+    #    'horse_num' だけを読んでいたので、**本番の推論では全馬が「馬番1」扱い**になり
+    #    f_post がレース内で一定になっていた（学習/推論パリティ違反・North Star #3）。
+    #    精度への影響は実測で −0.0001 AUC 程度（docs/sessions/2026-11-13②）。
+    from src.features.web_signals import horse_number as _horse_number
+    num = _horse_number(h) or 1
     feats['f_post'] = max(0, min(10, 5.0 - _bv * ((num - 1) / max(n - 1, 1) - 0.5) * 4))
 
     if hist and hist[-1].get('date'):
@@ -3058,8 +3064,10 @@ def calc_all(race, bias_data=None):
                 import pandas as _pd_xgb
                 import xgboost as _xgb_lib
                 _check_xgb_feature_coverage(xfeats, _XGB_FEATURE_COLS)
-                xrow   = {c: xfeats.get(c, 5.0) for c in _XGB_FEATURE_COLS}
-                X_pred = _pd_xgb.DataFrame([xrow])[_XGB_FEATURE_COLS].fillna(5.0)
+                # 🔴 web 由来の列だけは NaN のまま渡す（学習側 train_xgb と同じ fill_missing）
+                from src.features.web_signals import default_for as _ws_default, fill_missing as _ws_fill
+                xrow   = {c: xfeats.get(c, _ws_default(c)) for c in _XGB_FEATURE_COLS}
+                X_pred = _ws_fill(_pd_xgb.DataFrame([xrow])[_XGB_FEATURE_COLS])
 
                 if _XGB_RESIDUAL:
                     # 残差学習: base_margin を設定してから予測
