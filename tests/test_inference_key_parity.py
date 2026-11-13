@@ -94,3 +94,37 @@ def test_fill_missing_keeps_web_columns_nan_and_fills_the_rest():
     plain = pd.DataFrame({'f_a': [np.nan], 'f_b': [2.0]})
     assert web_signals.fill_missing(plain).equals(plain.fillna(5.0))
     assert np.isnan(web_signals.default_for(rank_col)) and web_signals.default_for('f_a') == 5.0
+
+
+def test_collect_for_date_accepts_the_date_format_weekend_py_passes(tmp_path, monkeypatch):
+    """weekend.py は 'YYYYMMDD' を渡す。sitemap 由来の 'YYYY-MM-DD' と一致しないと1本も取れない。"""
+    import json
+    from scripts import collect_web_signals as cws
+    (tmp_path / 'data').mkdir()
+    with open(tmp_path / 'data' / 'source_registry.json', 'w', encoding='utf-8') as f:
+        json.dump({'sources': []}, f)
+    monkeypatch.setattr('src.utils.source_registry.adopted_sources',
+                        lambda base_dir='.': [{'source': cws.SOURCE_NAME}])
+    monkeypatch.setattr(cws, '_session', lambda: None)
+    seen = {}
+
+    def fake_list(sess, start_ym, end_ym, cache_dir):
+        seen['ym'] = (start_ym, end_ym)
+        return [('2026-11-14', 'tokyo', 'https://kayochinkeiba.com/261114tokyo/'),
+                ('2026-11-15', 'tokyo', 'https://kayochinkeiba.com/261115tokyo/')]
+    monkeypatch.setattr(cws, 'list_articles', fake_list)
+    fetched = []
+
+    def fake_get(sess, url):
+        fetched.append(url)
+        raise RuntimeError('ネットワークには出ない')
+    monkeypatch.setattr(cws, '_get', fake_get)
+    monkeypatch.setattr(cws.time, 'sleep', lambda s: None)
+    for arg in ('20261114', '2026-11-14'):
+        fetched.clear()
+        r = cws.collect_for_date(str(tmp_path), arg)
+        assert seen['ym'] == ('202611', '202611')
+        # 「その日の記事が無い」ではなく、当日の1本を取りに行っていること
+        assert r['skipped_reason'] != 'no_article_for_date', arg
+        if r['skipped_reason'] is None:
+            assert fetched == ['https://kayochinkeiba.com/261114tokyo/']

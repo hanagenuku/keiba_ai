@@ -66,11 +66,26 @@ class TestGateDefaultsToNothing(unittest.TestCase):
     def setUp(self):
         sr.reset_warnings()
 
-    def test_real_registry_has_no_adopted_source(self):
-        """🔑 本番の台帳は採用ゼロ＝現状の挙動を変えない、を固定する。"""
+    def test_real_registry_adopts_only_what_was_decided(self):
+        """🔑 本番の台帳で採用されているのは、決定の記録があるものだけ。
+
+        2026-11-13 までは採用ゼロだった。同日ユーザーが kayochinkeiba の採用を決めた
+        （基準 websig/ADOPTION_STANDARD.md・測定 websig/RESULTS_CONFIRM_kayochin.md）。
+        採用を増やすときは、決定と測定を残したうえでこのテストを書き換える。
+        """
         base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        self.assertEqual(sr.adopted_sources(base), [])
-        self.assertEqual(sr.adopted_feature_cols(base), [])
+        self.assertEqual([e['source'] for e in sr.adopted_sources(base)], ['kayochinkeiba'])
+        self.assertEqual(sr.adopted_feature_cols(base),
+                         ['f_ws_kayochinkeiba_rank', 'f_ws_kayochinkeiba_z'])
+
+    def test_production_model_columns_match_the_registry(self):
+        """本番モデルの web 由来の列と、台帳の採用済みの列が一致すること（片方だけ変えない）。"""
+        import json
+        base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        with open(os.path.join(base, 'data', 'xgb_feature_cols.json'), encoding='utf-8') as f:
+            cols = json.load(f)['feature_cols']
+        self.assertEqual(sorted(c for c in cols if c.startswith('f_ws_')),
+                         sorted(sr.adopted_feature_cols(base)))
 
     def test_missing_registry_does_not_raise(self):
         with tempfile.TemporaryDirectory() as d:
