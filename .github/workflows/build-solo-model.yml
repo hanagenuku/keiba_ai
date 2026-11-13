@@ -1,0 +1,94 @@
+name: Build solo model (AI単 列の単独モデルを作って測る・手動)
+
+# hitrate/CRITERIA_SOLO.md の測定（1回）と、hitrate/explore_gap_web.py（記述統計）。
+# 指数DBは非公開 artifact にしか無いのでランナーで作る。
+# 🔴 main には push しない。結果は `solo/<run_id>` ブランチに置く（North Star #2）。
+# 🔴 本番の予想モデル・較正器には触らない（最後に md5 で確かめる）。
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: build-solo-model
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+
+      - name: Download required files via LFS
+        run: git lfs pull --include="data/*.db,data/*.pkl"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Find the run that has the index DB
+        id: last
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          RID=$(gh api "repos/${{ github.repository }}/actions/artifacts?name=web-signals-db&per_page=30" \
+                  --jq '[.artifacts[] | select(.expired == false)] | sort_by(.created_at) | last | .workflow_run.id // ""')
+          if [ -z "$RID" ]; then echo "::error::指数DBの artifact が無い"; exit 1; fi
+          echo "run_id=$RID" >> "$GITHUB_OUTPUT"
+
+      - name: Restore index DB
+        uses: actions/download-artifact@v4
+        with:
+          name: web-signals-db
+          path: data/private
+          run-id: ${{ steps.last.outputs.run_id }}
+          github-token: ${{ github.token }}
+
+      - name: md5 of production model files (before)
+        run: md5sum data/xgb_fukusho_model.pkl data/xgb_fukusho_model_residual.pkl data/xgb_calibrator.pkl data/ability_calibrator.pkl | tee /tmp/md5_before.txt
+
+      - name: Build training data（指数つき）
+        run: |
+          python3 - <<'PY'
+          import sys
+          sys.path.insert(0, '.')
+          from src.tools.build_training_data import build_training_data
+          build_training_data('.')
+          import pandas as pd
+          df = pd.read_csv('data/horse_features.csv', usecols=['date', 'f_ws_kayochinkeiba_rank'])
+          print('指数が付いた行の割合（年別）:',
+                df.groupby(df['date'].astype(str).str[:4])['f_ws_kayochinkeiba_rank'].apply(lambda s: round(s.notna().mean(), 3)).to_dict())
+          PY
+
+      - name: Train solo model and measure（CRITERIA_SOLO・1回）
+        run: python3 scripts/build_solo_model.py
+
+      - name: web 情報がずれをどれだけ埋めるか（記述統計）
+        run: python3 hitrate/explore_gap_web.py
+
+      - name: 本番の予想モデルが変わっていないこと
+        run: md5sum -c /tmp/md5_before.txt
+
+      - name: Push results to a branch（main には入れない）
+        run: |
+          set -euo pipefail
+          BR="solo/${{ github.run_id }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BR"
+          printf 'data/xgb_solo_model.pkl -filter -diff -merge\n' >> .gitattributes
+          git add .gitattributes data/xgb_solo_model.pkl data/xgb_solo_cols.json hitrate/solo_result.json hitrate/gap_web_result.json
+          git commit -m "単独モデル（AI単 列用）と測定結果（run ${{ github.run_id }}）"
+          git push origin "$BR"
+          echo "ブランチ: $BR"
