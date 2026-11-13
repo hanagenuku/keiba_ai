@@ -16,6 +16,7 @@ from src.models.calibration_xgb import load_xgb_calibrator
 _XGB_FUKUSHO_MODEL  = None
 _XGB_FEATURE_COLS   = None
 _XGB_RESIDUAL       = False   # True なら残差学習モデル（base_margin を渡す）
+_XGB_SOLO_MODEL     = None    # 市場なしで学習した単独モデル（「AI単」列の順位専用・表示のみ）
 _CALIBRATOR         = None
 _XGB_CALIBRATOR     = None
 _PACE_MODEL         = None
@@ -176,6 +177,33 @@ def _base_margin_from_popularity(pop, n_horses):
     harm = math.log(n) + 0.5772
     p = max(min((1.0 / max(pop, 1)) / harm, 0.999), 0.001)
     return math.log(p / (1 - p))
+
+
+def _load_solo_model(base_dir, feature_cols):
+    """市場なしで学習した単独モデルを読む。使えないときは None。
+
+    列が本番モデルと1つでも違えば使わない（片方だけ作り直した状態で、
+    別の特徴量の並びに黙って予測させないため）。
+    """
+    import json as _json
+    mp = os.path.join(base_dir, 'data', 'xgb_solo_model.pkl')
+    cp = os.path.join(base_dir, 'data', 'xgb_solo_cols.json')
+    if not (os.path.exists(mp) and os.path.exists(cp)):
+        return None
+    try:
+        with open(cp, encoding='utf-8') as f:
+            cols = _json.load(f)['feature_cols']
+        if list(cols) != list(feature_cols or []):
+            print('  ⚠ 単独モデルの列が本番モデルと違うため使わない（AI単 は従来の順位）')
+            return None
+        import xgboost as _xgb_solo
+        b = _xgb_solo.Booster()
+        b.load_model(mp)
+        print(f'  単独モデル（AI単 列用）読込: {b.num_boosted_rounds()}本')
+        return b
+    except Exception as _e:
+        print(f'  ⚠ 単独モデル読込失敗: {_e}（AI単 は従来の順位）')
+        return None
 
 
 def _flat_base_margin(n_horses):
@@ -374,6 +402,11 @@ def init_engine(base_dir,
             else:
                 with open(f'{base_dir}/data/xgb_fukusho_model.pkl', 'rb') as f:
                     _XGB_FUKUSHO_MODEL = pickle.load(f)
+
+    # 「AI単」列のための単独モデル（hitrate/CRITERIA_SOLO.md）。🔴 表示専用。
+    # 無い・壊れている・列が本番と違うときは None のまま（AI単 は ability_margin の順位に戻る）。
+    global _XGB_SOLO_MODEL
+    _XGB_SOLO_MODEL = _load_solo_model(base_dir, _XGB_FEATURE_COLS) if _XGB_RESIDUAL else None
 
     if calibrator is not None:
         _CALIBRATOR = calibrator
@@ -3059,6 +3092,7 @@ def calc_all(race, bias_data=None):
         ability_margin = None  # 市場非依存のAI能力スコア（残差学習時のみ設定。直前オッズ取得時の
                                 # クライアント側再同期用。base_marginを含まない「純粋な木モデル出力」）
         ability_breakdown = None  # ability_marginのカテゴリ別SHAP寄与度分解（残差学習時のみ設定）
+        solo_margin = None  # 市場なしで学習した単独モデルの出力（「AI単」列の順位専用・表示のみ）
         if use_xgb:
             try:
                 import pandas as _pd_xgb
@@ -3107,6 +3141,15 @@ def calc_all(race, bias_data=None):
                     # 引き直し、ability_marginと足し合わせて勝率を再計算できる
                     # （2026-07-26セッション：勝率とオッズの時点ずれ解消の一環）
                     ability_margin = raw_margin - _bm
+                    if _XGB_SOLO_MODEL is not None:
+                        # 🔴 _dmat は base_margin 付きなので使い回さない（市場が混ざる）
+                        try:
+                            _dsolo = _xgb_lib.DMatrix(X_pred, feature_names=list(_XGB_FEATURE_COLS))
+                            solo_margin = float(_XGB_SOLO_MODEL.predict(
+                                _dsolo, output_margin=True,
+                                iteration_range=(0, _XGB_SOLO_MODEL.num_boosted_rounds()))[0])
+                        except Exception:
+                            solo_margin = None
                     # ability_marginをカテゴリ別SHAP寄与度に分解する（「AIが市場と
                     # 違う評価をした理由」の説明可能性レイヤー）。予測自体には影響
                     # しない解釈専用の計算のため、失敗しても推論は止めない
@@ -3169,6 +3212,7 @@ def calc_all(race, bias_data=None):
             'rating':      round(rating, 4),  # 能力値（XGB生マージン or ルールベースtotal-5）
             'ability_margin': round(ability_margin, 6) if ability_margin is not None else None,
             'ability_breakdown': ability_breakdown,  # カテゴリ別SHAP寄与度（[{category, contrib}, ...]降順）
+            'solo_margin': round(solo_margin, 6) if solo_margin is not None else None,
         })
 
     if not out:

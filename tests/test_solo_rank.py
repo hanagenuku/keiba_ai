@@ -1,196 +1,113 @@
-"""市場ゼロAI順位（solo_rank）の検証。
+"""「AI単」列を単独モデル（市場なし）の順位にする変更が、表示だけを変えること。
 
-`solo_rank` は残差学習モデルの `ability_margin`（= raw_margin - base_margin、
-市場アンカーを差し引いたAI単独の評価）から作る**表示専用**の順位。
-買い目・軸・レース厳選・成績集計はすべて従来の `rl_rank` のままであることを、
-このテストで固定する（表示のために馬券が変わってしまう退行の検知）。
-
-North Star #6 に従い、手打ちの理想dictではなく **calc_all が実際に返す形**
-（num / name / total / pn / rl_rank / ability_margin 等）の馬辞書で検証する。
+hitrate/CRITERIA_SOLO.md。実際に save_model / load_model した Booster で確かめる（North Star #6）。
 """
-from src.betting.app_json import _build_solo_ranks, _build_horses_list
-
-
-def _horse(num, rl, pn, ability, odds=5.0):
-    """calc_all の出力と同じキー構成の馬辞書。"""
-    return {
-        'num': num, 'name': f'馬{num}', 'total': 8.0 - num * 0.1,
-        'pn': pn, 'rl_rank': rl, 'cl_rank': rl, 'win_odds': odds,
-        'cal_prob': pn, 'top3_prob': min(0.99, pn * 2.4),
-        'running_style': '差し', 'ability_margin': ability,
-        'ability_breakdown': None, 'rating': 0.0,
-    }
-
-
-def _field():
-    """rl_rank と ability_margin の順序がわざと食い違う4頭立て。
-
-    市場（オッズ）に支えられて RL1 になっている #1 は、市場を外すと最下位。
-    逆に市場が見放している #4 が、AI単独では最上位になる。
-    """
-    return [
-        _horse(1, 1, 0.40, -0.50, odds=1.8),
-        _horse(2, 2, 0.30, +0.10, odds=4.0),
-        _horse(3, 3, 0.20, +0.30, odds=9.0),
-        _horse(4, 4, 0.10, +0.90, odds=30.0),
-    ]
-
-
-class TestBuildSoloRanks:
-    def test_ranks_by_ability_margin_descending(self):
-        assert _build_solo_ranks(_field()) == {4: 1, 3: 2, 2: 3, 1: 4}
-
-    def test_empty_when_any_horse_lacks_ability_margin(self):
-        # 非残差モデル運用時・推論フォールバック時に、一部の馬だけ別基準の
-        # 順位が混ざるのを防ぐ（レース全体で出さない）。
-        field = _field()
-        field[2]['ability_margin'] = None
-        assert _build_solo_ranks(field) == {}
-
-    def test_empty_for_empty_field(self):
-        assert _build_solo_ranks([]) == {}
-
-    def test_ties_break_by_horse_number_not_by_existing_rank(self):
-        # ⚠ タイブレークに着順や既存順位を使うとそこから情報が漏れる
-        #    （2026-08-08のPLレーティングのリークがこの形だった）。
-        #    同値なら馬番昇順という中立な順序であることを固定する。
-        field = [_horse(3, 1, 0.4, 0.5), _horse(1, 2, 0.3, 0.5),
-                 _horse(2, 3, 0.2, 0.5)]
-        assert _build_solo_ranks(field) == {1: 1, 2: 2, 3: 3}
-
-
-class TestSoloRankInAppJson:
-    def test_horses_list_exposes_solo_rank(self):
-        field = _field()
-        by_odds = sorted(field, key=lambda h: h['win_odds'])
-        horses = _build_horses_list(field, field[0], by_odds)
-        got = {h['n']: h['solo_rank'] for h in horses}
-        assert got == {4: 1, 3: 2, 2: 3, 1: 4}
-
-    def test_rl_rank_is_untouched_by_solo_rank(self):
-        # 併記であって置き換えではない。買い目・軸・集計はすべて rl_rank を
-        # 見ているので、ここが動くと表示だけのつもりが馬券まで変わる。
-        field = _field()
-        by_odds = sorted(field, key=lambda h: h['win_odds'])
-        horses = _build_horses_list(field, field[0], by_odds)
-        assert {h['n']: h['rl_rank'] for h in horses} == {1: 1, 2: 2, 3: 3, 4: 4}
-
-    def test_solo_rank_none_when_model_is_not_residual(self):
-        # 非残差モデルでは ability_margin が None → 列ごと出さない（Noneのまま）
-        field = [dict(h, ability_margin=None) for h in _field()]
-        by_odds = sorted(field, key=lambda h: h['win_odds'])
-        horses = _build_horses_list(field, field[0], by_odds)
-        assert all(h['solo_rank'] is None for h in horses)
-
-    def test_solo_rank_does_not_depend_on_odds(self):
-        # ability_margin は市場アンカーを差し引いた値なので、オッズが動いても
-        # solo_rank は動かない。直前オッズ取得の前後で順位が変わらないこと。
-        field = _field()
-        before = _build_solo_ranks(field)
-        for h in field:
-            h['win_odds'] *= 3.0   # 市場が総取っ替えになった想定
-        assert _build_solo_ranks(field) == before
-
-
-# ── EV用の絶対確率（2026-09-11）────────────────────────────────────────────
-# 🔑 このプロジェクトには性質の違う確率が2種類あり、混ぜてはいけない。
-#    EV用   : sigmoid(ability + フラット土台) → Isotonic  馬ごとの絶対値が正しい
-#    順位用 : softmax(T=3.5) → Harville                  レース内合計が 1.0 / 3.0
-# 順位用を絶対確率として読むと ECE 0.0757（EV用は 0.0080）。
-# ⚠ EV用はレース内合計が 1.0 / 3.0 に**ならない**。それが正しい。
+import copy
+import json
+import pickle
 
 import numpy as np
 import pytest
-from sklearn.isotonic import IsotonicRegression
+import xgboost as xgb
 
-from src.betting import app_json as _aj
-
-
-@pytest.fixture
-def fake_cal(tmp_path, monkeypatch):
-    """本番と同じ形（Isotonic 2本入りの pkl）の較正器を置く。North Star #6。"""
-    import pickle
-    x = np.linspace(0.02, 0.98, 200)
-    d = {'win': IsotonicRegression(out_of_bounds='clip').fit(x, x * 0.3),
-         'fuku': IsotonicRegression(out_of_bounds='clip').fit(x, x * 0.8),
-         'n_rows': 200, 'fitted_on': 'test'}
-    (tmp_path / 'data').mkdir()
-    with open(tmp_path / 'data' / 'ability_calibrator.pkl', 'wb') as f:
-        pickle.dump(d, f)
-    monkeypatch.setattr(_aj, '_ABILITY_CAL_DIR', None)
-    monkeypatch.setattr(_aj, '_ABILITY_CAL', None)
-    return str(tmp_path)
+COLS = ['f_post', 'f_age', 'f_weight_load', 'f_career_runs', 'f_ws_kayochinkeiba_rank']
 
 
-def _scored(margins):
-    return [_horse(i + 1, i + 1, 0.1, m, odds=2.0 + i) for i, m in enumerate(margins)]
+def _booster(seed):
+    rng = np.random.RandomState(seed)
+    X = rng.rand(60, len(COLS)) * 10
+    y = (X[:, 0] + rng.rand(60) * 5 > 7).astype(int)
+    return xgb.train({'objective': 'binary:logistic', 'max_depth': 2},
+                     xgb.DMatrix(X, label=y, feature_names=COLS), num_boost_round=4)
 
 
-def test_ev_probs_follow_ability(fake_cal):
-    r = _aj._build_ev_probs(_scored([1.2, -0.4, 0.7, -1.1, 0.05, 2.0]), fake_cal)
-    assert max(r, key=lambda k: r[k][0]) == 6      # ability 2.0
-    assert min(r, key=lambda k: r[k][0]) == 4      # ability -1.1
+def _setup(tmp_path, solo_cols=None, with_solo=True):
+    d = tmp_path / 'data'
+    d.mkdir()
+    for name in ['horse_dist_dict.pkl', 'horse_course_dict.pkl', 'horse_venue_dist_dict.pkl', 'post_zone_bias.pkl']:
+        with open(d / name, 'wb') as f:
+            pickle.dump({}, f)
+    _booster(1).save_model(str(d / 'xgb_fukusho_model.pkl'))
+    (d / 'xgb_feature_cols.json').write_text(json.dumps({'feature_cols': COLS, 'residual': True}))
+    if with_solo:
+        _booster(2).save_model(str(d / 'xgb_solo_model.pkl'))
+        (d / 'xgb_solo_cols.json').write_text(json.dumps({'feature_cols': solo_cols or COLS}))
+    from src.features import engine
+    engine.init_engine(str(tmp_path))
+    return engine
 
 
-def test_ev_probs_independent_of_market(fake_cal):
-    """🔴 当日のオッズ・人気を変えても値が動かない（EV設計の前提）。"""
-    ms = [1.2, -0.4, 0.7, -1.1, 0.05, 2.0]
-    a, b = _scored(ms), _scored(ms)
-    for i, h in enumerate(a):
-        h['win_odds'], h['popularity'] = 2.0 + i * 5, i + 1
-    for i, h in enumerate(b):
-        h['win_odds'], h['popularity'] = 60.0 - i * 5, len(b) - i
-    assert _aj._build_ev_probs(a, fake_cal) == _aj._build_ev_probs(b, fake_cal)
+def _race(odds=(2.0, 8.0, 15.0, 30.0)):
+    # 本番の parser が返す形（馬番は num / post_position。horse_num は無い）
+    horses = [{'num': i + 1, 'post_position': i + 1, 'name': 'ABCD'[i], 'win_odds': o, 'age': 3 + i,
+               'weight_load': 54.0 + i, 'running_style': '差し', 'history': []} for i, o in enumerate(odds)]
+    return {'date': '20260726', 'id': 'x', 'racecourse': '新潟', 'distance': 1600, 'surface': '芝',
+            'race_class': '3勝クラス', 'track_condition': '良', 'horses': horses}
 
 
-def test_ev_probs_empty_without_calibrator(tmp_path, monkeypatch):
-    """🔴 較正器が無ければ数字を作らない（softmax で代用しない）。"""
-    monkeypatch.setattr(_aj, '_ABILITY_CAL_DIR', None)
-    monkeypatch.setattr(_aj, '_ABILITY_CAL', None)
-    assert _aj._build_ev_probs(_scored([1.2, -0.4, 0.7]), str(tmp_path)) == {}
+def _by_num(out):
+    return {h['num']: h for h in out}
 
 
-def test_ev_probs_empty_when_any_ability_missing(fake_cal):
-    sc = _scored([1.2, -0.4, 0.7])
-    sc[1]['ability_margin'] = None
-    assert _aj._build_ev_probs(sc, fake_cal) == {}
+def test_solo_margin_is_emitted_and_changes_nothing_else(tmp_path):
+    eng = _setup(tmp_path, with_solo=True)
+    assert eng._XGB_SOLO_MODEL is not None
+    with_solo = _by_num(eng.calc_all(_race()))
+    eng._XGB_SOLO_MODEL = None
+    without = _by_num(eng.calc_all(_race()))
+    for n, h in with_solo.items():
+        assert h['solo_margin'] is not None and without[n]['solo_margin'] is None
+        a = {k: v for k, v in h.items() if k != 'solo_margin'}
+        b = {k: v for k, v in without[n].items() if k != 'solo_margin'}
+        assert a == b, f'単独モデルの有無で solo_margin 以外が変わった: 馬番{n}'
 
 
-def test_horse_dict_carries_ev_fields(fake_cal):
-    """馬辞書に EV用確率と必要オッズが乗り、順位用の確率も残っていること。"""
-    scored = _scored([1.2, -0.4, 0.7, -1.1, 0.05, 2.0])
-    hs = _build_horses_list(scored, scored[0],
-                            sorted(scored, key=lambda x: x['win_odds']), base_dir=fake_cal)
-    for h in hs:
-        assert h['ev_tan_pct'] is not None and h['ev_fuku_pct'] is not None
-        # 必要オッズ = 1.2 / EV用勝率
-        assert h['need_odds'] == pytest.approx(1.2 / (h['ev_tan_pct'] / 100), rel=0.02)
-        # 順位用は別に残っている（買い目・軸が使う）
-        assert h['tan_pct'] is not None and h['fuku_pct'] is not None
+def test_solo_margin_does_not_see_todays_market(tmp_path):
+    eng = _setup(tmp_path)
+    a = _by_num(eng.calc_all(_race(odds=(2.0, 8.0, 15.0, 30.0))))
+    b = _by_num(eng.calc_all(_race(odds=(30.0, 15.0, 8.0, 2.0))))     # 人気を逆にする
+    assert [a[n]['popularity'] for n in a] != [b[n]['popularity'] for n in b]
+    for n in a:
+        assert a[n]['solo_margin'] == pytest.approx(b[n]['solo_margin'], abs=1e-6)
 
 
-def test_no_ev_field_in_horse_dict(fake_cal):
-    """🔴 'ev' という名前を画面に出さない。順位用の量は sim_ev に分離した。"""
-    scored = _scored([1.2, -0.4, 0.7])
-    hs = _build_horses_list(scored, scored[0],
-                            sorted(scored, key=lambda x: x['win_odds']), base_dir=fake_cal)
-    assert 'ev' not in hs[0], "'ev' が残っている（期待値と誤読される）"
-    assert 'sim_ev' in hs[0]
+def test_solo_model_is_ignored_when_its_columns_differ_from_production(tmp_path):
+    eng = _setup(tmp_path, solo_cols=COLS[:-1])
+    assert eng._XGB_SOLO_MODEL is None
+    assert all(h['solo_margin'] is None and h['ability_margin'] is not None for h in eng.calc_all(_race()))
 
 
-def test_ev_fields_none_without_calibrator(tmp_path, monkeypatch):
-    monkeypatch.setattr(_aj, '_ABILITY_CAL_DIR', None)
-    monkeypatch.setattr(_aj, '_ABILITY_CAL', None)
-    scored = _scored([1.2, -0.4, 0.7])
-    hs = _build_horses_list(scored, scored[0],
-                            sorted(scored, key=lambda x: x['win_odds']), base_dir=str(tmp_path))
-    assert all(h['ev_tan_pct'] is None and h['need_odds'] is None for h in hs)
-    assert all(h['tan_pct'] is not None for h in hs)   # 順位用は影響を受けない
+def test_no_solo_files_keeps_the_old_behaviour(tmp_path):
+    eng = _setup(tmp_path, with_solo=False)
+    assert eng._XGB_SOLO_MODEL is None
 
 
-def test_marks_use_sim_ev_not_ev():
-    """🔴 マーク付与が読む内部量は sim_ev（順位用）。名前で性質が分かること。"""
-    import inspect
-    src = inspect.getsource(_aj._assign_marks)
-    assert "h.get('sim_ev')" in src
-    assert "h.get('ev')" not in src, "順位用の量が 'ev' のまま残っている"
+def test_solo_rank_uses_solo_margin_only_when_every_horse_has_it():
+    from src.betting.app_json import _build_solo_ranks
+    scored = [{'num': 1, 'ability_margin': 0.9, 'solo_margin': -1.0},
+              {'num': 2, 'ability_margin': 0.1, 'solo_margin': 2.0},
+              {'num': 3, 'ability_margin': 0.5, 'solo_margin': 0.0}]
+    assert _build_solo_ranks(scored) == {2: 1, 3: 2, 1: 3}
+    partial = copy.deepcopy(scored)
+    partial[0]['solo_margin'] = None                    # 1頭欠けたらレース全体で従来の順位
+    assert _build_solo_ranks(partial) == {1: 1, 3: 2, 2: 3}
+    old = [{k: v for k, v in h.items() if k != 'solo_margin'} for h in scored]
+    assert _build_solo_ranks(old) == {1: 1, 3: 2, 2: 3}
+    assert _build_solo_ranks([{'num': 1, 'ability_margin': None}]) == {}
+
+
+def test_real_solo_model_matches_the_production_columns():
+    """リポジトリに単独モデルがあるなら、列は本番モデルと同じ（片方だけ作り直すと engine が黙って使わなくなる）。"""
+    import os
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    sp = os.path.join(root, 'data', 'xgb_solo_cols.json')
+    if not os.path.exists(sp):
+        pytest.skip('単独モデルはまだ無い')
+    with open(sp, encoding='utf-8') as f:
+        solo = json.load(f)['feature_cols']
+    with open(os.path.join(root, 'data', 'xgb_feature_cols.json'), encoding='utf-8') as f:
+        prod = json.load(f)['feature_cols']
+    assert solo == prod
+    b = xgb.Booster()
+    b.load_model(os.path.join(root, 'data', 'xgb_solo_model.pkl'))
+    assert b.num_boosted_rounds() >= 1

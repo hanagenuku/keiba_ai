@@ -32,7 +32,7 @@ REGISTRY = os.path.join(DATA, 'source_registry.json')
 #: ワークフローがコミットするファイル（これ以外は触っても出さない）
 OUTPUTS = ('source_registry.json', 'xgb_fukusho_model_residual.pkl', 'xgb_feature_cols_residual.json',
            'xgb_fukusho_model.pkl', 'xgb_feature_cols.json', 'xgb_calibrator.pkl',
-           'ability_calibrator.pkl')
+           'ability_calibrator.pkl', 'xgb_solo_model.pkl', 'xgb_solo_cols.json')
 
 
 def fail(msg):
@@ -161,6 +161,11 @@ def main():
     from scripts.build_ability_calibrator import build_ability_calibrator
     if build_ability_calibrator(ROOT) is None:
         fail('ability 較正器を作れなかった')
+
+    # ── 「AI単」列の単独モデル（列が本番と1つでも違うと engine は使わないので、必ず一緒に作り直す）──
+    from src.tools.train_solo import train_solo
+    _, solo_meta = train_solo(ROOT, train_end=a.train_end, val_start=a.val_start, val_end=a.val_end)
+    print('単独モデル:', {k: v for k, v in solo_meta.items() if k != 'feature_cols'})
 
     missing = [f for f in OUTPUTS if not os.path.exists(os.path.join(DATA, f))]
     if missing:

@@ -126,10 +126,11 @@ def _build_star(scored):
 
 
 def _build_solo_ranks(scored):
-    """市場ゼロAI順位（ability_margin 降順）を {horse_num: rank} で返す。
+    """市場ゼロAI順位を {horse_num: rank} で返す。
 
-    `ability_margin` は残差学習モデルの `raw_margin - base_margin`、つまり
-    市場アンカーを差し引いた「AI自身の評価」。表示専用の**併記**であり、
+    並べる値は、単独モデルの `solo_margin`（市場なしで学習した評価）。無ければ
+    残差学習モデルの `ability_margin`（`raw_margin - base_margin`＝市場への補正分）。
+    表示専用の**併記**であり、
     買い目・軸・レース厳選・成績集計はすべて従来の `rl_rank` のままである。
 
     ⚠ この順位は当てる力では `rl_rank` に劣ることが実測済み。
@@ -143,12 +144,19 @@ def _build_solo_ranks(scored):
     （非残差モデル運用時・SHAP/推論フォールバック時に、一部の馬だけ
     別基準の順位が混ざるのを防ぐ。index.html の再同期と同じ方針）。
     """
-    if not scored or any(h.get('ability_margin') is None for h in scored):
+    if not scored:
+        return {}
+    # 2026-11-14: 単独モデル（市場なしで学習・`solo_margin`）が全馬にあればそれで並べる。
+    # `ability_margin` は「市場への補正分」なので、市場が織り込み済みの情報（騎手・前走の
+    # 好走・厩舎）が順位に出ない（hitrate/EXPLORE_solo_market_gap.md・RESULTS_SOLO.md）。
+    # 1頭でも欠けたらレース全体で従来の ability_margin に戻す（基準を混ぜない）。
+    key = 'solo_margin' if all(h.get('solo_margin') is not None for h in scored) else 'ability_margin'
+    if any(h.get(key) is None for h in scored):
         return {}
     # タイブレークは馬番昇順（意味を持たない中立な順序）。
     # ⚠ 着順や既存順位でタイブレークすると、そこから情報が漏れる
     #    （2026-08-08のPLレーティングのリークがこの形だった）。
-    order = sorted(scored, key=lambda h: (-h['ability_margin'], h['num']))
+    order = sorted(scored, key=lambda h: (-h[key], h['num']))
     return {h['num']: i + 1 for i, h in enumerate(order)}
 
 

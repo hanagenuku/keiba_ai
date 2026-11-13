@@ -74,7 +74,8 @@ jobs:
           git add data/source_registry.json \
                   data/xgb_fukusho_model_residual.pkl data/xgb_feature_cols_residual.json \
                   data/xgb_fukusho_model.pkl data/xgb_feature_cols.json \
-                  data/xgb_calibrator.pkl data/ability_calibrator.pkl
+                  data/xgb_calibrator.pkl data/ability_calibrator.pkl \
+                  data/xgb_solo_model.pkl data/xgb_solo_cols.json
           git status --short | head -20
           git commit -m "adopt: ${{ inputs.source }} を採用してモデル一式を作り直す（run ${{ github.run_id }}）"
           git push origin "$BR"
