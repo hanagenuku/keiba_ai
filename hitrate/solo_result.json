@@ -1,0 +1,61 @@
+{
+ "meta": {
+  "trained_at": "2026-11-13 23:08:48.923966",
+  "val_auc": 0.7814,
+  "n_train": 151790,
+  "n_val": 8215,
+  "n_trees": 500,
+  "train_end": "2026-06-30",
+  "val_start": "2026-07-01",
+  "val_end": "2026-08-31",
+  "market": "none"
+ },
+ "n_cols": 136,
+ "window": [
+  "2026-09-05",
+  "2026-11-08"
+ ],
+ "n_horses": 7611,
+ "n_races": 572,
+ "auc_market": 0.7996,
+ "old": {
+  "auc": 0.7583,
+  "top1_fukusho": 0.5385,
+  "top1_is_fav": 0.3671,
+  "big_gap_share": 0.1529,
+  "gap_popular_jockey": 0.115,
+  "gap_last_win": 0.189,
+  "fav_with_solo_ge6": 65
+ },
+ "new": {
+  "auc": 0.7799,
+  "top1_fukusho": 0.6381,
+  "top1_is_fav": 0.6381,
+  "big_gap_share": 0.1077,
+  "gap_popular_jockey": -0.091,
+  "gap_last_win": 0.058,
+  "fav_with_solo_ge6": 18
+ },
+ "criteria": {
+  "1_auc_diff>=0.020": {
+   "value": 0.0216,
+   "ok": true
+  },
+  "2_top1_fukusho_new>=old": {
+   "value": 0.0996,
+   "ok": true
+  },
+  "3_gap_halved": {
+   "jockey": [
+    0.115,
+    -0.091
+   ],
+   "last_win": [
+    0.189,
+    0.058
+   ],
+   "ok": false
+  }
+ },
+ "verdict": "FAIL"
+}

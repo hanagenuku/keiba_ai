@@ -12,3 +12,4 @@ data/horse_features.csv -filter -diff -merge
 
 data/race_shape_model.pkl -filter -diff -merge
 data/star_calibrator.pkl -filter -diff -merge
+data/xgb_solo_model.pkl -filter -diff -merge
