@@ -246,9 +246,11 @@ def train_xgb(base_dir,
         print(f'残差学習: 除外した市場特徴量 = {removed}')
     print(f'特徴量数: {len(feat_cols)}')
 
-    X_train = train_df[feat_cols].fillna(5.0)
+    # 🔴 web 由来の列だけは NaN のまま（fill_missing の docstring）。推論側と同じ関数を通す
+    from src.features.web_signals import fill_missing
+    X_train = fill_missing(train_df[feat_cols])
     y_train = train_df['is_fukusho']
-    X_val   = val_df[feat_cols].fillna(5.0)
+    X_val   = fill_missing(val_df[feat_cols])
     y_val   = val_df['is_fukusho']
 
     # ── base_margin 計算（残差学習モード） ───────────────────────────────

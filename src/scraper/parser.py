@@ -240,11 +240,14 @@ def parse_horse(cells, rc, surf):
                 break
 
         # 性齢から年齢を取得（例: 牡4 → 4）。セル内の前後文字を許容
-        age = 4
+        # 🔴 2026-11-13: 性別もここで取る。以前は年齢だけ取って性別を捨てていたので、
+        #    本番の推論では f_sex が全馬「牡」になっていた（学習は history.db の実際の性別）。
+        age, sex = 4, None
         for t in tx:
-            m = re.search(r'[牡牝騸セ](\d)', t)
+            m = re.search(r'([牡牝騸セ])(\d)', t)
             if m:
-                age = int(m.group(1))
+                sex = 'セ' if m.group(1) == '騸' else m.group(1)
+                age = int(m.group(2))
                 break
 
         # 斤量（例: 57.0）。前後文字（kg等）を許容、ただし他の数字に紛れないようガード
@@ -286,6 +289,7 @@ def parse_horse(cells, rc, surf):
             'name': name,
             'win_odds': odds,
             'age': age,
+            'sex': sex,
             'weight_load': weight_load,
             'jockey': jockey,
             'trainer': trainer,
