@@ -21,9 +21,16 @@ def _src(rel):
 
 class TestCollectorDoesNotTouchSiteUnlessAdopted(unittest.TestCase):
     def test_collect_for_date_skips_when_not_adopted(self):
-        """採用ゼロならサイトを1回も叩かない。"""
+        """採用していない台帳ならサイトを1回も叩かない。"""
+        import json
+        import tempfile
         from scripts.collect_web_signals import collect_for_date
-        r = collect_for_date(BASE, '2026-09-21')
+        with tempfile.TemporaryDirectory() as d:
+            os.makedirs(os.path.join(d, 'data'))
+            with open(os.path.join(d, 'data', 'source_registry.json'), 'w', encoding='utf-8') as f:
+                json.dump({'version': 2, 'sources': [
+                    {'source': 'kayochinkeiba', 'status': 'rejected'}]}, f)
+            r = collect_for_date(d, '2026-09-21')
         self.assertEqual(r['skipped_reason'], 'not_adopted')
         self.assertEqual(r['fetched'], 0)
 

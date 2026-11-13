@@ -196,6 +196,9 @@ class TestArtifacts:
         if os.path.exists(rp):
             with open(rp, encoding='utf-8') as f:
                 prod = list(json.load(f)['feature_cols'])
+            # ☆モデルは web 由来の列（2026-11-13 採用）を使わない。事前登録した ☆ を
+            # 作り直さないため、本番の列から web 由来の列を除いたものと一致すればよい
+            prod = [c for c in prod if not c.startswith('f_ws_')]
             assert list(meta['feature_cols']) == prod, '列順が本番モデルと違う'
         bst, iso, cols = star.load_star_model(BASE)
         assert bst is not None and iso is not None

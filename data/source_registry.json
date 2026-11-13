@@ -14,8 +14,8 @@
   "   それまでの14件は「ユーザーが手で並べた11件＋偶然見つけた3件」で、",
   "   web から列挙する作業を一度もしていなかった。全文 websig/CANDIDATES_2026-10-23.md。",
   "   🔴 追加したのは候補であって、効くと分かったものではない。測定は1件もしていない。",
-    "⚠ 2026-11-10: status は「本番モデルに採用するか」の記録。収集を止めるのは unusable / blocked_pending_user だけ。",
-    "   rejected / closed_unmeasured の情報源も集め続ける（ユーザー方針: いまは広く集める段階。見極めは蓄積のあと）。"
+  "⚠ 2026-11-10: status は「本番モデルに採用するか」の記録。収集を止めるのは unusable / blocked_pending_user だけ。",
+  "   rejected / closed_unmeasured の情報源も集め続ける（ユーザー方針: いまは広く集める段階。見極めは蓄積のあと）。"
  ],
  "version": 2,
  "updated_at": "2026-10-23",
@@ -33,32 +33,50 @@
    "access_note": "robots は /wp-admin/ のみ Disallow・Crawl-delay なし（2026-09-23 実読）",
    "data_scope": "private",
    "collector": "scripts/collect_web_signals.py",
-   "status": "rejected",
-   "card": "websig/CRITERIA.md",
-   "results": "websig/RESULTS.md",
+   "status": "adopted",
+   "card": "websig/CRITERIA_CONFIRM_kayochin.md",
+   "results": "websig/RESULTS_CONFIRM_kayochin.md",
    "measured": {
-    "measured_at": "2026-09-25",
-    "delta_auc_mean": 0.00227,
+    "measured_at": "2026-11-11",
+    "delta_auc_mean": 0.00259,
     "delta_auc_windows": [
-     0.00333,
-     0.00247,
-     0.001
+     0.00316,
+     0.00308,
+     0.00056
     ],
-    "delta_auc_mean_subset": 0.00384,
-    "control_random_rank": -0.0001,
-    "solo_auc": [
-     0.7698,
-     0.7853,
-     0.7991
+    "axis_fukusho_hit": [
+     61.93,
+     62.22
     ],
-    "fukusho_roi_base": 79.7,
-    "fukusho_roi_arm": 79.1,
-    "failed_criterion": "③ Brier が3窓とも同方向にならない（2/3）",
-    "note": "AUC は動くが回収率は動かない（X のほうが 0.6〜0.7pt 悪い）"
+    "control_a_mean": -0.00027,
+    "note": "効果の基準はすべて通過。対照群A の合格線（帰無が0中心）だけ不合格＝カードの線の置き方の誤りで、ずれは採用に不利な側。ユーザーがそれを認めたうえで採用を決定",
+    "previous": {
+     "measured_at": "2026-09-25",
+     "delta_auc_mean": 0.00227,
+     "delta_auc_windows": [
+      0.00333,
+      0.00247,
+      0.001
+     ],
+     "delta_auc_mean_subset": 0.00384,
+     "control_random_rank": -0.0001,
+     "solo_auc": [
+      0.7698,
+      0.7853,
+      0.7991
+     ],
+     "fukusho_roi_base": 79.7,
+     "fukusho_roi_arm": 79.1,
+     "failed_criterion": "③ Brier が3窓とも同方向にならない（2/3）",
+     "note": "AUC は動くが回収率は動かない（X のほうが 0.6〜0.7pt 悪い）"
+    }
    },
-   "feature_cols": [],
-   "decided_at": "2026-09-25",
-   "decided_by": "websig/RESULTS.md"
+   "feature_cols": [
+    "f_ws_kayochinkeiba_rank",
+    "f_ws_kayochinkeiba_z"
+   ],
+   "decided_at": "2026-11-13",
+   "decided_by": "ユーザー決定 2026-11-13「(a) 採用」／基準 websig/ADOPTION_STANDARD.md"
   },
   {
    "source": "bloodline-trackbias",

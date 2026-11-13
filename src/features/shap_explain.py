@@ -92,6 +92,8 @@ FEATURE_CATEGORY_MAP = {
     'f_weight_trend_avg': '斤量・馬体', 'f_weight_last_diff': '斤量・馬体',
     # 枠順
     'f_post': '枠順',
+    # web 由来の能力指数（2026-11-13 採用・kayochinkeiba。レース内順位と z 値）
+    'f_ws_kayochinkeiba_rank': 'web指数', 'f_ws_kayochinkeiba_z': 'web指数',
     # 馬場適性
     'f_track_cond': '馬場適性', 'f_heavy_track_rate': '馬場適性',
     'cl_f_heavy_track_rank': '馬場適性', 'cl_f_heavy_track_vs_field': '馬場適性',

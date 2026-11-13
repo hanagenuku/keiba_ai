@@ -329,7 +329,12 @@ def collect_for_date(base_dir, target_date, budget=6, interval_sec=1.0):
         return {'fetched': 0, 'rows': 0, 'failed': 0,
                 'skipped_reason': 'not_adopted'}
 
-    ym = target_date.replace('-', '')[:6]
+    # 🔴 2026-11-13: 呼び出し側（weekend.py）は 'YYYYMMDD'、sitemap 由来の日付は 'YYYY-MM-DD'。
+    #    そのまま比べていたので**本番の推論では当日の記事が1本も一致しなかった**
+    #    （採用しても指数が取れない形だった）。ここで 'YYYY-MM-DD' にそろえる。
+    d8 = str(target_date).replace('-', '')[:8]
+    target_date = f'{d8[:4]}-{d8[4:6]}-{d8[6:8]}'
+    ym = d8[:6]
     db_path = os.path.join(base_dir, DB_REL)
     cache_dir = os.path.join(base_dir, CACHE_REL)
     sess = _session()

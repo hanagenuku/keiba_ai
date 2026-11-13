@@ -70,7 +70,7 @@ def adopt_in_registry(source, card, results, result_json):
             previous=prev,
         ))
     with open(REGISTRY, 'w', encoding='utf-8') as f:
-        json.dump(reg, f, ensure_ascii=False, indent=2)
+        json.dump(reg, f, ensure_ascii=False, indent=1)   # 元の書式（indent=1）を保つ
         f.write('\n')
     from src.utils.source_registry import adopted_sources
     if not any(e.get('source') == source for e in adopted_sources(ROOT)):
