@@ -148,6 +148,63 @@ def _axis_conf_map(conn):
     return out
 
 
+def _axis_place_map(conn):
+    """race_id → 軸(rl_rank==1)の {馬番・馬名・人気・着順}。
+
+    `_axis_conf_map` と同じ行（rl_rank==1）から取る。使う側は
+    `shadow_bets.rl1_num` と馬番が一致したときだけ使う:
+    予想を上書きした回に片方だけ古い馬を指すのを防ぐため。
+    """
+    out = {}
+    for r in conn.execute(
+            'SELECT race_id, horse_num, horse_name, popularity, actual_place '
+            'FROM race_predictions WHERE rl_rank = 1'):
+        out[r['race_id']] = {
+            'num':   r['horse_num'],
+            'name':  r['horse_name'],
+            'pop':   r['popularity'],
+            'place': r['actual_place'],
+        }
+    return out
+
+
+def _race_row(r, conf, is_rec, is_main, divs, axis):
+    """レース1本ぶんの表示用の行。
+
+    🔴 当日分の一覧（`latest_day.races`）と直近一覧（`recent`）は**この1つの
+       実装を共有する**。2026-11-10 に同じ量を2か所で数えて件数が食い違った
+       （τ=0.60 の 134 と 124.3）ので、行の作り方を分けない。
+    """
+    hits = {}
+    for lb, bt, n in SHADOW_BETS:
+        table = divs.get(r['race_id'], {}).get(bt)
+        key = _combo_key(r, n)
+        if key is None or not table:
+            hits[lb] = None                      # 評価不能
+        else:
+            hits[lb] = int(table[key]) if key in table else 0
+    # 🔴 馬名は `shadow_bets.rl1_name`（馬番と同じ行に書かれる）を正とする。
+    #    人気・着順は `race_predictions` の軸行からだが、**馬番が一致した
+    #    ときだけ**使う。別の馬の着順を◎の着順として出さないため。
+    a = axis.get(r['race_id']) or {}
+    if a.get('num') != r['rl1_num']:
+        a = {}
+    return {
+        'date':  r['date'], 'venue': r['racecourse'], 'num': r['race_num'],
+        'cls':   r['race_class'],
+        'conf':  conf,
+        'rec':   1 if is_rec else 0,
+        'main':  1 if is_main else 0,
+        'rl':    [r['rl1_num'], r['rl2_num'], r['rl3_num']],
+        'axis':  {'num':  r['rl1_num'],
+                  'name': r['rl1_name'] or a.get('name'),
+                  'pop':  a.get('pop'),
+                  'place': a.get('place')},
+        'result': [r['winner_num'], r['second_num'], r['third_num']],
+        'pays':  hits,
+    }
+
+
 def calc_scope_accuracy(conn):
     """商品の対象範囲（推奨レース ＋ 9〜11R）の的中実績。
 
@@ -195,8 +252,9 @@ def calc_scope_accuracy(conn):
         return None
 
     rows = conn.execute(
-        '''SELECT date, race_id, racecourse, race_num,
-                  rl1_num, rl2_num, rl3_num
+        '''SELECT date, race_id, racecourse, race_num, race_class,
+                  rl1_num, rl1_name, rl2_num, rl3_num,
+                  winner_num, second_num, third_num
            FROM shadow_bets ORDER BY date'''
     ).fetchall()
     if not rows:
@@ -204,6 +262,7 @@ def calc_scope_accuracy(conn):
 
     confs = _axis_conf_map(conn)
     divs = _dividend_map(conn)
+    axis = _axis_place_map(conn)
 
     # 軸が無い行（オッズ全滅等でRL1を決められなかった回）と conf を復元できない行は
     # 「不的中」ではなく**評価不能**なので母集団から除く。除いた数は画面に出す。
@@ -335,6 +394,15 @@ def calc_scope_accuracy(conn):
                        '9〜11R の推奨漏れ'),
                 _group(rs, divs, '全レース'),
             ],
+            # ユーザー依頼（2026-11-14）:「その日の全ての推奨レースをまとめた
+            # 結果表示をしてくれ」。券種ごとの集計だけでは**どのレースが
+            # どうなったか**が分からず、同じ依頼を何度も受けていた。
+            # 推奨（★）を先に、そのあと 9〜11R の推奨漏れを会場・R順に並べる。
+            'race_list': sorted(
+                [_race_row(r, confs[r['race_id']], _is_rec(r), _is_main(r),
+                           divs, axis)
+                 for r in rs if _is_rec(r) or _is_main(r)],
+                key=lambda d: (-d['rec'], d['venue'] or '', d['num'] or 0)),
         }
 
     # 直近の対象レース一覧（9〜11R か 推奨）。★が付いた行が推奨レース。
@@ -342,22 +410,8 @@ def calc_scope_accuracy(conn):
     for r in reversed(usable):
         if not (_is_main(r) or _is_rec(r)):
             continue
-        hits = {}
-        for lb, bt, n in SHADOW_BETS:
-            table = divs.get(r['race_id'], {}).get(bt)
-            key = _combo_key(r, n)
-            if key is None or not table:
-                hits[lb] = None                      # 評価不能
-            else:
-                hits[lb] = int(table[key]) if key in table else 0
-        recent.append({
-            'date':  r['date'], 'venue': r['racecourse'], 'num': r['race_num'],
-            'conf':  confs[r['race_id']],
-            'rec':   1 if _is_rec(r) else 0,
-            'main':  1 if _is_main(r) else 0,
-            'rl':    [r['rl1_num'], r['rl2_num'], r['rl3_num']],
-            'pays':  hits,
-        })
+        recent.append(_race_row(r, confs[r['race_id']], _is_rec(r), _is_main(r),
+                                divs, axis))
         if len(recent) >= 40:
             break
 

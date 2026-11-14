@@ -608,3 +608,148 @@ class TestRecommendedIsDayWide:
         html = open(os.path.join(BASE, 'index.html'), encoding='utf-8').read()
         assert 'その日の全レースから拾います' in html
         assert '9〜11R の推奨漏れ' in html
+
+
+def _decorate(conn, race_id, *, rl1, name=None, pop=None, place=None,
+              cls=None, result=(None, None, None)):
+    """表示用の列（馬名・人気・着順・クラス・1-2-3着）を本番と同じ列に入れる。
+
+    `_race` は集計に要る最小限しか書かないので、一覧の表示に使う列だけ足す。
+    """
+    conn.execute(
+        'UPDATE race_predictions SET horse_name=?, popularity=?, actual_place=? '
+        'WHERE race_id=? AND horse_num=?', (name, pop, place, race_id, rl1))
+    conn.execute(
+        'UPDATE shadow_bets SET race_class=?, rl1_name=?, winner_num=?, '
+        'second_num=?, third_num=? WHERE race_id=?',
+        (cls, name, result[0], result[1], result[2], race_id))
+    conn.commit()
+
+
+class TestDayRaceList:
+    """ユーザー依頼（2026-11-14）:「その日の全ての推奨レースをまとめた結果表示」。
+
+    券種ごとの集計（groups）だけでは**どのレースが当たって、どのレースが
+    外れたのか**が読めない。当日分カードにレース単位の行を出す。
+    固定したいのは数字ではなく規則:
+
+    1. その日の対象レース（推奨 ∪ 9〜11R）を**全部**出す。推奨が先。
+    2. 行の払戻は集計と**同じ1つの実装**から作る（2026-11-10 に同じ量を
+       2か所で数えて件数が食い違った再発防止）。
+    3. ◎の馬名は `race_predictions` の軸行と `shadow_bets.rl1_num` が
+       一致したときだけ出す（学習/推論パリティと同じ考え方）。
+    """
+
+    def _day(self, tmp_path):
+        conn = _db(tmp_path)
+        # 推奨（conf>=66）: 平場3R と 9R
+        _race(conn, 'D_03', '東京', 3, 0.70, rl=(1, 2, 3),
+              pays=_all_pays((1, 2, 3), tansho=270, fukusho=130),
+              date='2026-11-14')
+        _decorate(conn, 'D_03', rl1=1, name='アルファ', pop=1, place=1,
+                  cls='新馬', result=(1, 5, 6))
+        _race(conn, 'D_09', '京都', 9, 0.66, rl=(4, 5, 6),
+              pays=_all_pays((4, 5, 6), fukusho=160, umaren=1180),
+              date='2026-11-14')
+        _decorate(conn, 'D_09', rl1=4, name='ブラボー', pop=2, place=2,
+                  cls='3勝', result=(5, 4, 9))
+        # 推奨漏れ（9〜11R で conf<66）
+        _race(conn, 'D_10', '京都', 10, 0.50, rl=(7, 8, 9),
+              pays=_all_pays((7, 8, 9)), date='2026-11-14')
+        _decorate(conn, 'D_10', rl1=7, name='チャーリー', pop=3, place=9,
+                  cls='OP', result=(2, 3, 11))
+        # 対象外（平場で conf<66）
+        _race(conn, 'D_04', '東京', 4, 0.50, rl=(1, 2, 3),
+              pays=_all_pays((1, 2, 3)), date='2026-11-14')
+        # 別の開催日
+        _race(conn, 'P_09', '東京', 9, 0.80, rl=(1, 2, 3),
+              pays=_all_pays((1, 2, 3), fukusho=120), date='2026-11-08')
+        return conn
+
+    def test_lists_every_recommended_race_of_the_day(self, tmp_path):
+        races = calc_scope_accuracy(self._day(tmp_path))['latest_day']['race_list']
+        assert [(r['venue'], r['num']) for r in races if r['rec']] \
+            == [('京都', 9), ('東京', 3)]
+        assert len(races) == 3          # 推奨2本 ＋ 推奨漏れ1本
+
+    def test_recommended_rows_come_first(self, tmp_path):
+        races = calc_scope_accuracy(self._day(tmp_path))['latest_day']['race_list']
+        assert [r['rec'] for r in races] == sorted(
+            [r['rec'] for r in races], reverse=True)
+
+    def test_flat_race_below_the_threshold_is_not_listed(self, tmp_path):
+        races = calc_scope_accuracy(self._day(tmp_path))['latest_day']['race_list']
+        assert ('東京', 4) not in [(r['venue'], r['num']) for r in races]
+
+    def test_does_not_mix_in_another_day(self, tmp_path):
+        ld = calc_scope_accuracy(self._day(tmp_path))['latest_day']
+        assert ld['date'] == '2026-11-14'
+        assert all(r['date'] == '2026-11-14' for r in ld['race_list'])
+
+    def test_row_carries_the_axis_and_the_finish(self, tmp_path):
+        races = calc_scope_accuracy(self._day(tmp_path))['latest_day']['race_list']
+        row = [r for r in races if (r['venue'], r['num']) == ('東京', 3)][0]
+        assert row['axis'] == {'num': 1, 'name': 'アルファ', 'pop': 1, 'place': 1}
+        assert row['result'] == [1, 5, 6]
+        assert row['cls'] == '新馬'
+        assert row['conf'] == 70
+
+    def test_payouts_match_the_group_totals(self, tmp_path):
+        """🔴 一覧と集計は同じ数でなければならない（別実装を作らない）。"""
+        sa = calc_scope_accuracy(self._day(tmp_path))
+        ld = sa['latest_day']
+        g = {x['label']: x for x in ld['groups']}
+        rec_group = g[f'推奨レース（信頼度{scope.FLAT_MIN_CONF}以上）']
+        rows = [r for r in ld['race_list'] if r['rec']]
+        for b in rec_group['bets']:
+            paid = [r['pays'][b['type']] for r in rows]
+            assert b['hit'] == sum(1 for p in paid if p)
+            assert b['na'] == sum(1 for p in paid if p is None)
+            if b['roi'] is not None:
+                assert round(sum(p for p in paid if p)
+                             / (b['races'] * 100) * 100, 1) == b['roi']
+
+    def test_unevaluable_is_none_not_zero(self, tmp_path):
+        """払戻表そのものが無い券種は × ではなく評価不能（—）。"""
+        conn = _db(tmp_path)
+        _race(conn, 'E_09', '東京', 9, 0.70, rl=(1, 2, 3),
+              pays={'tansho': {'1': 200}}, date='2026-11-14')
+        _decorate(conn, 'E_09', rl1=1, name='デルタ', pop=1, place=1)
+        row = calc_scope_accuracy(conn)['latest_day']['race_list'][0]
+        assert row['pays']['単勝'] == 200
+        assert row['pays']['ワイド'] is None
+
+    def test_axis_name_is_dropped_when_the_two_tables_disagree(self, tmp_path):
+        """軸の馬番が食い違う回に、別の馬の名前を出さない。"""
+        conn = _db(tmp_path)
+        _race(conn, 'F_09', '東京', 9, 0.70, rl=(1, 2, 3), date='2026-11-14')
+        _decorate(conn, 'F_09', rl1=1, name='エコー', pop=1, place=1)
+        conn.execute("UPDATE shadow_bets SET rl1_num=9 WHERE race_id='F_09'")
+        conn.commit()
+        row = calc_scope_accuracy(conn)['latest_day']['race_list'][0]
+        assert row['axis']['num'] == 9
+        assert row['axis']['place'] is None      # 別の馬の着順を出さない
+        assert row['axis']['pop'] is None
+
+    def test_recent_list_uses_the_same_row_shape(self, tmp_path):
+        sa = calc_scope_accuracy(self._day(tmp_path))
+        assert set(sa['recent'][0]) == set(sa['latest_day']['race_list'][0])
+
+    def test_source_builds_both_lists_from_one_helper(self):
+        src = open(os.path.join(BASE, 'scripts', 'generate_stats.py'),
+                   encoding='utf-8').read()
+        assert src.count('def _race_row(') == 1
+        assert src.count('_race_row(') >= 3        # 定義 ＋ 当日分 ＋ 直近
+
+    def test_day_race_count_is_still_a_number(self, tmp_path):
+        """🔴 `latest_day.races` は**その日のレース数**（カードの見出し）。
+        一覧はここに入れない（2026-11-14 に一度上書きして既存テストが落ちた）。"""
+        ld = calc_scope_accuracy(self._day(tmp_path))['latest_day']
+        assert ld['races'] == 4                  # 対象外の平場も含めた全レース
+        assert isinstance(ld['race_list'], list)
+
+    def test_page_renders_the_per_race_table(self):
+        html = open(os.path.join(BASE, 'index.html'), encoding='utf-8').read()
+        assert 'レースごとの結果' in html
+        assert 'ld.race_list' in html
+        assert '★=推奨' in html

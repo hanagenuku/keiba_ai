@@ -2852,6 +2852,53 @@ function renderStats(S) {
           h += _betTable(g);
           h += '</div>';
         }
+        // ── その日のレースごとの結果 ─────────────────────────────
+        // ユーザー依頼（2026-11-14）:「その日の全ての推奨レースをまとめた
+        // 結果表示をしてくれ」。券種ごとの集計だけでは、どのレースが当たって
+        // どのレースが外れたのかが読めなかった。★が推奨レース。
+        if ((ld.race_list || []).length) {
+          const types = sa.bet_types || [];
+          const nrec = ld.race_list.filter(r => r.rec).length;
+          h += '<div style="font-size:12px;font-weight:700;margin:12px 0 4px">'
+             + 'レースごとの結果'
+             + `<span style="font-weight:400;color:var(--sub)">　★=推奨 ${nrec}R / 計 ${ld.race_list.length}R</span></div>`;
+          h += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px">';
+          h += '<tr style="color:var(--sub)"><th style="text-align:left;padding:2px 4px">レース</th>'
+             + '<th style="padding:2px 4px">信頼度</th>'
+             + '<th style="text-align:left;padding:2px 4px">◎</th>'
+             + '<th style="padding:2px 4px">着</th>'
+             + types.map(t => `<th style="padding:2px 4px">${t}</th>`).join('')
+             + '<th style="padding:2px 4px">1-2-3着</th></tr>';
+          for (const r of ld.race_list) {
+            const a = r.axis || {};
+            const star = r.rec ? '<span style="color:#e67e22">★</span>' : '';
+            const pl = a.place == null ? '—' : a.place + '着';
+            const plCol = (a.place != null && a.place <= 3) ? '#117a65' : 'var(--sub)';
+            h += `<tr style="border-top:1px solid var(--line)">`
+               + `<td style="padding:3px 4px;white-space:nowrap">${r.venue || ''}${r.num}R ${star}`
+               + `<span style="color:var(--sub)">${r.cls ? ' ' + r.cls : ''}</span></td>`
+               + `<td style="padding:3px 4px;text-align:center">${r.conf == null ? '—' : r.conf}</td>`
+               + `<td style="padding:3px 4px;white-space:nowrap">${a.num == null ? '—' : a.num}`
+               + `${a.name ? ' ' + a.name : ''}`
+               + `${a.pop == null ? '' : `<span style="color:var(--sub)">(${a.pop}番人気)</span>`}</td>`
+               + `<td style="padding:3px 4px;text-align:center;color:${plCol};font-weight:700">${pl}</td>`;
+            for (const t of types) {
+              const p = (r.pays || {})[t];
+              h += `<td style="padding:3px 4px;text-align:center">`
+                 + (p == null ? '<span style="color:#ccc">—</span>'
+                    : p ? `<span style="color:#27ae60;font-weight:700">¥${p}</span>` : '×')
+                 + '</td>';
+            }
+            h += `<td style="padding:3px 4px;text-align:center;white-space:nowrap;color:var(--sub)">`
+               + (r.result || []).map(x => x == null ? '?' : x).join('-') + '</td></tr>';
+          }
+          h += '</table></div>';
+          h += '<div style="font-size:10px;color:var(--sub);margin-top:4px;line-height:1.6">'
+             + '★＝推奨レース（信頼度 ' + (sa.conf_strong ?? 66) + ' 以上）。★の付かない行は 9〜11R の推奨漏れです。'
+             + '「◎」は軸1頭、金額はその券種を1点買ったときの払戻、× は不的中、'
+             + '— は「発売が無い／払戻を取得できていない」＝評価不能。</div>';
+        }
+
         h += '<div style="font-size:10px;color:var(--sub);line-height:1.6">'
            + '⚠ <b>1日分は母数が10〜20レースしかありません。</b>この日の数字から買い方を変えないでください'
            + '（2026-07-27 に本番4開催日の182.8%を信じて、2,000レースで71.3%と判明しています）。</div>';
