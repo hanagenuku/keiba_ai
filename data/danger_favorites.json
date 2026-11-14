@@ -1,6 +1,6 @@
 {
  "schema_version": 1,
- "updated_at": "2026-11-14T09:10:25.667756+09:00",
+ "updated_at": "2026-11-14T12:17:58.621500+09:00",
  "entries": [
   {
    "date": "2026-10-10",
@@ -2243,6 +2243,27 @@
    "snapshot": "2026-11-14T08:52:00.025994+09:00",
    "odds_coverage": 0.94,
    "recorded_at": "2026-11-14T09:10:25.667450+09:00",
+   "result": null
+  },
+  {
+   "date": "2026-11-14",
+   "race_id": "20261114_05_12",
+   "venue": "東京",
+   "race_num": 12,
+   "race_name": "3歳以上2勝クラス",
+   "num": 6,
+   "name": "ノビリシマビジョン",
+   "pop": 1,
+   "solo_rank": 6,
+   "rl_rank": 1,
+   "odds": 3.8,
+   "conf": 55,
+   "verdict": "light",
+   "in_scope": false,
+   "scope_reason": "平場でレース信頼度55（66未満）",
+   "snapshot": "2026-11-14T11:56:20.421788+09:00",
+   "odds_coverage": 0.97,
+   "recorded_at": "2026-11-14T12:17:58.621325+09:00",
    "result": null
   },
   {
