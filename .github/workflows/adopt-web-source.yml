@@ -1,0 +1,81 @@
+name: Adopt web source (採用した web 情報源でモデル一式を作り直す・手動)
+
+# websig/ADOPTION_STANDARD.md §4。指数DBは非公開 artifact にしか無いのでランナーで作る。
+# 🔴 main には push しない。結果は `adopt/<source>-<run_id>` ブランチに置き、PR → CI → マージで入れる
+#    （North Star #2）。失敗したら何もコミットしない。
+
+on:
+  workflow_dispatch:
+    inputs:
+      source:
+        description: '採用する情報源（台帳の source）'
+        required: false
+        default: 'kayochinkeiba'
+        type: string
+
+concurrency:
+  group: adopt-web-source
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  adopt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+
+      - name: Download required files via LFS
+        run: git lfs pull --include="data/*.db,data/*.pkl"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Find the run that has the index DB
+        id: last
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          RID=$(gh api "repos/${{ github.repository }}/actions/artifacts?name=web-signals-db&per_page=30" \
+                  --jq '[.artifacts[] | select(.expired == false)] | sort_by(.created_at) | last | .workflow_run.id // ""')
+          if [ -z "$RID" ]; then echo "::error::指数DBの artifact が無い"; exit 1; fi
+          echo "run_id=$RID" >> "$GITHUB_OUTPUT"
+
+      - name: Restore index DB
+        uses: actions/download-artifact@v4
+        with:
+          name: web-signals-db
+          path: data/private
+          run-id: ${{ steps.last.outputs.run_id }}
+          github-token: ${{ github.token }}
+
+      - name: Adopt and rebuild
+        run: python3 scripts/adopt_web_source.py --source '${{ inputs.source }}'
+
+      - name: Push result to a branch (main には入れない)
+        run: |
+          set -euo pipefail
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          BR="adopt/${{ inputs.source }}-${{ github.run_id }}"
+          git checkout -b "$BR"
+          # 🔴 決めたファイルだけ。horse_features.csv・data/private・再生成されたキャッシュは出さない
+          git add data/source_registry.json \
+                  data/xgb_fukusho_model_residual.pkl data/xgb_feature_cols_residual.json \
+                  data/xgb_fukusho_model.pkl data/xgb_feature_cols.json \
+                  data/xgb_calibrator.pkl data/ability_calibrator.pkl
+          git status --short | head -20
+          git commit -m "adopt: ${{ inputs.source }} を採用してモデル一式を作り直す（run ${{ github.run_id }}）"
+          git push origin "$BR"
+          echo "ブランチ: $BR"

@@ -89,7 +89,8 @@ def build_ability_calibrator(base_dir, features_csv=None, min_rows=MIN_ROWS):
     booster = xgb.Booster()
     booster.load_model(os.path.join(base_dir, 'data', 'xgb_fukusho_model.pkl'))
     # ⚠ 列名を渡さないと Booster が「feature names が無い」と拒否する
-    dm = xgb.DMatrix(d[cols].fillna(5.0).astype(np.float32), feature_names=list(cols))
+    from src.features.web_signals import fill_missing   # web 由来の列は NaN のまま
+    dm = xgb.DMatrix(fill_missing(d[cols]).astype(np.float32), feature_names=list(cols))
     dm.set_base_margin(bm)
     ability = booster.predict(dm, output_margin=True) - bm
 

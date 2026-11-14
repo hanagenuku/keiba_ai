@@ -89,6 +89,8 @@
     "f_beat_market_rate",
     "f_pl_rating",
     "f_pl_rating_n",
+    "f_ws_kayochinkeiba_rank",
+    "f_ws_kayochinkeiba_z",
     "rl_f_speed_avg_rank",
     "rl_f_speed_avg_vs_field",
     "rl_f_speed_last_rank",
@@ -135,11 +137,11 @@
     "f_rl_rank",
     "f_cl_rank"
   ],
-  "trained_at": "2026-09-15 03:53:19.053133",
-  "val_auc": 0.7846,
-  "val_brier": 0.186,
-  "val_logloss": 0.5554,
+  "trained_at": "2026-11-13 03:29:29.384536",
+  "val_auc": 0.788,
+  "val_brier": 0.1846,
+  "val_logloss": 0.5506,
   "n_train": 155187,
-  "n_val": 9728,
+  "n_val": 8215,
   "residual": true
 }

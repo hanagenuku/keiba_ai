@@ -29,6 +29,60 @@ from src.utils.source_registry import adopted_sources
 
 DB_REL = os.path.join('data', 'private', 'web_signals.db')
 
+#: web 由来の列名の接頭辞。`feature_cols_for()` が作る列はすべてこれで始まる
+WEB_COL_PREFIX = 'f_ws_'
+#: 既存の特徴量の欠損に入れる値（学習・推論・較正で共通。以前は各所に 5.0 が直書きされていた）
+FILL_VALUE = 5.0
+
+
+def is_web_col(name):
+    return str(name).startswith(WEB_COL_PREFIX)
+
+
+def default_for(name):
+    """その列が辞書に無いときの値。web 由来の列は NaN、それ以外は FILL_VALUE。"""
+    return float('nan') if is_web_col(name) else FILL_VALUE
+
+
+def fill_missing(df):
+    """欠損を埋める。🔴 **web 由来の列だけは NaN のまま残す。**
+
+    既存の特徴量は学習でも推論でも `fillna(5.0)` してきた。web 由来の列
+    （レース内順位と z 値）に同じことをすると「順位5位・z=5」という**実在する値と
+    区別できない嘘の値**になる。指数が無い馬・記事が無いレースは NaN のまま渡し、
+    XGBoost に欠損として扱わせる（`websig/CRITERIA_CONFIRM_kayochin.md` §6）。
+    学習（train_xgb）・推論（engine）・較正（calibrate_xgb / ability）が**全部この関数を通る**。
+    """
+    keep = [c for c in df.columns if not is_web_col(c)]
+    if len(keep) == len(df.columns):
+        return df.fillna(FILL_VALUE)
+    out = df.copy()
+    out[keep] = out[keep].fillna(FILL_VALUE)
+    return out
+
+
+def horse_number(h):
+    """馬番を返す。経路によってキーが違うので1箇所で吸収する。
+
+    学習（build_training_data）: 'horse_num' ／ 本番の出馬表（parser.parse_horse）: 'num' と
+    'post_position'。片方のキーだけ読むと、もう片方の経路で**黙って None**になる
+    （2026-11-13 に f_post と web 指数の両方で見つかった）。
+    """
+    for key in ('horse_num', 'num', 'post_position'):
+        v = h.get(key)
+        try:
+            v = int(v)
+        except (TypeError, ValueError):
+            continue
+        if v > 0:
+            return v
+    return None
+
+
+def race_key(race):
+    """レースID。学習側は 'race_id'、本番の出馬表は 'id' しか持たない。"""
+    return race.get('race_id') or race.get('id')
+
 
 def _col_base(source):
     """列名に使える形にする（'bloodline-trackbias' → 'bloodline_trackbias'）。"""
@@ -47,7 +101,7 @@ def attach_web_signals(race, db_path, sources=None):
     学習側・推論側の**両方**がこれを呼ぶ。読めなければ何も貼らない
     （情報が無いことと壊れていることを区別するため、例外は投げない）。
     """
-    race_id = race.get('race_id')
+    race_id = race_key(race)
     if not race_id or not db_path or not os.path.exists(db_path):
         return race
     try:
@@ -120,11 +174,7 @@ def calc_web_signal_features(h, race, base_dir='.'):
         return {}
 
     attached = race.get('web_signals') or {}
-    num = h.get('horse_num')
-    try:
-        num = int(num)
-    except (TypeError, ValueError):
-        num = None
+    num = horse_number(h)
 
     feats = {}
     for entry in adopted:

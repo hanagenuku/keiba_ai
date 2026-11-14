@@ -193,6 +193,12 @@ def _build_xgb_pairs(base_dir, verbose=True):
             'horses': [], 'pace_dist': {'high': 0.3, 'mid': 0.4, 'slow': 0.3},
         }
 
+        # web由来の情報を貼る（採用済みの情報源だけ・既定は0件で何もしない）。
+        # 🔑 学習（build_training_data）・推論（weekend.py）と**同じ関数**。ここで貼らないと
+        #    較正器だけが「指数なし」の予測に当たってしまう（2026-11-13 追加）。
+        from src.features.web_signals import attach_for_adopted
+        attach_for_adopted(race_dict, base_dir)
+
         for hrow in horses_rows:
             name = hrow['horse_name'] or ''
             # このレース日より前の過去レースID（最大5件）を history に渡す
@@ -218,8 +224,9 @@ def _build_xgb_pairs(base_dir, verbose=True):
 
         try:
             xfeats = [calc_features_for_xgb(h, race_dict) for h in race_dict['horses']]
-            X = pd.DataFrame([{c: xf.get(c, 5.0) for c in _XGB_FEATURE_COLS}
-                              for xf in xfeats])[_XGB_FEATURE_COLS].fillna(5.0)
+            from src.features.web_signals import default_for, fill_missing
+            X = fill_missing(pd.DataFrame([{c: xf.get(c, default_for(c)) for c in _XGB_FEATURE_COLS}
+                                           for xf in xfeats])[_XGB_FEATURE_COLS])
             raw_probs = _predict_fukusho_probs(X, race_dict['horses'])
 
             for h, raw_prob in zip(race_dict['horses'], raw_probs):
