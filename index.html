@@ -304,6 +304,8 @@ const DATA_URL_FALLBACK = 'https://raw.githubusercontent.com/hanagenuku/keiba_ai
 const STATS_URL = 'https://hanagenuku.github.io/keiba_ai/data/stats.json';
 // 予想表に結果を重ねるための「馬ごとの着順・配当」。latest.json はレース前に
 // 作られるので結果を持てない。scripts/generate_stats.save_race_results が書く。
+const NOTE_BLOCKS_URL = 'https://hanagenuku.github.io/keiba_ai/data/note_blocks.json';
+const NOTE_BLOCKS_URL_FALLBACK = 'https://raw.githubusercontent.com/hanagenuku/keiba_ai/main/data/note_blocks.json';
 const RESULTS_URL = 'https://hanagenuku.github.io/keiba_ai/data/race_results.json';
 const RESULTS_URL_FALLBACK = 'https://raw.githubusercontent.com/hanagenuku/keiba_ai/main/data/race_results.json';
 const STATS_URL_FALLBACK = 'https://raw.githubusercontent.com/hanagenuku/keiba_ai/main/data/stats.json';
@@ -336,6 +338,8 @@ async function loadData(preferRaw) {
     // 結果ファイルは後追いで良い（レース前は存在しないのが正常）。
     // 取れたら描き直して、予想表と一覧に着順・配当を重ねる。
     loadRaceResults().then(ok => { if (ok) render(); }).catch(() => {});
+    // note用テキストも後追い。無くても画面は動く（予想には一切関係しない）。
+    loadNoteBlocks().then(ok => { if (ok) render(); }).catch(() => {});
   } catch(e) {
     document.getElementById('race-list').innerHTML = '<div class="error-box">⚠️ <strong>データ読み込みエラー</strong><br><br>' + e.message + '<br><br><strong>確認事項:</strong><br>• Colabで予想生成を実行済みか<br><br><button class="reload-btn" onclick="loadData()" style="margin:8px 0 0">再読み込み</button></div>';
     document.getElementById('hdate').textContent = 'エラー';
@@ -831,6 +835,93 @@ async function loadRaceResults() {
     } catch (e) { /* 結果がまだ無いのは正常。黙って諦める */ }
   }
   return false;
+}
+
+// ── note用テキスト（商品になる予定のレースだけ）────────────────────────
+// ユーザー依頼（2026-11-14）:「商品になる予定のレースの予想根拠コメントと
+// 買い目をアプリのレース出走表の下部に置いてくれないか。そのままコピーして
+// note に貼り付けられるように」
+//
+// 🔴 本文はここで組み立てない。`scripts/build_note_blocks.py` が記事と同じ
+//    `src/product/article.build_race_section()` で作ったものをそのまま出す。
+//    画面側で文章を作ると、禁止パターン（陣営コメント・調教・パドック）と
+//    誇大表現のチェックがアプリだけ素通りする。
+// 🔴 どのレースを載せるかも `scope.article_kind()` の判定済みの結果をそのまま使う。
+var _NOTE_BLOCKS = null;
+
+async function loadNoteBlocks() {
+  for (const u of [NOTE_BLOCKS_URL, NOTE_BLOCKS_URL_FALLBACK]) {
+    try {
+      const r = await fetch(u + '?t=' + Date.now(), { cache: 'no-store' });
+      if (r.ok) { _NOTE_BLOCKS = await r.json(); return true; }
+    } catch (e) { /* 無いのは正常（対象レースが0本の日もある）*/ }
+  }
+  return false;
+}
+
+function _noteBlockFor(race) {
+  if (!_NOTE_BLOCKS || !_NOTE_BLOCKS.races || !race || !race.race_id) return null;
+  const b = _NOTE_BLOCKS.races[race.race_id];
+  if (!b || !b.md) return null;
+  // ⚠ 予想を作り直した後に古い本文を出さない。latest.json の generated_at と
+  //    note_blocks.json が見ていた generated_at が違えば「古い」と明示する。
+  const stale = !!(D && D.generated_at && _NOTE_BLOCKS.source_generated_at
+                   && D.generated_at !== _NOTE_BLOCKS.source_generated_at);
+  return Object.assign({ stale }, b);
+}
+
+async function copyNoteBlock(raceId, btn) {
+  const b = (_NOTE_BLOCKS && _NOTE_BLOCKS.races || {})[raceId];
+  if (!b || !b.md) return;
+  const done = ok => {
+    const t = btn.textContent;
+    btn.textContent = ok ? '✅ コピーしました' : '⚠ コピーできませんでした';
+    setTimeout(() => { btn.textContent = t; }, 1800);
+  };
+  try {
+    await navigator.clipboard.writeText(b.md);
+    done(true);
+  } catch (e) {
+    // クリップボードAPIが使えない環境（古いiOS・非HTTPS）向けの保険
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = b.md;
+      ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      done(ok);
+    } catch (e2) { done(false); }
+  }
+}
+
+function _noteBlockHtml(race) {
+  const b = _noteBlockFor(race);
+  if (!b) return '';
+  const label = b.kind === 'paid' ? '有料記事に載る予定' : '無料記事に載る予定';
+  const col = b.kind === 'paid' ? '#b9770e' : '#117a65';
+  let h = '<div class="sec" style="margin-top:14px">📝 note用テキスト'
+        + '<span style="font-size:9px;color:#fff;background:' + col
+        + ';border-radius:3px;padding:1px 5px;margin-left:6px;font-weight:700">'
+        + label + '</span></div>';
+  if (b.stale) {
+    h += '<div style="font-size:10px;color:#b9770e;font-weight:700;margin:4px 0">'
+       + '⚠ この本文は前回の予想生成時のものです（そのあと予想が更新されています）。'
+       + '貼り付ける前に下の本文を確認してください。</div>';
+  }
+  h += '<button onclick="copyNoteBlock(\'' + race.race_id + '\', this)" '
+     + 'style="font-size:11px;font-weight:700;padding:6px 12px;border:1px solid var(--line);'
+     + 'border-radius:6px;background:var(--card);color:var(--fg);cursor:pointer">'
+     + '📋 本文をコピー</button>';
+  h += '<details style="margin-top:6px"><summary style="font-size:11px;color:var(--sub);cursor:pointer">'
+     + '本文を見る（' + b.md.length.toLocaleString() + '文字）</summary>'
+     + '<pre style="white-space:pre-wrap;word-break:break-word;font-size:11px;line-height:1.7;'
+     + 'background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px;'
+     + 'margin:6px 0 0;max-height:420px;overflow:auto">' + _esc(b.md) + '</pre></details>';
+  h += '<div style="font-size:9px;color:var(--sub);margin-top:4px;line-height:1.6">'
+     + '記事と同じ文章です（印・根拠・比較表・買い目・web情報）。'
+     + '⚠ <b>まだ公開・販売していない下書き</b>です。</div>';
+  return h;
 }
 
 function _resultsFor(race) {
@@ -2284,6 +2375,7 @@ function render() {
         html += formationHtml(race.formation);
       }
       html += _claudeViewHtml(race);
+      html += _noteBlockHtml(race);
       html += '<div class="cmt">'+(race.cmt||'').replace(/</g,'&lt;')+'</div></div></div>';
     }
     html += '</div>';
