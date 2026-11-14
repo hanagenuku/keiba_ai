@@ -1,6 +1,6 @@
 {
  "schema_version": 1,
- "updated_at": "2026-11-14T12:17:58.717732+09:00",
+ "updated_at": "2026-11-14T18:50:57.111642+09:00",
  "entries": [
   {
    "date": "2026-11-14",
@@ -17,7 +17,21 @@
    "solo_rank": 10,
    "p1_num": 1,
    "snapshot": "2026-11-14T08:52:00.025994+09:00",
-   "result": null
+   "result": {
+    "place": 11,
+    "top3": false,
+    "n_finishers": 16,
+    "fukusho_payout": null,
+    "fukusho_sold": true,
+    "p1_place": 12,
+    "p1_top3": false,
+    "p1_fukusho_payout": null,
+    "beat_p1": true,
+    "post_time": "12:00",
+    "before_post": true,
+    "attached_at": "2026-11-14T18:50:57.111642+09:00",
+    "source": "history.db+keiba.db"
+   }
   },
   {
    "date": "2026-11-14",
@@ -34,7 +48,21 @@
    "solo_rank": 6,
    "p1_num": 7,
    "snapshot": "2026-11-14T08:52:00.025994+09:00",
-   "result": null
+   "result": {
+    "place": 5,
+    "top3": false,
+    "n_finishers": 15,
+    "fukusho_payout": null,
+    "fukusho_sold": true,
+    "p1_place": 9,
+    "p1_top3": false,
+    "p1_fukusho_payout": null,
+    "beat_p1": true,
+    "post_time": "12:30",
+    "before_post": true,
+    "attached_at": "2026-11-14T18:50:57.111642+09:00",
+    "source": "history.db+keiba.db"
+   }
   },
   {
    "date": "2026-11-14",
@@ -51,7 +79,21 @@
    "solo_rank": 7,
    "p1_num": 1,
    "snapshot": "2026-11-14T08:52:00.025994+09:00",
-   "result": null
+   "result": {
+    "place": 2,
+    "top3": true,
+    "n_finishers": 16,
+    "fukusho_payout": 310,
+    "fukusho_sold": true,
+    "p1_place": 14,
+    "p1_top3": false,
+    "p1_fukusho_payout": null,
+    "beat_p1": true,
+    "post_time": "13:35",
+    "before_post": true,
+    "attached_at": "2026-11-14T18:50:57.111642+09:00",
+    "source": "history.db+keiba.db"
+   }
   },
   {
    "date": "2026-11-14",
@@ -68,7 +110,21 @@
    "solo_rank": 1,
    "p1_num": 2,
    "snapshot": "2026-11-14T08:52:00.025994+09:00",
-   "result": null
+   "result": {
+    "place": 4,
+    "top3": false,
+    "n_finishers": 16,
+    "fukusho_payout": null,
+    "fukusho_sold": true,
+    "p1_place": 14,
+    "p1_top3": false,
+    "p1_fukusho_payout": null,
+    "beat_p1": true,
+    "post_time": "16:01",
+    "before_post": true,
+    "attached_at": "2026-11-14T18:50:57.111642+09:00",
+    "source": "history.db+keiba.db"
+   }
   },
   {
    "date": "2026-11-14",
@@ -102,7 +158,21 @@
    "solo_rank": 1,
    "p1_num": 1,
    "snapshot": "2026-11-14T08:52:00.025994+09:00",
-   "result": null
+   "result": {
+    "place": 5,
+    "top3": false,
+    "n_finishers": 16,
+    "fukusho_payout": null,
+    "fukusho_sold": true,
+    "p1_place": 1,
+    "p1_top3": true,
+    "p1_fukusho_payout": 150,
+    "beat_p1": false,
+    "post_time": "12:50",
+    "before_post": true,
+    "attached_at": "2026-11-14T18:50:57.111642+09:00",
+    "source": "history.db+keiba.db"
+   }
   },
   {
    "date": "2026-11-14",
@@ -119,7 +189,21 @@
    "solo_rank": 1,
    "p1_num": 6,
    "snapshot": "2026-11-14T08:52:00.025994+09:00",
-   "result": null
+   "result": {
+    "place": 2,
+    "top3": true,
+    "n_finishers": 10,
+    "fukusho_payout": 160,
+    "fukusho_sold": true,
+    "p1_place": 1,
+    "p1_top3": true,
+    "p1_fukusho_payout": 240,
+    "beat_p1": false,
+    "post_time": "14:31",
+    "before_post": true,
+    "attached_at": "2026-11-14T18:50:57.111642+09:00",
+    "source": "history.db+keiba.db"
+   }
   }
  ]
 }
