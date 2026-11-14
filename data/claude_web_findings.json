@@ -1,399 +1,1338 @@
 {
  "schema_version": 1,
- "date": "20261108",
- "collected_at": "2026-11-08T09:08:24+09:00",
+ "date": "20261114",
+ "collected_at": "2026-11-14T09:12:29+09:00",
  "races": {
-  "20261108_05_10": {
+  "20261114_05_04": {
    "venue": "東京",
-   "race_num": 10,
-   "going": {
-    "surface": "ダート",
-    "state": "やや重",
-    "expected": "良。枠はフラット〜外、直線の伸びはフラット、前後は展開次第〜差しと想定。想定時計 −1.4〜−0.7秒"
-   },
+   "race_num": 4,
    "sources": [
-    "https://www.bloodline-trackbias.work/entry/2026/11/07/200000"
+    "https://www.bloodline-trackbias.work/entry/2026/11/13/190000",
+    "https://www.jra.go.jp/keiba/baba/",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25517/"
    ],
-   "summary": "東京ダートは土曜夜の発表がやや重で、日曜は良の想定。枠はフラット〜外、直線の伸びはフラット、前後は展開次第〜差しと想定されている。このレースの追い切りを無料で出している媒体は見つからず、調教メモは取れなかった。"
-  },
-  "20261108_05_11": {
-   "venue": "東京",
-   "race_num": 11,
    "going": {
     "surface": "芝",
     "state": "良",
-    "expected": "内ラチ沿いに傷みが出ており、3〜4角にもやや傷み。日曜は枠がフラット〜外、直線の伸びはフラット〜やや外、前後は展開次第〜差しと想定。想定時計 −2.5〜−2.2秒。天気は晴れのち曇り予報"
+    "expected": "内ラチ沿いのダメージが目立ち、枠はフラット〜外有利の想定。直線の伸びはフラット〜やや外、ペースは展開次第〜差し。時計は約-2.5〜-2.0秒想定。月〜火に8.5mmの雨。"
    },
+   "picks": [
+    {
+     "source": "https://muryou-keiba-ai.jp/predict/2026/11/12/25517/",
+     "tipster": "無料競馬AI",
+     "marks": {
+      "1": "◎",
+      "3": "○",
+      "7": "▲",
+      "9": "△",
+      "2": "☆",
+      "4": "消",
+      "5": "消"
+     }
+    }
+   ]
+  },
+  "20261114_05_05": {
+   "venue": "東京",
+   "race_num": 5,
    "sources": [
-    "https://www.bloodline-trackbias.work/entry/2026/11/07/200000",
-    "https://www.keibanomiryoku.com/article/copa-republica-argentina-2026-work-out.html",
-    "https://umasiru.com/archives/22206"
+    "https://www.bloodline-trackbias.work/entry/2026/11/13/190000",
+    "https://www.jra.go.jp/keiba/baba/",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25518/"
    ],
-   "summary": "アルゼンチン共和国杯。全18頭の1週前・最終追い切りのタイムと陣営コメントが無料で読めた。東京芝は土曜夜の発表が良で、内ラチ沿いに傷みが出ており枠はフラット〜外・前後は展開次第〜差しと想定されている。",
+   "going": {
+    "surface": "芝",
+    "state": "良",
+    "expected": "内ラチ沿いのダメージが目立ち、枠はフラット〜外有利の想定。直線の伸びはフラット〜やや外、ペースは展開次第〜差し。時計は約-2.5〜-2.0秒想定。月〜火に8.5mmの雨。"
+   },
+   "picks": [
+    {
+     "source": "https://muryou-keiba-ai.jp/predict/2026/11/12/25518/",
+     "tipster": "無料競馬AI",
+     "marks": {
+      "1": "◎",
+      "9": "○",
+      "8": "▲",
+      "2": "△",
+      "4": "☆"
+     }
+    }
+   ]
+  },
+  "20261114_05_12": {
+   "venue": "東京",
+   "race_num": 12,
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/13/190000",
+    "https://www.jra.go.jp/keiba/baba/",
+    "https://www.yosounohone.com/entry/tokyo-2026-11-14",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25525/"
+   ],
+   "going": {
+    "surface": "芝",
+    "state": "良",
+    "expected": "内ラチ沿いのダメージが目立ち、枠はフラット〜外有利の想定。直線の伸びはフラット〜やや外、ペースは展開次第〜差し。時計は約-2.5〜-2.0秒想定。月〜火に8.5mmの雨。"
+   },
    "horses": {
-    "9": {
-     "note": "1週前は美浦ウッド6F80.2を一杯に追い僚馬に0.6秒先着、最終は6F84.3を馬なりで0.1秒先着。大竹調教師は叩いた効果で反応が前回より良くなっているとし、復帰戦とは動きが違うと述べている。",
-     "direction": "up",
-     "grade": "S",
-     "sources": [
-      "https://www.keibanomiryoku.com/article/copa-republica-argentina-2026-work-out.html",
-      "https://umasiru.com/archives/22206"
-     ]
-    },
-    "5": {
-     "note": "1週前は美浦ウッド6F81.9を馬なりで僚馬と同入、最終は美浦坂路800m53.2の馬なり。宮田調教師は走りのバランスや息遣いは悪くないとし、淡々と一定のリズムで走れるようになっているとしている。",
-     "direction": null,
-     "grade": "A",
-     "sources": [
-      "https://www.keibanomiryoku.com/article/copa-republica-argentina-2026-work-out.html",
-      "https://umasiru.com/archives/22206"
-     ]
-    },
-    "14": {
-     "note": "1週前は美浦ウッド6F83.8を強めで僚馬に0.1秒先着、最終は5F66.8を強めで同入。林調教師はしまいに脚を使う形がいいとし、至って順調としている。",
-     "direction": null,
-     "grade": "A",
-     "sources": [
-      "https://www.keibanomiryoku.com/article/copa-republica-argentina-2026-work-out.html",
-      "https://umasiru.com/archives/22206"
-     ]
-    },
     "4": {
-     "note": "1週前は栗東CW5F68.2を一杯に追い僚馬に0.5秒先着、最終は栗東坂路800m55.5の馬なり。杉山佳調教師はひと追いごとに良化してきて元気も良さそうとし、涼しくなって元気いっぱいとしている。",
-     "direction": "up",
-     "grade": "A",
      "sources": [
-      "https://www.keibanomiryoku.com/article/copa-republica-argentina-2026-work-out.html",
-      "https://umasiru.com/archives/22206"
-     ]
-    },
-    "11": {
-     "note": "1週前は栗東CW稍重で6F83.3の馬なり、最終は6F84.1を馬なりで僚馬と同入。寺島調教師は状態は問題ないとし東京は勝っているのでいいイメージとしつつ、最終は無理をせずとしている。",
-     "direction": null,
-     "grade": "B",
-     "sources": [
-      "https://www.keibanomiryoku.com/article/copa-republica-argentina-2026-work-out.html",
-      "https://umasiru.com/archives/22206"
-     ]
-    },
-    "16": {
-     "note": "1週前は美浦ウッド6F81.6を強めで僚馬に0.1秒先着、最終は6F87.9を馬なりで0.4秒先着。戸田調教師は涼しくなって状態的にも前回よりいいとし、松岡騎手は週を追うごとに良くなってきたと述べている。",
-     "direction": "up",
-     "grade": "B",
-     "sources": [
-      "https://www.keibanomiryoku.com/article/copa-republica-argentina-2026-work-out.html",
-      "https://umasiru.com/archives/22206"
-     ]
-    },
-    "2": {
-     "note": "1週前は栗東CW稍重で6F81.7を一杯、最終は栗東CW5F68.8の馬なり。坂口調教師は先週よりも息遣いが良くなっているとし、馬場は重かったようだがこの馬なりに動けているとしている。",
-     "direction": "up",
-     "grade": "B",
-     "sources": [
-      "https://www.keibanomiryoku.com/article/copa-republica-argentina-2026-work-out.html",
-      "https://umasiru.com/archives/22206"
-     ]
-    },
-    "7": {
-     "note": "1週前は美浦ウッド6F83.0を一杯に追い僚馬に0.6秒遅れ、最終は5F65.9を強めで0.3秒遅れ。堀調教師はまだ気持ちの高ぶりが強いが精神面は良くなっているとし、リズムとペースを一致させることが大事としている。",
-     "direction": null,
-     "grade": "B",
-     "sources": [
-      "https://www.keibanomiryoku.com/article/copa-republica-argentina-2026-work-out.html",
-      "https://umasiru.com/archives/22206"
-     ]
-    },
-    "6": {
-     "note": "1週前は栗東坂路稍重で800m57.9の馬なり、最終は800m54.0の馬なり。石坂調教師は1週前の時計は地味だったが一度使った上積みは十分あるとし、いい状態を維持しているとしている。",
-     "direction": null,
-     "grade": "B",
-     "sources": [
-      "https://www.keibanomiryoku.com/article/copa-republica-argentina-2026-work-out.html",
-      "https://umasiru.com/archives/22206"
-     ]
-    },
-    "15": {
-     "note": "1週前は美浦ウッド6F83.1を強め、最終は戸崎騎手が乗って5F69.7を馬なりで僚馬と同入。戸崎騎手は最後の伸び脚はとても良かったとし、田島調教師はいい感じで迎えられそうとしている。",
-     "direction": "up",
-     "grade": "B",
-     "sources": [
-      "https://www.keibanomiryoku.com/article/copa-republica-argentina-2026-work-out.html",
-      "https://umasiru.com/archives/22206"
-     ]
-    },
-    "10": {
-     "note": "1週前は美浦ウッド6F82.1を馬なりで僚馬と同入、最終は6F80.6を馬なりで0.1秒遅れ。牧調教師はすごい心臓を持っている馬とし、変わらず順調としている。",
-     "direction": null,
-     "grade": "B",
-     "sources": [
-      "https://www.keibanomiryoku.com/article/copa-republica-argentina-2026-work-out.html",
-      "https://umasiru.com/archives/22206"
-     ]
-    },
-    "3": {
-     "note": "1週前は栗東CW稍重で7F98.8を直強め、最終は7F97.7を馬なりで僚馬に0.1秒先着（ラスト2F 11.6-11.6）。清水久調教師は順調とし、稽古は動くし動きは言うことなしとしている。",
-     "direction": null,
-     "grade": "B",
-     "sources": [
-      "https://www.keibanomiryoku.com/article/copa-republica-argentina-2026-work-out.html",
-      "https://umasiru.com/archives/22206"
-     ]
-    },
-    "13": {
-     "note": "1週前は美浦ウッド6F85.7を馬なりで僚馬と同入、最終は5F68.3を強めで0.1秒遅れ。青木調教師は道中力みなく最後はしっかり馬体を併せる形で良い動きだったとしている。",
-     "direction": null,
-     "grade": "B",
-     "sources": [
-      "https://www.keibanomiryoku.com/article/copa-republica-argentina-2026-work-out.html",
-      "https://umasiru.com/archives/22206"
-     ]
-    },
-    "18": {
-     "note": "1週前は栗東CW6F85.6を末強めで僚馬と同入、最終は7F99.7を馬なりで同入。杉山佳調教師はコースは問わないとし、松本騎手はリズム良く行けたら頑張ってくれると述べている。",
-     "direction": null,
-     "grade": "B",
-     "sources": [
-      "https://www.keibanomiryoku.com/article/copa-republica-argentina-2026-work-out.html",
-      "https://umasiru.com/archives/22206"
-     ]
+      "https://www.yosounohone.com/entry/tokyo-2026-11-14"
+     ],
+     "note": "ホネ追切注目 ★2",
+     "grade": "★2"
     },
     "12": {
-     "note": "1週前は栗東坂路稍重で800m53.7を一杯に追い僚馬に0.2秒先着、最終は800m54.0を一杯で0.2秒先着。笹田調教師は状態は前走以上だと思うとしている。",
-     "direction": "up",
-     "grade": "B",
      "sources": [
-      "https://www.keibanomiryoku.com/article/copa-republica-argentina-2026-work-out.html",
-      "https://umasiru.com/archives/22206"
-     ]
-    },
-    "17": {
-     "note": "1週前は栗東CW6F82.0を一杯に追い僚馬と同入、最終は6F84.1の強め。甲斐助手はしっかり動かしたいと思い古川奈穂騎手に乗ってもらったとし、荒木助手は時計的にはちょうどいい感じとしている。",
-     "direction": null,
-     "grade": "C",
-     "sources": [
-      "https://www.keibanomiryoku.com/article/copa-republica-argentina-2026-work-out.html",
-      "https://umasiru.com/archives/22206"
-     ]
-    },
-    "8": {
-     "note": "1週前は栗東CW稍重で6F83.5を一杯に追い僚馬に0.1秒遅れ、最終は横山武騎手が乗って6F82.5の末強め。四位調教師はいい動きだったとし、じっくり使って良くなっているとしている。",
-     "direction": "up",
-     "grade": "C",
-     "sources": [
-      "https://www.keibanomiryoku.com/article/copa-republica-argentina-2026-work-out.html",
-      "https://umasiru.com/archives/22206"
-     ]
-    },
-    "1": {
-     "note": "1週前は栗東CW7F93.2を馬なりで僚馬に0.1秒先着、最終は栗東坂路800m55.3の馬なり。中田助手は状態の良さを生かしてどこまでやれるかとしている。",
-     "direction": null,
-     "grade": "E",
-     "sources": [
-      "https://www.keibanomiryoku.com/article/copa-republica-argentina-2026-work-out.html",
-      "https://umasiru.com/archives/22206"
-     ]
-    }
-   }
-  },
-  "20261108_08_10": {
-   "venue": "京都",
-   "race_num": 10,
-   "going": {
-    "surface": "芝",
-    "state": "良",
-    "expected": "直近のレースで内ラチ沿いに傷みが出ている。枠はフラット〜外、直線の伸びはフラット〜やや外、前後は展開次第〜差しと想定。想定時計 −2.7〜−2.4秒。天気は晴れのち曇り予報"
-   },
-   "sources": [
-    "https://www.bloodline-trackbias.work/entry/2026/11/07/200000"
-   ],
-   "summary": "京都芝は土曜夜の発表が良。直近のレースで内ラチ沿いに傷みが出ており、枠はフラット〜外、直線の伸びはフラット〜やや外、前後は展開次第〜差しと想定されている。このレースの追い切りを無料で出している媒体は見つからなかった。"
-  },
-  "20261108_08_11": {
-   "venue": "京都",
-   "race_num": 11,
-   "going": {
-    "surface": "ダート",
-    "state": "良",
-    "expected": "含水率は約5%で、日曜はパサパサの状態まで乾く想定。枠は内〜フラット、直線の伸びはフラット、前後は展開次第と想定。想定時計 −1.6〜−0.9秒"
-   },
-   "sources": [
-    "https://www.bloodline-trackbias.work/entry/2026/11/07/200000",
-    "https://www.keibanomiryoku.com/article/miyako-stakes-2026-work-out.html",
-    "https://umasiru.com/archives/22208"
-   ],
-   "summary": "みやこS。全16頭の1週前・最終追い切りのタイムと陣営コメントが無料で読めた。京都ダートは土曜夜の発表が良で、含水率約5%から日曜はパサパサまで乾く想定。枠は内〜フラット、前後は展開次第とされている。",
-   "horses": {
-    "11": {
-     "note": "1週前は栗東CW稍重で6F85.9を稍一杯に追い僚馬にクビ先着、最終は横山和騎手が乗って6F82.4の馬なり。四位調教師は馬場も悪いので全体が速くならないよう上がり重点にしたとし、動きは問題ないとしている。",
-     "direction": null,
-     "grade": "S",
-     "sources": [
-      "https://www.keibanomiryoku.com/article/miyako-stakes-2026-work-out.html",
-      "https://umasiru.com/archives/22208"
-     ]
-    },
-    "12": {
-     "note": "1週前は栗東CW6F84.9を一杯に追い僚馬と同入、最終は富田暁騎手が乗って7F98.9を稍一杯で同入。小林調教師は特に問題なく動きも良かったとし、前回よりいい・相手は強いがいろいろかみあえばとしている。",
-     "direction": "up",
-     "grade": "A",
-     "sources": [
-      "https://www.keibanomiryoku.com/article/miyako-stakes-2026-work-out.html",
-      "https://umasiru.com/archives/22208"
-     ]
-    },
-    "8": {
-     "note": "1週前は栗東CW稍重で幸英明騎手が乗り6F78.9を一杯、最終は栗東坂路800m54.2の馬なり。大根田調教師は坂路で流す程度とし、少しテンションが高いところはあるが当日落ち着いて臨めればとしている。",
-     "direction": null,
-     "grade": "A",
-     "sources": [
-      "https://www.keibanomiryoku.com/article/miyako-stakes-2026-work-out.html",
-      "https://umasiru.com/archives/22208"
-     ]
-    },
-    "4": {
-     "note": "1週前は栗東CW稍重で7F99.6を馬なりで僚馬と同入、最終は栗東坂路800m54.8の馬なり。野中調教師は心臓もできているのでやりすぎないよう馬なりにしたとしつつ、ゲートも安定しておらず本当に良くなるのは来春かもしれないと述べている。",
-     "direction": "down",
-     "grade": "A",
-     "sources": [
-      "https://www.keibanomiryoku.com/article/miyako-stakes-2026-work-out.html",
-      "https://umasiru.com/archives/22208"
-     ]
-    },
-    "10": {
-     "note": "1週前は栗東CW6F82.5を馬なりで僚馬と同入、最終は栗東坂路800m53.6の一杯。兼武助手はまだ左右のバランスという点ではもうひとつとし、池江調教師は暑いのが苦手で前走は夏負け気味だったが涼しくなっていいパフォーマンスができればとしている。",
-     "direction": null,
-     "grade": "A",
-     "sources": [
-      "https://www.keibanomiryoku.com/article/miyako-stakes-2026-work-out.html",
-      "https://umasiru.com/archives/22208"
-     ]
+      "https://www.yosounohone.com/entry/tokyo-2026-11-14"
+     ],
+     "note": "ホネ追切注目 ★2",
+     "grade": "★2"
     },
     "5": {
-     "note": "1週前は美浦坂路800m54.1をG前仕掛けで僚馬に0.2秒先着、最終は800m53.2の馬なり。高木調教師は京都は走っているししまいの脚は確実・展開ひとつとし、宗方助手は別定57キロで出られるのはいいとしている。",
-     "direction": null,
-     "grade": "B",
      "sources": [
-      "https://www.keibanomiryoku.com/article/miyako-stakes-2026-work-out.html",
-      "https://umasiru.com/archives/22208"
-     ]
-    },
-    "6": {
-     "note": "最終は太宰啓騎手が乗って栗東坂路800m55.8の馬なり。大橋調教師はマイペースで行ければ見直せると思うとしている。",
-     "direction": null,
-     "grade": "B",
-     "sources": [
-      "https://www.keibanomiryoku.com/article/miyako-stakes-2026-work-out.html",
-      "https://umasiru.com/archives/22208"
-     ]
-    },
-    "15": {
-     "note": "1週前は栗東坂路稍重で800m54.0を一杯、最終は800m54.5の末強め。松下調教師は自分の形なら強いとし、オープンに上がって重賞のメンバーでどれだけやれるか・凄く動いた感じではないが良かったとしている。",
-     "direction": null,
-     "grade": "B",
-     "sources": [
-      "https://www.keibanomiryoku.com/article/miyako-stakes-2026-work-out.html",
-      "https://umasiru.com/archives/22208"
-     ]
-    },
-    "2": {
-     "note": "1週前は栗東CW稍重で7F98.5を馬なりで僚馬と同入、最終は調教師が乗って栗東坂路800m54.4の馬なり。渡辺調教師は動きは良かった・自分の形なら強いとし、上浜助手は先週しっかりやっているのでサラッとと述べている。",
-     "direction": null,
-     "grade": "B",
-     "sources": [
-      "https://www.keibanomiryoku.com/article/miyako-stakes-2026-work-out.html",
-      "https://umasiru.com/archives/22208"
-     ]
-    },
-    "14": {
-     "note": "1週前は栗東CW6F85.6の馬なり、最終は栗東坂路800m56.2を末強めで僚馬に0.2秒遅れ。藤田厩務員は間隔が詰まっているので軽めにしたとし、上積みは感じる・自分の競馬ができると強いとしている。",
-     "direction": "up",
-     "grade": "B",
-     "sources": [
-      "https://www.keibanomiryoku.com/article/miyako-stakes-2026-work-out.html",
-      "https://umasiru.com/archives/22208"
-     ]
-    },
-    "13": {
-     "note": "最終は栗東CW6F84.4を一杯に追い僚馬に0.2秒遅れ。荒木助手は以前より調教でも動ける感じになってきてまじめに取り組んでいるとしつつ、集中力に課題があるとも述べている。",
-     "direction": null,
-     "grade": "B",
-     "sources": [
-      "https://www.keibanomiryoku.com/article/miyako-stakes-2026-work-out.html",
-      "https://umasiru.com/archives/22208"
-     ]
-    },
-    "16": {
-     "note": "1週前は美浦ウッド7F98.0を馬なりで僚馬と同入、最終は上野翔騎手が乗って6F86.3を馬なりで0.1秒先着。田中勝調教師は稽古の動きはまずまず・ダート適性はあると思うとし、テンションが上がりすぎず落ち着きがあるとしている。",
-     "direction": null,
-     "grade": "C",
-     "sources": [
-      "https://www.keibanomiryoku.com/article/miyako-stakes-2026-work-out.html",
-      "https://umasiru.com/archives/22208"
-     ]
-    },
-    "1": {
-     "note": "1週前は栗東CW稍重でC.デムーロ騎手が乗り6F84.1を一杯に追って0.3秒遅れ、最終は6F84.4を馬なりでアタマ遅れ。上村調教師は先週びっしりやった分ピリッとしてきたとし、番手からも競馬ができているので特に位置は選ばないとしている。",
-     "direction": "up",
-     "grade": "C",
-     "sources": [
-      "https://www.keibanomiryoku.com/article/miyako-stakes-2026-work-out.html",
-      "https://umasiru.com/archives/22208"
-     ]
-    },
-    "3": {
-     "note": "1週前は栗東CW稍重で7F99.3を一杯に追い僚馬に0.7秒遅れ、最終は6F82.6を一杯で0.1秒遅れ。鈴木孝調教師はいつもの動き・攻め馬でそんなに目立つ馬じゃないとしつつ、状態自体は前走よりいいとしている。",
-     "direction": "up",
-     "grade": "C",
-     "sources": [
-      "https://www.keibanomiryoku.com/article/miyako-stakes-2026-work-out.html",
-      "https://umasiru.com/archives/22208"
-     ]
-    },
-    "7": {
-     "note": "1週前は栗東坂路稍重で800m54.3を一杯に追い僚馬に0.2秒遅れ、最終は800m53.9を一杯で0.2秒遅れ。笹田調教師は少し遅れたがしっかり時計は出ているとしている。",
-     "direction": null,
-     "grade": "C",
-     "sources": [
-      "https://www.keibanomiryoku.com/article/miyako-stakes-2026-work-out.html",
-      "https://umasiru.com/archives/22208"
-     ]
-    },
-    "9": {
-     "note": "1週前は栗東CW稍重で三浦皇成騎手が乗り6F83.4を一杯に追って僚馬に0.1秒先着、最終は7F98.0の一杯。松永幹調教師はラスト1ハロンが12秒台でも問題はないとし、少しでもペースが流れてほしいとしている。",
-     "direction": null,
-     "grade": "C",
-     "sources": [
-      "https://www.keibanomiryoku.com/article/miyako-stakes-2026-work-out.html",
-      "https://umasiru.com/archives/22208"
-     ]
+      "https://www.yosounohone.com/entry/tokyo-2026-11-14"
+     ],
+     "note": "ホネ追切注目 ★2",
+     "grade": "★2"
     }
-   }
+   },
+   "picks": [
+    {
+     "source": "https://muryou-keiba-ai.jp/predict/2026/11/12/25525/",
+     "tipster": "無料競馬AI",
+     "marks": {
+      "4": "◎",
+      "11": "○",
+      "1": "▲",
+      "9": "△",
+      "5": "☆",
+      "7": "消"
+     }
+    }
+   ]
   },
-  "20261108_03_10": {
-   "venue": "福島",
-   "race_num": 10,
+  "20261114_05_01": {
+   "venue": "東京",
+   "race_num": 1,
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/13/190000",
+    "https://www.jra.go.jp/keiba/baba/",
+    "https://www.yosounohone.com/entry/tokyo-2026-11-14",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25514/"
+   ],
    "going": {
     "surface": "ダート",
-    "state": "やや重",
-    "expected": "良〜やや重。枠はフラット〜外、直線の伸びはフラット、前後は前〜展開次第と想定。想定時計 −2.0〜±0秒"
+    "state": "やや重→良",
+    "expected": "金曜昼はやや重。土曜は晴れ時々曇りで良に回復想定。良馬場だと外枠有利になることがあり、差し有利が多い。時計は約-1.3〜-0.7秒想定。"
    },
-   "sources": [
-    "https://www.bloodline-trackbias.work/entry/2026/11/07/200000"
-   ],
-   "summary": "福島ダートは土曜夜の発表がやや重で、日曜は良〜やや重の想定。枠はフラット〜外、直線の伸びはフラット、前後は前〜展開次第と想定されている。追い切りを無料で出している媒体は見つからなかった。"
+   "horses": {
+    "1": {
+     "sources": [
+      "https://www.yosounohone.com/entry/tokyo-2026-11-14"
+     ],
+     "note": "ホネ追切注目 ★2",
+     "grade": "★2"
+    }
+   },
+   "picks": [
+    {
+     "source": "https://muryou-keiba-ai.jp/predict/2026/11/12/25514/",
+     "tipster": "無料競馬AI",
+     "marks": {
+      "7": "◎",
+      "10": "○",
+      "13": "▲",
+      "1": "△",
+      "11": "☆"
+     }
+    }
+   ]
   },
-  "20261108_03_11": {
-   "venue": "福島",
-   "race_num": 11,
+  "20261114_05_02": {
+   "venue": "東京",
+   "race_num": 2,
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/13/190000",
+    "https://www.jra.go.jp/keiba/baba/",
+    "https://www.yosounohone.com/entry/tokyo-2026-11-14",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25515/"
+   ],
    "going": {
     "surface": "芝",
-    "state": "やや重",
-    "expected": "良〜やや重。3〜4角から直線にかけて内ラチ沿いに傷みが出ている。枠はフラット〜外、直線の伸びはフラット〜やや外、前後は展開次第〜差しと想定。想定時計 −0.5〜+1.0秒"
+    "state": "良",
+    "expected": "内ラチ沿いのダメージが目立ち、枠はフラット〜外有利の想定。直線の伸びはフラット〜やや外、ペースは展開次第〜差し。時計は約-2.5〜-2.0秒想定。月〜火に8.5mmの雨。"
    },
+   "horses": {
+    "15": {
+     "sources": [
+      "https://www.yosounohone.com/entry/tokyo-2026-11-14"
+     ],
+     "note": "ホネ追切注目 ★2",
+     "grade": "★2"
+    }
+   },
+   "picks": [
+    {
+     "source": "https://muryou-keiba-ai.jp/predict/2026/11/12/25515/",
+     "tipster": "無料競馬AI",
+     "marks": {
+      "13": "◎",
+      "2": "○",
+      "10": "▲",
+      "12": "△",
+      "7": "☆",
+      "3": "消",
+      "18": "消",
+      "5": "消"
+     }
+    }
+   ]
+  },
+  "20261114_05_03": {
+   "venue": "東京",
+   "race_num": 3,
    "sources": [
-    "https://www.bloodline-trackbias.work/entry/2026/11/07/200000"
+    "https://www.bloodline-trackbias.work/entry/2026/11/13/190000",
+    "https://www.jra.go.jp/keiba/baba/",
+    "https://www.yosounohone.com/entry/tokyo-2026-11-14",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25516/"
    ],
-   "summary": "みちのくS。福島芝は土曜夜の発表がやや重で、日曜は良〜やや重の想定。3〜4角から直線にかけて内ラチ沿いに傷みが出ており、枠はフラット〜外・前後は展開次第〜差しと想定されている。重賞以外の追い切りを無料で出している媒体は見つからず、調教メモは取れなかった。"
+   "going": {
+    "surface": "ダート",
+    "state": "やや重→良",
+    "expected": "金曜昼はやや重。土曜は晴れ時々曇りで良に回復想定。良馬場だと外枠有利になることがあり、差し有利が多い。時計は約-1.3〜-0.7秒想定。"
+   },
+   "horses": {
+    "14": {
+     "sources": [
+      "https://www.yosounohone.com/entry/tokyo-2026-11-14"
+     ],
+     "note": "ホネ追切注目 ★2",
+     "grade": "★2"
+    }
+   },
+   "picks": [
+    {
+     "source": "https://muryou-keiba-ai.jp/predict/2026/11/12/25516/",
+     "tipster": "無料競馬AI",
+     "marks": {
+      "6": "◎",
+      "1": "○",
+      "11": "▲",
+      "10": "△",
+      "9": "☆",
+      "14": "消",
+      "13": "消"
+     }
+    }
+   ]
+  },
+  "20261114_05_06": {
+   "venue": "東京",
+   "race_num": 6,
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/13/190000",
+    "https://www.jra.go.jp/keiba/baba/",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25519/"
+   ],
+   "going": {
+    "surface": "芝",
+    "state": "良",
+    "expected": "内ラチ沿いのダメージが目立ち、枠はフラット〜外有利の想定。直線の伸びはフラット〜やや外、ペースは展開次第〜差し。時計は約-2.5〜-2.0秒想定。月〜火に8.5mmの雨。"
+   },
+   "picks": [
+    {
+     "source": "https://muryou-keiba-ai.jp/predict/2026/11/12/25519/",
+     "tipster": "無料競馬AI",
+     "marks": {
+      "2": "◎",
+      "14": "○",
+      "10": "▲",
+      "1": "△",
+      "15": "☆"
+     }
+    }
+   ]
+  },
+  "20261114_05_07": {
+   "venue": "東京",
+   "race_num": 7,
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/13/190000",
+    "https://www.jra.go.jp/keiba/baba/",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25520/"
+   ],
+   "going": {
+    "surface": "ダート",
+    "state": "やや重→良",
+    "expected": "金曜昼はやや重。土曜は晴れ時々曇りで良に回復想定。良馬場だと外枠有利になることがあり、差し有利が多い。時計は約-1.3〜-0.7秒想定。"
+   },
+   "picks": [
+    {
+     "source": "https://muryou-keiba-ai.jp/predict/2026/11/12/25520/",
+     "tipster": "無料競馬AI",
+     "marks": {
+      "13": "◎",
+      "3": "○",
+      "9": "▲",
+      "14": "△",
+      "15": "☆",
+      "2": "消"
+     }
+    }
+   ]
+  },
+  "20261114_05_09": {
+   "venue": "東京",
+   "race_num": 9,
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/13/190000",
+    "https://www.jra.go.jp/keiba/baba/",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25522/"
+   ],
+   "going": {
+    "surface": "ダート",
+    "state": "やや重→良",
+    "expected": "金曜昼はやや重。土曜は晴れ時々曇りで良に回復想定。良馬場だと外枠有利になることがあり、差し有利が多い。時計は約-1.3〜-0.7秒想定。"
+   },
+   "picks": [
+    {
+     "source": "https://muryou-keiba-ai.jp/predict/2026/11/12/25522/",
+     "tipster": "無料競馬AI",
+     "marks": {
+      "13": "◎",
+      "5": "○",
+      "2": "▲",
+      "11": "△",
+      "14": "☆",
+      "12": "消"
+     }
+    }
+   ]
+  },
+  "20261114_05_10": {
+   "venue": "東京",
+   "race_num": 10,
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/13/190000",
+    "https://www.jra.go.jp/keiba/baba/",
+    "https://www.yosounohone.com/entry/tokyo-2026-11-14",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25523/"
+   ],
+   "going": {
+    "surface": "芝",
+    "state": "良",
+    "expected": "内ラチ沿いのダメージが目立ち、枠はフラット〜外有利の想定。直線の伸びはフラット〜やや外、ペースは展開次第〜差し。時計は約-2.5〜-2.0秒想定。月〜火に8.5mmの雨。"
+   },
+   "horses": {
+    "16": {
+     "sources": [
+      "https://www.yosounohone.com/entry/tokyo-2026-11-14"
+     ],
+     "note": "ホネ追切注目 ★2",
+     "grade": "★2"
+    }
+   },
+   "picks": [
+    {
+     "source": "https://muryou-keiba-ai.jp/predict/2026/11/12/25523/",
+     "tipster": "無料競馬AI",
+     "marks": {
+      "5": "◎",
+      "4": "○",
+      "6": "▲",
+      "1": "△",
+      "15": "☆",
+      "9": "消",
+      "13": "消"
+     }
+    }
+   ]
+  },
+  "20261114_05_11": {
+   "venue": "東京",
+   "race_num": 11,
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/13/190000",
+    "https://www.jra.go.jp/keiba/baba/",
+    "https://www.yosounohone.com/entry/tokyo-2026-11-14",
+    "https://umasiru.com/archives/22312",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25524/"
+   ],
+   "going": {
+    "surface": "ダート",
+    "state": "やや重→良",
+    "expected": "金曜昼はやや重。土曜は晴れ時々曇りで良に回復想定。良馬場だと外枠有利になることがあり、差し有利が多い。時計は約-1.3〜-0.7秒想定。"
+   },
+   "horses": {
+    "6": {
+     "sources": [
+      "https://www.yosounohone.com/entry/tokyo-2026-11-14",
+      "https://umasiru.com/archives/22312"
+     ],
+     "note": "umasiru 追切 S(6段階S-E)／ホネ追切注目 ★2",
+     "grade": "S"
+    },
+    "15": {
+     "sources": [
+      "https://www.yosounohone.com/entry/tokyo-2026-11-14",
+      "https://umasiru.com/archives/22312"
+     ],
+     "note": "umasiru 追切 A(6段階S-E)／ホネ追切注目 ★2",
+     "grade": "A"
+    },
+    "8": {
+     "sources": [
+      "https://umasiru.com/archives/22312"
+     ],
+     "note": "umasiru 追切 A(6段階S-E)",
+     "grade": "A"
+    },
+    "10": {
+     "sources": [
+      "https://umasiru.com/archives/22312"
+     ],
+     "note": "umasiru 追切 A(6段階S-E)",
+     "grade": "A"
+    },
+    "1": {
+     "sources": [
+      "https://umasiru.com/archives/22312"
+     ],
+     "note": "umasiru 追切 A(6段階S-E)",
+     "grade": "A"
+    },
+    "12": {
+     "sources": [
+      "https://umasiru.com/archives/22312"
+     ],
+     "note": "umasiru 追切 A(6段階S-E)",
+     "grade": "A"
+    },
+    "4": {
+     "sources": [
+      "https://umasiru.com/archives/22312"
+     ],
+     "note": "umasiru 追切 B(6段階S-E)",
+     "grade": "B"
+    },
+    "2": {
+     "sources": [
+      "https://umasiru.com/archives/22312"
+     ],
+     "note": "umasiru 追切 B(6段階S-E)",
+     "grade": "B"
+    },
+    "16": {
+     "sources": [
+      "https://umasiru.com/archives/22312"
+     ],
+     "note": "umasiru 追切 B(6段階S-E)",
+     "grade": "B"
+    },
+    "14": {
+     "sources": [
+      "https://umasiru.com/archives/22312"
+     ],
+     "note": "umasiru 追切 B(6段階S-E)",
+     "grade": "B"
+    },
+    "7": {
+     "sources": [
+      "https://umasiru.com/archives/22312"
+     ],
+     "note": "umasiru 追切 B(6段階S-E)",
+     "grade": "B"
+    },
+    "13": {
+     "sources": [
+      "https://umasiru.com/archives/22312"
+     ],
+     "note": "umasiru 追切 B(6段階S-E)",
+     "grade": "B"
+    },
+    "5": {
+     "sources": [
+      "https://umasiru.com/archives/22312"
+     ],
+     "note": "umasiru 追切 C(6段階S-E)",
+     "grade": "C"
+    },
+    "9": {
+     "sources": [
+      "https://umasiru.com/archives/22312"
+     ],
+     "note": "umasiru 追切 C(6段階S-E)",
+     "grade": "C"
+    },
+    "11": {
+     "sources": [
+      "https://umasiru.com/archives/22312"
+     ],
+     "note": "umasiru 追切 C(6段階S-E)",
+     "grade": "C"
+    },
+    "3": {
+     "sources": [
+      "https://umasiru.com/archives/22312"
+     ],
+     "note": "umasiru 追切 C(6段階S-E)",
+     "grade": "C"
+    }
+   },
+   "picks": [
+    {
+     "source": "https://muryou-keiba-ai.jp/predict/2026/11/12/25524/",
+     "tipster": "無料競馬AI",
+     "marks": {
+      "7": "◎",
+      "15": "○",
+      "6": "▲",
+      "11": "△",
+      "13": "☆",
+      "14": "消"
+     }
+    }
+   ]
+  },
+  "20261114_08_04": {
+   "venue": "京都",
+   "race_num": 4,
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/13/190000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25529/"
+   ],
+   "going": {
+    "surface": "芝",
+    "state": "良",
+    "expected": "火〜水に0.5mm。土曜は曇り時々晴れで想定雨量0〜1mm。内ラチ沿いのダメージを避けられる外が有利の可能性。時計は約-2.7〜-2.0秒想定、ペースは展開次第〜差し。"
+   },
+   "picks": [
+    {
+     "source": "https://muryou-keiba-ai.jp/predict/2026/11/12/25529/",
+     "tipster": "無料競馬AI",
+     "marks": {
+      "4": "◎",
+      "13": "○",
+      "2": "▲",
+      "9": "△",
+      "8": "☆",
+      "7": "消"
+     }
+    }
+   ]
+  },
+  "20261114_08_05": {
+   "venue": "京都",
+   "race_num": 5,
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/13/190000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25530/"
+   ],
+   "going": {
+    "surface": "芝",
+    "state": "良",
+    "expected": "火〜水に0.5mm。土曜は曇り時々晴れで想定雨量0〜1mm。内ラチ沿いのダメージを避けられる外が有利の可能性。時計は約-2.7〜-2.0秒想定、ペースは展開次第〜差し。"
+   },
+   "picks": [
+    {
+     "source": "https://muryou-keiba-ai.jp/predict/2026/11/12/25530/",
+     "tipster": "無料競馬AI",
+     "marks": {
+      "10": "◎",
+      "1": "○",
+      "4": "▲",
+      "7": "△",
+      "8": "☆"
+     }
+    }
+   ]
+  },
+  "20261114_08_08": {
+   "venue": "京都",
+   "race_num": 8,
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/13/190000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-14",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25533/"
+   ],
+   "going": {
+    "surface": "芝",
+    "state": "良",
+    "expected": "火〜水に0.5mm。土曜は曇り時々晴れで想定雨量0〜1mm。内ラチ沿いのダメージを避けられる外が有利の可能性。時計は約-2.7〜-2.0秒想定、ペースは展開次第〜差し。"
+   },
+   "horses": {
+    "8": {
+     "sources": [
+      "https://www.yosounohone.com/entry/kyoto-2026-11-14"
+     ],
+     "note": "ホネ追切注目 ★2",
+     "grade": "★2"
+    }
+   },
+   "picks": [
+    {
+     "source": "https://muryou-keiba-ai.jp/predict/2026/11/12/25533/",
+     "tipster": "無料競馬AI",
+     "marks": {
+      "1": "◎",
+      "8": "○",
+      "7": "▲",
+      "5": "△",
+      "3": "☆",
+      "6": "消",
+      "2": "消"
+     }
+    }
+   ]
+  },
+  "20261114_08_01": {
+   "venue": "京都",
+   "race_num": 1,
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/13/190000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-14",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25526/"
+   ],
+   "going": {
+    "surface": "ダート",
+    "state": "良",
+    "expected": "含水率4%台でほぼ乾燥。枠は内〜フラット、直線の伸びはフラットでバイアスは出にくい。時計は約-1.6〜-0.9秒想定。"
+   },
+   "horses": {
+    "10": {
+     "sources": [
+      "https://www.yosounohone.com/entry/kyoto-2026-11-14"
+     ],
+     "note": "ホネ追切注目 ★2",
+     "grade": "★2"
+    }
+   },
+   "picks": [
+    {
+     "source": "https://muryou-keiba-ai.jp/predict/2026/11/12/25526/",
+     "tipster": "無料競馬AI",
+     "marks": {
+      "10": "◎",
+      "6": "○",
+      "7": "▲",
+      "8": "△",
+      "9": "☆",
+      "13": "消",
+      "1": "消"
+     }
+    }
+   ]
+  },
+  "20261114_08_02": {
+   "venue": "京都",
+   "race_num": 2,
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/13/190000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-14",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25527/"
+   ],
+   "going": {
+    "surface": "ダート",
+    "state": "良",
+    "expected": "含水率4%台でほぼ乾燥。枠は内〜フラット、直線の伸びはフラットでバイアスは出にくい。時計は約-1.6〜-0.9秒想定。"
+   },
+   "horses": {
+    "13": {
+     "sources": [
+      "https://www.yosounohone.com/entry/kyoto-2026-11-14"
+     ],
+     "note": "ホネ追切注目 ★3",
+     "grade": "★3"
+    },
+    "9": {
+     "sources": [
+      "https://www.yosounohone.com/entry/kyoto-2026-11-14"
+     ],
+     "note": "ホネ追切注目 ★2",
+     "grade": "★2"
+    }
+   },
+   "picks": [
+    {
+     "source": "https://muryou-keiba-ai.jp/predict/2026/11/12/25527/",
+     "tipster": "無料競馬AI",
+     "marks": {
+      "2": "◎",
+      "10": "○",
+      "11": "▲",
+      "13": "△",
+      "4": "☆",
+      "6": "消"
+     }
+    }
+   ]
+  },
+  "20261114_08_03": {
+   "venue": "京都",
+   "race_num": 3,
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/13/190000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-14",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25528/"
+   ],
+   "going": {
+    "surface": "ダート",
+    "state": "良",
+    "expected": "含水率4%台でほぼ乾燥。枠は内〜フラット、直線の伸びはフラットでバイアスは出にくい。時計は約-1.6〜-0.9秒想定。"
+   },
+   "horses": {
+    "9": {
+     "sources": [
+      "https://www.yosounohone.com/entry/kyoto-2026-11-14"
+     ],
+     "note": "ホネ追切注目 ★3",
+     "grade": "★3"
+    }
+   },
+   "picks": [
+    {
+     "source": "https://muryou-keiba-ai.jp/predict/2026/11/12/25528/",
+     "tipster": "無料競馬AI",
+     "marks": {
+      "9": "◎",
+      "8": "○",
+      "14": "▲",
+      "6": "△",
+      "1": "☆",
+      "5": "消",
+      "10": "消"
+     }
+    }
+   ]
+  },
+  "20261114_08_06": {
+   "venue": "京都",
+   "race_num": 6,
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/13/190000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25531/"
+   ],
+   "going": {
+    "surface": "ダート",
+    "state": "良",
+    "expected": "含水率4%台でほぼ乾燥。枠は内〜フラット、直線の伸びはフラットでバイアスは出にくい。時計は約-1.6〜-0.9秒想定。"
+   },
+   "picks": [
+    {
+     "source": "https://muryou-keiba-ai.jp/predict/2026/11/12/25531/",
+     "tipster": "無料競馬AI",
+     "marks": {
+      "11": "◎",
+      "1": "○",
+      "7": "▲",
+      "5": "△",
+      "14": "☆"
+     }
+    }
+   ]
+  },
+  "20261114_08_07": {
+   "venue": "京都",
+   "race_num": 7,
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/13/190000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-14",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25532/"
+   ],
+   "going": {
+    "surface": "ダート",
+    "state": "良",
+    "expected": "含水率4%台でほぼ乾燥。枠は内〜フラット、直線の伸びはフラットでバイアスは出にくい。時計は約-1.6〜-0.9秒想定。"
+   },
+   "horses": {
+    "12": {
+     "sources": [
+      "https://www.yosounohone.com/entry/kyoto-2026-11-14"
+     ],
+     "note": "ホネ追切注目 ★2",
+     "grade": "★2"
+    }
+   },
+   "picks": [
+    {
+     "source": "https://muryou-keiba-ai.jp/predict/2026/11/12/25532/",
+     "tipster": "無料競馬AI",
+     "marks": {
+      "4": "◎",
+      "3": "○",
+      "6": "▲",
+      "5": "△",
+      "1": "☆",
+      "13": "消"
+     }
+    }
+   ]
+  },
+  "20261114_08_09": {
+   "venue": "京都",
+   "race_num": 9,
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/13/190000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-14",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25534/"
+   ],
+   "going": {
+    "surface": "ダート",
+    "state": "良",
+    "expected": "含水率4%台でほぼ乾燥。枠は内〜フラット、直線の伸びはフラットでバイアスは出にくい。時計は約-1.6〜-0.9秒想定。"
+   },
+   "horses": {
+    "5": {
+     "sources": [
+      "https://www.yosounohone.com/entry/kyoto-2026-11-14"
+     ],
+     "note": "ホネ追切注目 ★3",
+     "grade": "★3"
+    }
+   },
+   "picks": [
+    {
+     "source": "https://muryou-keiba-ai.jp/predict/2026/11/12/25534/",
+     "tipster": "無料競馬AI",
+     "marks": {
+      "4": "◎",
+      "7": "○",
+      "10": "▲",
+      "8": "△",
+      "2": "☆",
+      "5": "消"
+     }
+    }
+   ]
+  },
+  "20261114_08_10": {
+   "venue": "京都",
+   "race_num": 10,
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/13/190000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-14",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25535/"
+   ],
+   "going": {
+    "surface": "芝",
+    "state": "良",
+    "expected": "火〜水に0.5mm。土曜は曇り時々晴れで想定雨量0〜1mm。内ラチ沿いのダメージを避けられる外が有利の可能性。時計は約-2.7〜-2.0秒想定、ペースは展開次第〜差し。"
+   },
+   "horses": {
+    "2": {
+     "sources": [
+      "https://www.yosounohone.com/entry/kyoto-2026-11-14"
+     ],
+     "note": "ホネ追切注目 ★2",
+     "grade": "★2"
+    },
+    "4": {
+     "sources": [
+      "https://www.yosounohone.com/entry/kyoto-2026-11-14"
+     ],
+     "note": "ホネ追切注目 ★2",
+     "grade": "★2"
+    }
+   },
+   "picks": [
+    {
+     "source": "https://muryou-keiba-ai.jp/predict/2026/11/12/25535/",
+     "tipster": "無料競馬AI",
+     "marks": {
+      "1": "◎",
+      "7": "○",
+      "5": "▲",
+      "3": "△",
+      "8": "☆",
+      "12": "消",
+      "4": "消"
+     }
+    }
+   ]
+  },
+  "20261114_08_11": {
+   "venue": "京都",
+   "race_num": 11,
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/13/190000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-14",
+    "https://umasiru.com/archives/22314",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25536/"
+   ],
+   "going": {
+    "surface": "芝",
+    "state": "良",
+    "expected": "火〜水に0.5mm。土曜は曇り時々晴れで想定雨量0〜1mm。内ラチ沿いのダメージを避けられる外が有利の可能性。時計は約-2.7〜-2.0秒想定、ペースは展開次第〜差し。"
+   },
+   "horses": {
+    "13": {
+     "sources": [
+      "https://www.yosounohone.com/entry/kyoto-2026-11-14",
+      "https://umasiru.com/archives/22314"
+     ],
+     "note": "umasiru 追切 A(6段階S-E)／ホネ追切注目 ★2",
+     "grade": "A"
+    },
+    "7": {
+     "sources": [
+      "https://www.yosounohone.com/entry/kyoto-2026-11-14",
+      "https://umasiru.com/archives/22314"
+     ],
+     "note": "umasiru 追切 A(6段階S-E)／ホネ追切注目 ★2",
+     "grade": "A"
+    },
+    "2": {
+     "sources": [
+      "https://www.yosounohone.com/entry/kyoto-2026-11-14",
+      "https://umasiru.com/archives/22314"
+     ],
+     "note": "umasiru 追切 B(6段階S-E)／ホネ追切注目 ★2",
+     "grade": "B"
+    },
+    "11": {
+     "sources": [
+      "https://umasiru.com/archives/22314"
+     ],
+     "note": "umasiru 追切 S(6段階S-E)",
+     "grade": "S"
+    },
+    "4": {
+     "sources": [
+      "https://umasiru.com/archives/22314"
+     ],
+     "note": "umasiru 追切 A(6段階S-E)",
+     "grade": "A"
+    },
+    "8": {
+     "sources": [
+      "https://umasiru.com/archives/22314"
+     ],
+     "note": "umasiru 追切 A(6段階S-E)",
+     "grade": "A"
+    },
+    "5": {
+     "sources": [
+      "https://umasiru.com/archives/22314"
+     ],
+     "note": "umasiru 追切 A(6段階S-E)",
+     "grade": "A"
+    },
+    "3": {
+     "sources": [
+      "https://umasiru.com/archives/22314"
+     ],
+     "note": "umasiru 追切 A(6段階S-E)",
+     "grade": "A"
+    },
+    "12": {
+     "sources": [
+      "https://umasiru.com/archives/22314"
+     ],
+     "note": "umasiru 追切 B(6段階S-E)",
+     "grade": "B"
+    },
+    "1": {
+     "sources": [
+      "https://umasiru.com/archives/22314"
+     ],
+     "note": "umasiru 追切 B(6段階S-E)",
+     "grade": "B"
+    },
+    "9": {
+     "sources": [
+      "https://umasiru.com/archives/22314"
+     ],
+     "note": "umasiru 追切 C(6段階S-E)",
+     "grade": "C"
+    },
+    "10": {
+     "sources": [
+      "https://umasiru.com/archives/22314"
+     ],
+     "note": "umasiru 追切 C(6段階S-E)",
+     "grade": "C"
+    },
+    "6": {
+     "sources": [
+      "https://umasiru.com/archives/22314"
+     ],
+     "note": "umasiru 追切 C(6段階S-E)",
+     "grade": "C"
+    }
+   },
+   "picks": [
+    {
+     "source": "https://muryou-keiba-ai.jp/predict/2026/11/12/25536/",
+     "tipster": "無料競馬AI",
+     "marks": {
+      "5": "◎",
+      "6": "○",
+      "8": "▲",
+      "2": "△",
+      "1": "☆"
+     }
+    }
+   ]
+  },
+  "20261114_08_12": {
+   "venue": "京都",
+   "race_num": 12,
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/13/190000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25537/"
+   ],
+   "going": {
+    "surface": "芝",
+    "state": "良",
+    "expected": "火〜水に0.5mm。土曜は曇り時々晴れで想定雨量0〜1mm。内ラチ沿いのダメージを避けられる外が有利の可能性。時計は約-2.7〜-2.0秒想定、ペースは展開次第〜差し。"
+   },
+   "picks": [
+    {
+     "source": "https://muryou-keiba-ai.jp/predict/2026/11/12/25537/",
+     "tipster": "無料競馬AI",
+     "marks": {
+      "13": "◎",
+      "7": "○",
+      "4": "▲",
+      "16": "△",
+      "10": "☆",
+      "2": "消",
+      "11": "消",
+      "12": "消"
+     }
+    }
+   ]
+  },
+  "20261114_03_01": {
+   "venue": "福島",
+   "race_num": 1,
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/13/190000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25502/"
+   ],
+   "going": {
+    "surface": "ダート",
+    "state": "良",
+    "expected": "含水率3%台でパサパサ。使用砂はオーストラリア産で例年より速い時計が出る可能性。時計は約-1.2〜±0秒想定。近年は良馬場で前有利になることがある。"
+   },
+   "picks": [
+    {
+     "source": "https://muryou-keiba-ai.jp/predict/2026/11/12/25502/",
+     "tipster": "無料競馬AI",
+     "marks": {
+      "12": "◎",
+      "15": "○",
+      "11": "▲",
+      "13": "△",
+      "1": "☆"
+     }
+    }
+   ]
+  },
+  "20261114_03_02": {
+   "venue": "福島",
+   "race_num": 2,
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/13/190000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25503/"
+   ],
+   "going": {
+    "surface": "芝",
+    "state": "良",
+    "expected": "週間で雨なし。土曜は晴れのち曇り。枠はフラット〜外有利、ペースは展開次第〜差しになる可能性。時計は約-1.0〜+0.5秒想定。"
+   },
+   "picks": [
+    {
+     "source": "https://muryou-keiba-ai.jp/predict/2026/11/12/25503/",
+     "tipster": "無料競馬AI",
+     "marks": {
+      "15": "◎",
+      "13": "○",
+      "2": "▲",
+      "14": "△",
+      "4": "☆",
+      "1": "消",
+      "3": "消",
+      "5": "消"
+     }
+    }
+   ]
+  },
+  "20261114_03_03": {
+   "venue": "福島",
+   "race_num": 3,
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/13/190000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25504/"
+   ],
+   "going": {
+    "surface": "芝",
+    "state": "良",
+    "expected": "週間で雨なし。土曜は晴れのち曇り。枠はフラット〜外有利、ペースは展開次第〜差しになる可能性。時計は約-1.0〜+0.5秒想定。"
+   },
+   "picks": [
+    {
+     "source": "https://muryou-keiba-ai.jp/predict/2026/11/12/25504/",
+     "tipster": "無料競馬AI",
+     "marks": {
+      "13": "◎",
+      "8": "○",
+      "10": "▲",
+      "5": "△",
+      "16": "☆",
+      "11": "消",
+      "6": "消",
+      "2": "消"
+     }
+    }
+   ]
+  },
+  "20261114_03_04": {
+   "venue": "福島",
+   "race_num": 4,
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/13/190000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25505/"
+   ],
+   "going": {
+    "surface": "ダート",
+    "state": "良",
+    "expected": "含水率3%台でパサパサ。使用砂はオーストラリア産で例年より速い時計が出る可能性。時計は約-1.2〜±0秒想定。近年は良馬場で前有利になることがある。"
+   },
+   "picks": [
+    {
+     "source": "https://muryou-keiba-ai.jp/predict/2026/11/12/25505/",
+     "tipster": "無料競馬AI",
+     "marks": {
+      "9": "◎",
+      "7": "○",
+      "6": "▲",
+      "15": "△",
+      "11": "☆",
+      "13": "消"
+     }
+    }
+   ]
+  },
+  "20261114_03_05": {
+   "venue": "福島",
+   "race_num": 5,
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/13/190000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25506/"
+   ],
+   "going": {
+    "surface": "芝",
+    "state": "良",
+    "expected": "週間で雨なし。土曜は晴れのち曇り。枠はフラット〜外有利、ペースは展開次第〜差しになる可能性。時計は約-1.0〜+0.5秒想定。"
+   },
+   "picks": [
+    {
+     "source": "https://muryou-keiba-ai.jp/predict/2026/11/12/25506/",
+     "tipster": "無料競馬AI",
+     "marks": {
+      "5": "◎",
+      "13": "○",
+      "2": "▲",
+      "3": "△",
+      "11": "☆"
+     }
+    }
+   ]
+  },
+  "20261114_03_06": {
+   "venue": "福島",
+   "race_num": 6,
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/13/190000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25507/"
+   ],
+   "going": {
+    "surface": "芝",
+    "state": "良",
+    "expected": "週間で雨なし。土曜は晴れのち曇り。枠はフラット〜外有利、ペースは展開次第〜差しになる可能性。時計は約-1.0〜+0.5秒想定。"
+   },
+   "picks": [
+    {
+     "source": "https://muryou-keiba-ai.jp/predict/2026/11/12/25507/",
+     "tipster": "無料競馬AI",
+     "marks": {
+      "14": "◎",
+      "7": "○",
+      "3": "▲",
+      "15": "△",
+      "8": "☆",
+      "9": "消",
+      "4": "消",
+      "6": "消",
+      "11": "消"
+     }
+    }
+   ]
+  },
+  "20261114_03_07": {
+   "venue": "福島",
+   "race_num": 7,
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/13/190000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25508/"
+   ],
+   "going": {
+    "surface": "ダート",
+    "state": "良",
+    "expected": "含水率3%台でパサパサ。使用砂はオーストラリア産で例年より速い時計が出る可能性。時計は約-1.2〜±0秒想定。近年は良馬場で前有利になることがある。"
+   },
+   "picks": [
+    {
+     "source": "https://muryou-keiba-ai.jp/predict/2026/11/12/25508/",
+     "tipster": "無料競馬AI",
+     "marks": {
+      "3": "◎",
+      "1": "○",
+      "10": "▲",
+      "7": "△",
+      "14": "☆"
+     }
+    }
+   ]
+  },
+  "20261114_03_08": {
+   "venue": "福島",
+   "race_num": 8,
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/13/190000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25509/"
+   ],
+   "going": {
+    "surface": "芝",
+    "state": "良",
+    "expected": "週間で雨なし。土曜は晴れのち曇り。枠はフラット〜外有利、ペースは展開次第〜差しになる可能性。時計は約-1.0〜+0.5秒想定。"
+   },
+   "picks": [
+    {
+     "source": "https://muryou-keiba-ai.jp/predict/2026/11/12/25509/",
+     "tipster": "無料競馬AI",
+     "marks": {
+      "9": "◎",
+      "16": "○",
+      "4": "▲",
+      "10": "△",
+      "5": "☆",
+      "6": "消",
+      "13": "消",
+      "2": "消"
+     }
+    }
+   ]
+  },
+  "20261114_03_09": {
+   "venue": "福島",
+   "race_num": 9,
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/13/190000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25510/"
+   ],
+   "going": {
+    "surface": "芝",
+    "state": "良",
+    "expected": "週間で雨なし。土曜は晴れのち曇り。枠はフラット〜外有利、ペースは展開次第〜差しになる可能性。時計は約-1.0〜+0.5秒想定。"
+   },
+   "picks": [
+    {
+     "source": "https://muryou-keiba-ai.jp/predict/2026/11/12/25510/",
+     "tipster": "無料競馬AI",
+     "marks": {
+      "2": "◎",
+      "11": "○",
+      "6": "▲",
+      "13": "△",
+      "10": "☆",
+      "4": "消"
+     }
+    }
+   ]
+  },
+  "20261114_03_10": {
+   "venue": "福島",
+   "race_num": 10,
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/13/190000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25511/"
+   ],
+   "going": {
+    "surface": "ダート",
+    "state": "良",
+    "expected": "含水率3%台でパサパサ。使用砂はオーストラリア産で例年より速い時計が出る可能性。時計は約-1.2〜±0秒想定。近年は良馬場で前有利になることがある。"
+   },
+   "picks": [
+    {
+     "source": "https://muryou-keiba-ai.jp/predict/2026/11/12/25511/",
+     "tipster": "無料競馬AI",
+     "marks": {
+      "10": "◎",
+      "5": "○",
+      "7": "▲",
+      "15": "△",
+      "6": "☆",
+      "3": "消"
+     }
+    }
+   ]
+  },
+  "20261114_03_11": {
+   "venue": "福島",
+   "race_num": 11,
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/13/190000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25512/"
+   ],
+   "going": {
+    "surface": "ダート",
+    "state": "良",
+    "expected": "含水率3%台でパサパサ。使用砂はオーストラリア産で例年より速い時計が出る可能性。時計は約-1.2〜±0秒想定。近年は良馬場で前有利になることがある。"
+   },
+   "picks": [
+    {
+     "source": "https://muryou-keiba-ai.jp/predict/2026/11/12/25512/",
+     "tipster": "無料競馬AI",
+     "marks": {
+      "9": "◎",
+      "2": "○",
+      "1": "▲",
+      "3": "△",
+      "12": "☆"
+     }
+    }
+   ]
+  },
+  "20261114_03_12": {
+   "venue": "福島",
+   "race_num": 12,
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/13/190000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25513/"
+   ],
+   "going": {
+    "surface": "芝",
+    "state": "良",
+    "expected": "週間で雨なし。土曜は晴れのち曇り。枠はフラット〜外有利、ペースは展開次第〜差しになる可能性。時計は約-1.0〜+0.5秒想定。"
+   },
+   "picks": [
+    {
+     "source": "https://muryou-keiba-ai.jp/predict/2026/11/12/25513/",
+     "tipster": "無料競馬AI",
+     "marks": {
+      "5": "◎",
+      "4": "○",
+      "11": "▲",
+      "12": "△",
+      "15": "☆",
+      "8": "消",
+      "1": "消"
+     }
+    }
+   ]
   }
  }
 }
