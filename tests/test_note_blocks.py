@@ -166,8 +166,27 @@ class TestPage:
         assert '### 買い目' not in html
         assert '◎にした根拠' not in html
 
-    def test_workflow_builds_the_file_and_publishes_it(self):
+    def test_workflow_builds_the_file(self):
         wf = open(os.path.join(BASE, '.github', 'workflows', 'weekend.yml'),
                   encoding='utf-8').read()
         assert 'build_note_blocks.py' in wf
-        assert 'note_blocks.json' in wf       # Pages にも配る
+
+    def test_every_pages_deploy_publishes_it(self):
+        """Pages を配るワークフローの配布リストに漏れが無いこと。
+
+        1か所だけ直して他が抜けると、デプロイしたワークフロー次第で
+        ブロックが出たり出なかったりする（アプリは raw への保険で動くが、
+        その日は Pages から取れないまま気づけない）。
+        ⚠ `friday-predict.yml` は使っていない（CLAUDE.md §3）ので対象外。
+        """
+        wf_dir = os.path.join(BASE, '.github', 'workflows')
+        checked = 0
+        for name in os.listdir(wf_dir):
+            if not name.endswith('.yml') or name == 'friday-predict.yml':
+                continue
+            wf = open(os.path.join(wf_dir, name), encoding='utf-8').read()
+            if 'course_profiles.json' not in wf:     # Pages を配らない回
+                continue
+            checked += 1
+            assert 'note_blocks.json' in wf, name
+        assert checked >= 3

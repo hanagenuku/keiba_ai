@@ -201,7 +201,7 @@ jobs:
           cp index.html _site/
           cp .nojekyll _site/
           mkdir -p _site/data
-          for f in latest.json stats.json workflow_status.json note_schema.json course_profiles.json; do
+          for f in latest.json stats.json workflow_status.json note_schema.json course_profiles.json note_blocks.json; do
             [ -f "data/$f" ] && cp "data/$f" "_site/data/$f"
           done
 
