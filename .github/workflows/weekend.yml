@@ -87,6 +87,18 @@ jobs:
           fi
           python scripts/weekend.py --mode "$MODE" $FORCE_FLAG
 
+      # アプリの出走表の下に出す note 用テキスト（data/note_blocks.json）。
+      # ユーザー依頼（2026-11-14）:「商品になる予定のレースの予想根拠コメントと
+      # 買い目をアプリのレース出走表の下部に置いてくれないか。そのままコピーして
+      # note に貼り付けられるように」
+      # 🔴 本文は記事と同じ `article.build_race_section()` で作る（アプリ側で
+      #   文章を組み立てない）。対象は `scope.article_kind()` が有料／無料と
+      #   判定したレースだけ。予想は何も変えない。
+      # ⚠ web見解の節は `data/claude_web_findings.json` が当日のものに入れ替わって
+      #   から（11:30 / 14:00 の更新）入る。朝いちばんの生成では入らない。
+      - name: Build note blocks (非ブロッキング)
+        run: python scripts/build_note_blocks.py --base-dir . || true
+
       - name: Ingest pre-race odds log
         run: python scripts/ingest_odds_log.py
         env:
@@ -223,7 +235,7 @@ jobs:
           cp index.html _site/
           cp .nojekyll _site/
           mkdir -p _site/data
-          for f in latest.json stats.json workflow_status.json note_schema.json course_profiles.json; do
+          for f in latest.json stats.json workflow_status.json note_schema.json course_profiles.json note_blocks.json; do
             [ -f "data/$f" ] && cp "data/$f" "_site/data/$f"
           done
 
