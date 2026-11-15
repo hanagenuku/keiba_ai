@@ -1,6 +1,6 @@
 {
  "schema_version": 1,
- "updated_at": "2026-11-14T18:50:57.111642+09:00",
+ "updated_at": "2026-11-15T09:05:42.931720+09:00",
  "entries": [
   {
    "date": "2026-11-14",
@@ -204,6 +204,91 @@
     "attached_at": "2026-11-14T18:50:57.111642+09:00",
     "source": "history.db+keiba.db"
    }
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_10",
+   "venue": "福島",
+   "race_num": 10,
+   "num": 12,
+   "name": "アスクデッドヒート",
+   "prob": 0.6585,
+   "tau": 0.6,
+   "pop": 2,
+   "odds": 6.3,
+   "rl_rank": 2,
+   "solo_rank": 1,
+   "p1_num": 7,
+   "snapshot": "2026-11-15T08:51:41.449351+09:00",
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_12",
+   "venue": "福島",
+   "race_num": 12,
+   "num": 7,
+   "name": "ウイルソン",
+   "prob": 0.6667,
+   "tau": 0.6,
+   "pop": 4,
+   "odds": 8.2,
+   "rl_rank": 3,
+   "solo_rank": 3,
+   "p1_num": 6,
+   "snapshot": "2026-11-15T08:51:41.449351+09:00",
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_05",
+   "venue": "東京",
+   "race_num": 5,
+   "num": 2,
+   "name": "チェンジオブペース",
+   "prob": 0.6585,
+   "tau": 0.6,
+   "pop": 7,
+   "odds": 13.5,
+   "rl_rank": 7,
+   "solo_rank": 5,
+   "p1_num": 9,
+   "snapshot": "2026-11-15T08:51:41.449351+09:00",
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_04",
+   "venue": "京都",
+   "race_num": 4,
+   "num": 6,
+   "name": "ヤマニンウラカン",
+   "prob": 0.6667,
+   "tau": 0.6,
+   "pop": 5,
+   "odds": 11.9,
+   "rl_rank": 5,
+   "solo_rank": 1,
+   "p1_num": 12,
+   "snapshot": "2026-11-15T08:51:41.449351+09:00",
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_07",
+   "venue": "京都",
+   "race_num": 7,
+   "num": 17,
+   "name": "ルーチェブリラーレ",
+   "prob": 0.6667,
+   "tau": 0.6,
+   "pop": 2,
+   "odds": 4.9,
+   "rl_rank": 2,
+   "solo_rank": 2,
+   "p1_num": 7,
+   "snapshot": "2026-11-15T08:51:41.449351+09:00",
+   "result": null
   }
  ]
 }
