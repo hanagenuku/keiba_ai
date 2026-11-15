@@ -77,6 +77,26 @@ ROI予測150%）。そのためこの層は **AI側の数字を1つも変えな�
 🔑 この誤りのせいで **JRA公式が 2018年〜のクッション値・含水率を開催単位の PDF で
 公開していること**が見えていなかった（`websig/CANDIDATES_2026-10-23.md` §2-D）。
 
+🔴 **2026-11-15 再訂正: いまは会場ごとの馬場ページ `/keiba/baba/<会場>.html` も 403。**
+2026-11-14（京都・福島）と 2026-11-15（東京・京都・福島）の朝の収集で実際に止まった。
+この日に測り直した結果（WebFetch。UA の偽装はしていない）:
+
+| URL | 結果 |
+|---|---|
+| `https://www.jra.go.jp/` | 200 |
+| `/keiba/` | 200 |
+| `/keiba/baba/` | **200**（中身は**東京**の馬場情報。クッション値・含水率が読める） |
+| `/keiba/baba/tokyo.html` | **403** |
+| `/keiba/baba/kyoto.html` | **403** |
+| `/keiba/baba/fukushima.html` | **403** |
+| `/keiba/baba/archive/2026pdf/tokyo01.pdf` | 200（PDF は今も取れる） |
+| `/sitemap.xml` | **403** |
+
+→ 朝の収集では **`/keiba/baba/` から取れるのは東京だけ**。京都・福島の当日の馬場状態は
+この経路では取れないので、`bloodline-trackbias.work` の想定に頼るか「取れなかった」と書く。
+⚠ 10-23 の測定（`/keiba/baba/` 200）自体は今も再現する。変わったのは**会場ごとの .html**
+なので、「JRA 全体が 403」とも「403 は sitemap だけ」とも書かないこと。
+
 ⚠ **2026-10-22 追記: この表と `data/source_registry.json` が食い違っていた。**
 `www.yosounohone.com`（2026-10-12 に実運用で見つけた）は**どちらにも載っておらず**、
 `www.keibanomiryoku.com` / `muryou-keiba-ai.jp` はこの表にだけあって台帳に無かった。
