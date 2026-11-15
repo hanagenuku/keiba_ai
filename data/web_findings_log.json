@@ -1,6 +1,6 @@
 {
  "schema_version": 2,
- "updated_at": "2026-11-14T18:50:57.218463+09:00",
+ "updated_at": "2026-11-15T11:43:11.762134+09:00",
  "entries": [
   {
    "date": "2026-10-10",
@@ -18223,6 +18223,7185 @@
     "fukusho_payout": 150,
     "fukusho_sold": true
    }
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_01",
+   "venue": "福島",
+   "race_num": 1,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25538/"
+   ],
+   "kind": "going",
+   "key": "ダート",
+   "said": {
+    "surface": "ダート",
+    "state": "",
+    "expected": "想定は良〜不良（想定雨量1〜15mm）。道悪では外枠有利になることがある。直線の伸びはフラット。脚質は前〜展開次第（前有利になることがある）。時計は-4.0〜-1.0秒想定。",
+    "expected_state": "不良",
+    "summary": null
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25538/"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_01",
+   "venue": "福島",
+   "race_num": 1,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25538/"
+   ],
+   "kind": "pick",
+   "key": "11@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "11",
+   "said": {
+    "mark": "▲",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25538/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_01",
+   "venue": "福島",
+   "race_num": 1,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25538/"
+   ],
+   "kind": "pick",
+   "key": "12@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "12",
+   "said": {
+    "mark": "☆",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25538/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_01",
+   "venue": "福島",
+   "race_num": 1,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25538/"
+   ],
+   "kind": "pick",
+   "key": "2@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "2",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25538/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_01",
+   "venue": "福島",
+   "race_num": 1,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25538/"
+   ],
+   "kind": "pick",
+   "key": "7@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "7",
+   "said": {
+    "mark": "△",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25538/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_01",
+   "venue": "福島",
+   "race_num": 1,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25538/"
+   ],
+   "kind": "pick",
+   "key": "8@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "8",
+   "said": {
+    "mark": "◎",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25538/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_01",
+   "venue": "福島",
+   "race_num": 1,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25538/"
+   ],
+   "kind": "pick",
+   "key": "9@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "9",
+   "said": {
+    "mark": "○",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25538/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_02",
+   "venue": "福島",
+   "race_num": 2,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25539/"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": "",
+    "expected": "想定は良〜重（想定雨量1〜15mm）。枠はフラット〜外、内ラチ沿いに傷みが出れば外枠有利の可能性。直線の伸びはフラット〜やや外。脚質は展開次第〜差し。時計は±0〜+3.0秒想定。",
+    "expected_state": "重",
+    "summary": null
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25539/"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_02",
+   "venue": "福島",
+   "race_num": 2,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25539/"
+   ],
+   "kind": "pick",
+   "key": "10@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "10",
+   "said": {
+    "mark": "△",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25539/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_02",
+   "venue": "福島",
+   "race_num": 2,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25539/"
+   ],
+   "kind": "pick",
+   "key": "11@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "11",
+   "said": {
+    "mark": "○",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25539/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_02",
+   "venue": "福島",
+   "race_num": 2,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25539/"
+   ],
+   "kind": "pick",
+   "key": "13@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "13",
+   "said": {
+    "mark": "▲",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25539/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_02",
+   "venue": "福島",
+   "race_num": 2,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25539/"
+   ],
+   "kind": "pick",
+   "key": "3@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "3",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25539/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_02",
+   "venue": "福島",
+   "race_num": 2,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25539/"
+   ],
+   "kind": "pick",
+   "key": "5@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "5",
+   "said": {
+    "mark": "◎",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25539/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_02",
+   "venue": "福島",
+   "race_num": 2,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25539/"
+   ],
+   "kind": "pick",
+   "key": "6@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "6",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25539/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_02",
+   "venue": "福島",
+   "race_num": 2,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25539/"
+   ],
+   "kind": "pick",
+   "key": "7@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "7",
+   "said": {
+    "mark": "☆",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25539/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_03",
+   "venue": "福島",
+   "race_num": 3,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25540/"
+   ],
+   "kind": "going",
+   "key": "ダート",
+   "said": {
+    "surface": "ダート",
+    "state": "",
+    "expected": "想定は良〜不良（想定雨量1〜15mm）。道悪では外枠有利になることがある。直線の伸びはフラット。脚質は前〜展開次第（前有利になることがある）。時計は-4.0〜-1.0秒想定。",
+    "expected_state": "不良",
+    "summary": null
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25540/"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_03",
+   "venue": "福島",
+   "race_num": 3,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25540/"
+   ],
+   "kind": "pick",
+   "key": "12@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "12",
+   "said": {
+    "mark": "○",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25540/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_03",
+   "venue": "福島",
+   "race_num": 3,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25540/"
+   ],
+   "kind": "pick",
+   "key": "14@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "14",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25540/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_03",
+   "venue": "福島",
+   "race_num": 3,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25540/"
+   ],
+   "kind": "pick",
+   "key": "15@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "15",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25540/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_03",
+   "venue": "福島",
+   "race_num": 3,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25540/"
+   ],
+   "kind": "pick",
+   "key": "1@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "1",
+   "said": {
+    "mark": "▲",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25540/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_03",
+   "venue": "福島",
+   "race_num": 3,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25540/"
+   ],
+   "kind": "pick",
+   "key": "3@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "3",
+   "said": {
+    "mark": "◎",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25540/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_03",
+   "venue": "福島",
+   "race_num": 3,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25540/"
+   ],
+   "kind": "pick",
+   "key": "4@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "4",
+   "said": {
+    "mark": "☆",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25540/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_03",
+   "venue": "福島",
+   "race_num": 3,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25540/"
+   ],
+   "kind": "pick",
+   "key": "6@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "6",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25540/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_03",
+   "venue": "福島",
+   "race_num": 3,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25540/"
+   ],
+   "kind": "pick",
+   "key": "7@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "7",
+   "said": {
+    "mark": "△",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25540/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_03",
+   "venue": "福島",
+   "race_num": 3,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25540/"
+   ],
+   "kind": "pick",
+   "key": "9@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "9",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25540/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_06",
+   "venue": "福島",
+   "race_num": 6,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25543/"
+   ],
+   "kind": "going",
+   "key": "ダート",
+   "said": {
+    "surface": "ダート",
+    "state": "",
+    "expected": "想定は良〜不良（想定雨量1〜15mm）。道悪では外枠有利になることがある。直線の伸びはフラット。脚質は前〜展開次第（前有利になることがある）。時計は-4.0〜-1.0秒想定。",
+    "expected_state": "不良",
+    "summary": null
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25543/"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_06",
+   "venue": "福島",
+   "race_num": 6,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25543/"
+   ],
+   "kind": "pick",
+   "key": "3@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "3",
+   "said": {
+    "mark": "▲",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25543/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_06",
+   "venue": "福島",
+   "race_num": 6,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25543/"
+   ],
+   "kind": "pick",
+   "key": "4@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "4",
+   "said": {
+    "mark": "◎",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25543/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_06",
+   "venue": "福島",
+   "race_num": 6,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25543/"
+   ],
+   "kind": "pick",
+   "key": "6@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "6",
+   "said": {
+    "mark": "☆",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25543/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_06",
+   "venue": "福島",
+   "race_num": 6,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25543/"
+   ],
+   "kind": "pick",
+   "key": "7@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "7",
+   "said": {
+    "mark": "○",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25543/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_06",
+   "venue": "福島",
+   "race_num": 6,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25543/"
+   ],
+   "kind": "pick",
+   "key": "8@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "8",
+   "said": {
+    "mark": "△",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25543/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_07",
+   "venue": "福島",
+   "race_num": 7,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25544/"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": "",
+    "expected": "想定は良〜重（想定雨量1〜15mm）。枠はフラット〜外、内ラチ沿いに傷みが出れば外枠有利の可能性。直線の伸びはフラット〜やや外。脚質は展開次第〜差し。時計は±0〜+3.0秒想定。",
+    "expected_state": "重",
+    "summary": null
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25544/"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_07",
+   "venue": "福島",
+   "race_num": 7,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25544/"
+   ],
+   "kind": "pick",
+   "key": "10@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "10",
+   "said": {
+    "mark": "☆",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25544/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_07",
+   "venue": "福島",
+   "race_num": 7,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25544/"
+   ],
+   "kind": "pick",
+   "key": "11@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "11",
+   "said": {
+    "mark": "▲",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25544/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_07",
+   "venue": "福島",
+   "race_num": 7,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25544/"
+   ],
+   "kind": "pick",
+   "key": "15@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "15",
+   "said": {
+    "mark": "○",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25544/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_07",
+   "venue": "福島",
+   "race_num": 7,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25544/"
+   ],
+   "kind": "pick",
+   "key": "4@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "4",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25544/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_07",
+   "venue": "福島",
+   "race_num": 7,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25544/"
+   ],
+   "kind": "pick",
+   "key": "6@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "6",
+   "said": {
+    "mark": "◎",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25544/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_07",
+   "venue": "福島",
+   "race_num": 7,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25544/"
+   ],
+   "kind": "pick",
+   "key": "8@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "8",
+   "said": {
+    "mark": "△",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25544/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_07",
+   "venue": "福島",
+   "race_num": 7,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25544/"
+   ],
+   "kind": "pick",
+   "key": "9@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "9",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25544/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_08",
+   "venue": "福島",
+   "race_num": 8,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25545/"
+   ],
+   "kind": "going",
+   "key": "ダート",
+   "said": {
+    "surface": "ダート",
+    "state": "",
+    "expected": "想定は良〜不良（想定雨量1〜15mm）。道悪では外枠有利になることがある。直線の伸びはフラット。脚質は前〜展開次第（前有利になることがある）。時計は-4.0〜-1.0秒想定。",
+    "expected_state": "不良",
+    "summary": null
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25545/"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_08",
+   "venue": "福島",
+   "race_num": 8,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25545/"
+   ],
+   "kind": "pick",
+   "key": "11@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "11",
+   "said": {
+    "mark": "◎",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25545/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_08",
+   "venue": "福島",
+   "race_num": 8,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25545/"
+   ],
+   "kind": "pick",
+   "key": "12@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "12",
+   "said": {
+    "mark": "△",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25545/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_08",
+   "venue": "福島",
+   "race_num": 8,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25545/"
+   ],
+   "kind": "pick",
+   "key": "13@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "13",
+   "said": {
+    "mark": "○",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25545/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_08",
+   "venue": "福島",
+   "race_num": 8,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25545/"
+   ],
+   "kind": "pick",
+   "key": "15@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "15",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25545/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_08",
+   "venue": "福島",
+   "race_num": 8,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25545/"
+   ],
+   "kind": "pick",
+   "key": "1@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "1",
+   "said": {
+    "mark": "☆",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25545/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_08",
+   "venue": "福島",
+   "race_num": 8,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25545/"
+   ],
+   "kind": "pick",
+   "key": "2@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "2",
+   "said": {
+    "mark": "▲",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25545/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_09",
+   "venue": "福島",
+   "race_num": 9,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25546/"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": "",
+    "expected": "想定は良〜重（想定雨量1〜15mm）。枠はフラット〜外、内ラチ沿いに傷みが出れば外枠有利の可能性。直線の伸びはフラット〜やや外。脚質は展開次第〜差し。時計は±0〜+3.0秒想定。",
+    "expected_state": "重",
+    "summary": null
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25546/"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_09",
+   "venue": "福島",
+   "race_num": 9,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25546/"
+   ],
+   "kind": "pick",
+   "key": "12@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "12",
+   "said": {
+    "mark": "◎",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25546/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_09",
+   "venue": "福島",
+   "race_num": 9,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25546/"
+   ],
+   "kind": "pick",
+   "key": "1@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "1",
+   "said": {
+    "mark": "☆",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25546/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_09",
+   "venue": "福島",
+   "race_num": 9,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25546/"
+   ],
+   "kind": "pick",
+   "key": "3@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "3",
+   "said": {
+    "mark": "▲",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25546/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_09",
+   "venue": "福島",
+   "race_num": 9,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25546/"
+   ],
+   "kind": "pick",
+   "key": "4@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "4",
+   "said": {
+    "mark": "○",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25546/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_09",
+   "venue": "福島",
+   "race_num": 9,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25546/"
+   ],
+   "kind": "pick",
+   "key": "6@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "6",
+   "said": {
+    "mark": "△",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25546/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_09",
+   "venue": "福島",
+   "race_num": 9,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25546/"
+   ],
+   "kind": "pick",
+   "key": "9@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "9",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25546/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_10",
+   "venue": "福島",
+   "race_num": 10,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25547/"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": "",
+    "expected": "想定は良〜重（想定雨量1〜15mm）。枠はフラット〜外、内ラチ沿いに傷みが出れば外枠有利の可能性。直線の伸びはフラット〜やや外。脚質は展開次第〜差し。時計は±0〜+3.0秒想定。",
+    "expected_state": "重",
+    "summary": null
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25547/"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_10",
+   "venue": "福島",
+   "race_num": 10,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25547/"
+   ],
+   "kind": "pick",
+   "key": "10@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "10",
+   "said": {
+    "mark": "☆",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25547/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_10",
+   "venue": "福島",
+   "race_num": 10,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25547/"
+   ],
+   "kind": "pick",
+   "key": "12@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "12",
+   "said": {
+    "mark": "○",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25547/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_10",
+   "venue": "福島",
+   "race_num": 10,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25547/"
+   ],
+   "kind": "pick",
+   "key": "1@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "1",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25547/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_10",
+   "venue": "福島",
+   "race_num": 10,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25547/"
+   ],
+   "kind": "pick",
+   "key": "5@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "5",
+   "said": {
+    "mark": "◎",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25547/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_10",
+   "venue": "福島",
+   "race_num": 10,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25547/"
+   ],
+   "kind": "pick",
+   "key": "6@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "6",
+   "said": {
+    "mark": "△",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25547/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_10",
+   "venue": "福島",
+   "race_num": 10,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25547/"
+   ],
+   "kind": "pick",
+   "key": "7@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "7",
+   "said": {
+    "mark": "▲",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25547/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_10",
+   "venue": "福島",
+   "race_num": 10,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25547/"
+   ],
+   "kind": "pick",
+   "key": "9@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "9",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25547/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_11",
+   "venue": "福島",
+   "race_num": 11,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25548/"
+   ],
+   "kind": "going",
+   "key": "ダート",
+   "said": {
+    "surface": "ダート",
+    "state": "",
+    "expected": "想定は良〜不良（想定雨量1〜15mm）。道悪では外枠有利になることがある。直線の伸びはフラット。脚質は前〜展開次第（前有利になることがある）。時計は-4.0〜-1.0秒想定。",
+    "expected_state": "不良",
+    "summary": null
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25548/"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_11",
+   "venue": "福島",
+   "race_num": 11,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25548/"
+   ],
+   "kind": "pick",
+   "key": "13@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "13",
+   "said": {
+    "mark": "○",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25548/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_11",
+   "venue": "福島",
+   "race_num": 11,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25548/"
+   ],
+   "kind": "pick",
+   "key": "14@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "14",
+   "said": {
+    "mark": "△",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25548/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_11",
+   "venue": "福島",
+   "race_num": 11,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25548/"
+   ],
+   "kind": "pick",
+   "key": "1@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "1",
+   "said": {
+    "mark": "☆",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25548/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_11",
+   "venue": "福島",
+   "race_num": 11,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25548/"
+   ],
+   "kind": "pick",
+   "key": "2@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "2",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25548/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_11",
+   "venue": "福島",
+   "race_num": 11,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25548/"
+   ],
+   "kind": "pick",
+   "key": "6@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "6",
+   "said": {
+    "mark": "◎",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25548/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_11",
+   "venue": "福島",
+   "race_num": 11,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25548/"
+   ],
+   "kind": "pick",
+   "key": "7@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "7",
+   "said": {
+    "mark": "▲",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25548/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_12",
+   "venue": "福島",
+   "race_num": 12,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25549/"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": "",
+    "expected": "想定は良〜重（想定雨量1〜15mm）。枠はフラット〜外、内ラチ沿いに傷みが出れば外枠有利の可能性。直線の伸びはフラット〜やや外。脚質は展開次第〜差し。時計は±0〜+3.0秒想定。",
+    "expected_state": "重",
+    "summary": null
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25549/"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_12",
+   "venue": "福島",
+   "race_num": 12,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25549/"
+   ],
+   "kind": "pick",
+   "key": "10@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "10",
+   "said": {
+    "mark": "○",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25549/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_12",
+   "venue": "福島",
+   "race_num": 12,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25549/"
+   ],
+   "kind": "pick",
+   "key": "14@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "14",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25549/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_12",
+   "venue": "福島",
+   "race_num": 12,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25549/"
+   ],
+   "kind": "pick",
+   "key": "15@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "15",
+   "said": {
+    "mark": "▲",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25549/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_12",
+   "venue": "福島",
+   "race_num": 12,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25549/"
+   ],
+   "kind": "pick",
+   "key": "4@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "4",
+   "said": {
+    "mark": "△",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25549/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_12",
+   "venue": "福島",
+   "race_num": 12,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25549/"
+   ],
+   "kind": "pick",
+   "key": "5@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "5",
+   "said": {
+    "mark": "☆",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25549/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_12",
+   "venue": "福島",
+   "race_num": 12,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25549/"
+   ],
+   "kind": "pick",
+   "key": "7@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "7",
+   "said": {
+    "mark": "◎",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25549/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_01",
+   "venue": "東京",
+   "race_num": 1,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25550/"
+   ],
+   "kind": "going",
+   "key": "ダート",
+   "said": {
+    "surface": "ダート",
+    "state": "",
+    "expected": "想定は良〜不良（想定雨量0〜15mm）。枠は内〜外で今開催はバイアスが出にくい想定。直線の伸びはフラット。脚質は前〜差し。時計は雨前で約-1.3〜-0.7秒想定。",
+    "expected_state": "不良",
+    "summary": null
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25550/"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_01",
+   "venue": "東京",
+   "race_num": 1,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25550/"
+   ],
+   "kind": "pick",
+   "key": "11@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "11",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25550/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_01",
+   "venue": "東京",
+   "race_num": 1,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25550/"
+   ],
+   "kind": "pick",
+   "key": "12@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "12",
+   "said": {
+    "mark": "▲",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25550/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_01",
+   "venue": "東京",
+   "race_num": 1,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25550/"
+   ],
+   "kind": "pick",
+   "key": "14@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "14",
+   "said": {
+    "mark": "△",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25550/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_01",
+   "venue": "東京",
+   "race_num": 1,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25550/"
+   ],
+   "kind": "pick",
+   "key": "16@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "16",
+   "said": {
+    "mark": "☆",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25550/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_01",
+   "venue": "東京",
+   "race_num": 1,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25550/"
+   ],
+   "kind": "pick",
+   "key": "2@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "2",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25550/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_01",
+   "venue": "東京",
+   "race_num": 1,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25550/"
+   ],
+   "kind": "pick",
+   "key": "3@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "3",
+   "said": {
+    "mark": "◎",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25550/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_01",
+   "venue": "東京",
+   "race_num": 1,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25550/"
+   ],
+   "kind": "pick",
+   "key": "7@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "7",
+   "said": {
+    "mark": "○",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25550/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_02",
+   "venue": "東京",
+   "race_num": 2,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25551/"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": "",
+    "expected": "想定は良〜重（想定雨量0〜15mm）。枠はフラット〜外、内ラチ沿いに傷みが出れば外枠有利の可能性。直線の伸びはフラット〜やや外。脚質は展開次第〜差し。時計は雨前で約-2.3〜-2.0秒想定。",
+    "expected_state": "重",
+    "summary": null
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25551/"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_02",
+   "venue": "東京",
+   "race_num": 2,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25551/"
+   ],
+   "kind": "pick",
+   "key": "10@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "10",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25551/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_02",
+   "venue": "東京",
+   "race_num": 2,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25551/"
+   ],
+   "kind": "pick",
+   "key": "11@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "11",
+   "said": {
+    "mark": "◎",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25551/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_02",
+   "venue": "東京",
+   "race_num": 2,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25551/"
+   ],
+   "kind": "pick",
+   "key": "16@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "16",
+   "said": {
+    "mark": "☆",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25551/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_02",
+   "venue": "東京",
+   "race_num": 2,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25551/"
+   ],
+   "kind": "pick",
+   "key": "17@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "17",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25551/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_02",
+   "venue": "東京",
+   "race_num": 2,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25551/"
+   ],
+   "kind": "pick",
+   "key": "1@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "1",
+   "said": {
+    "mark": "○",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25551/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_02",
+   "venue": "東京",
+   "race_num": 2,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25551/"
+   ],
+   "kind": "pick",
+   "key": "2@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "2",
+   "said": {
+    "mark": "△",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25551/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_02",
+   "venue": "東京",
+   "race_num": 2,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25551/"
+   ],
+   "kind": "pick",
+   "key": "5@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "5",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25551/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_02",
+   "venue": "東京",
+   "race_num": 2,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25551/"
+   ],
+   "kind": "pick",
+   "key": "6@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "6",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25551/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_02",
+   "venue": "東京",
+   "race_num": 2,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25551/"
+   ],
+   "kind": "pick",
+   "key": "8@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "8",
+   "said": {
+    "mark": "▲",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25551/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_03",
+   "venue": "東京",
+   "race_num": 3,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25552/"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": "",
+    "expected": "想定は良〜重（想定雨量0〜15mm）。枠はフラット〜外、内ラチ沿いに傷みが出れば外枠有利の可能性。直線の伸びはフラット〜やや外。脚質は展開次第〜差し。時計は雨前で約-2.3〜-2.0秒想定。",
+    "expected_state": "重",
+    "summary": null
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25552/"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_03",
+   "venue": "東京",
+   "race_num": 3,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25552/"
+   ],
+   "kind": "pick",
+   "key": "10@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "10",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25552/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_03",
+   "venue": "東京",
+   "race_num": 3,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25552/"
+   ],
+   "kind": "pick",
+   "key": "11@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "11",
+   "said": {
+    "mark": "▲",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25552/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_03",
+   "venue": "東京",
+   "race_num": 3,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25552/"
+   ],
+   "kind": "pick",
+   "key": "12@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "12",
+   "said": {
+    "mark": "△",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25552/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_03",
+   "venue": "東京",
+   "race_num": 3,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25552/"
+   ],
+   "kind": "pick",
+   "key": "13@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "13",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25552/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_03",
+   "venue": "東京",
+   "race_num": 3,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25552/"
+   ],
+   "kind": "pick",
+   "key": "14@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "14",
+   "said": {
+    "mark": "☆",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25552/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_03",
+   "venue": "東京",
+   "race_num": 3,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25552/"
+   ],
+   "kind": "pick",
+   "key": "3@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "3",
+   "said": {
+    "mark": "◎",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25552/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_03",
+   "venue": "東京",
+   "race_num": 3,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25552/"
+   ],
+   "kind": "pick",
+   "key": "7@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "7",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25552/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_03",
+   "venue": "東京",
+   "race_num": 3,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25552/"
+   ],
+   "kind": "pick",
+   "key": "8@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "8",
+   "said": {
+    "mark": "○",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25552/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_04",
+   "venue": "東京",
+   "race_num": 4,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25553/"
+   ],
+   "kind": "going",
+   "key": "ダート",
+   "said": {
+    "surface": "ダート",
+    "state": "",
+    "expected": "想定は良〜不良（想定雨量0〜15mm）。枠は内〜外で今開催はバイアスが出にくい想定。直線の伸びはフラット。脚質は前〜差し。時計は雨前で約-1.3〜-0.7秒想定。",
+    "expected_state": "不良",
+    "summary": null
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25553/"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_04",
+   "venue": "東京",
+   "race_num": 4,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25553/"
+   ],
+   "kind": "pick",
+   "key": "10@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "10",
+   "said": {
+    "mark": "◎",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25553/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_04",
+   "venue": "東京",
+   "race_num": 4,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25553/"
+   ],
+   "kind": "pick",
+   "key": "12@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "12",
+   "said": {
+    "mark": "▲",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25553/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_04",
+   "venue": "東京",
+   "race_num": 4,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25553/"
+   ],
+   "kind": "pick",
+   "key": "2@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "2",
+   "said": {
+    "mark": "☆",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25553/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_04",
+   "venue": "東京",
+   "race_num": 4,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25553/"
+   ],
+   "kind": "pick",
+   "key": "8@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "8",
+   "said": {
+    "mark": "○",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25553/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_04",
+   "venue": "東京",
+   "race_num": 4,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25553/"
+   ],
+   "kind": "pick",
+   "key": "9@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "9",
+   "said": {
+    "mark": "△",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25553/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_05",
+   "venue": "東京",
+   "race_num": 5,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25554/"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": "",
+    "expected": "想定は良〜重（想定雨量0〜15mm）。枠はフラット〜外、内ラチ沿いに傷みが出れば外枠有利の可能性。直線の伸びはフラット〜やや外。脚質は展開次第〜差し。時計は雨前で約-2.3〜-2.0秒想定。",
+    "expected_state": "重",
+    "summary": null
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25554/"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_05",
+   "venue": "東京",
+   "race_num": 5,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25554/"
+   ],
+   "kind": "pick",
+   "key": "10@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "10",
+   "said": {
+    "mark": "○",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25554/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_05",
+   "venue": "東京",
+   "race_num": 5,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25554/"
+   ],
+   "kind": "pick",
+   "key": "1@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "1",
+   "said": {
+    "mark": "△",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25554/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_05",
+   "venue": "東京",
+   "race_num": 5,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25554/"
+   ],
+   "kind": "pick",
+   "key": "5@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "5",
+   "said": {
+    "mark": "▲",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25554/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_05",
+   "venue": "東京",
+   "race_num": 5,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25554/"
+   ],
+   "kind": "pick",
+   "key": "8@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "8",
+   "said": {
+    "mark": "◎",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25554/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_05",
+   "venue": "東京",
+   "race_num": 5,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25554/"
+   ],
+   "kind": "pick",
+   "key": "9@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "9",
+   "said": {
+    "mark": "☆",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25554/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_06",
+   "venue": "東京",
+   "race_num": 6,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25555/"
+   ],
+   "kind": "going",
+   "key": "ダート",
+   "said": {
+    "surface": "ダート",
+    "state": "",
+    "expected": "想定は良〜不良（想定雨量0〜15mm）。枠は内〜外で今開催はバイアスが出にくい想定。直線の伸びはフラット。脚質は前〜差し。時計は雨前で約-1.3〜-0.7秒想定。",
+    "expected_state": "不良",
+    "summary": null
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25555/"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_06",
+   "venue": "東京",
+   "race_num": 6,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25555/"
+   ],
+   "kind": "pick",
+   "key": "14@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "14",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25555/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_06",
+   "venue": "東京",
+   "race_num": 6,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25555/"
+   ],
+   "kind": "pick",
+   "key": "1@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "1",
+   "said": {
+    "mark": "▲",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25555/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_06",
+   "venue": "東京",
+   "race_num": 6,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25555/"
+   ],
+   "kind": "pick",
+   "key": "3@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "3",
+   "said": {
+    "mark": "☆",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25555/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_06",
+   "venue": "東京",
+   "race_num": 6,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25555/"
+   ],
+   "kind": "pick",
+   "key": "4@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "4",
+   "said": {
+    "mark": "◎",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25555/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_06",
+   "venue": "東京",
+   "race_num": 6,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25555/"
+   ],
+   "kind": "pick",
+   "key": "5@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "5",
+   "said": {
+    "mark": "○",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25555/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_06",
+   "venue": "東京",
+   "race_num": 6,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25555/"
+   ],
+   "kind": "pick",
+   "key": "6@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "6",
+   "said": {
+    "mark": "△",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25555/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_06",
+   "venue": "東京",
+   "race_num": 6,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25555/"
+   ],
+   "kind": "pick",
+   "key": "8@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "8",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25555/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_07",
+   "venue": "東京",
+   "race_num": 7,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25556/"
+   ],
+   "kind": "going",
+   "key": "ダート",
+   "said": {
+    "surface": "ダート",
+    "state": "",
+    "expected": "想定は良〜不良（想定雨量0〜15mm）。枠は内〜外で今開催はバイアスが出にくい想定。直線の伸びはフラット。脚質は前〜差し。時計は雨前で約-1.3〜-0.7秒想定。",
+    "expected_state": "不良",
+    "summary": null
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25556/"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_07",
+   "venue": "東京",
+   "race_num": 7,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25556/"
+   ],
+   "kind": "pick",
+   "key": "13@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "13",
+   "said": {
+    "mark": "○",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25556/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_07",
+   "venue": "東京",
+   "race_num": 7,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25556/"
+   ],
+   "kind": "pick",
+   "key": "2@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "2",
+   "said": {
+    "mark": "△",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25556/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_07",
+   "venue": "東京",
+   "race_num": 7,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25556/"
+   ],
+   "kind": "pick",
+   "key": "6@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "6",
+   "said": {
+    "mark": "☆",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25556/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_07",
+   "venue": "東京",
+   "race_num": 7,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25556/"
+   ],
+   "kind": "pick",
+   "key": "7@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "7",
+   "said": {
+    "mark": "◎",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25556/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_07",
+   "venue": "東京",
+   "race_num": 7,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25556/"
+   ],
+   "kind": "pick",
+   "key": "8@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "8",
+   "said": {
+    "mark": "▲",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25556/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_08",
+   "venue": "東京",
+   "race_num": 8,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25557/"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": "",
+    "expected": "想定は良〜重（想定雨量0〜15mm）。枠はフラット〜外、内ラチ沿いに傷みが出れば外枠有利の可能性。直線の伸びはフラット〜やや外。脚質は展開次第〜差し。時計は雨前で約-2.3〜-2.0秒想定。",
+    "expected_state": "重",
+    "summary": null
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25557/"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_08",
+   "venue": "東京",
+   "race_num": 8,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25557/"
+   ],
+   "kind": "pick",
+   "key": "11@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "11",
+   "said": {
+    "mark": "▲",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25557/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_08",
+   "venue": "東京",
+   "race_num": 8,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25557/"
+   ],
+   "kind": "pick",
+   "key": "12@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "12",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25557/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_08",
+   "venue": "東京",
+   "race_num": 8,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25557/"
+   ],
+   "kind": "pick",
+   "key": "3@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "3",
+   "said": {
+    "mark": "◎",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25557/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_08",
+   "venue": "東京",
+   "race_num": 8,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25557/"
+   ],
+   "kind": "pick",
+   "key": "5@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "5",
+   "said": {
+    "mark": "○",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25557/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_08",
+   "venue": "東京",
+   "race_num": 8,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25557/"
+   ],
+   "kind": "pick",
+   "key": "7@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "7",
+   "said": {
+    "mark": "☆",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25557/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_08",
+   "venue": "東京",
+   "race_num": 8,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25557/"
+   ],
+   "kind": "pick",
+   "key": "8@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "8",
+   "said": {
+    "mark": "△",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25557/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_08",
+   "venue": "東京",
+   "race_num": 8,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25557/"
+   ],
+   "kind": "pick",
+   "key": "9@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "9",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25557/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_09",
+   "venue": "東京",
+   "race_num": 9,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25558/"
+   ],
+   "kind": "going",
+   "key": "ダート",
+   "said": {
+    "surface": "ダート",
+    "state": "",
+    "expected": "想定は良〜不良（想定雨量0〜15mm）。枠は内〜外で今開催はバイアスが出にくい想定。直線の伸びはフラット。脚質は前〜差し。時計は雨前で約-1.3〜-0.7秒想定。",
+    "expected_state": "不良",
+    "summary": null
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25558/"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_09",
+   "venue": "東京",
+   "race_num": 9,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25558/"
+   ],
+   "kind": "pick",
+   "key": "11@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "11",
+   "said": {
+    "mark": "○",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25558/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_09",
+   "venue": "東京",
+   "race_num": 9,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25558/"
+   ],
+   "kind": "pick",
+   "key": "14@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "14",
+   "said": {
+    "mark": "▲",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25558/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_09",
+   "venue": "東京",
+   "race_num": 9,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25558/"
+   ],
+   "kind": "pick",
+   "key": "1@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "1",
+   "said": {
+    "mark": "☆",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25558/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_09",
+   "venue": "東京",
+   "race_num": 9,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25558/"
+   ],
+   "kind": "pick",
+   "key": "6@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "6",
+   "said": {
+    "mark": "△",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25558/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_09",
+   "venue": "東京",
+   "race_num": 9,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25558/"
+   ],
+   "kind": "pick",
+   "key": "7@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "7",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25558/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_09",
+   "venue": "東京",
+   "race_num": 9,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25558/"
+   ],
+   "kind": "pick",
+   "key": "8@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "8",
+   "said": {
+    "mark": "◎",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25558/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_10",
+   "venue": "東京",
+   "race_num": 10,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25559/"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": "",
+    "expected": "想定は良〜重（想定雨量0〜15mm）。枠はフラット〜外、内ラチ沿いに傷みが出れば外枠有利の可能性。直線の伸びはフラット〜やや外。脚質は展開次第〜差し。時計は雨前で約-2.3〜-2.0秒想定。",
+    "expected_state": "重",
+    "summary": null
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25559/"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_10",
+   "venue": "東京",
+   "race_num": 10,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25559/"
+   ],
+   "kind": "pick",
+   "key": "11@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "11",
+   "said": {
+    "mark": "◎",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25559/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_10",
+   "venue": "東京",
+   "race_num": 10,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25559/"
+   ],
+   "kind": "pick",
+   "key": "2@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "2",
+   "said": {
+    "mark": "☆",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25559/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_10",
+   "venue": "東京",
+   "race_num": 10,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25559/"
+   ],
+   "kind": "pick",
+   "key": "4@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "4",
+   "said": {
+    "mark": "▲",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25559/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_10",
+   "venue": "東京",
+   "race_num": 10,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25559/"
+   ],
+   "kind": "pick",
+   "key": "6@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "6",
+   "said": {
+    "mark": "△",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25559/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_10",
+   "venue": "東京",
+   "race_num": 10,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25559/"
+   ],
+   "kind": "pick",
+   "key": "7@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "7",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25559/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_10",
+   "venue": "東京",
+   "race_num": 10,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25559/"
+   ],
+   "kind": "pick",
+   "key": "9@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "9",
+   "said": {
+    "mark": "○",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25559/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25560/"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": "",
+    "expected": "想定は良〜重（想定雨量0〜15mm）。枠はフラット〜外、内ラチ沿いに傷みが出れば外枠有利の可能性。直線の伸びはフラット〜やや外。脚質は展開次第〜差し。時計は雨前で約-2.3〜-2.0秒想定。",
+    "expected_state": "重",
+    "summary": null
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25560/"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25560/"
+   ],
+   "kind": "pick",
+   "key": "14@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "14",
+   "said": {
+    "mark": "☆",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25560/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25560/"
+   ],
+   "kind": "pick",
+   "key": "15@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "15",
+   "said": {
+    "mark": "○",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25560/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25560/"
+   ],
+   "kind": "pick",
+   "key": "18@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "18",
+   "said": {
+    "mark": "▲",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25560/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25560/"
+   ],
+   "kind": "pick",
+   "key": "3@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "3",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25560/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25560/"
+   ],
+   "kind": "pick",
+   "key": "5@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "5",
+   "said": {
+    "mark": "◎",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25560/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25560/"
+   ],
+   "kind": "pick",
+   "key": "6@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "6",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25560/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25560/"
+   ],
+   "kind": "pick",
+   "key": "7@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "7",
+   "said": {
+    "mark": "△",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25560/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_11",
+   "venue": "東京",
+   "race_num": 11,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25560/"
+   ],
+   "kind": "pick",
+   "key": "9@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "9",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25560/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_12",
+   "venue": "東京",
+   "race_num": 12,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25561/"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": "",
+    "expected": "想定は良〜重（想定雨量0〜15mm）。枠はフラット〜外、内ラチ沿いに傷みが出れば外枠有利の可能性。直線の伸びはフラット〜やや外。脚質は展開次第〜差し。時計は雨前で約-2.3〜-2.0秒想定。",
+    "expected_state": "重",
+    "summary": null
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25561/"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_12",
+   "venue": "東京",
+   "race_num": 12,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25561/"
+   ],
+   "kind": "pick",
+   "key": "10@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "10",
+   "said": {
+    "mark": "▲",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25561/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_12",
+   "venue": "東京",
+   "race_num": 12,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25561/"
+   ],
+   "kind": "pick",
+   "key": "11@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "11",
+   "said": {
+    "mark": "△",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25561/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_12",
+   "venue": "東京",
+   "race_num": 12,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25561/"
+   ],
+   "kind": "pick",
+   "key": "12@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "12",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25561/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_12",
+   "venue": "東京",
+   "race_num": 12,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25561/"
+   ],
+   "kind": "pick",
+   "key": "15@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "15",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25561/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_12",
+   "venue": "東京",
+   "race_num": 12,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25561/"
+   ],
+   "kind": "pick",
+   "key": "1@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "1",
+   "said": {
+    "mark": "◎",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25561/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_12",
+   "venue": "東京",
+   "race_num": 12,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25561/"
+   ],
+   "kind": "pick",
+   "key": "3@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "3",
+   "said": {
+    "mark": "○",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25561/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_05_12",
+   "venue": "東京",
+   "race_num": 12,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25561/"
+   ],
+   "kind": "pick",
+   "key": "9@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "9",
+   "said": {
+    "mark": "☆",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25561/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_01",
+   "venue": "京都",
+   "race_num": 1,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25562/"
+   ],
+   "kind": "going",
+   "key": "ダート",
+   "said": {
+    "surface": "ダート",
+    "state": "",
+    "expected": "想定はやや重〜不良（想定雨量5〜50mm）。今開催は道悪でバイアスが出にくい想定。直線の伸びはフラット。脚質は前〜展開次第。時計は-4.5〜-1.2秒想定。",
+    "expected_state": "不良",
+    "summary": null
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25562/"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "yosounohone.com",
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_01",
+   "venue": "京都",
+   "race_num": 1,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25562/"
+   ],
+   "kind": "horse",
+   "key": "8",
+   "said": {
+    "note": "ホネ追切注目 ★2",
+    "direction": null,
+    "grade": "★2"
+   },
+   "sources": [
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15"
+   ],
+   "hosts": [
+    "yosounohone.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_01",
+   "venue": "京都",
+   "race_num": 1,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25562/"
+   ],
+   "kind": "pick",
+   "key": "1@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "1",
+   "said": {
+    "mark": "△",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25562/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_01",
+   "venue": "京都",
+   "race_num": 1,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25562/"
+   ],
+   "kind": "pick",
+   "key": "2@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "2",
+   "said": {
+    "mark": "◎",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25562/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_01",
+   "venue": "京都",
+   "race_num": 1,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25562/"
+   ],
+   "kind": "pick",
+   "key": "3@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "3",
+   "said": {
+    "mark": "○",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25562/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_01",
+   "venue": "京都",
+   "race_num": 1,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25562/"
+   ],
+   "kind": "pick",
+   "key": "4@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "4",
+   "said": {
+    "mark": "▲",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25562/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_01",
+   "venue": "京都",
+   "race_num": 1,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25562/"
+   ],
+   "kind": "pick",
+   "key": "5@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "5",
+   "said": {
+    "mark": "☆",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25562/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_02",
+   "venue": "京都",
+   "race_num": 2,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25563/"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": "",
+    "expected": "想定はやや重〜不良（土曜夜から日曜の想定雨量5〜50mm）。雨が止んで内が乾けば内有利、雨量がそれなり以下で内ラチ沿いが傷めば外有利。直線の伸びはやや内〜やや外。脚質は前〜差し（上がりが遅くなれば前有利）。時計は雨量次第で-1.5〜+3.0秒以上。",
+    "expected_state": "不良",
+    "summary": null
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25563/"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_02",
+   "venue": "京都",
+   "race_num": 2,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25563/"
+   ],
+   "kind": "pick",
+   "key": "10@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "10",
+   "said": {
+    "mark": "☆",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25563/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_02",
+   "venue": "京都",
+   "race_num": 2,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25563/"
+   ],
+   "kind": "pick",
+   "key": "12@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "12",
+   "said": {
+    "mark": "△",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25563/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_02",
+   "venue": "京都",
+   "race_num": 2,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25563/"
+   ],
+   "kind": "pick",
+   "key": "1@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "1",
+   "said": {
+    "mark": "▲",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25563/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_02",
+   "venue": "京都",
+   "race_num": 2,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25563/"
+   ],
+   "kind": "pick",
+   "key": "2@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "2",
+   "said": {
+    "mark": "◎",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25563/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_02",
+   "venue": "京都",
+   "race_num": 2,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25563/"
+   ],
+   "kind": "pick",
+   "key": "5@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "5",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25563/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_02",
+   "venue": "京都",
+   "race_num": 2,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25563/"
+   ],
+   "kind": "pick",
+   "key": "6@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "6",
+   "said": {
+    "mark": "○",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25563/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_02",
+   "venue": "京都",
+   "race_num": 2,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25563/"
+   ],
+   "kind": "pick",
+   "key": "9@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "9",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25563/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_03",
+   "venue": "京都",
+   "race_num": 3,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25564/"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": "",
+    "expected": "想定はやや重〜不良（土曜夜から日曜の想定雨量5〜50mm）。雨が止んで内が乾けば内有利、雨量がそれなり以下で内ラチ沿いが傷めば外有利。直線の伸びはやや内〜やや外。脚質は前〜差し（上がりが遅くなれば前有利）。時計は雨量次第で-1.5〜+3.0秒以上。",
+    "expected_state": "不良",
+    "summary": null
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25564/"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "yosounohone.com",
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_03",
+   "venue": "京都",
+   "race_num": 3,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25564/"
+   ],
+   "kind": "horse",
+   "key": "1",
+   "said": {
+    "note": "ホネ追切注目 ★2",
+    "direction": null,
+    "grade": "★2"
+   },
+   "sources": [
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15"
+   ],
+   "hosts": [
+    "yosounohone.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_03",
+   "venue": "京都",
+   "race_num": 3,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25564/"
+   ],
+   "kind": "pick",
+   "key": "1@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "1",
+   "said": {
+    "mark": "○",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25564/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_03",
+   "venue": "京都",
+   "race_num": 3,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25564/"
+   ],
+   "kind": "pick",
+   "key": "4@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "4",
+   "said": {
+    "mark": "☆",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25564/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_03",
+   "venue": "京都",
+   "race_num": 3,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25564/"
+   ],
+   "kind": "pick",
+   "key": "5@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "5",
+   "said": {
+    "mark": "△",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25564/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_03",
+   "venue": "京都",
+   "race_num": 3,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25564/"
+   ],
+   "kind": "pick",
+   "key": "6@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "6",
+   "said": {
+    "mark": "▲",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25564/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_03",
+   "venue": "京都",
+   "race_num": 3,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25564/"
+   ],
+   "kind": "pick",
+   "key": "7@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "7",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25564/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_03",
+   "venue": "京都",
+   "race_num": 3,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25564/"
+   ],
+   "kind": "pick",
+   "key": "9@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "9",
+   "said": {
+    "mark": "◎",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25564/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_04",
+   "venue": "京都",
+   "race_num": 4,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25565/"
+   ],
+   "kind": "going",
+   "key": "ダート",
+   "said": {
+    "surface": "ダート",
+    "state": "",
+    "expected": "想定はやや重〜不良（想定雨量5〜50mm）。今開催は道悪でバイアスが出にくい想定。直線の伸びはフラット。脚質は前〜展開次第。時計は-4.5〜-1.2秒想定。",
+    "expected_state": "不良",
+    "summary": null
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25565/"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_04",
+   "venue": "京都",
+   "race_num": 4,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25565/"
+   ],
+   "kind": "pick",
+   "key": "12@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "12",
+   "said": {
+    "mark": "◎",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25565/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_04",
+   "venue": "京都",
+   "race_num": 4,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25565/"
+   ],
+   "kind": "pick",
+   "key": "14@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "14",
+   "said": {
+    "mark": "△",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25565/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_04",
+   "venue": "京都",
+   "race_num": 4,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25565/"
+   ],
+   "kind": "pick",
+   "key": "3@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "3",
+   "said": {
+    "mark": "○",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25565/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_04",
+   "venue": "京都",
+   "race_num": 4,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25565/"
+   ],
+   "kind": "pick",
+   "key": "7@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "7",
+   "said": {
+    "mark": "▲",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25565/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_04",
+   "venue": "京都",
+   "race_num": 4,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25565/"
+   ],
+   "kind": "pick",
+   "key": "9@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "9",
+   "said": {
+    "mark": "☆",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25565/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_05",
+   "venue": "京都",
+   "race_num": 5,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25566/"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": "",
+    "expected": "想定はやや重〜不良（土曜夜から日曜の想定雨量5〜50mm）。雨が止んで内が乾けば内有利、雨量がそれなり以下で内ラチ沿いが傷めば外有利。直線の伸びはやや内〜やや外。脚質は前〜差し（上がりが遅くなれば前有利）。時計は雨量次第で-1.5〜+3.0秒以上。",
+    "expected_state": "不良",
+    "summary": null
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25566/"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_05",
+   "venue": "京都",
+   "race_num": 5,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25566/"
+   ],
+   "kind": "pick",
+   "key": "11@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "11",
+   "said": {
+    "mark": "◎",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25566/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_05",
+   "venue": "京都",
+   "race_num": 5,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25566/"
+   ],
+   "kind": "pick",
+   "key": "12@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "12",
+   "said": {
+    "mark": "☆",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25566/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_05",
+   "venue": "京都",
+   "race_num": 5,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25566/"
+   ],
+   "kind": "pick",
+   "key": "2@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "2",
+   "said": {
+    "mark": "△",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25566/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_05",
+   "venue": "京都",
+   "race_num": 5,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25566/"
+   ],
+   "kind": "pick",
+   "key": "6@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "6",
+   "said": {
+    "mark": "▲",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25566/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_05",
+   "venue": "京都",
+   "race_num": 5,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25566/"
+   ],
+   "kind": "pick",
+   "key": "7@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "7",
+   "said": {
+    "mark": "○",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25566/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_06",
+   "venue": "京都",
+   "race_num": 6,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25567/"
+   ],
+   "kind": "going",
+   "key": "ダート",
+   "said": {
+    "surface": "ダート",
+    "state": "",
+    "expected": "想定はやや重〜不良（想定雨量5〜50mm）。今開催は道悪でバイアスが出にくい想定。直線の伸びはフラット。脚質は前〜展開次第。時計は-4.5〜-1.2秒想定。",
+    "expected_state": "不良",
+    "summary": null
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25567/"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_06",
+   "venue": "京都",
+   "race_num": 6,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25567/"
+   ],
+   "kind": "pick",
+   "key": "10@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "10",
+   "said": {
+    "mark": "○",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25567/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_06",
+   "venue": "京都",
+   "race_num": 6,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25567/"
+   ],
+   "kind": "pick",
+   "key": "12@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "12",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25567/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_06",
+   "venue": "京都",
+   "race_num": 6,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25567/"
+   ],
+   "kind": "pick",
+   "key": "13@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "13",
+   "said": {
+    "mark": "△",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25567/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_06",
+   "venue": "京都",
+   "race_num": 6,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25567/"
+   ],
+   "kind": "pick",
+   "key": "14@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "14",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25567/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_06",
+   "venue": "京都",
+   "race_num": 6,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25567/"
+   ],
+   "kind": "pick",
+   "key": "2@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "2",
+   "said": {
+    "mark": "▲",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25567/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_06",
+   "venue": "京都",
+   "race_num": 6,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25567/"
+   ],
+   "kind": "pick",
+   "key": "3@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "3",
+   "said": {
+    "mark": "☆",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25567/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_06",
+   "venue": "京都",
+   "race_num": 6,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25567/"
+   ],
+   "kind": "pick",
+   "key": "8@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "8",
+   "said": {
+    "mark": "◎",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25567/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_07",
+   "venue": "京都",
+   "race_num": 7,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25568/"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": "",
+    "expected": "想定はやや重〜不良（土曜夜から日曜の想定雨量5〜50mm）。雨が止んで内が乾けば内有利、雨量がそれなり以下で内ラチ沿いが傷めば外有利。直線の伸びはやや内〜やや外。脚質は前〜差し（上がりが遅くなれば前有利）。時計は雨量次第で-1.5〜+3.0秒以上。",
+    "expected_state": "不良",
+    "summary": null
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25568/"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "yosounohone.com",
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_07",
+   "venue": "京都",
+   "race_num": 7,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25568/"
+   ],
+   "kind": "horse",
+   "key": "17",
+   "said": {
+    "note": "ホネ追切注目 ★3",
+    "direction": null,
+    "grade": "★3"
+   },
+   "sources": [
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15"
+   ],
+   "hosts": [
+    "yosounohone.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_07",
+   "venue": "京都",
+   "race_num": 7,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25568/"
+   ],
+   "kind": "horse",
+   "key": "7",
+   "said": {
+    "note": "ホネ追切注目 ★2",
+    "direction": null,
+    "grade": "★2"
+   },
+   "sources": [
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15"
+   ],
+   "hosts": [
+    "yosounohone.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_07",
+   "venue": "京都",
+   "race_num": 7,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25568/"
+   ],
+   "kind": "horse",
+   "key": "9",
+   "said": {
+    "note": "ホネ追切注目 ★3",
+    "direction": null,
+    "grade": "★3"
+   },
+   "sources": [
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15"
+   ],
+   "hosts": [
+    "yosounohone.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_07",
+   "venue": "京都",
+   "race_num": 7,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25568/"
+   ],
+   "kind": "pick",
+   "key": "10@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "10",
+   "said": {
+    "mark": "☆",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25568/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_07",
+   "venue": "京都",
+   "race_num": 7,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25568/"
+   ],
+   "kind": "pick",
+   "key": "11@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "11",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25568/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_07",
+   "venue": "京都",
+   "race_num": 7,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25568/"
+   ],
+   "kind": "pick",
+   "key": "12@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "12",
+   "said": {
+    "mark": "◎",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25568/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_07",
+   "venue": "京都",
+   "race_num": 7,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25568/"
+   ],
+   "kind": "pick",
+   "key": "16@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "16",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25568/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_07",
+   "venue": "京都",
+   "race_num": 7,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25568/"
+   ],
+   "kind": "pick",
+   "key": "17@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "17",
+   "said": {
+    "mark": "△",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25568/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_07",
+   "venue": "京都",
+   "race_num": 7,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25568/"
+   ],
+   "kind": "pick",
+   "key": "1@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "1",
+   "said": {
+    "mark": "▲",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25568/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_07",
+   "venue": "京都",
+   "race_num": 7,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25568/"
+   ],
+   "kind": "pick",
+   "key": "3@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "3",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25568/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_07",
+   "venue": "京都",
+   "race_num": 7,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25568/"
+   ],
+   "kind": "pick",
+   "key": "7@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "7",
+   "said": {
+    "mark": "○",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25568/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_08",
+   "venue": "京都",
+   "race_num": 8,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25569/"
+   ],
+   "kind": "going",
+   "key": "ダート",
+   "said": {
+    "surface": "ダート",
+    "state": "",
+    "expected": "想定はやや重〜不良（想定雨量5〜50mm）。今開催は道悪でバイアスが出にくい想定。直線の伸びはフラット。脚質は前〜展開次第。時計は-4.5〜-1.2秒想定。",
+    "expected_state": "不良",
+    "summary": null
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25569/"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "yosounohone.com",
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_08",
+   "venue": "京都",
+   "race_num": 8,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25569/"
+   ],
+   "kind": "horse",
+   "key": "5",
+   "said": {
+    "note": "ホネ追切注目 ★3",
+    "direction": null,
+    "grade": "★3"
+   },
+   "sources": [
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15"
+   ],
+   "hosts": [
+    "yosounohone.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_08",
+   "venue": "京都",
+   "race_num": 8,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25569/"
+   ],
+   "kind": "pick",
+   "key": "1@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "1",
+   "said": {
+    "mark": "○",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25569/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_08",
+   "venue": "京都",
+   "race_num": 8,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25569/"
+   ],
+   "kind": "pick",
+   "key": "2@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "2",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25569/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_08",
+   "venue": "京都",
+   "race_num": 8,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25569/"
+   ],
+   "kind": "pick",
+   "key": "3@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "3",
+   "said": {
+    "mark": "◎",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25569/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_08",
+   "venue": "京都",
+   "race_num": 8,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25569/"
+   ],
+   "kind": "pick",
+   "key": "4@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "4",
+   "said": {
+    "mark": "△",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25569/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_08",
+   "venue": "京都",
+   "race_num": 8,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25569/"
+   ],
+   "kind": "pick",
+   "key": "5@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "5",
+   "said": {
+    "mark": "▲",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25569/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_08",
+   "venue": "京都",
+   "race_num": 8,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25569/"
+   ],
+   "kind": "pick",
+   "key": "8@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "8",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25569/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_08",
+   "venue": "京都",
+   "race_num": 8,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25569/"
+   ],
+   "kind": "pick",
+   "key": "9@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "9",
+   "said": {
+    "mark": "☆",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25569/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_09",
+   "venue": "京都",
+   "race_num": 9,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25570/"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": "",
+    "expected": "想定はやや重〜不良（土曜夜から日曜の想定雨量5〜50mm）。雨が止んで内が乾けば内有利、雨量がそれなり以下で内ラチ沿いが傷めば外有利。直線の伸びはやや内〜やや外。脚質は前〜差し（上がりが遅くなれば前有利）。時計は雨量次第で-1.5〜+3.0秒以上。",
+    "expected_state": "不良",
+    "summary": null
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25570/"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_09",
+   "venue": "京都",
+   "race_num": 9,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25570/"
+   ],
+   "kind": "pick",
+   "key": "1@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "1",
+   "said": {
+    "mark": "◎",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25570/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_09",
+   "venue": "京都",
+   "race_num": 9,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25570/"
+   ],
+   "kind": "pick",
+   "key": "2@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "2",
+   "said": {
+    "mark": "☆",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25570/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_09",
+   "venue": "京都",
+   "race_num": 9,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25570/"
+   ],
+   "kind": "pick",
+   "key": "6@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "6",
+   "said": {
+    "mark": "○",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25570/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_09",
+   "venue": "京都",
+   "race_num": 9,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25570/"
+   ],
+   "kind": "pick",
+   "key": "7@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "7",
+   "said": {
+    "mark": "△",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25570/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_09",
+   "venue": "京都",
+   "race_num": 9,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25570/"
+   ],
+   "kind": "pick",
+   "key": "8@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "8",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25570/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_09",
+   "venue": "京都",
+   "race_num": 9,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25570/"
+   ],
+   "kind": "pick",
+   "key": "9@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "9",
+   "said": {
+    "mark": "▲",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25570/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_10",
+   "venue": "京都",
+   "race_num": 10,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25571/"
+   ],
+   "kind": "going",
+   "key": "ダート",
+   "said": {
+    "surface": "ダート",
+    "state": "",
+    "expected": "想定はやや重〜不良（想定雨量5〜50mm）。今開催は道悪でバイアスが出にくい想定。直線の伸びはフラット。脚質は前〜展開次第。時計は-4.5〜-1.2秒想定。",
+    "expected_state": "不良",
+    "summary": null
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25571/"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "yosounohone.com",
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_10",
+   "venue": "京都",
+   "race_num": 10,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25571/"
+   ],
+   "kind": "horse",
+   "key": "4",
+   "said": {
+    "note": "ホネ追切注目 ★2",
+    "direction": null,
+    "grade": "★2"
+   },
+   "sources": [
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15"
+   ],
+   "hosts": [
+    "yosounohone.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_10",
+   "venue": "京都",
+   "race_num": 10,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25571/"
+   ],
+   "kind": "pick",
+   "key": "1@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "1",
+   "said": {
+    "mark": "☆",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25571/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_10",
+   "venue": "京都",
+   "race_num": 10,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25571/"
+   ],
+   "kind": "pick",
+   "key": "4@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "4",
+   "said": {
+    "mark": "△",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25571/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_10",
+   "venue": "京都",
+   "race_num": 10,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25571/"
+   ],
+   "kind": "pick",
+   "key": "8@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "8",
+   "said": {
+    "mark": "◎",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25571/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_10",
+   "venue": "京都",
+   "race_num": 10,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25571/"
+   ],
+   "kind": "pick",
+   "key": "9@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "9",
+   "said": {
+    "mark": "▲",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25571/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://umasiru.com/archives/22316",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25572/"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": "",
+    "expected": "想定はやや重〜不良（土曜夜から日曜の想定雨量5〜50mm）。雨が止んで内が乾けば内有利、雨量がそれなり以下で内ラチ沿いが傷めば外有利。直線の伸びはやや内〜やや外。脚質は前〜差し（上がりが遅くなれば前有利）。時計は雨量次第で-1.5〜+3.0秒以上。",
+    "expected_state": "不良",
+    "summary": null
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://umasiru.com/archives/22316",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25572/"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "yosounohone.com",
+    "umasiru.com",
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://umasiru.com/archives/22316",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25572/"
+   ],
+   "kind": "horse",
+   "key": "1",
+   "said": {
+    "note": "ウマシル追切評価 B",
+    "direction": null,
+    "grade": "B"
+   },
+   "sources": [
+    "https://umasiru.com/archives/22316"
+   ],
+   "hosts": [
+    "umasiru.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://umasiru.com/archives/22316",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25572/"
+   ],
+   "kind": "horse",
+   "key": "10",
+   "said": {
+    "note": "ウマシル追切評価 B",
+    "direction": null,
+    "grade": "B"
+   },
+   "sources": [
+    "https://umasiru.com/archives/22316"
+   ],
+   "hosts": [
+    "umasiru.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://umasiru.com/archives/22316",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25572/"
+   ],
+   "kind": "horse",
+   "key": "11",
+   "said": {
+    "note": "ウマシル追切評価 B",
+    "direction": null,
+    "grade": "B"
+   },
+   "sources": [
+    "https://umasiru.com/archives/22316"
+   ],
+   "hosts": [
+    "umasiru.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://umasiru.com/archives/22316",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25572/"
+   ],
+   "kind": "horse",
+   "key": "12",
+   "said": {
+    "note": "ウマシル追切評価 B",
+    "direction": null,
+    "grade": "B"
+   },
+   "sources": [
+    "https://umasiru.com/archives/22316"
+   ],
+   "hosts": [
+    "umasiru.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://umasiru.com/archives/22316",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25572/"
+   ],
+   "kind": "horse",
+   "key": "13",
+   "said": {
+    "note": "ウマシル追切評価 A",
+    "direction": null,
+    "grade": "A"
+   },
+   "sources": [
+    "https://umasiru.com/archives/22316"
+   ],
+   "hosts": [
+    "umasiru.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://umasiru.com/archives/22316",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25572/"
+   ],
+   "kind": "horse",
+   "key": "14",
+   "said": {
+    "note": "ウマシル追切評価 B",
+    "direction": null,
+    "grade": "B"
+   },
+   "sources": [
+    "https://umasiru.com/archives/22316"
+   ],
+   "hosts": [
+    "umasiru.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://umasiru.com/archives/22316",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25572/"
+   ],
+   "kind": "horse",
+   "key": "15",
+   "said": {
+    "note": "ウマシル追切評価 C",
+    "direction": null,
+    "grade": "C"
+   },
+   "sources": [
+    "https://umasiru.com/archives/22316"
+   ],
+   "hosts": [
+    "umasiru.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://umasiru.com/archives/22316",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25572/"
+   ],
+   "kind": "horse",
+   "key": "16",
+   "said": {
+    "note": "ウマシル追切評価 B",
+    "direction": null,
+    "grade": "B"
+   },
+   "sources": [
+    "https://umasiru.com/archives/22316"
+   ],
+   "hosts": [
+    "umasiru.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://umasiru.com/archives/22316",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25572/"
+   ],
+   "kind": "horse",
+   "key": "17",
+   "said": {
+    "note": "ウマシル追切評価 B",
+    "direction": null,
+    "grade": "B"
+   },
+   "sources": [
+    "https://umasiru.com/archives/22316"
+   ],
+   "hosts": [
+    "umasiru.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://umasiru.com/archives/22316",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25572/"
+   ],
+   "kind": "horse",
+   "key": "18",
+   "said": {
+    "note": "ウマシル追切評価 B",
+    "direction": null,
+    "grade": "B"
+   },
+   "sources": [
+    "https://umasiru.com/archives/22316"
+   ],
+   "hosts": [
+    "umasiru.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://umasiru.com/archives/22316",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25572/"
+   ],
+   "kind": "horse",
+   "key": "2",
+   "said": {
+    "note": "ウマシル追切評価 B",
+    "direction": null,
+    "grade": "B"
+   },
+   "sources": [
+    "https://umasiru.com/archives/22316"
+   ],
+   "hosts": [
+    "umasiru.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://umasiru.com/archives/22316",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25572/"
+   ],
+   "kind": "horse",
+   "key": "3",
+   "said": {
+    "note": "ウマシル追切評価 A",
+    "direction": null,
+    "grade": "A"
+   },
+   "sources": [
+    "https://umasiru.com/archives/22316"
+   ],
+   "hosts": [
+    "umasiru.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://umasiru.com/archives/22316",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25572/"
+   ],
+   "kind": "horse",
+   "key": "4",
+   "said": {
+    "note": "ウマシル追切評価 B",
+    "direction": null,
+    "grade": "B"
+   },
+   "sources": [
+    "https://umasiru.com/archives/22316"
+   ],
+   "hosts": [
+    "umasiru.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://umasiru.com/archives/22316",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25572/"
+   ],
+   "kind": "horse",
+   "key": "5",
+   "said": {
+    "note": "ウマシル追切評価 B",
+    "direction": null,
+    "grade": "B"
+   },
+   "sources": [
+    "https://umasiru.com/archives/22316"
+   ],
+   "hosts": [
+    "umasiru.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://umasiru.com/archives/22316",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25572/"
+   ],
+   "kind": "horse",
+   "key": "6",
+   "said": {
+    "note": "ホネ追切注目 ★2 / ウマシル追切評価 S",
+    "direction": null,
+    "grade": "★2"
+   },
+   "sources": [
+    "https://umasiru.com/archives/22316",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15"
+   ],
+   "hosts": [
+    "umasiru.com",
+    "yosounohone.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://umasiru.com/archives/22316",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25572/"
+   ],
+   "kind": "horse",
+   "key": "7",
+   "said": {
+    "note": "ウマシル追切評価 B",
+    "direction": null,
+    "grade": "B"
+   },
+   "sources": [
+    "https://umasiru.com/archives/22316"
+   ],
+   "hosts": [
+    "umasiru.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://umasiru.com/archives/22316",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25572/"
+   ],
+   "kind": "horse",
+   "key": "8",
+   "said": {
+    "note": "ウマシル追切評価 B",
+    "direction": null,
+    "grade": "B"
+   },
+   "sources": [
+    "https://umasiru.com/archives/22316"
+   ],
+   "hosts": [
+    "umasiru.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://umasiru.com/archives/22316",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25572/"
+   ],
+   "kind": "horse",
+   "key": "9",
+   "said": {
+    "note": "ウマシル追切評価 A",
+    "direction": null,
+    "grade": "A"
+   },
+   "sources": [
+    "https://umasiru.com/archives/22316"
+   ],
+   "hosts": [
+    "umasiru.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://umasiru.com/archives/22316",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25572/"
+   ],
+   "kind": "pick",
+   "key": "13@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "13",
+   "said": {
+    "mark": "▲",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25572/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://umasiru.com/archives/22316",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25572/"
+   ],
+   "kind": "pick",
+   "key": "15@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "15",
+   "said": {
+    "mark": "○",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25572/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://umasiru.com/archives/22316",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25572/"
+   ],
+   "kind": "pick",
+   "key": "16@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "16",
+   "said": {
+    "mark": "△",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25572/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://umasiru.com/archives/22316",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25572/"
+   ],
+   "kind": "pick",
+   "key": "1@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "1",
+   "said": {
+    "mark": "☆",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25572/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://umasiru.com/archives/22316",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25572/"
+   ],
+   "kind": "pick",
+   "key": "7@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "7",
+   "said": {
+    "mark": "◎",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25572/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://umasiru.com/archives/22316",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25572/"
+   ],
+   "kind": "pick",
+   "key": "8@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "8",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25572/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_12",
+   "venue": "京都",
+   "race_num": 12,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25573/"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": "",
+    "expected": "想定はやや重〜不良（土曜夜から日曜の想定雨量5〜50mm）。雨が止んで内が乾けば内有利、雨量がそれなり以下で内ラチ沿いが傷めば外有利。直線の伸びはやや内〜やや外。脚質は前〜差し（上がりが遅くなれば前有利）。時計は雨量次第で-1.5〜+3.0秒以上。",
+    "expected_state": "不良",
+    "summary": null
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25573/"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "yosounohone.com",
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_12",
+   "venue": "京都",
+   "race_num": 12,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25573/"
+   ],
+   "kind": "horse",
+   "key": "14",
+   "said": {
+    "note": "ホネ追切注目 ★2",
+    "direction": null,
+    "grade": "★2"
+   },
+   "sources": [
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15"
+   ],
+   "hosts": [
+    "yosounohone.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_12",
+   "venue": "京都",
+   "race_num": 12,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25573/"
+   ],
+   "kind": "pick",
+   "key": "11@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "11",
+   "said": {
+    "mark": "○",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25573/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_12",
+   "venue": "京都",
+   "race_num": 12,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25573/"
+   ],
+   "kind": "pick",
+   "key": "12@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "12",
+   "said": {
+    "mark": "◎",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25573/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_12",
+   "venue": "京都",
+   "race_num": 12,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25573/"
+   ],
+   "kind": "pick",
+   "key": "2@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "2",
+   "said": {
+    "mark": "消",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25573/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_12",
+   "venue": "京都",
+   "race_num": 12,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25573/"
+   ],
+   "kind": "pick",
+   "key": "4@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "4",
+   "said": {
+    "mark": "☆",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25573/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_12",
+   "venue": "京都",
+   "race_num": 12,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25573/"
+   ],
+   "kind": "pick",
+   "key": "5@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "5",
+   "said": {
+    "mark": "▲",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25573/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_08_12",
+   "venue": "京都",
+   "race_num": 12,
+   "collected_at": "2026-11-15T09:07:27+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-15",
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25573/"
+   ],
+   "kind": "pick",
+   "key": "6@muryou-keiba-ai.jp/無料競馬AI",
+   "num": "6",
+   "said": {
+    "mark": "△",
+    "tipster": "無料競馬AI"
+   },
+   "sources": [
+    "https://muryou-keiba-ai.jp/predict/2026/11/12/25573/"
+   ],
+   "hosts": [
+    "muryou-keiba-ai.jp"
+   ],
+   "result": null
   }
  ]
 }

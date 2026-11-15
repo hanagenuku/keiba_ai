@@ -1,6 +1,6 @@
 {
  "schema_version": 1,
- "updated_at": "2026-11-15T09:05:42.812628+09:00",
+ "updated_at": "2026-11-15T11:43:11.495946+09:00",
  "entries": [
   {
    "date": "2026-10-10",
@@ -2418,6 +2418,27 @@
    "snapshot": "2026-11-15T08:51:41.449351+09:00",
    "odds_coverage": 0.979,
    "recorded_at": "2026-11-15T09:05:42.812329+09:00",
+   "result": null
+  },
+  {
+   "date": "2026-11-15",
+   "race_id": "20261115_03_10",
+   "venue": "福島",
+   "race_num": 10,
+   "race_name": "三陸特別",
+   "num": 5,
+   "name": "タケルフォーカス",
+   "pop": 1,
+   "solo_rank": 9,
+   "rl_rank": 1,
+   "odds": 5.8,
+   "conf": 51,
+   "verdict": "skip",
+   "in_scope": true,
+   "scope_reason": "10R（各競馬場9R〜11Rは対象）",
+   "snapshot": "2026-11-15T11:26:55.288697+09:00",
+   "odds_coverage": 0.969,
+   "recorded_at": "2026-11-15T11:43:11.495654+09:00",
    "result": null
   },
   {
