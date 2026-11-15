@@ -63,6 +63,20 @@ jobs:
           lfs: false
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      # 🔴 実行開始時に main の最新へ合わせる（2026-11-15 のデータ消失対策）。
+      #   チェックアウトは run の**作成時刻**の SHA で固定される。concurrency
+      #   （group: keiba-weekly）で順番待ちしている間に別の run が data/ を
+      #   更新すると、下の「退避 → reset --hard origin/main → 上書き」で
+      #   こちらの古い keiba.db をそのまま押し戻してしまう。
+      #   実例 2026-11-15: 09:40 UTC に起動した結果取得が shadow_bets 34行と
+      #   race_dividends 405行を書いて 09:50 に push → その3分前（09:47）に
+      #   作成された refresh の run が 10:03 に古い keiba.db を上書きし、
+      #   当日の結果が成績ページから消えた（history.db は無傷）。
+      - name: Sync to latest main
+        run: |
+          git fetch origin main
+          git reset --hard origin/main
+
       - name: Download required files via LFS
         run: git lfs pull --include="data/*.db,data/*.pkl"
 

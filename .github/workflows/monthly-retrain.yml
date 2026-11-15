@@ -41,6 +41,14 @@ jobs:
         with:
           lfs: false
 
+      # 🔴 weekend.yml / sunday-results.yml と同じ理由で、開始時に main の最新へ
+      #   合わせる（2026-11-15 のデータ消失対策）。再学習は長時間走るので、
+      #   その間に開催日の結果取得が入ると、古い data/ を押し戻す危険が最も大きい。
+      - name: Sync to latest main
+        run: |
+          git fetch origin main
+          git reset --hard origin/main
+
       - name: Download required files via LFS
         run: git lfs pull --include="data/*.db,data/*.pkl"
 
