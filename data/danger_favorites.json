@@ -1,6 +1,6 @@
 {
  "schema_version": 1,
- "updated_at": "2026-11-15T11:43:11.495946+09:00",
+ "updated_at": "2026-11-15T18:49:57.720040+09:00",
  "entries": [
   {
    "date": "2026-10-10",
@@ -2397,7 +2397,17 @@
    "snapshot": "2026-11-15T08:51:41.449351+09:00",
    "odds_coverage": 0.979,
    "recorded_at": "2026-11-15T09:05:42.812329+09:00",
-   "result": null
+   "result": {
+    "place": 5,
+    "top3": false,
+    "n_finishers": 16,
+    "fukusho_payout": null,
+    "fukusho_sold": true,
+    "post_time": "10:05",
+    "before_post": true,
+    "attached_at": "2026-11-15T18:49:57.720040+09:00",
+    "source": "history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）"
+   }
   },
   {
    "date": "2026-11-15",
@@ -2418,7 +2428,17 @@
    "snapshot": "2026-11-15T08:51:41.449351+09:00",
    "odds_coverage": 0.979,
    "recorded_at": "2026-11-15T09:05:42.812329+09:00",
-   "result": null
+   "result": {
+    "place": 1,
+    "top3": true,
+    "n_finishers": 15,
+    "fukusho_payout": 130,
+    "fukusho_sold": true,
+    "post_time": "10:35",
+    "before_post": true,
+    "attached_at": "2026-11-15T18:49:57.720040+09:00",
+    "source": "history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）"
+   }
   },
   {
    "date": "2026-11-15",
@@ -2439,7 +2459,17 @@
    "snapshot": "2026-11-15T11:26:55.288697+09:00",
    "odds_coverage": 0.969,
    "recorded_at": "2026-11-15T11:43:11.495654+09:00",
-   "result": null
+   "result": {
+    "place": 5,
+    "top3": false,
+    "n_finishers": 16,
+    "fukusho_payout": null,
+    "fukusho_sold": true,
+    "post_time": "14:35",
+    "before_post": true,
+    "attached_at": "2026-11-15T18:49:57.720040+09:00",
+    "source": "history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）"
+   }
   },
   {
    "date": "2026-11-15",
@@ -2460,7 +2490,17 @@
    "snapshot": "2026-11-15T08:51:41.449351+09:00",
    "odds_coverage": 0.979,
    "recorded_at": "2026-11-15T09:05:42.812329+09:00",
-   "result": null
+   "result": {
+    "place": 14,
+    "top3": false,
+    "n_finishers": 15,
+    "fukusho_payout": null,
+    "fukusho_sold": true,
+    "post_time": "15:11",
+    "before_post": true,
+    "attached_at": "2026-11-15T18:49:57.720040+09:00",
+    "source": "history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）"
+   }
   },
   {
    "date": "2026-11-15",
@@ -2481,7 +2521,17 @@
    "snapshot": "2026-11-15T08:51:41.449351+09:00",
    "odds_coverage": 0.979,
    "recorded_at": "2026-11-15T09:05:42.812329+09:00",
-   "result": null
+   "result": {
+    "place": 10,
+    "top3": false,
+    "n_finishers": 16,
+    "fukusho_payout": null,
+    "fukusho_sold": true,
+    "post_time": "15:55",
+    "before_post": true,
+    "attached_at": "2026-11-15T18:49:57.720040+09:00",
+    "source": "history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）"
+   }
   },
   {
    "date": "2026-11-15",
@@ -2502,7 +2552,17 @@
    "snapshot": "2026-11-15T08:51:41.449351+09:00",
    "odds_coverage": 0.979,
    "recorded_at": "2026-11-15T09:05:42.812329+09:00",
-   "result": null
+   "result": {
+    "place": 3,
+    "top3": true,
+    "n_finishers": 17,
+    "fukusho_payout": 130,
+    "fukusho_sold": true,
+    "post_time": "10:15",
+    "before_post": true,
+    "attached_at": "2026-11-15T18:49:57.720040+09:00",
+    "source": "history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）"
+   }
   },
   {
    "date": "2026-11-15",
@@ -2523,7 +2583,17 @@
    "snapshot": "2026-11-15T08:51:41.449351+09:00",
    "odds_coverage": 0.979,
    "recorded_at": "2026-11-15T09:05:42.812329+09:00",
-   "result": null
+   "result": {
+    "place": 10,
+    "top3": false,
+    "n_finishers": 12,
+    "fukusho_payout": null,
+    "fukusho_sold": true,
+    "post_time": "11:15",
+    "before_post": true,
+    "attached_at": "2026-11-15T18:49:57.720040+09:00",
+    "source": "history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）"
+   }
   },
   {
    "date": "2026-11-15",
@@ -2544,7 +2614,17 @@
    "snapshot": "2026-11-15T08:51:41.449351+09:00",
    "odds_coverage": 0.979,
    "recorded_at": "2026-11-15T09:05:42.812329+09:00",
-   "result": null
+   "result": {
+    "place": 6,
+    "top3": false,
+    "n_finishers": 10,
+    "fukusho_payout": null,
+    "fukusho_sold": true,
+    "post_time": "12:05",
+    "before_post": true,
+    "attached_at": "2026-11-15T18:49:57.720040+09:00",
+    "source": "history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）"
+   }
   },
   {
    "date": "2026-11-15",
@@ -2565,7 +2645,17 @@
    "snapshot": "2026-11-15T08:51:41.449351+09:00",
    "odds_coverage": 0.979,
    "recorded_at": "2026-11-15T09:05:42.812329+09:00",
-   "result": null
+   "result": {
+    "place": 4,
+    "top3": false,
+    "n_finishers": 16,
+    "fukusho_payout": null,
+    "fukusho_sold": true,
+    "post_time": "12:40",
+    "before_post": true,
+    "attached_at": "2026-11-15T18:49:57.720040+09:00",
+    "source": "history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）"
+   }
   },
   {
    "date": "2026-11-15",
@@ -2586,7 +2676,17 @@
    "snapshot": "2026-11-15T08:51:41.449351+09:00",
    "odds_coverage": 0.979,
    "recorded_at": "2026-11-15T09:05:42.812329+09:00",
-   "result": null
+   "result": {
+    "place": 1,
+    "top3": true,
+    "n_finishers": 16,
+    "fukusho_payout": 110,
+    "fukusho_sold": true,
+    "post_time": "14:10",
+    "before_post": true,
+    "attached_at": "2026-11-15T18:49:57.720040+09:00",
+    "source": "history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）"
+   }
   },
   {
    "date": "2026-11-15",
@@ -2607,7 +2707,17 @@
    "snapshot": "2026-11-15T08:51:41.449351+09:00",
    "odds_coverage": 0.979,
    "recorded_at": "2026-11-15T09:05:42.812329+09:00",
-   "result": null
+   "result": {
+    "place": 3,
+    "top3": true,
+    "n_finishers": 16,
+    "fukusho_payout": 110,
+    "fukusho_sold": true,
+    "post_time": "11:25",
+    "before_post": true,
+    "attached_at": "2026-11-15T18:49:57.720040+09:00",
+    "source": "history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）"
+   }
   }
  ]
 }

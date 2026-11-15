@@ -1,6 +1,6 @@
 {
  "schema_version": 2,
- "updated_at": "2026-11-15T11:43:11.762134+09:00",
+ "updated_at": "2026-11-15T18:49:57.845064+09:00",
  "entries": [
   {
    "date": "2026-10-10",
@@ -18251,7 +18251,16 @@
     "bloodline-trackbias.work",
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "良",
+    "actual_surface": "ダート",
+    "said_state_at_collection": "",
+    "collection_state_matches_actual": null,
+    "said_expected_state": "不良",
+    "expected_state_matches_actual": false
+   }
   },
   {
    "date": "2026-11-15",
@@ -18276,7 +18285,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 4,
+    "top3": false,
+    "popularity": 4,
+    "horse_name": "ビーテリオス",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -18301,7 +18319,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 5,
+    "top3": false,
+    "popularity": 6,
+    "horse_name": "アーバーバイティ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -18326,7 +18353,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 11,
+    "top3": false,
+    "popularity": 14,
+    "horse_name": "アップルザビート",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -18351,7 +18387,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 3,
+    "top3": true,
+    "popularity": 2,
+    "horse_name": "クリスタルシャイン",
+    "fukusho_payout": 140,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -18376,7 +18421,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 1,
+    "top3": true,
+    "popularity": 1,
+    "horse_name": "エコロメジャー",
+    "fukusho_payout": 120,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -18401,7 +18455,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 9,
+    "top3": false,
+    "popularity": 5,
+    "horse_name": "スペシャルサンクス",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -18430,7 +18493,16 @@
     "bloodline-trackbias.work",
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "良",
+    "actual_surface": "芝",
+    "said_state_at_collection": "",
+    "collection_state_matches_actual": null,
+    "said_expected_state": "重",
+    "expected_state_matches_actual": false
+   }
   },
   {
    "date": "2026-11-15",
@@ -18455,7 +18527,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 12,
+    "top3": false,
+    "popularity": 10,
+    "horse_name": "ウインロッドブレス",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -18480,7 +18561,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 1,
+    "top3": true,
+    "popularity": 2,
+    "horse_name": "イテルム",
+    "fukusho_payout": 260,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -18505,7 +18595,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 13,
+    "top3": false,
+    "popularity": 7,
+    "horse_name": "コウサイリクリ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -18530,7 +18629,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 15,
+    "top3": false,
+    "popularity": 16,
+    "horse_name": "ヌンエリン",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -18555,7 +18663,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 5,
+    "top3": false,
+    "popularity": 1,
+    "horse_name": "サンオブシディアン",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -18580,7 +18697,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 8,
+    "top3": false,
+    "popularity": 14,
+    "horse_name": "ワンダーラヴグッド",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -18605,7 +18731,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 9,
+    "top3": false,
+    "popularity": 3,
+    "horse_name": "ヴェントリナ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -18634,7 +18769,16 @@
     "bloodline-trackbias.work",
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "良",
+    "actual_surface": "ダート",
+    "said_state_at_collection": "",
+    "collection_state_matches_actual": null,
+    "said_expected_state": "不良",
+    "expected_state_matches_actual": false
+   }
   },
   {
    "date": "2026-11-15",
@@ -18659,7 +18803,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 2,
+    "top3": true,
+    "popularity": 2,
+    "horse_name": "レボルシオン",
+    "fukusho_payout": 170,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -18684,7 +18837,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 15,
+    "top3": false,
+    "popularity": 14,
+    "horse_name": "ナックシュバリエ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -18709,7 +18871,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 14,
+    "top3": false,
+    "popularity": 12,
+    "horse_name": "ニーナバイリッカ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -18734,7 +18905,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 5,
+    "top3": false,
+    "popularity": 7,
+    "horse_name": "ロードフロリゼル",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -18759,7 +18939,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 1,
+    "top3": true,
+    "popularity": 1,
+    "horse_name": "ラブインアクション",
+    "fukusho_payout": 130,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -18784,7 +18973,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 11,
+    "top3": false,
+    "popularity": 6,
+    "horse_name": "ヒヒーン",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -18809,7 +19007,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 9,
+    "top3": false,
+    "popularity": 13,
+    "horse_name": "ビスケットマリー",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -18834,7 +19041,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 8,
+    "top3": false,
+    "popularity": 5,
+    "horse_name": "タルタロス",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -18859,7 +19075,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 13,
+    "top3": false,
+    "popularity": 15,
+    "horse_name": "アルマグラース",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -18888,7 +19113,16 @@
     "bloodline-trackbias.work",
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "稍重",
+    "actual_surface": "ダート",
+    "said_state_at_collection": "",
+    "collection_state_matches_actual": null,
+    "said_expected_state": "不良",
+    "expected_state_matches_actual": false
+   }
   },
   {
    "date": "2026-11-15",
@@ -18913,7 +19147,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 3,
+    "top3": true,
+    "popularity": 4,
+    "horse_name": "コーズダンサー",
+    "fukusho_payout": 140,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -18938,7 +19181,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 1,
+    "top3": true,
+    "popularity": 1,
+    "horse_name": "ストライクアロー",
+    "fukusho_payout": 110,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -18963,7 +19215,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 8,
+    "top3": false,
+    "popularity": 8,
+    "horse_name": "ロックフォール",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -18988,7 +19249,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 9,
+    "top3": false,
+    "popularity": 6,
+    "horse_name": "ペスカデロ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -19013,7 +19283,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 2,
+    "top3": true,
+    "popularity": 2,
+    "horse_name": "グラスアステール",
+    "fukusho_payout": 120,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -19042,7 +19321,16 @@
     "bloodline-trackbias.work",
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "稍重",
+    "actual_surface": "芝",
+    "said_state_at_collection": "",
+    "collection_state_matches_actual": null,
+    "said_expected_state": "重",
+    "expected_state_matches_actual": false
+   }
   },
   {
    "date": "2026-11-15",
@@ -19067,7 +19355,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 11,
+    "top3": false,
+    "popularity": 3,
+    "horse_name": "ゴールドパレード",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -19092,7 +19389,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 2,
+    "top3": true,
+    "popularity": 4,
+    "horse_name": "ダイユウルミナス",
+    "fukusho_payout": 270,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -19117,7 +19423,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 1,
+    "top3": true,
+    "popularity": 2,
+    "horse_name": "リアライズブラーヴ",
+    "fukusho_payout": 160,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -19142,7 +19457,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 16,
+    "top3": false,
+    "popularity": 15,
+    "horse_name": "ワタシイノッテマス",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -19167,7 +19491,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 3,
+    "top3": true,
+    "popularity": 1,
+    "horse_name": "シヴィータス",
+    "fukusho_payout": 150,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -19192,7 +19525,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 14,
+    "top3": false,
+    "popularity": 6,
+    "horse_name": "ノアールビーナス",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -19217,7 +19559,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 15,
+    "top3": false,
+    "popularity": 16,
+    "horse_name": "ハッピーダンシング",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -19246,7 +19597,16 @@
     "bloodline-trackbias.work",
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "稍重",
+    "actual_surface": "ダート",
+    "said_state_at_collection": "",
+    "collection_state_matches_actual": null,
+    "said_expected_state": "不良",
+    "expected_state_matches_actual": false
+   }
   },
   {
    "date": "2026-11-15",
@@ -19271,7 +19631,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 3,
+    "top3": true,
+    "popularity": 1,
+    "horse_name": "ブルーレース",
+    "fukusho_payout": 120,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -19296,7 +19665,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 1,
+    "top3": true,
+    "popularity": 7,
+    "horse_name": "リトセア",
+    "fukusho_payout": 230,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -19321,7 +19699,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 2,
+    "top3": true,
+    "popularity": 2,
+    "horse_name": "アパレイユ",
+    "fukusho_payout": 160,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -19346,7 +19733,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 11,
+    "top3": false,
+    "popularity": 14,
+    "horse_name": "メモリーデイズ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -19371,7 +19767,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 8,
+    "top3": false,
+    "popularity": 8,
+    "horse_name": "パドゼフィール",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -19396,7 +19801,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 4,
+    "top3": false,
+    "popularity": 5,
+    "horse_name": "ミスヘンリー",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -19425,7 +19839,16 @@
     "bloodline-trackbias.work",
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "稍重",
+    "actual_surface": "芝",
+    "said_state_at_collection": "",
+    "collection_state_matches_actual": null,
+    "said_expected_state": "重",
+    "expected_state_matches_actual": false
+   }
   },
   {
    "date": "2026-11-15",
@@ -19450,7 +19873,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 3,
+    "top3": true,
+    "popularity": 1,
+    "horse_name": "ダイシンドラゴン",
+    "fukusho_payout": 140,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -19475,7 +19907,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 1,
+    "top3": true,
+    "popularity": 4,
+    "horse_name": "ジャスパートレノ",
+    "fukusho_payout": 190,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -19500,7 +19941,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 2,
+    "top3": true,
+    "popularity": 6,
+    "horse_name": "ラヴィサンエール",
+    "fukusho_payout": 290,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -19525,7 +19975,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 4,
+    "top3": false,
+    "popularity": 2,
+    "horse_name": "ノヴァーリス",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -19550,7 +20009,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 10,
+    "top3": false,
+    "popularity": 3,
+    "horse_name": "ショウナンカノア",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -19575,7 +20043,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 7,
+    "top3": false,
+    "popularity": 12,
+    "horse_name": "ライフイズアート",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -19604,7 +20081,16 @@
     "bloodline-trackbias.work",
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "稍重",
+    "actual_surface": "芝",
+    "said_state_at_collection": "",
+    "collection_state_matches_actual": null,
+    "said_expected_state": "重",
+    "expected_state_matches_actual": false
+   }
   },
   {
    "date": "2026-11-15",
@@ -19629,7 +20115,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 14,
+    "top3": false,
+    "popularity": 9,
+    "horse_name": "オルトパラティウム",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -19654,7 +20149,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 10,
+    "top3": false,
+    "popularity": 3,
+    "horse_name": "アスクデッドヒート",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -19679,7 +20183,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 11,
+    "top3": false,
+    "popularity": 16,
+    "horse_name": "エリム",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -19704,7 +20217,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 5,
+    "top3": false,
+    "popularity": 1,
+    "horse_name": "タケルフォーカス",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -19729,7 +20251,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 4,
+    "top3": false,
+    "popularity": 5,
+    "horse_name": "ジュンライデン",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -19754,7 +20285,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 2,
+    "top3": true,
+    "popularity": 4,
+    "horse_name": "バースライト",
+    "fukusho_payout": 300,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -19779,7 +20319,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 1,
+    "top3": true,
+    "popularity": 10,
+    "horse_name": "ドッビアーコ",
+    "fukusho_payout": 820,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -19808,7 +20357,16 @@
     "bloodline-trackbias.work",
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "稍重",
+    "actual_surface": "ダート",
+    "said_state_at_collection": "",
+    "collection_state_matches_actual": null,
+    "said_expected_state": "不良",
+    "expected_state_matches_actual": false
+   }
   },
   {
    "date": "2026-11-15",
@@ -19833,7 +20391,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 10,
+    "top3": false,
+    "popularity": 5,
+    "horse_name": "ゲイルライダー",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -19858,7 +20425,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 11,
+    "top3": false,
+    "popularity": 4,
+    "horse_name": "ドバイブルース",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -19883,7 +20459,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 14,
+    "top3": false,
+    "popularity": 2,
+    "horse_name": "ワイドブリザード",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -19908,7 +20493,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 15,
+    "top3": false,
+    "popularity": 9,
+    "horse_name": "オーケーバーディー",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -19933,7 +20527,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 7,
+    "top3": false,
+    "popularity": 1,
+    "horse_name": "シュラザック",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -19958,7 +20561,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 1,
+    "top3": true,
+    "popularity": 3,
+    "horse_name": "ゴッドブルービー",
+    "fukusho_payout": 220,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -19987,7 +20599,16 @@
     "bloodline-trackbias.work",
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "重",
+    "actual_surface": "芝",
+    "said_state_at_collection": "",
+    "collection_state_matches_actual": null,
+    "said_expected_state": "重",
+    "expected_state_matches_actual": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -20012,7 +20633,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 6,
+    "top3": false,
+    "popularity": 3,
+    "horse_name": "メイショウキンタイ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -20037,7 +20667,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 15,
+    "top3": false,
+    "popularity": 16,
+    "horse_name": "フォーグッド",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -20062,7 +20701,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 1,
+    "top3": true,
+    "popularity": 4,
+    "horse_name": "ミッドセンチュリー",
+    "fukusho_payout": 190,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -20087,7 +20735,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 9,
+    "top3": false,
+    "popularity": 9,
+    "horse_name": "ウインファヴォリ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -20112,7 +20769,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 3,
+    "top3": true,
+    "popularity": 1,
+    "horse_name": "エイシンイグニース",
+    "fukusho_payout": 200,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -20137,7 +20803,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 16,
+    "top3": false,
+    "popularity": 2,
+    "horse_name": "ウイルソン",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -20166,7 +20841,16 @@
     "bloodline-trackbias.work",
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "良",
+    "actual_surface": "ダート",
+    "said_state_at_collection": "",
+    "collection_state_matches_actual": null,
+    "said_expected_state": "不良",
+    "expected_state_matches_actual": false
+   }
   },
   {
    "date": "2026-11-15",
@@ -20191,7 +20875,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 11,
+    "top3": false,
+    "popularity": 9,
+    "horse_name": "ミラクルオーラ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -20216,7 +20909,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 2,
+    "top3": true,
+    "popularity": 3,
+    "horse_name": "ケッパレ",
+    "fukusho_payout": 170,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -20241,7 +20943,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 9,
+    "top3": false,
+    "popularity": 4,
+    "horse_name": "トーセンイルン",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -20266,7 +20977,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 4,
+    "top3": false,
+    "popularity": 11,
+    "horse_name": "ルバルマン",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -20291,7 +21011,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 14,
+    "top3": false,
+    "popularity": 16,
+    "horse_name": "ワイプユアアイズ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -20316,7 +21045,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 6,
+    "top3": false,
+    "popularity": 2,
+    "horse_name": "コスモツクヨミ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -20341,7 +21079,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 1,
+    "top3": true,
+    "popularity": 1,
+    "horse_name": "オーケーエース",
+    "fukusho_payout": 110,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -20370,7 +21117,16 @@
     "bloodline-trackbias.work",
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "良",
+    "actual_surface": "芝",
+    "said_state_at_collection": "",
+    "collection_state_matches_actual": null,
+    "said_expected_state": "重",
+    "expected_state_matches_actual": false
+   }
   },
   {
    "date": "2026-11-15",
@@ -20395,7 +21151,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 15,
+    "top3": false,
+    "popularity": 17,
+    "horse_name": "リョウランリノ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -20420,7 +21185,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 2,
+    "top3": true,
+    "popularity": 3,
+    "horse_name": "シュートザワークス",
+    "fukusho_payout": 130,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -20445,7 +21219,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 12,
+    "top3": false,
+    "popularity": 6,
+    "horse_name": "ヴィルアペックス",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -20470,7 +21253,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 16,
+    "top3": false,
+    "popularity": 14,
+    "horse_name": "コールドスリープ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -20495,7 +21287,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 3,
+    "top3": true,
+    "popularity": 1,
+    "horse_name": "シネファイル",
+    "fukusho_payout": 130,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -20520,7 +21321,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 10,
+    "top3": false,
+    "popularity": 7,
+    "horse_name": "ポジティブレンサ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -20545,7 +21355,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 14,
+    "top3": false,
+    "popularity": 16,
+    "horse_name": "フォルミナンテ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -20570,7 +21389,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 11,
+    "top3": false,
+    "popularity": 12,
+    "horse_name": "サターンテソーロ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -20595,7 +21423,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 1,
+    "top3": true,
+    "popularity": 2,
+    "horse_name": "オンザボー",
+    "fukusho_payout": 130,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -20624,7 +21461,16 @@
     "bloodline-trackbias.work",
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "良",
+    "actual_surface": "芝",
+    "said_state_at_collection": "",
+    "collection_state_matches_actual": null,
+    "said_expected_state": "重",
+    "expected_state_matches_actual": false
+   }
   },
   {
    "date": "2026-11-15",
@@ -20649,7 +21495,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 14,
+    "top3": false,
+    "popularity": 16,
+    "horse_name": "ナンヨーカラフル",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -20674,7 +21529,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 1,
+    "top3": true,
+    "popularity": 1,
+    "horse_name": "ドミナートル",
+    "fukusho_payout": 160,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -20699,7 +21563,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 8,
+    "top3": false,
+    "popularity": 4,
+    "horse_name": "フィオリアーモ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -20724,7 +21597,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 13,
+    "top3": false,
+    "popularity": 15,
+    "horse_name": "ドナミモザ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -20749,7 +21631,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 3,
+    "top3": true,
+    "popularity": 3,
+    "horse_name": "シュプレヒコール",
+    "fukusho_payout": 210,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -20774,7 +21665,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 15,
+    "top3": false,
+    "popularity": 7,
+    "horse_name": "サンレガート",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -20799,7 +21699,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 12,
+    "top3": false,
+    "popularity": 14,
+    "horse_name": "パーシビア",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -20824,7 +21733,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 5,
+    "top3": false,
+    "popularity": 2,
+    "horse_name": "ブルードロップ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -20853,7 +21771,16 @@
     "bloodline-trackbias.work",
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "良",
+    "actual_surface": "ダート",
+    "said_state_at_collection": "",
+    "collection_state_matches_actual": null,
+    "said_expected_state": "不良",
+    "expected_state_matches_actual": false
+   }
   },
   {
    "date": "2026-11-15",
@@ -20878,7 +21805,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 7,
+    "top3": false,
+    "popularity": 7,
+    "horse_name": "アイディザーブ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -20903,7 +21839,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 1,
+    "top3": true,
+    "popularity": 1,
+    "horse_name": "ホウオウマジカル",
+    "fukusho_payout": 130,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -20928,7 +21873,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 5,
+    "top3": false,
+    "popularity": 8,
+    "horse_name": "ニシノイブシギン",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -20953,7 +21907,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 2,
+    "top3": true,
+    "popularity": 4,
+    "horse_name": "ドラゴンスマイル",
+    "fukusho_payout": 210,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -20978,7 +21941,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 6,
+    "top3": false,
+    "popularity": 3,
+    "horse_name": "イチロケンソウ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -21007,7 +21979,16 @@
     "bloodline-trackbias.work",
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "良",
+    "actual_surface": "芝",
+    "said_state_at_collection": "",
+    "collection_state_matches_actual": null,
+    "said_expected_state": "重",
+    "expected_state_matches_actual": false
+   }
   },
   {
    "date": "2026-11-15",
@@ -21032,7 +22013,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 3,
+    "top3": true,
+    "popularity": 1,
+    "horse_name": "ロンドンレガシー",
+    "fukusho_payout": 120,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -21057,7 +22047,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 5,
+    "top3": false,
+    "popularity": 6,
+    "horse_name": "ペイヴザウェイ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -21082,7 +22081,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 1,
+    "top3": true,
+    "popularity": 2,
+    "horse_name": "ラディオーサ",
+    "fukusho_payout": 130,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -21107,7 +22115,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 2,
+    "top3": true,
+    "popularity": 4,
+    "horse_name": "スターリーグロウ",
+    "fukusho_payout": 140,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -21132,7 +22149,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 6,
+    "top3": false,
+    "popularity": 5,
+    "horse_name": "コルシカ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -21161,7 +22187,16 @@
     "bloodline-trackbias.work",
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "良",
+    "actual_surface": "ダート",
+    "said_state_at_collection": "",
+    "collection_state_matches_actual": null,
+    "said_expected_state": "不良",
+    "expected_state_matches_actual": false
+   }
   },
   {
    "date": "2026-11-15",
@@ -21186,7 +22221,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 13,
+    "top3": false,
+    "popularity": 16,
+    "horse_name": "オブシディアン",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -21211,7 +22255,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 14,
+    "top3": false,
+    "popularity": 7,
+    "horse_name": "アデルフィー",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -21236,7 +22289,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 1,
+    "top3": true,
+    "popularity": 5,
+    "horse_name": "テイクオンミー",
+    "fukusho_payout": 440,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -21261,7 +22323,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 4,
+    "top3": false,
+    "popularity": 1,
+    "horse_name": "アクアマーズ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -21286,7 +22357,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 2,
+    "top3": true,
+    "popularity": 4,
+    "horse_name": "モンスターラッシュ",
+    "fukusho_payout": 280,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -21311,7 +22391,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 9,
+    "top3": false,
+    "popularity": 2,
+    "horse_name": "ゴールドバローズ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -21336,7 +22425,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 15,
+    "top3": false,
+    "popularity": 11,
+    "horse_name": "サトノカイロス",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -21365,7 +22463,16 @@
     "bloodline-trackbias.work",
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "良",
+    "actual_surface": "ダート",
+    "said_state_at_collection": "",
+    "collection_state_matches_actual": null,
+    "said_expected_state": "不良",
+    "expected_state_matches_actual": false
+   }
   },
   {
    "date": "2026-11-15",
@@ -21390,7 +22497,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 11,
+    "top3": false,
+    "popularity": 3,
+    "horse_name": "レッドスティンガー",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -21415,7 +22531,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 5,
+    "top3": false,
+    "popularity": 4,
+    "horse_name": "タイキブリッツェン",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -21440,7 +22565,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 3,
+    "top3": true,
+    "popularity": 6,
+    "horse_name": "エムティエスターテ",
+    "fukusho_payout": 360,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -21465,7 +22599,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 1,
+    "top3": true,
+    "popularity": 1,
+    "horse_name": "バルダンツァ",
+    "fukusho_payout": 140,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -21490,7 +22633,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 2,
+    "top3": true,
+    "popularity": 2,
+    "horse_name": "トラヴェリンバンド",
+    "fukusho_payout": 150,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -21519,7 +22671,16 @@
     "bloodline-trackbias.work",
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "良",
+    "actual_surface": "芝",
+    "said_state_at_collection": "",
+    "collection_state_matches_actual": null,
+    "said_expected_state": "重",
+    "expected_state_matches_actual": false
+   }
   },
   {
    "date": "2026-11-15",
@@ -21544,7 +22705,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 4,
+    "top3": false,
+    "popularity": 3,
+    "horse_name": "ダノンファンスター",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -21569,7 +22739,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 12,
+    "top3": false,
+    "popularity": 12,
+    "horse_name": "ホークマン",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -21594,7 +22773,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 5,
+    "top3": false,
+    "popularity": 2,
+    "horse_name": "ドッグウッド",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -21619,7 +22807,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 1,
+    "top3": true,
+    "popularity": 1,
+    "horse_name": "リッツパーティー",
+    "fukusho_payout": 110,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -21644,7 +22841,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 9,
+    "top3": false,
+    "popularity": 5,
+    "horse_name": "コッツォリーノ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -21669,7 +22875,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 2,
+    "top3": true,
+    "popularity": 4,
+    "horse_name": "マイネルアズーロ",
+    "fukusho_payout": 220,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -21694,7 +22909,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 10,
+    "top3": false,
+    "popularity": 11,
+    "horse_name": "ビッグベルーガ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -21723,7 +22947,16 @@
     "bloodline-trackbias.work",
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "良",
+    "actual_surface": "ダート",
+    "said_state_at_collection": "",
+    "collection_state_matches_actual": null,
+    "said_expected_state": "不良",
+    "expected_state_matches_actual": false
+   }
   },
   {
    "date": "2026-11-15",
@@ -21748,7 +22981,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 11,
+    "top3": false,
+    "popularity": 2,
+    "horse_name": "リゾートアイランド",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -21773,7 +23015,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 2,
+    "top3": true,
+    "popularity": 3,
+    "horse_name": "サンマルノヴェル",
+    "fukusho_payout": 200,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -21798,7 +23049,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 3,
+    "top3": true,
+    "popularity": 4,
+    "horse_name": "キョウエイカンセ",
+    "fukusho_payout": 250,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -21823,7 +23083,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 13,
+    "top3": false,
+    "popularity": 9,
+    "horse_name": "サトミノキラリ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -21848,7 +23117,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 12,
+    "top3": false,
+    "popularity": 16,
+    "horse_name": "ウナギノボリ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -21873,7 +23151,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 1,
+    "top3": true,
+    "popularity": 1,
+    "horse_name": "トヨサカエ",
+    "fukusho_payout": 110,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -21902,7 +23189,16 @@
     "bloodline-trackbias.work",
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "良",
+    "actual_surface": "芝",
+    "said_state_at_collection": "",
+    "collection_state_matches_actual": null,
+    "said_expected_state": "重",
+    "expected_state_matches_actual": false
+   }
   },
   {
    "date": "2026-11-15",
@@ -21927,7 +23223,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 5,
+    "top3": false,
+    "popularity": 1,
+    "horse_name": "ファムクラジューズ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -21952,7 +23257,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 9,
+    "top3": false,
+    "popularity": 8,
+    "horse_name": "クロシェットノエル",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -21977,7 +23291,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 2,
+    "top3": true,
+    "popularity": 5,
+    "horse_name": "ハートメテオ",
+    "fukusho_payout": 380,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -22002,7 +23325,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 7,
+    "top3": false,
+    "popularity": 6,
+    "horse_name": "マイエレメント",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -22027,7 +23359,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 10,
+    "top3": false,
+    "popularity": 11,
+    "horse_name": "フルールドール",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -22052,7 +23393,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 3,
+    "top3": true,
+    "popularity": 2,
+    "horse_name": "タイセイプランセス",
+    "fukusho_payout": 180,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -22081,7 +23431,16 @@
     "bloodline-trackbias.work",
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "良",
+    "actual_surface": "芝",
+    "said_state_at_collection": "",
+    "collection_state_matches_actual": null,
+    "said_expected_state": "重",
+    "expected_state_matches_actual": false
+   }
   },
   {
    "date": "2026-11-15",
@@ -22106,7 +23465,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 2,
+    "top3": true,
+    "popularity": 4,
+    "horse_name": "ロジケープ",
+    "fukusho_payout": 220,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -22131,7 +23499,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 1,
+    "top3": true,
+    "popularity": 1,
+    "horse_name": "エコロアルバ",
+    "fukusho_payout": 160,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -22156,7 +23533,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 5,
+    "top3": false,
+    "popularity": 3,
+    "horse_name": "フォーチュンタイム",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -22181,7 +23567,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 7,
+    "top3": false,
+    "popularity": 17,
+    "horse_name": "ラケマーダ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -22206,7 +23601,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 8,
+    "top3": false,
+    "popularity": 2,
+    "horse_name": "マイネルチケット",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -22231,7 +23635,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 17,
+    "top3": false,
+    "popularity": 16,
+    "horse_name": "メイショウチタン",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -22256,7 +23669,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 11,
+    "top3": false,
+    "popularity": 7,
+    "horse_name": "カンシン",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -22281,7 +23703,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 15,
+    "top3": false,
+    "popularity": 14,
+    "horse_name": "タマモブラックタイ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -22310,7 +23741,16 @@
     "bloodline-trackbias.work",
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "良",
+    "actual_surface": "芝",
+    "said_state_at_collection": "",
+    "collection_state_matches_actual": null,
+    "said_expected_state": "重",
+    "expected_state_matches_actual": false
+   }
   },
   {
    "date": "2026-11-15",
@@ -22335,7 +23775,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 10,
+    "top3": false,
+    "popularity": 7,
+    "horse_name": "ストレートブラック",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -22360,7 +23809,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 7,
+    "top3": false,
+    "popularity": 5,
+    "horse_name": "レッドレガリア",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -22385,7 +23843,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 18,
+    "top3": false,
+    "popularity": 17,
+    "horse_name": "パワポケウォーズ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -22410,7 +23877,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 16,
+    "top3": false,
+    "popularity": 15,
+    "horse_name": "ディエスルージュ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -22435,7 +23911,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 1,
+    "top3": true,
+    "popularity": 1,
+    "horse_name": "プラウディッツ",
+    "fukusho_payout": 170,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -22460,7 +23945,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 11,
+    "top3": false,
+    "popularity": 3,
+    "horse_name": "ベルウッドバイオ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -22485,7 +23979,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 6,
+    "top3": false,
+    "popularity": 4,
+    "horse_name": "サンセットビュー",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -22517,7 +24020,16 @@
     "yosounohone.com",
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "稍重",
+    "actual_surface": "ダート",
+    "said_state_at_collection": "",
+    "collection_state_matches_actual": null,
+    "said_expected_state": "不良",
+    "expected_state_matches_actual": false
+   }
   },
   {
    "date": "2026-11-15",
@@ -22543,7 +24055,16 @@
    "hosts": [
     "yosounohone.com"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 9,
+    "top3": false,
+    "popularity": 7,
+    "horse_name": "ウインブリーズ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -22569,7 +24090,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 7,
+    "top3": false,
+    "popularity": 2,
+    "horse_name": "ハリケンライズ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -22595,7 +24125,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 3,
+    "top3": true,
+    "popularity": 1,
+    "horse_name": "ケーリュケイオン",
+    "fukusho_payout": 100,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -22621,7 +24160,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 2,
+    "top3": true,
+    "popularity": 3,
+    "horse_name": "ハレムスビ",
+    "fukusho_payout": 190,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -22647,7 +24195,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 4,
+    "top3": false,
+    "popularity": 4,
+    "horse_name": "カフジカニステル",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -22673,7 +24230,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 6,
+    "top3": false,
+    "popularity": 5,
+    "horse_name": "ベラジオセブン",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -22702,7 +24268,16 @@
     "bloodline-trackbias.work",
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "稍重",
+    "actual_surface": "芝",
+    "said_state_at_collection": "",
+    "collection_state_matches_actual": null,
+    "said_expected_state": "不良",
+    "expected_state_matches_actual": false
+   }
   },
   {
    "date": "2026-11-15",
@@ -22727,7 +24302,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 3,
+    "top3": true,
+    "popularity": 4,
+    "horse_name": "シャトンダンス",
+    "fukusho_payout": 200,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -22752,7 +24336,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 4,
+    "top3": false,
+    "popularity": 6,
+    "horse_name": "ポネンテ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -22777,7 +24370,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 5,
+    "top3": false,
+    "popularity": 3,
+    "horse_name": "アレオクール",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -22802,7 +24404,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 2,
+    "top3": true,
+    "popularity": 1,
+    "horse_name": "リーベラーリア",
+    "fukusho_payout": 130,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -22827,7 +24438,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 12,
+    "top3": false,
+    "popularity": 10,
+    "horse_name": "メイショウノゾミ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -22852,7 +24472,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 6,
+    "top3": false,
+    "popularity": 2,
+    "horse_name": "マイヴェール",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -22877,7 +24506,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 10,
+    "top3": false,
+    "popularity": 12,
+    "horse_name": "ラストフィールド",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -22909,7 +24547,16 @@
     "yosounohone.com",
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "稍重",
+    "actual_surface": "芝",
+    "said_state_at_collection": "",
+    "collection_state_matches_actual": null,
+    "said_expected_state": "不良",
+    "expected_state_matches_actual": false
+   }
   },
   {
    "date": "2026-11-15",
@@ -22935,7 +24582,16 @@
    "hosts": [
     "yosounohone.com"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 3,
+    "top3": true,
+    "popularity": 1,
+    "horse_name": "エフティヒア",
+    "fukusho_payout": 110,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -22961,7 +24617,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 3,
+    "top3": true,
+    "popularity": 1,
+    "horse_name": "エフティヒア",
+    "fukusho_payout": 110,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -22987,7 +24652,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 4,
+    "top3": false,
+    "popularity": 3,
+    "horse_name": "コルソヴェローチェ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -23013,7 +24687,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 8,
+    "top3": false,
+    "popularity": 6,
+    "horse_name": "エールヴォル",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -23039,7 +24722,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 1,
+    "top3": true,
+    "popularity": 5,
+    "horse_name": "ナリタトップライト",
+    "fukusho_payout": 160,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -23065,7 +24757,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 10,
+    "top3": false,
+    "popularity": 10,
+    "horse_name": "サイモンソレアード",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -23091,7 +24792,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 2,
+    "top3": true,
+    "popularity": 2,
+    "horse_name": "ホウオウビースト",
+    "fukusho_payout": 150,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -23120,7 +24830,16 @@
     "bloodline-trackbias.work",
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "不良",
+    "actual_surface": "ダート",
+    "said_state_at_collection": "",
+    "collection_state_matches_actual": null,
+    "said_expected_state": "不良",
+    "expected_state_matches_actual": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -23145,7 +24864,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 3,
+    "top3": true,
+    "popularity": 1,
+    "horse_name": "ユーキャンダンス",
+    "fukusho_payout": 110,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -23170,7 +24898,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 11,
+    "top3": false,
+    "popularity": 7,
+    "horse_name": "アンソフィリア",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -23195,7 +24932,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 2,
+    "top3": true,
+    "popularity": 3,
+    "horse_name": "ドラゴンジョルノ",
+    "fukusho_payout": 200,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -23220,7 +24966,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 8,
+    "top3": false,
+    "popularity": 2,
+    "horse_name": "モズデキマリ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -23245,7 +25000,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 4,
+    "top3": false,
+    "popularity": 11,
+    "horse_name": "アマル",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -23274,7 +25038,16 @@
     "bloodline-trackbias.work",
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "重",
+    "actual_surface": "芝",
+    "said_state_at_collection": "",
+    "collection_state_matches_actual": null,
+    "said_expected_state": "不良",
+    "expected_state_matches_actual": false
+   }
   },
   {
    "date": "2026-11-15",
@@ -23299,7 +25072,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 8,
+    "top3": false,
+    "popularity": 1,
+    "horse_name": "サトノミラクル",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -23324,7 +25106,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 4,
+    "top3": false,
+    "popularity": 14,
+    "horse_name": "レイヨンラゼール",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -23349,7 +25140,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 11,
+    "top3": false,
+    "popularity": 5,
+    "horse_name": "テーオーハピネス",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -23374,7 +25174,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 10,
+    "top3": false,
+    "popularity": 8,
+    "horse_name": "プリンセスバローズ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -23399,7 +25208,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 9,
+    "top3": false,
+    "popularity": 2,
+    "horse_name": "フォーセブンライズ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -23428,7 +25246,16 @@
     "bloodline-trackbias.work",
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "不良",
+    "actual_surface": "ダート",
+    "said_state_at_collection": "",
+    "collection_state_matches_actual": null,
+    "said_expected_state": "不良",
+    "expected_state_matches_actual": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -23453,7 +25280,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 4,
+    "top3": false,
+    "popularity": 3,
+    "horse_name": "アーデルリーベ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -23478,7 +25314,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 12,
+    "top3": false,
+    "popularity": 16,
+    "horse_name": "マリノエステーラ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -23503,7 +25348,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 3,
+    "top3": true,
+    "popularity": 5,
+    "horse_name": "アキノビューティー",
+    "fukusho_payout": 240,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -23528,7 +25382,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 13,
+    "top3": false,
+    "popularity": 15,
+    "horse_name": "シゲルオトヒメ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -23553,7 +25416,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 1,
+    "top3": true,
+    "popularity": 1,
+    "horse_name": "モスカテル",
+    "fukusho_payout": 170,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -23578,7 +25450,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 6,
+    "top3": false,
+    "popularity": 10,
+    "horse_name": "アリストクラシア",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -23603,7 +25484,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 16,
+    "top3": false,
+    "popularity": 2,
+    "horse_name": "ティエラレイナ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -23635,7 +25525,16 @@
     "yosounohone.com",
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "重",
+    "actual_surface": "芝",
+    "said_state_at_collection": "",
+    "collection_state_matches_actual": null,
+    "said_expected_state": "不良",
+    "expected_state_matches_actual": false
+   }
   },
   {
    "date": "2026-11-15",
@@ -23661,7 +25560,16 @@
    "hosts": [
     "yosounohone.com"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 2,
+    "top3": true,
+    "popularity": 2,
+    "horse_name": "ルーチェブリラーレ",
+    "fukusho_payout": 170,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -23687,7 +25595,16 @@
    "hosts": [
     "yosounohone.com"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 3,
+    "top3": true,
+    "popularity": 1,
+    "horse_name": "ロードレジェロ",
+    "fukusho_payout": 160,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -23713,7 +25630,16 @@
    "hosts": [
     "yosounohone.com"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 5,
+    "top3": false,
+    "popularity": 6,
+    "horse_name": "ムーンライトラガー",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -23739,7 +25665,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 12,
+    "top3": false,
+    "popularity": 5,
+    "horse_name": "エクリュ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -23765,7 +25700,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 17,
+    "top3": false,
+    "popularity": 15,
+    "horse_name": "ラテライト",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -23791,7 +25735,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 4,
+    "top3": false,
+    "popularity": 7,
+    "horse_name": "シャンパンライフ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -23817,7 +25770,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 7,
+    "top3": false,
+    "popularity": 12,
+    "horse_name": "ホワイトオーキッド",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -23843,7 +25805,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 2,
+    "top3": true,
+    "popularity": 2,
+    "horse_name": "ルーチェブリラーレ",
+    "fukusho_payout": 170,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -23869,7 +25840,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 13,
+    "top3": false,
+    "popularity": 4,
+    "horse_name": "メイショウトウコウ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -23895,7 +25875,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 11,
+    "top3": false,
+    "popularity": 13,
+    "horse_name": "カドーダムール",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -23921,7 +25910,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 3,
+    "top3": true,
+    "popularity": 1,
+    "horse_name": "ロードレジェロ",
+    "fukusho_payout": 160,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -23953,7 +25951,16 @@
     "yosounohone.com",
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "不良",
+    "actual_surface": "ダート",
+    "said_state_at_collection": "",
+    "collection_state_matches_actual": null,
+    "said_expected_state": "不良",
+    "expected_state_matches_actual": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -23979,7 +25986,16 @@
    "hosts": [
     "yosounohone.com"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 6,
+    "top3": false,
+    "popularity": 3,
+    "horse_name": "カーリキュー",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -24005,7 +26021,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 3,
+    "top3": true,
+    "popularity": 2,
+    "horse_name": "ショウナンタハティ",
+    "fukusho_payout": 130,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -24031,7 +26056,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 8,
+    "top3": false,
+    "popularity": 8,
+    "horse_name": "オトメナシャチョウ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -24057,7 +26091,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 1,
+    "top3": true,
+    "popularity": 1,
+    "horse_name": "ブルーマッキンジー",
+    "fukusho_payout": 110,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -24083,7 +26126,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 9,
+    "top3": false,
+    "popularity": 6,
+    "horse_name": "モカラマーズ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -24109,7 +26161,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 6,
+    "top3": false,
+    "popularity": 3,
+    "horse_name": "カーリキュー",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -24135,7 +26196,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 7,
+    "top3": false,
+    "popularity": 9,
+    "horse_name": "メモリーグラス",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -24161,7 +26231,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 4,
+    "top3": false,
+    "popularity": 4,
+    "horse_name": "ルイステソーロ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -24190,7 +26269,16 @@
     "bloodline-trackbias.work",
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "重",
+    "actual_surface": "芝",
+    "said_state_at_collection": "",
+    "collection_state_matches_actual": null,
+    "said_expected_state": "不良",
+    "expected_state_matches_actual": false
+   }
   },
   {
    "date": "2026-11-15",
@@ -24215,7 +26303,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 1,
+    "top3": true,
+    "popularity": 1,
+    "horse_name": "サイモンレガシー",
+    "fukusho_payout": 170,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -24240,7 +26337,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 2,
+    "top3": true,
+    "popularity": 7,
+    "horse_name": "モナークスヴァラー",
+    "fukusho_payout": 340,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -24265,7 +26371,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 5,
+    "top3": false,
+    "popularity": 3,
+    "horse_name": "キトゥンズクラフト",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -24290,7 +26405,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 7,
+    "top3": false,
+    "popularity": 6,
+    "horse_name": "ロマノヴェリテ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -24315,7 +26439,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 9,
+    "top3": false,
+    "popularity": 9,
+    "horse_name": "タイヴァス",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -24340,7 +26473,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 3,
+    "top3": true,
+    "popularity": 5,
+    "horse_name": "フランソワーズ",
+    "fukusho_payout": 230,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -24372,7 +26514,16 @@
     "yosounohone.com",
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "不良",
+    "actual_surface": "ダート",
+    "said_state_at_collection": "",
+    "collection_state_matches_actual": null,
+    "said_expected_state": "不良",
+    "expected_state_matches_actual": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -24398,7 +26549,16 @@
    "hosts": [
     "yosounohone.com"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 5,
+    "top3": false,
+    "popularity": 4,
+    "horse_name": "テーオーライマン",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -24424,7 +26584,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 6,
+    "top3": false,
+    "popularity": 8,
+    "horse_name": "マーウォルス",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -24450,7 +26619,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 5,
+    "top3": false,
+    "popularity": 4,
+    "horse_name": "テーオーライマン",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -24476,7 +26654,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 3,
+    "top3": true,
+    "popularity": 2,
+    "horse_name": "セイントホース",
+    "fukusho_payout": 110,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -24502,7 +26689,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 1,
+    "top3": true,
+    "popularity": 1,
+    "horse_name": "タイセイドラード",
+    "fukusho_payout": 110,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -24537,7 +26733,16 @@
     "umasiru.com",
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "重",
+    "actual_surface": "芝",
+    "said_state_at_collection": "",
+    "collection_state_matches_actual": null,
+    "said_expected_state": "不良",
+    "expected_state_matches_actual": false
+   }
   },
   {
    "date": "2026-11-15",
@@ -24564,7 +26769,16 @@
    "hosts": [
     "umasiru.com"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 12,
+    "top3": false,
+    "popularity": 11,
+    "horse_name": "ラヴァンダ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -24591,7 +26805,16 @@
    "hosts": [
     "umasiru.com"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 5,
+    "top3": false,
+    "popularity": 10,
+    "horse_name": "セキトバイースト",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -24618,7 +26841,16 @@
    "hosts": [
     "umasiru.com"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 11,
+    "top3": false,
+    "popularity": 2,
+    "horse_name": "ジュウリョクピエロ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -24645,7 +26877,16 @@
    "hosts": [
     "umasiru.com"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 9,
+    "top3": false,
+    "popularity": 9,
+    "horse_name": "シャドウメテオ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -24672,7 +26913,16 @@
    "hosts": [
     "umasiru.com"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 7,
+    "top3": false,
+    "popularity": 5,
+    "horse_name": "ジョスラン",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -24699,7 +26949,16 @@
    "hosts": [
     "umasiru.com"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 14,
+    "top3": false,
+    "popularity": 13,
+    "horse_name": "チェルヴィニア",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -24726,7 +26985,16 @@
    "hosts": [
     "umasiru.com"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 1,
+    "top3": true,
+    "popularity": 7,
+    "horse_name": "ラフターラインズ",
+    "fukusho_payout": 390,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -24753,7 +27021,16 @@
    "hosts": [
     "umasiru.com"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 3,
+    "top3": true,
+    "popularity": 3,
+    "horse_name": "アクアヴァーナル",
+    "fukusho_payout": 210,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -24780,7 +27057,16 @@
    "hosts": [
     "umasiru.com"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 10,
+    "top3": false,
+    "popularity": 17,
+    "horse_name": "ケリフレッドアスク",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -24807,7 +27093,16 @@
    "hosts": [
     "umasiru.com"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 13,
+    "top3": false,
+    "popularity": 8,
+    "horse_name": "コガネノソラ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -24834,7 +27129,16 @@
    "hosts": [
     "umasiru.com"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 4,
+    "top3": false,
+    "popularity": 16,
+    "horse_name": "レイクラシック",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -24861,7 +27165,16 @@
    "hosts": [
     "umasiru.com"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 17,
+    "top3": false,
+    "popularity": 18,
+    "horse_name": "ステレンボッシュ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -24888,7 +27201,16 @@
    "hosts": [
     "umasiru.com"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 16,
+    "top3": false,
+    "popularity": 14,
+    "horse_name": "エストゥペンダ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -24915,7 +27237,16 @@
    "hosts": [
     "umasiru.com"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 18,
+    "top3": false,
+    "popularity": 15,
+    "horse_name": "ニシノティアモ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -24944,7 +27275,16 @@
     "umasiru.com",
     "yosounohone.com"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 6,
+    "top3": false,
+    "popularity": 6,
+    "horse_name": "ヴーレヴー",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -24971,7 +27311,16 @@
    "hosts": [
     "umasiru.com"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 2,
+    "top3": true,
+    "popularity": 1,
+    "horse_name": "カムニャック",
+    "fukusho_payout": 180,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -24998,7 +27347,16 @@
    "hosts": [
     "umasiru.com"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 15,
+    "top3": false,
+    "popularity": 12,
+    "horse_name": "レーゼドラマ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -25025,7 +27383,16 @@
    "hosts": [
     "umasiru.com"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 8,
+    "top3": false,
+    "popularity": 4,
+    "horse_name": "クイーンズウォーク",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -25052,7 +27419,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 7,
+    "top3": false,
+    "popularity": 5,
+    "horse_name": "ジョスラン",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -25079,7 +27455,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 1,
+    "top3": true,
+    "popularity": 7,
+    "horse_name": "ラフターラインズ",
+    "fukusho_payout": 390,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -25106,7 +27491,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 3,
+    "top3": true,
+    "popularity": 3,
+    "horse_name": "アクアヴァーナル",
+    "fukusho_payout": 210,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -25133,7 +27527,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 12,
+    "top3": false,
+    "popularity": 11,
+    "horse_name": "ラヴァンダ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -25160,7 +27563,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 2,
+    "top3": true,
+    "popularity": 1,
+    "horse_name": "カムニャック",
+    "fukusho_payout": 180,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -25187,7 +27599,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 15,
+    "top3": false,
+    "popularity": 12,
+    "horse_name": "レーゼドラマ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -25219,7 +27640,16 @@
     "yosounohone.com",
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "actual_track_condition": "重",
+    "actual_surface": "芝",
+    "said_state_at_collection": "",
+    "collection_state_matches_actual": null,
+    "said_expected_state": "不良",
+    "expected_state_matches_actual": false
+   }
   },
   {
    "date": "2026-11-15",
@@ -25245,7 +27675,16 @@
    "hosts": [
     "yosounohone.com"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 2,
+    "top3": true,
+    "popularity": 5,
+    "horse_name": "スパークリシャール",
+    "fukusho_payout": 300,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -25271,7 +27710,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 10,
+    "top3": false,
+    "popularity": 3,
+    "horse_name": "デルアヴァー",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -25297,7 +27745,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 11,
+    "top3": false,
+    "popularity": 9,
+    "horse_name": "マイネルフルムーン",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -25323,7 +27780,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 12,
+    "top3": false,
+    "popularity": 16,
+    "horse_name": "ボンドロア",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -25349,7 +27815,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 3,
+    "top3": true,
+    "popularity": 7,
+    "horse_name": "マトラコーニッシュ",
+    "fukusho_payout": 370,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -25375,7 +27850,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 16,
+    "top3": false,
+    "popularity": 8,
+    "horse_name": "チェルノボーグ",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   },
   {
    "date": "2026-11-15",
@@ -25401,7 +27885,16 @@
    "hosts": [
     "muryou-keiba-ai.jp"
    ],
-   "result": null
+   "result": {
+    "checked_at": "2026-11-15T18:49:57.845064+09:00",
+    "source": "history.db:race_history.track_condition（確定馬場） / history.db:horse_history.place（着順） / keiba.db:race_dividends（複勝払戻） / keiba.db:race_schedule（発走時刻）",
+    "place": 13,
+    "top3": false,
+    "popularity": 2,
+    "horse_name": "オリバナム",
+    "fukusho_payout": null,
+    "fukusho_sold": true
+   }
   }
  ]
 }
