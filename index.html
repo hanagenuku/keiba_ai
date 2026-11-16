@@ -134,6 +134,8 @@ body{font-family:-apple-system,'Hiragino Sans',sans-serif;background:var(--bg);c
 .mk-高{background:#27ae60;color:#fff}
 .mk-穴{background:#e67e22;color:#fff}
 .mk-star{background:#f1c40f;color:#5a4300}
+.star-note{margin:6px 14px 2px;padding:6px 8px;background:#fff8dc;border-left:3px solid #f1c40f;border-radius:3px;font-size:10px;line-height:1.5;color:#5a4300}
+.htbl td.col-name .mk-star{margin-right:2px}
 /* ベット・コメント */
 .bets{margin-top:10px}
 .bet{display:flex;align-items:center;gap:6px;padding:7px 10px;background:#fff;border-radius:8px;margin-bottom:4px;border:1px solid var(--border)}
@@ -2143,9 +2145,14 @@ function render() {
                    : _r.place === 2 ? 'rgba(127,140,141,0.14)' : 'rgba(160,82,45,0.12)';
           _rowCls = ' style="background:'+bg+'"';
         }
-        html += '<tr'+_rowCls+'>'+_finTd+_umCell+'<td>'+(isH?'◎':'')+h.n+'</td><td class="col-name">'+h.name+starBadge+surgeBadge+'</td><td class="col-pop">'+pop+'</td><td class="col-odds">'+odds+'</td><td class="col-mk">'+mkBadge(h.mark)+'</td>'+_soloTd+_fitTd+'<td class="col-rl">'+rl+gapBadge+mxBadge+breakdownBadge+'</td>'+'<td>'+tan+'</td><td class="'+(hi?'phi':'plo')+'">'+fuku+'</td><td class="'+valClass+'">'+valCell+'</td></tr>';
+        html += '<tr'+_rowCls+'>'+_finTd+_umCell+'<td>'+(isH?'◎':'')+h.n+'</td><td class="col-name">'+starBadge+h.name+surgeBadge+'</td><td class="col-pop">'+pop+'</td><td class="col-odds">'+odds+'</td><td class="col-mk">'+mkBadge(h.mark)+'</td>'+_soloTd+_fitTd+'<td class="col-rl">'+rl+gapBadge+mxBadge+breakdownBadge+'</td>'+'<td>'+tan+'</td><td class="'+(hi?'phi':'plo')+'">'+fuku+'</td><td class="'+valClass+'">'+valCell+'</td></tr>';
       }
       html += '</table>';
+      // ☆の併記文は省略不可。スマホでは title（長押し）が出ないので、表の下に本文として出す。
+      if (race.star && race.star.n) {
+        html += '<div class="star-note"><span class="mk mk-star">☆</span> '
+              + race.star.n + '番 ' + (race.star.name || '') + '：' + _starTitle + '</div>';
+      }
       if (race.race_id) {
         html += '<div style="padding:6px 14px;text-align:center">';
         html += '<button class="odds-btn" onclick="fetchFreshOdds(\''+k+'\', this)">🔄 直前オッズ取得</button>';
