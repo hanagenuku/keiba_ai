@@ -1,0 +1,7 @@
+{
+ "reason": "スピード指数の馬場差を芝ダート別・距離の比率に直した（2026-11-18）",
+ "old_val_auc": 0.788,
+ "new_val_auc": 0.7915,
+ "n_cols": 136,
+ "speed_cache": "SpeedIndexCalculator(v2, base_times=102, track_variants=2128, latest=2026-11-15)"
+}
