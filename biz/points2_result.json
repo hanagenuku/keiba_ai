@@ -1,0 +1,516 @@
+{
+ "period": [
+  "2026-06-27",
+  "2026-11-15"
+ ],
+ "n_rec": 295,
+ "n_all": 1312,
+ "rec": [
+  {
+   "label": "T5 三連複5頭BOX（vs ◎軸流し10点）",
+   "current": {
+    "points_avg": 9.3,
+    "hit_rate": 46.3,
+    "roi": 122.0,
+    "roi_wo_top1": 80.5,
+    "loss_on_hit": 49.2
+   },
+   "new": {
+    "points_avg": 9.8,
+    "hit_rate": 42.7,
+    "roi": 97.5,
+    "roi_wo_top1": 57.9,
+    "loss_on_hit": 58.3
+   },
+   "vs_current": {
+    "d_roi": -24.5,
+    "d_roi_ci": [
+     -51.5,
+     2.1
+    ],
+    "d_roi_se": 13.6,
+    "d_hit": -3.6,
+    "d_hit_ci": [
+     -8.2,
+     1.1
+    ]
+   },
+   "verdict": {
+    "hit_rate_up": false,
+    "roi": "このデータ量では測れない",
+    "loss_on_hit_diff": 9.1,
+    "loss_increase_over_5pt": true
+   }
+  },
+  {
+   "label": "T6 三連複6頭BOX（vs ◎軸流し10点）",
+   "current": {
+    "points_avg": 9.3,
+    "hit_rate": 46.3,
+    "roi": 122.0,
+    "roi_wo_top1": 80.5,
+    "loss_on_hit": 49.2
+   },
+   "new": {
+    "points_avg": 18.3,
+    "hit_rate": 59.4,
+    "roi": 104.1,
+    "roi_wo_top1": 83.2,
+    "loss_on_hit": 61.7
+   },
+   "vs_current": {
+    "d_roi": -17.9,
+    "d_roi_ci": [
+     -69.9,
+     19.9
+    ],
+    "d_roi_se": 23.2,
+    "d_hit": 13.2,
+    "d_hit_ci": [
+     9.3,
+     17.4
+    ]
+   },
+   "verdict": {
+    "hit_rate_up": true,
+    "roi": "このデータ量では測れない",
+    "loss_on_hit_diff": 12.5,
+    "loss_increase_over_5pt": true
+   }
+  },
+  {
+   "label": "M5 三連単◎軸5頭流しマルチ（vs ◎1着固定20点）",
+   "current": {
+    "points_avg": 18.6,
+    "hit_rate": 24.6,
+    "roi": 161.2,
+    "roi_wo_top1": 66.7,
+    "loss_on_hit": 20.3
+   },
+   "new": {
+    "points_avg": 55.8,
+    "hit_rate": 46.3,
+    "roi": 110.0,
+    "roi_wo_top1": 78.8,
+    "loss_on_hit": 55.4
+   },
+   "vs_current": {
+    "d_roi": -51.2,
+    "d_roi_ci": [
+     -196.6,
+     38.6
+    ],
+    "d_roi_se": 64.0,
+    "d_hit": 21.7,
+    "d_hit_ci": [
+     17.1,
+     26.7
+    ]
+   },
+   "verdict": {
+    "hit_rate_up": true,
+    "roi": "このデータ量では測れない",
+    "loss_on_hit_diff": 35.1,
+    "loss_increase_over_5pt": true
+   }
+  },
+  {
+   "label": "C1 勝負コース: 三連複をT5に",
+   "current": {
+    "points_avg": 34.6,
+    "hit_rate": 62.8,
+    "roi": 136.8,
+    "roi_wo_top1": 72.1,
+    "loss_on_hit": 65.0
+   },
+   "new": {
+    "points_avg": 35.1,
+    "hit_rate": 69.1,
+    "roi": 129.8,
+    "roi_wo_top1": 66.0,
+    "loss_on_hit": 69.2
+   },
+   "vs_current": {
+    "d_roi": -7.0,
+    "d_roi_ci": [
+     -14.7,
+     0.4
+    ],
+    "d_roi_se": 3.8,
+    "d_hit": 6.4,
+    "d_hit_ci": [
+     3.2,
+     9.9
+    ]
+   },
+   "verdict": {
+    "hit_rate_up": true,
+    "roi": "下がるとは言えない",
+    "loss_on_hit_diff": 4.2,
+    "loss_increase_over_5pt": false
+   }
+  },
+  {
+   "label": "C2 勝負コース: 三連複をT6に",
+   "current": {
+    "points_avg": 34.6,
+    "hit_rate": 62.8,
+    "roi": 136.8,
+    "roi_wo_top1": 72.1,
+    "loss_on_hit": 65.0
+   },
+   "new": {
+    "points_avg": 43.6,
+    "hit_rate": 75.9,
+    "roi": 126.3,
+    "roi_wo_top1": 75.0,
+    "loss_on_hit": 70.6
+   },
+   "vs_current": {
+    "d_roi": -10.6,
+    "d_roi_ci": [
+     -42.0,
+     10.5
+    ],
+    "d_roi_se": 13.9,
+    "d_hit": 13.1,
+    "d_hit_ci": [
+     9.6,
+     17.0
+    ]
+   },
+   "verdict": {
+    "hit_rate_up": true,
+    "roi": "このデータ量では測れない",
+    "loss_on_hit_diff": 5.6,
+    "loss_increase_over_5pt": true
+   }
+  },
+  {
+   "label": "C3 勝負コース: 三連単をM5に",
+   "current": {
+    "points_avg": 34.6,
+    "hit_rate": 62.8,
+    "roi": 136.8,
+    "roi_wo_top1": 72.1,
+    "loss_on_hit": 65.0
+   },
+   "new": {
+    "points_avg": 71.7,
+    "hit_rate": 62.8,
+    "roi": 109.7,
+    "roi_wo_top1": 78.7,
+    "loss_on_hit": 64.4
+   },
+   "vs_current": {
+    "d_roi": -27.1,
+    "d_roi_ci": [
+     -106.8,
+     24.5
+    ],
+    "d_roi_se": 34.7,
+    "d_hit": 0.0,
+    "d_hit_ci": [
+     0.0,
+     0.0
+    ]
+   },
+   "verdict": {
+    "hit_rate_up": false,
+    "roi": "このデータ量では測れない",
+    "loss_on_hit_diff": -0.6,
+    "loss_increase_over_5pt": false
+   }
+  },
+  {
+   "label": "C4 勝負コース: T6とM5",
+   "current": {
+    "points_avg": 34.6,
+    "hit_rate": 62.8,
+    "roi": 136.8,
+    "roi_wo_top1": 72.1,
+    "loss_on_hit": 65.0
+   },
+   "new": {
+    "points_avg": 80.7,
+    "hit_rate": 75.9,
+    "roi": 107.1,
+    "roi_wo_top1": 79.5,
+    "loss_on_hit": 71.0
+   },
+   "vs_current": {
+    "d_roi": -29.8,
+    "d_roi_ci": [
+     -116.2,
+     24.4
+    ],
+    "d_roi_se": 37.7,
+    "d_hit": 13.1,
+    "d_hit_ci": [
+     9.6,
+     17.0
+    ]
+   },
+   "verdict": {
+    "hit_rate_up": true,
+    "roi": "このデータ量では測れない",
+    "loss_on_hit_diff": 6.0,
+    "loss_increase_over_5pt": true
+   }
+  }
+ ],
+ "all": [
+  {
+   "label": "T5 三連複5頭BOX（vs ◎軸流し10点）",
+   "current": {
+    "points_avg": 9.7,
+    "hit_rate": 32.4,
+    "roi": 84.2,
+    "roi_wo_top1": 75.6,
+    "loss_on_hit": 32.1
+   },
+   "new": {
+    "points_avg": 9.9,
+    "hit_rate": 30.0,
+    "roi": 75.3,
+    "roi_wo_top1": 66.8,
+    "loss_on_hit": 36.9
+   },
+   "vs_current": {
+    "d_roi": -8.9,
+    "d_roi_ci": [
+     -19.8,
+     2.0
+    ],
+    "d_roi_se": 5.4,
+    "d_hit": -2.3,
+    "d_hit_ci": [
+     -4.5,
+     -0.4
+    ]
+   },
+   "verdict": {
+    "hit_rate_up": false,
+    "roi": "下がるとは言えない",
+    "loss_on_hit_diff": 4.8,
+    "loss_increase_over_5pt": false
+   }
+  },
+  {
+   "label": "T6 三連複6頭BOX（vs ◎軸流し10点）",
+   "current": {
+    "points_avg": 9.7,
+    "hit_rate": 32.4,
+    "roi": 84.2,
+    "roi_wo_top1": 75.6,
+    "loss_on_hit": 32.1
+   },
+   "new": {
+    "points_avg": 19.4,
+    "hit_rate": 42.8,
+    "roi": 73.8,
+    "roi_wo_top1": 69.5,
+    "loss_on_hit": 51.2
+   },
+   "vs_current": {
+    "d_roi": -10.4,
+    "d_roi_ci": [
+     -25.5,
+     3.4
+    ],
+    "d_roi_se": 7.5,
+    "d_hit": 10.4,
+    "d_hit_ci": [
+     8.7,
+     12.2
+    ]
+   },
+   "verdict": {
+    "hit_rate_up": true,
+    "roi": "下がるとは言えない",
+    "loss_on_hit_diff": 19.1,
+    "loss_increase_over_5pt": true
+   }
+  },
+  {
+   "label": "M5 三連単◎軸5頭流しマルチ（vs ◎1着固定20点）",
+   "current": {
+    "points_avg": 19.5,
+    "hit_rate": 16.1,
+    "roi": 77.2,
+    "roi_wo_top1": 57.5,
+    "loss_on_hit": 11.5
+   },
+   "new": {
+    "points_avg": 58.4,
+    "hit_rate": 32.4,
+    "roi": 75.5,
+    "roi_wo_top1": 69.0,
+    "loss_on_hit": 45.0
+   },
+   "vs_current": {
+    "d_roi": -1.6,
+    "d_roi_ci": [
+     -38.3,
+     23.8
+    ],
+    "d_roi_se": 15.7,
+    "d_hit": 16.3,
+    "d_hit_ci": [
+     14.2,
+     18.4
+    ]
+   },
+   "verdict": {
+    "hit_rate_up": true,
+    "roi": "このデータ量では測れない",
+    "loss_on_hit_diff": 33.5,
+    "loss_increase_over_5pt": true
+   }
+  },
+  {
+   "label": "C1 勝負コース: 三連複をT5に",
+   "current": {
+    "points_avg": 36.1,
+    "hit_rate": 50.7,
+    "roi": 78.9,
+    "roi_wo_top1": 65.4,
+    "loss_on_hit": 63.3
+   },
+   "new": {
+    "points_avg": 36.3,
+    "hit_rate": 55.4,
+    "roi": 76.5,
+    "roi_wo_top1": 63.1,
+    "loss_on_hit": 66.8
+   },
+   "vs_current": {
+    "d_roi": -2.4,
+    "d_roi_ci": [
+     -5.2,
+     0.5
+    ],
+    "d_roi_se": 1.4,
+    "d_hit": 4.6,
+    "d_hit_ci": [
+     3.2,
+     6.0
+    ]
+   },
+   "verdict": {
+    "hit_rate_up": true,
+    "roi": "下がるとは言えない",
+    "loss_on_hit_diff": 3.5,
+    "loss_increase_over_5pt": false
+   }
+  },
+  {
+   "label": "C2 勝負コース: 三連複をT6に",
+   "current": {
+    "points_avg": 36.1,
+    "hit_rate": 50.7,
+    "roi": 78.9,
+    "roi_wo_top1": 65.4,
+    "loss_on_hit": 63.3
+   },
+   "new": {
+    "points_avg": 45.7,
+    "hit_rate": 61.2,
+    "roi": 75.7,
+    "roi_wo_top1": 65.0,
+    "loss_on_hit": 67.9
+   },
+   "vs_current": {
+    "d_roi": -3.3,
+    "d_roi_ci": [
+     -10.9,
+     2.7
+    ],
+    "d_roi_se": 3.5,
+    "d_hit": 10.4,
+    "d_hit_ci": [
+     8.8,
+     12.1
+    ]
+   },
+   "verdict": {
+    "hit_rate_up": true,
+    "roi": "下がるとは言えない",
+    "loss_on_hit_diff": 4.6,
+    "loss_increase_over_5pt": false
+   }
+  },
+  {
+   "label": "C3 勝負コース: 三連単をM5に",
+   "current": {
+    "points_avg": 36.1,
+    "hit_rate": 50.7,
+    "roi": 78.9,
+    "roi_wo_top1": 65.4,
+    "loss_on_hit": 63.3
+   },
+   "new": {
+    "points_avg": 75.0,
+    "hit_rate": 50.7,
+    "roi": 76.8,
+    "roi_wo_top1": 70.3,
+    "loss_on_hit": 60.7
+   },
+   "vs_current": {
+    "d_roi": -2.2,
+    "d_roi_ci": [
+     -21.6,
+     13.5
+    ],
+    "d_roi_se": 8.9,
+    "d_hit": 0.0,
+    "d_hit_ci": [
+     0.0,
+     0.0
+    ]
+   },
+   "verdict": {
+    "hit_rate_up": false,
+    "roi": "下がるとは言えない",
+    "loss_on_hit_diff": -2.6,
+    "loss_increase_over_5pt": false
+   }
+  },
+  {
+   "label": "C4 勝負コース: T6とM5",
+   "current": {
+    "points_avg": 36.1,
+    "hit_rate": 50.7,
+    "roi": 78.9,
+    "roi_wo_top1": 65.4,
+    "loss_on_hit": 63.3
+   },
+   "new": {
+    "points_avg": 84.6,
+    "hit_rate": 61.2,
+    "roi": 75.2,
+    "roi_wo_top1": 69.5,
+    "loss_on_hit": 68.4
+   },
+   "vs_current": {
+    "d_roi": -3.7,
+    "d_roi_ci": [
+     -24.2,
+     11.6
+    ],
+    "d_roi_se": 9.3,
+    "d_hit": 10.4,
+    "d_hit_ci": [
+     8.8,
+     12.1
+    ]
+   },
+   "verdict": {
+    "hit_rate_up": true,
+    "roi": "下がるとは言えない",
+    "loss_on_hit_diff": 5.1,
+    "loss_increase_over_5pt": true
+   }
+  }
+ ]
+}
