@@ -117,6 +117,7 @@
 
 - 出馬表・結果ページの CNAME suffix 走査が間欠的に失敗し、実在するレースが朝の記事や `history.db` から落ちる（2026-10-10〜12 に3開催日中2日）。「欠番」と誤記録する点は直した（今は「suffix走査で発見できず」と記録）が、**走査の失敗そのものは直っていない**。朝に落ちた分は 11:30 の追い更新で戻ることが多い。
 - 🔴 **学習と本番の推論でキーが違う**: 馬番は学習 `horse_num`／本番 `num`・`post_position`、レースIDは `race_id`／`id`、日付は `YYYY-MM-DD`／`YYYYMMDD`。片方だけ読むコードは本番でだけ黙って既定値に落ちる（2026-11-13 に `f_post`・`f_sex`・web 指数の3経路で発見して修正。馬番は `web_signals.horse_number()`、レースIDは `race_key()` を使う・`tests/test_inference_key_parity.py`）。
+- ✅ **スピード指数の馬場差キャッシュが 2026-07-26 で止まっていた**（以降の過去走は無補正）。2026-11-18 に芝ダート別・距離の比率に直し、古ければ読み込み時に作り直すようにした（`src/features/speed_index.py`）。特徴量の作り方を直したら `retrain-production.yml` でモデル一式（☆含む）を作り直す。
 - `f_track_cond` は R1〜R3 と前日生成では常に「良」（`going.py` は当日すでに終わったレースからしか取れない）。
 - **`race_history.pace_label` は充足 0%**（12,475レース中0件。スキーマ文書の「修正済み・改善見込み」は実現していない）。`first_3f`/`last_3f` も 47.6% だけ。**ペースを使う案を出す前にここを確かめる**（2026-11-10・`hitrate/EXPLORE_unpopular_place.md`）。
 - ⚠ `horse_history.running_style` は**そのレースの実位置**から付く後知恵（逃げ7%/先行15%/差し31%/追込47%）。レース前に使えるのは `engine.py::_estimate_style`（直近5走の最頻値）の方。取り違えるとリークになる。
