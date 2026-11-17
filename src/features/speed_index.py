@@ -3,8 +3,8 @@
 
 【設計方針】
 - 基準タイム: (distance, surface, track_condition) ごとの1着馬 finish_time 中央値
-- Track Variant: 同日×同競馬場の全レースで「基準タイムからのズレ」の中央値
-- スピード指数: (基準タイム - (実タイム - Track Variant)) / 基準タイム * 1000
+- Track Variant: 同日×同競馬場×芝ダートの勝ち馬で「基準タイムからのずれの比率」の中央値（2026-11-18〜）
+- スピード指数: (基準タイム - (実タイム - 比率×基準タイム)) / 基準タイム * 1000
   → 高いほど速い（= 強い）
 - 上がり3Fスピード指数: (レース最速上がり - 自身の上がり) / レース最速上がり * 1000
   → 高いほど上がりが速い
@@ -23,12 +23,40 @@ import sqlite3
 import statistics
 
 
+#: キャッシュの形式。変えたら上げる（古い形式のキャッシュは読み込み時に作り直す）。
+#: v2（2026-11-18）: 馬場差を「日付×競馬場×芝ダート」ごとに、基準タイムに対する比率で出す。
+CACHE_VERSION = 2
+
+#: 馬場差を出すのに要る、同じ日・同じ競馬場・同じ芝ダートの勝ち馬の数。
+#: これ未満なら「日付×競馬場」（芝ダート合算）の値に戻し、それも無ければ 0。
+MIN_RACES_PER_SURFACE = 2
+
+
+def _norm_date(raw):
+    d = str(raw or '').replace('-', '')[:8]
+    return f'{d[:4]}-{d[4:6]}-{d[6:8]}' if len(d) == 8 else str(raw or '')[:10]
+
+
 class SpeedIndexCalculator:
-    """基準タイムと Track Variant を事前計算してスピード指数を提供するクラス。"""
+    """基準タイムと馬場差（Track Variant）を事前計算してスピード指数を提供するクラス。
+
+    🔴 2026-11-18 に2点を直した（ユーザー指示「効果があろうがなかろうがなおしてください」）:
+
+    1. **芝とダートを分ける。** 以前は「日付×競馬場」で1つの値だったので、
+       同じ日に芝が高速・ダートが時計のかかる馬場でも、両方を同じ値で補正していた。
+       いまは「日付×競馬場×芝ダート」ごと。数が足りなければ合算の値に戻す。
+    2. **距離で割る。** 以前は秒のずれをそのまま中央値にしていたので、
+       1200m の1秒と 2400m の1秒が同じ重さで混ざっていた。
+       いまは「基準タイムに対するずれの比率」の中央値を馬場差にし、
+       補正は その比率 × そのレースの基準タイム（秒）で行う。
+    """
 
     def __init__(self, db_path):
-        self.base_times = {}      # (dist, surf, tc) → median winner time
-        self.track_variants = {}  # (date, racecourse) → median deviation (秒)
+        self.version = CACHE_VERSION
+        self.base_times = {}         # (dist, surf, tc) → 勝ち馬タイムの中央値（秒）
+        self.track_variants = {}     # (date, racecourse, surface) → ずれの比率の中央値
+        self.track_variants_all = {} # (date, racecourse) → 同上（芝ダート合算・予備）
+        self.latest_date = ''        # 馬場差を出した最後の日（キャッシュの古さの判定に使う）
         self._build(db_path)
 
     # ── 構築 ──────────────────────────────────────────────────
@@ -56,8 +84,6 @@ class SpeedIndexCalculator:
         # ── Step 1: 基準タイム ────────────────────────────────
         from collections import defaultdict
         winner_times = defaultdict(list)
-        all_by_dist_surf = defaultdict(list)  # (dist, surf) → list of finish_time (for fallback)
-
         for r in rows:
             dist = int(r['distance'] or 0)
             surf = r['surface'] or '芝'
@@ -66,8 +92,6 @@ class SpeedIndexCalculator:
             if dist <= 0 or ft <= 0:
                 continue
             winner_times[(dist, surf, tc)].append(ft)
-            if tc == '良':
-                all_by_dist_surf[(dist, surf)].append(ft)
 
         for key, times in winner_times.items():
             if len(times) >= 1:
@@ -83,41 +107,51 @@ class SpeedIndexCalculator:
                         self.base_times[base_key] + TC_ADJUST_SEC.get(tc, 0.0)
                     )
 
-        # ── Step 2: Track Variant ──────────────────────────────
-        day_deviations = defaultdict(list)
-
+        # ── Step 2: 馬場差（比率）────────────────────────────
+        by_surface = defaultdict(list)
+        by_day = defaultdict(list)
         for r in rows:
             dist = int(r['distance'] or 0)
             surf = r['surface'] or '芝'
             tc   = r['track_condition'] or '良'
             ft   = float(r['finish_time'])
-            # 日付を YYYY-MM-DD に統一（YYYYMMDD と YYYY-MM-DD 混在対応）
-            raw_date = str(r['date'] or '').replace('-', '')[:8]
-            if len(raw_date) == 8:
-                date = f'{raw_date[:4]}-{raw_date[4:6]}-{raw_date[6:8]}'
-            else:
-                date = raw_date
+            date = _norm_date(r['date'])
             rc   = r['racecourse'] or ''
-            if dist <= 0 or ft <= 0 or not date or not rc:
+            if dist <= 0 or ft <= 0 or len(date) != 10 or not rc:
                 continue
             base = self.base_times.get((dist, surf, tc))
-            if base is None:
+            if not base:
                 continue
-            deviation = ft - base  # 負=速い、正=遅い
-            day_deviations[(date, rc)].append(deviation)
+            ratio = (ft - base) / base   # 負=速い、正=遅い
+            by_surface[(date, rc, surf)].append(ratio)
+            by_day[(date, rc)].append(ratio)
 
-        for key, devs in day_deviations.items():
-            if len(devs) >= 2:
-                self.track_variants[key] = statistics.median(devs)
+        for key, v in by_surface.items():
+            if len(v) >= MIN_RACES_PER_SURFACE:
+                self.track_variants[key] = statistics.median(v)
+        for key, v in by_day.items():
+            if len(v) >= MIN_RACES_PER_SURFACE:
+                self.track_variants_all[key] = statistics.median(v)
+        if by_day:
+            self.latest_date = max(k[0] for k in by_day)
 
     # ── 計算 ──────────────────────────────────────────────────
+
+    def variant_ratio(self, date, racecourse, surface):
+        """その日・その競馬場・その芝ダートの馬場差（比率）。無ければ合算、それも無ければ 0。"""
+        d = _norm_date(date)
+        rc = racecourse or ''
+        v = self.track_variants.get((d, rc, surface or '芝'))
+        if v is None:
+            v = self.track_variants_all.get((d, rc), 0.0)
+        return v
 
     def calc_speed_figure(self, finish_time, distance, surface,
                           track_condition, date, racecourse):
         """1頭のスピード指数を計算。finish_time=None/0 のときは None を返す。
 
         スピード指数 = (基準タイム - 調整済タイム) / 基準タイム * 1000
-        調整済タイム = finish_time - track_variant（その日の馬場速度補正）
+        調整済タイム = finish_time - 馬場差の比率 × 基準タイム
         """
         if not finish_time or float(finish_time) <= 0:
             return None
@@ -127,13 +161,6 @@ class SpeedIndexCalculator:
         surf = surface or '芝'
         tc   = track_condition or '良'
 
-        # 日付文字列正規化
-        date_str = str(date or '').replace('-', '')[:8]
-        if len(date_str) == 8:
-            date_norm = f'{date_str[:4]}-{date_str[4:6]}-{date_str[6:8]}'
-        else:
-            date_norm = str(date or '')[:10]
-
         base = self.base_times.get((dist, surf, tc))
         if base is None:
             # 「良」でフォールバック
@@ -141,8 +168,7 @@ class SpeedIndexCalculator:
         if base is None or base <= 0:
             return None
 
-        tv = self.track_variants.get((date_norm, racecourse or ''), 0.0)
-        adjusted = ft - tv
+        adjusted = ft - self.variant_ratio(date, racecourse, surf) * base
         fig = (base - adjusted) / base * 1000
         return round(fig, 2)
 
@@ -161,22 +187,50 @@ class SpeedIndexCalculator:
         return round((r - a) / r * 1000, 2)
 
     def __repr__(self):
-        return (f'SpeedIndexCalculator('
+        return (f'SpeedIndexCalculator(v{getattr(self, "version", 1)}, '
                 f'base_times={len(self.base_times)}, '
-                f'track_variants={len(self.track_variants)})')
+                f'track_variants={len(self.track_variants)}, '
+                f'latest={getattr(self, "latest_date", "")})')
 
 
 # ── キャッシュ I/O ────────────────────────────────────────────
 
+def _history_latest_date(db_path):
+    try:
+        conn = sqlite3.connect(db_path)
+        d = conn.execute('SELECT MAX(date) FROM horse_history WHERE place = 1 '
+                         'AND finish_time > 0').fetchone()[0]
+        conn.close()
+        return _norm_date(d) if d else ''
+    except Exception:
+        return ''
+
+
+def cache_is_usable(calc, db_path):
+    """キャッシュがいまの形式で、history.db の最後の日まで馬場差を持っているか。
+
+    🔴 2026-11-18 に見つかった不具合: 以前は「キャッシュがあれば中身を問わず使う」作りで、
+       どのワークフローも作り直していなかった。リポジトリのキャッシュは 2026-07-26 で止まっていて、
+       それ以降の約4か月の過去走は**馬場差の補正が 0（無補正）**になっていた（学習データも本番も）。
+    """
+    if getattr(calc, 'version', 1) != CACHE_VERSION:
+        return False
+    latest = _history_latest_date(db_path)
+    return not latest or getattr(calc, 'latest_date', '') >= latest
+
+
 def load_speed_index_calculator(base_dir):
-    """speed_index_cache.pkl を読み込む。なければ history.db から構築して保存。"""
+    """speed_index_cache.pkl を読み込む。古い形式・古い中身なら history.db から作り直して保存する。"""
     cache_path = os.path.join(base_dir, 'data', 'speed_index_cache.pkl')
     db_path    = os.path.join(base_dir, 'data', 'history.db')
 
     if os.path.exists(cache_path):
         try:
             with open(cache_path, 'rb') as f:
-                return pickle.load(f)
+                calc = pickle.load(f)
+            if not os.path.exists(db_path) or cache_is_usable(calc, db_path):
+                return calc
+            print('  🔨 speed_index_cache.pkl が古いので作り直す')
         except Exception:
             pass
 
