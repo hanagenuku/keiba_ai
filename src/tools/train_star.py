@@ -52,9 +52,13 @@ DRIFT_SEED = 11
 
 
 def feat_cols(df):
-    """市場列と除外列を抜いた数値列。本番 residual モデルの `feature_cols` と一致する。"""
+    """市場列と除外列を抜いた数値列。本番 residual モデルの `feature_cols` から web 由来の列を除いたものと一致する。
+
+    🔴 ☆は web 由来の列（`f_ws_*`・2026-11-13 採用）を使わない（`tests/test_star.py` が守る）。
+       2026-11-18 の作り直しで、学習データに web 列が入ったまま ☆ を学習してしまったので明示的に除く。
+    """
     ex = set(_EXCLUDE_COLS) | {'date_obj', '_n_horses'} | set(_MARKET_FEAT_COLS)
-    return [c for c in df.columns if c not in ex and df[c].dtype.kind in 'fi']
+    return [c for c in df.columns if c not in ex and df[c].dtype.kind in 'fi' and not c.startswith('f_ws_')]
 
 
 def build_pairs(df, X, place, cols):
@@ -101,7 +105,7 @@ def main():
     meta_p = os.path.join(base, 'data', 'xgb_feature_cols_residual.json')
     if os.path.exists(meta_p):
         with open(meta_p, encoding='utf-8') as f:
-            prod = list(json.load(f)['feature_cols'])
+            prod = [c for c in json.load(f)['feature_cols'] if not c.startswith('f_ws_')]
         if set(prod) != set(cols):
             raise SystemExit(
                 f'本番 residual の列と一致しない（本番 {len(prod)} / ここ {len(cols)}）。'
