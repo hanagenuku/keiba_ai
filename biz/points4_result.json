@@ -1,0 +1,173 @@
+{
+ "period": [
+  "20261003",
+  "20261115"
+ ],
+ "days": 14,
+ "n_all": 408,
+ "n_rec": 64,
+ "rec": [
+  {
+   "size": 5,
+   "races": 64,
+   "A": {
+    "points": 10.0,
+    "hit_rate": 54.7,
+    "roi": 73.2,
+    "roi_wo_top1": 48.4,
+    "loss_on_hit": 68.6
+   },
+   "B": {
+    "points": 10.0,
+    "hit_rate": 59.4,
+    "roi": 78.4,
+    "roi_wo_top1": 53.7,
+    "loss_on_hit": 65.8
+   },
+   "d_hit": -4.7,
+   "d_hit_ci": [
+    -10.9,
+    1.6
+   ],
+   "d_roi": -5.1,
+   "d_roi_ci": [
+    -18.8,
+    8.9
+   ],
+   "d_roi_se": 6.9,
+   "verdict": {
+    "hit": "差は言えない",
+    "roi": "下がるとは言えない"
+   },
+   "extra_horses": {
+    "0": 39,
+    "1": 25
+   },
+   "same_as_B": 50,
+   "star_races": 0
+  },
+  {
+   "size": 6,
+   "races": 64,
+   "A": {
+    "points": 20.0,
+    "hit_rate": 71.9,
+    "roi": 63.2,
+    "roi_wo_top1": 51.2,
+    "loss_on_hit": 80.4
+   },
+   "B": {
+    "points": 20.0,
+    "hit_rate": 75.0,
+    "roi": 69.3,
+    "roi_wo_top1": 57.4,
+    "loss_on_hit": 77.1
+   },
+   "d_hit": -3.1,
+   "d_hit_ci": [
+    -7.8,
+    0.0
+   ],
+   "d_roi": -6.1,
+   "d_roi_ci": [
+    -15.3,
+    0.0
+   ],
+   "d_roi_se": 4.2,
+   "verdict": {
+    "hit": "差は言えない",
+    "roi": "下がるとは言えない"
+   },
+   "extra_horses": {
+    "0": 39,
+    "1": 25
+   },
+   "same_as_B": 56,
+   "star_races": 0
+  }
+ ],
+ "all": [
+  {
+   "size": 5,
+   "races": 408,
+   "A": {
+    "points": 10.0,
+    "hit_rate": 31.6,
+    "roi": 72.6,
+    "roi_wo_top1": 65.8,
+    "loss_on_hit": 40.3
+   },
+   "B": {
+    "points": 10.0,
+    "hit_rate": 35.3,
+    "roi": 73.3,
+    "roi_wo_top1": 69.4,
+    "loss_on_hit": 38.2
+   },
+   "d_hit": -3.7,
+   "d_hit_ci": [
+    -6.9,
+    -0.7
+   ],
+   "d_roi": -0.6,
+   "d_roi_ci": [
+    -19.9,
+    22.4
+   ],
+   "d_roi_se": 10.7,
+   "verdict": {
+    "hit": "下がる",
+    "roi": "測れない"
+   },
+   "extra_horses": {
+    "0": 138,
+    "1": 212,
+    "2": 57,
+    "3": 1
+   },
+   "same_as_B": 232,
+   "star_races": 11
+  },
+  {
+   "size": 6,
+   "races": 408,
+   "A": {
+    "points": 20.0,
+    "hit_rate": 46.1,
+    "roi": 72.0,
+    "roi_wo_top1": 68.7,
+    "loss_on_hit": 54.3
+   },
+   "B": {
+    "points": 20.0,
+    "hit_rate": 48.3,
+    "roi": 70.3,
+    "roi_wo_top1": 67.6,
+    "loss_on_hit": 51.3
+   },
+   "d_hit": -2.2,
+   "d_hit_ci": [
+    -4.9,
+    0.2
+   ],
+   "d_roi": 1.7,
+   "d_roi_ci": [
+    -8.5,
+    13.6
+   ],
+   "d_roi_se": 5.6,
+   "verdict": {
+    "hit": "差は言えない",
+    "roi": "下がるとは言えない"
+   },
+   "extra_horses": {
+    "0": 138,
+    "1": 212,
+    "2": 57,
+    "3": 1
+   },
+   "same_as_B": 273,
+   "star_races": 11
+  }
+ ]
+}
