@@ -1,0 +1,180 @@
+{
+ "period": [
+  "2026-06-27",
+  "2026-11-08"
+ ],
+ "n_races": 1243,
+ "n_star_races": 195,
+ "n_switch": 106,
+ "n_switch_rec": 23,
+ "all": {
+  "races": 106,
+  "steady": {
+   "current": {
+    "hit_rate": 47.2,
+    "roi": 71.5,
+    "roi_wo_top1": 61.4,
+    "loss_on_hit": 54.0
+   },
+   "star": {
+    "hit_rate": 42.5,
+    "roi": 71.2,
+    "roi_wo_top1": 67.7,
+    "loss_on_hit": 37.8
+   },
+   "diff": {
+    "d_hit": -4.7,
+    "d_hit_ci": [
+     -18.9,
+     9.4
+    ],
+    "d_roi": -0.2,
+    "d_roi_ci": [
+     -34.9,
+     35.0
+    ],
+    "d_roi_se": 18.1
+   }
+  },
+  "aggressive": {
+   "current": {
+    "hit_rate": 37.7,
+    "roi": 213.0,
+    "roi_wo_top1": 46.7,
+    "loss_on_hit": 72.5
+   },
+   "star": {
+    "hit_rate": 37.7,
+    "roi": 46.5,
+    "roi_wo_top1": 40.6,
+    "loss_on_hit": 62.5
+   },
+   "diff": {
+    "d_hit": 0.0,
+    "d_hit_ci": [
+     -12.3,
+     12.3
+    ],
+    "d_roi": -166.5,
+    "d_roi_ci": [
+     -523.4,
+     26.1
+    ],
+    "d_roi_se": 163.6
+   }
+  },
+  "fukusho": {
+   "current": {
+    "hit_rate": 47.2,
+    "roi": 75.8,
+    "roi_wo_top1": 72.2,
+    "loss_on_hit": 0.0
+   },
+   "star": {
+    "hit_rate": 42.5,
+    "roi": 67.7,
+    "roi_wo_top1": 65.7,
+    "loss_on_hit": 0.0
+   },
+   "diff": {
+    "d_hit": -4.7,
+    "d_hit_ci": [
+     -18.9,
+     9.4
+    ],
+    "d_roi": -8.1,
+    "d_roi_ci": [
+     -33.9,
+     19.1
+    ],
+    "d_roi_se": 13.4
+   }
+  }
+ },
+ "rec": {
+  "races": 23,
+  "steady": {
+   "current": {
+    "hit_rate": 52.2,
+    "roi": 95.7,
+    "roi_wo_top1": 48.9,
+    "loss_on_hit": 58.3
+   },
+   "star": {
+    "hit_rate": 43.5,
+    "roi": 71.3,
+    "roi_wo_top1": 60.5,
+    "loss_on_hit": 40.0
+   },
+   "diff": {
+    "d_hit": -8.7,
+    "d_hit_ci": [
+     -39.1,
+     21.7
+    ],
+    "d_roi": -24.3,
+    "d_roi_ci": [
+     -145.7,
+     66.3
+    ],
+    "d_roi_se": 55.2
+   }
+  },
+  "aggressive": {
+   "current": {
+    "hit_rate": 56.5,
+    "roi": 831.9,
+    "roi_wo_top1": 53.4,
+    "loss_on_hit": 76.9
+   },
+   "star": {
+    "hit_rate": 43.5,
+    "roi": 19.6,
+    "roi_wo_top1": 15.3,
+    "loss_on_hit": 80.0
+   },
+   "diff": {
+    "d_hit": -13.0,
+    "d_hit_ci": [
+     -39.1,
+     13.0
+    ],
+    "d_roi": -812.3,
+    "d_roi_ci": [
+     -2398.5,
+     3.1
+    ],
+    "d_roi_se": 748.1
+   }
+  },
+  "fukusho": {
+   "current": {
+    "hit_rate": 52.2,
+    "roi": 81.7,
+    "roi_wo_top1": 64.5,
+    "loss_on_hit": 0.0
+   },
+   "star": {
+    "hit_rate": 43.5,
+    "roi": 58.7,
+    "roi_wo_top1": 53.6,
+    "loss_on_hit": 0.0
+   },
+   "diff": {
+    "d_hit": -8.7,
+    "d_hit_ci": [
+     -39.1,
+     21.7
+    ],
+    "d_roi": -23.0,
+    "d_roi_ci": [
+     -80.9,
+     30.0
+    ],
+    "d_roi_se": 28.8
+   }
+  }
+ },
+ "stop": [],
+ "verdict": "実装へ進む"
+}
