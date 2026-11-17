@@ -347,3 +347,11 @@ class TestEndToEndThroughCalcAll:
         key = lambda xs: [(h['num'], h.get('rl_rank'), h.get('ai_rank'),  # noqa: E731
                            round(h['total'], 6)) for h in xs]
         assert key(before) == key(after), '☆を入れたら順位・スコアが動いた'
+
+
+def test_train_star_feature_cols_exclude_web_columns():
+    """学習データに web 由来の列があっても、☆の学習には使わない（2026-11-18）。"""
+    import pandas as pd
+    from src.tools.train_star import feat_cols
+    df = pd.DataFrame({'race_id': ['a'], 'f_x': [1.0], 'f_ws_kayochinkeiba_rank': [1.0], 'f_popularity': [1.0]})
+    assert feat_cols(df) == ['f_x']
