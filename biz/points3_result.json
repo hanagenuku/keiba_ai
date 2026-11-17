@@ -1,0 +1,252 @@
+{
+ "period": [
+  "2026-06-27",
+  "2026-11-15"
+ ],
+ "rec": {
+  "n": 282,
+  "median": {
+   "field": 10.0,
+   "fav": 2.3,
+   "p6": 13.55,
+   "conf": 71.0
+  },
+  "split_date": "2026-08-22",
+  "baseline": {
+   "常に5頭": {
+    "points": 35.08,
+    "hit": 69.15,
+    "roi": 129.85,
+    "loss": 69.23
+   },
+   "常に6頭": {
+    "points": 43.59,
+    "hit": 75.89,
+    "roi": 126.29,
+    "loss": 70.56,
+    "eff": 0.79
+   }
+  },
+  "rules": [
+   {
+    "rule": "R1 頭数",
+    "n_6box": 110,
+    "points": 38.77,
+    "hit": 71.63,
+    "roi": 128.69,
+    "loss": 70.3,
+    "eff": 0.67,
+    "rand_eff_mean": 0.79,
+    "rand_eff_p95": 1.17,
+    "halves": [
+     {
+      "rule": 0.9,
+      "always6": 1.08
+     },
+     {
+      "rule": 0.27,
+      "always6": 0.5
+     }
+    ],
+    "ok_beats_random": false,
+    "ok_both_halves": false,
+    "verdict": "使えない"
+   },
+   {
+    "rule": "R2 オッズの割れ",
+    "n_6box": 130,
+    "points": 39.55,
+    "hit": 73.76,
+    "roi": 131.15,
+    "loss": 68.75,
+    "eff": 1.03,
+    "rand_eff_mean": 0.8,
+    "rand_eff_p95": 1.11,
+    "halves": [
+     {
+      "rule": 1.13,
+      "always6": 1.08
+     },
+     {
+      "rule": 0.91,
+      "always6": 0.5
+     }
+    ],
+    "ok_beats_random": false,
+    "ok_both_halves": true,
+    "verdict": "使えない"
+   },
+   {
+    "rule": "R3 6頭目の力",
+    "n_6box": 120,
+    "points": 39.33,
+    "hit": 73.4,
+    "roi": 130.1,
+    "loss": 68.12,
+    "eff": 1.0,
+    "rand_eff_mean": 0.8,
+    "rand_eff_p95": 1.17,
+    "halves": [
+     {
+      "rule": 1.15,
+      "always6": 1.08
+     },
+     {
+      "rule": 0.71,
+      "always6": 0.5
+     }
+    ],
+    "ok_beats_random": false,
+    "ok_both_halves": true,
+    "verdict": "使えない"
+   },
+   {
+    "rule": "R4 ◎の信頼度",
+    "n_6box": 139,
+    "points": 39.58,
+    "hit": 73.05,
+    "roi": 128.32,
+    "loss": 72.33,
+    "eff": 0.87,
+    "rand_eff_mean": 0.79,
+    "rand_eff_p95": 1.08,
+    "halves": [
+     {
+      "rule": 1.25,
+      "always6": 1.08
+     },
+     {
+      "rule": 0.63,
+      "always6": 0.5
+     }
+    ],
+    "ok_beats_random": false,
+    "ok_both_halves": true,
+    "verdict": "使えない"
+   }
+  ]
+ },
+ "all": {
+  "n": 1293,
+  "median": {
+   "field": 14.0,
+   "fav": 2.9,
+   "p6": 13.5,
+   "conf": 59.0
+  },
+  "split_date": "2026-08-30",
+  "baseline": {
+   "常に5頭": {
+    "points": 36.29,
+    "hit": 55.38,
+    "roi": 76.52,
+    "loss": 66.76
+   },
+   "常に6頭": {
+    "points": 45.73,
+    "hit": 61.18,
+    "roi": 75.66,
+    "loss": 67.89,
+    "eff": 0.61
+   }
+  },
+  "rules": [
+   {
+    "rule": "R1 頭数",
+    "n_6box": 520,
+    "points": 40.26,
+    "hit": 57.62,
+    "roi": 75.98,
+    "loss": 66.04,
+    "eff": 0.57,
+    "rand_eff_mean": 0.61,
+    "rand_eff_p95": 0.75,
+    "halves": [
+     {
+      "rule": 0.68,
+      "always6": 0.72
+     },
+     {
+      "rule": 0.48,
+      "always6": 0.52
+     }
+    ],
+    "ok_beats_random": false,
+    "ok_both_halves": false,
+    "verdict": "使えない"
+   },
+   {
+    "rule": "R2 オッズの割れ",
+    "n_6box": 599,
+    "points": 40.91,
+    "hit": 58.31,
+    "roi": 76.22,
+    "loss": 66.05,
+    "eff": 0.64,
+    "rand_eff_mean": 0.61,
+    "rand_eff_p95": 0.73,
+    "halves": [
+     {
+      "rule": 0.74,
+      "always6": 0.72
+     },
+     {
+      "rule": 0.55,
+      "always6": 0.52
+     }
+    ],
+    "ok_beats_random": false,
+    "ok_both_halves": true,
+    "verdict": "使えない"
+   },
+   {
+    "rule": "R3 6頭目の力",
+    "n_6box": 612,
+    "points": 41.02,
+    "hit": 59.09,
+    "roi": 77.48,
+    "loss": 66.49,
+    "eff": 0.78,
+    "rand_eff_mean": 0.62,
+    "rand_eff_p95": 0.74,
+    "halves": [
+     {
+      "rule": 0.87,
+      "always6": 0.72
+     },
+     {
+      "rule": 0.69,
+      "always6": 0.52
+     }
+    ],
+    "ok_beats_random": true,
+    "ok_both_halves": true,
+    "verdict": "使える"
+   },
+   {
+    "rule": "R4 ◎の信頼度",
+    "n_6box": 642,
+    "points": 41.13,
+    "hit": 57.93,
+    "roi": 74.05,
+    "loss": 67.02,
+    "eff": 0.53,
+    "rand_eff_mean": 0.61,
+    "rand_eff_p95": 0.73,
+    "halves": [
+     {
+      "rule": 0.59,
+      "always6": 0.72
+     },
+     {
+      "rule": 0.47,
+      "always6": 0.52
+     }
+    ],
+    "ok_beats_random": false,
+    "ok_both_halves": false,
+    "verdict": "使えない"
+   }
+  ]
+ }
+}
