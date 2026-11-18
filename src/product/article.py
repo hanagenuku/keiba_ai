@@ -264,8 +264,7 @@ def build_race_section(race, horses, facts_by_num, *, paid=True,
         #    「妙味」「狙い目」「☆の回収率は◯%」は書かない。
         _star = race.get('star') if isinstance(race, dict) else None
         if _star and _star.get('n'):
-            _sp = _star.get('prob')
-            parts.append('### ☆ 1番人気を上回る可能性がある馬')
+            parts.append('### ☆ 気になる一頭')
             parts.append('')
             _sh = next((h for h in marked if h.get('n') == _star['n']), None)
             _bits = []
@@ -277,10 +276,8 @@ def build_race_section(race, horses, facts_by_num, *, paid=True,
             _head = f"- **{_star['n']}{_star.get('name', '')}**"
             if _bits:
                 _head += '（' + '・'.join(_bits) + '）'
-            if isinstance(_sp, (int, float)):
-                # 🔴 宣言値そのものではなく5%刻みで切り下げた値を書く
-                #    （hitrate/CRITERIA_STAR.md §4「記事に書く確率」）
-                _head += f"：1番人気を上回る可能性は{int(_sp * 100 // 5 * 5)}%以上"
+            # 🔴 2026-11-18: 「1番人気を上回る可能性は◯%以上」は書かない。
+            #    確率の較正が作り物の1番人気に対するものだった（biz/RESULTS_HONMEI_STAR.md §2）。
             parts.append(_head + '。')
             parts.append('')
             parts.append(_star.get('note') or '')

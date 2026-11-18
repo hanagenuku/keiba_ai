@@ -103,6 +103,17 @@ class TestThreshold:
 
 
 class TestNote:
+    def test_note_makes_no_claim_against_the_favorite(self):
+        """2026-11-18: 1番人気との比較・確率の主張は書かない（根拠が無かった）。"""
+        assert '気になる一頭' in star.STAR_NOTE
+        for bad in ('1番人気より', '入りやすい', '傾向がありました', '%'):
+            assert bad not in star.STAR_NOTE
+
+    def test_article_has_no_probability_claim(self):
+        with open(os.path.join(BASE, 'src/product/article.py'), encoding='utf-8') as f:
+            src = f.read()
+        assert '可能性は{' not in src and 'star_prob' not in src.split('### ☆ 気になる一頭')[1][:1200]
+
     def test_note_mentions_roi_not_improved(self):
         assert '回収率は改善していません' in star.STAR_NOTE
 
@@ -146,7 +157,7 @@ class TestDisplayOnly:
     def test_article_emits_note_with_star(self):
         """記事で ☆ の見出しを出す箇所に併記文が必ず付く。"""
         src = self._src('src/product/article.py')
-        i = src.find('1番人気を上回る可能性がある馬')
+        i = src.find('### ☆ 気になる一頭')
         assert i > 0, '☆の見出しが article.py に無い'
         block = src[i:i + 1600]
         assert "_star.get('note')" in block, '併記文を出していない'
