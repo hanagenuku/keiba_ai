@@ -1,0 +1,69 @@
+{
+ "period": [
+  "2026-06-27",
+  "2026-11-08"
+ ],
+ "n_races": 1243,
+ "n_changed": 41,
+ "n_changed_rec": 7,
+ "all": {
+  "races": 41,
+  "aggressive": {
+   "current": {
+    "hit_rate": 36.6,
+    "roi": 478.4,
+    "roi_wo_top1": 34.0,
+    "loss_on_hit": 66.7
+   },
+   "star": {
+    "hit_rate": 39.0,
+    "roi": 474.9,
+    "roi_wo_top1": 34.8,
+    "loss_on_hit": 62.5
+   },
+   "diff": {
+    "d_hit": 2.4,
+    "d_hit_ci": [
+     0.0,
+     7.3
+    ],
+    "d_roi": -3.5,
+    "d_roi_ci": [
+     -14.0,
+     3.6
+    ],
+    "d_roi_se": 4.7
+   }
+  },
+  "wide": {
+   "current": {
+    "hit_rate": 29.3,
+    "roi": 133.8,
+    "roi_wo_top1": 71.0,
+    "loss_on_hit": 0.0
+   },
+   "star": {
+    "hit_rate": 29.3,
+    "roi": 60.5,
+    "roi_wo_top1": 50.9,
+    "loss_on_hit": 16.7
+   },
+   "diff": {
+    "d_hit": 0.0,
+    "d_hit_ci": [
+     -9.8,
+     9.8
+    ],
+    "d_roi": -73.3,
+    "d_roi_ci": [
+     -223.4,
+     14.6
+    ],
+    "d_roi_se": 65.8
+   }
+  }
+ },
+ "rec": null,
+ "stop": [],
+ "verdict": "入れる"
+}
