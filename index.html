@@ -1993,7 +1993,7 @@ function render() {
       const _res = _resultsFor(race);
       const _finTh = _res ? '<th class="col-fin">着</th>' : '';
       html += '<table class="'+_tblClass()+'">'+'<tr>'+_finTh+'<th class="col-um" title="タップで ◎○▲△✕ を切り替え。端末内だけに保存されます">印</th><th style="width:20px">番</th><th class="col-name">馬名</th><th class="col-pop" style="width:22px">人</th><th class="col-odds" style="width:34px">ｵｯｽﾞ</th><th class="col-mk">特記</th>'+_soloTh+_fitTh+'<th class="col-rl" style="width:30px" title="AI+市＝市場（オッズ）を土台にAIが補正した順位。⚠ 買い目・軸・推奨レースの判定はこの列を使います。◎が付いている馬がこの列の1位です">AI+市</th>'+'<th style="width:32px" title="当日のオッズを直接使わないAI確率をIsotonicで較正した絶対確率（確認期24,993頭でECE 0.0080）。⚠ レース内合計は100%になりません。⚠ 少頭数では高め・多頭数では低めに出ます（5-9頭で-8.7pt / 17頭以上で+4.3pt）。順位付け・買い目には別の確率を使っています">AI勝率</th><th style="width:32px" title="同じくIsotonic較正済みの3着内率。70%までの全帯で予測と実測のズレが±1.6pt以内。⚠ 70%超は−7.5pt、少頭数レースは−8.7pt ずれるので額面どおり読まないこと">AI複勝</th><th class="col-val" style="width:40px" title="EV=1.2 になるのに必要な単勝オッズ（＝1.2÷AI勝率）。🔴 実オッズがこれを超えても『買い』ではありません。超える馬だけを買った実測回収率は73.7%で、全部買う73.1%と変わりません（2026-09-11・単勝8,703頭）">必要ｵｯｽﾞ</th></tr>';
-      // ☆（市場1番人気を着順で上回る可能性）。サーバが決めた1頭をそのまま出す。
+      // ☆（AIが気になる一頭・2026-11-18〜）。サーバが決めた1頭をそのまま出す。
       // 🔴 表示専用。印・買い目・AI+市 の順位を1つも変えない。
       //    併記文（race.star.note）は省略不可（biz/S4_HITRATE_AXIS.md）。
       const _starN = (race.star && race.star.n) || null;
