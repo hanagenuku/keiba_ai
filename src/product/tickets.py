@@ -631,6 +631,40 @@ def split_partners(horses, axis_num, n_solid, n_ana):
     return partners, got_solid, got_ana
 
 
+def include_star(horses, axis_num, partners, solid, ana, star_num):
+    """☆が◎と別の馬なら、相手（紐）に必ず入れる。返り値は (相手, 固め, 中穴, 入れたか)。
+
+    🟢 2026-11-18 ユーザー指示「☆を絡めた馬券を選択するようにしてください。☆がそもそもの◎と同じなら
+       より自信ありの◎、◎と☆が別々なら紐として扱う」。
+    - 相手の頭数は変えない（点数を増やさない）。☆が相手に入っていなければ、相手のうち
+      `rl_rank` が一番下の馬と入れ替える。相手が足りないときは足すだけ。
+    - ☆は固め／中穴の帯（単勝 ANA_ODDS_MIN 倍で区切る）に振り分ける。中穴の上限（30倍）は超えてもよい。
+    ⚠ ☆の根拠（1番人気より当たる）は確認できていない（biz/RESULTS_HONMEI_STAR.md §2）。
+       ここはユーザーの判断で☆を買い目に絡める実装で、当たりやすくなる根拠は無い。
+    """
+    if star_num is None or star_num == axis_num:
+        return partners, solid, ana, False
+    star = next((h for h in horses if h.get('n') == star_num), None)
+    odds = usable_odds(star) if star else None
+    if odds is None:
+        return partners, solid, ana, False
+    if star_num in partners:
+        return partners, solid, ana, True
+    want = len(partners)
+    order = {n: r for r, n, _o in _partner_candidates(horses, axis_num)}
+    partners = list(partners)
+    solid, ana = list(solid), list(ana)
+    if want:
+        drop = max(partners, key=lambda n: (order.get(n, 99), n))
+        partners.remove(drop)
+        solid = [n for n in solid if n != drop]
+        ana = [n for n in ana if n != drop]
+    partners.append(star_num)
+    partners.sort(key=lambda n: (order.get(n, 99), n))
+    (solid if odds < ANA_ODDS_MIN else ana).append(star_num)
+    return partners, solid, ana, True
+
+
 def _join(nums):
     """馬番を馬券の書き方どおり**昇順**で並べる。
 
@@ -649,7 +683,7 @@ def _bet(type_, group, axis, combos, line, note=''):
     }
 
 
-def build_bet_lines(axis_num, partners, solid, ana, allow_trifecta):
+def build_bet_lines(axis_num, partners, solid, ana, allow_trifecta, star_num=None):
     """全券種の買い目を並べて返す。買える形にならない券種は出さない。"""
     bets = [
         _bet('単勝', '単勝', axis_num, [[axis_num]], f'単勝　{axis_num}',
@@ -675,6 +709,12 @@ def build_bet_lines(axis_num, partners, solid, ana, allow_trifecta):
                 wide_nums.append(n)
             if len(wide_nums) == 2:
                 break
+    # ☆が相手にいるなら、ワイドの2点のどちらかは必ず ◎－☆ にする（2026-11-18 ユーザー指示）
+    if star_num is not None and star_num in partners and star_num not in wide_nums:
+        if len(wide_nums) >= 2:
+            wide_nums[-1] = star_num
+        else:
+            wide_nums.append(star_num)
     wide_nums = sorted(wide_nums, key=lambda n: partners.index(n))
     w = [[axis_num, p] for p in wide_nums]
     bets.append(_bet('ワイド', 'ワイド', axis_num, w,
@@ -933,13 +973,19 @@ def build_tickets(race, horses):
         want = PARTNERS_LIGHT
 
     partners, solid, ana = split_partners(horses, axis_num, n_solid, n_ana)
+    star_num = ((race or {}).get('star') or {}).get('n')
+    partners, solid, ana, star_in = include_star(horses, axis_num, partners, solid, ana, star_num)
+    # ☆の扱い: ◎と同じ馬なら 'honmei'（より自信ありの◎）、相手に入れたら 'partner'
+    result['star_role'] = ('honmei' if star_num is not None and star_num == axis_num
+                           else ('partner' if star_in else None))
     result['partners'] = partners
     result['solid_partners'] = solid
     result['ana_partners'] = ana
     result['narrow_field'] = len(partners) < want
 
     bets = build_bet_lines(axis_num, partners, solid, ana,
-                           allow_trifecta=(v == 'strong'))
+                           allow_trifecta=(v == 'strong'),
+                           star_num=star_num if star_in else None)
     result['bets'] = bets[:MAX_BET_TYPES]
     # ⚠ 並べた行をそのまま足した点数。**記事には出さない**（2026-10-26）。
     #    三連複(2頭軸)は三連複(流し)の部分集合、三連単フォーメーションは

@@ -259,7 +259,7 @@ def build_race_section(race, horses, facts_by_num, *, paid=True,
             parts.append('')
 
         # ── ☆（市場1番人気を着順で上回る可能性）────────────────────────
-        # 🔴 表示だけ。◎○▲△・買い目・確率を1つも変えていない。
+        # ◎○▲△・確率は変えない。買い目は ☆を相手に入れる（2026-11-18・tickets.include_star）。
         #    併記文（star.STAR_NOTE）は**省略不可**（biz/S4_HITRATE_AXIS.md）。
         #    「妙味」「狙い目」「☆の回収率は◯%」は書かない。
         _star = race.get('star') if isinstance(race, dict) else None
@@ -280,6 +280,14 @@ def build_race_section(race, horses, facts_by_num, *, paid=True,
             #    確率の較正が作り物の1番人気に対するものだった（biz/RESULTS_HONMEI_STAR.md §2）。
             parts.append(_head + '。')
             parts.append('')
+            # 2026-11-18: ☆を買い目に絡める（tickets.include_star）。どう扱ったかを1行で書く
+            _role = (tickets or {}).get('star_role') if isinstance(tickets, dict) else None
+            if _role == 'honmei':
+                parts.append('☆は◎と同じ馬です。')
+                parts.append('')
+            elif _role == 'partner':
+                parts.append('☆は買い目の相手（ヒモ）に入れています。')
+                parts.append('')
             parts.append(_star.get('note') or '')
             parts.append('')
 
