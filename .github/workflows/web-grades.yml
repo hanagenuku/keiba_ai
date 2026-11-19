@@ -1,0 +1,84 @@
+name: Web grades (web 情報源の評価を集めて測る・手動)
+
+# scripts/collect_web_grades.py → websig/eval_web_grades.py（事前登録カード websig/CRITERIA_GRADES_<source>.md）。
+# 取得データは data/private/web_grades.db（公開しない）。artifact `web-grades-db` で持ち回る。
+# 🔴 main には push しない。測定の集計だけを `grades/<source>-<run_id>` ブランチに置く。
+
+on:
+  workflow_dispatch:
+    inputs:
+      source:
+        description: '情報源（src/scraper に parser があるもの）'
+        required: true
+        default: 'rihua-keiba'
+        type: string
+      budget:
+        description: '1回に取る記事数の上限'
+        required: false
+        default: '300'
+        type: string
+      measure:
+        description: '測定する（事前登録カードがあるときだけ true）'
+        required: false
+        default: 'true'
+        type: string
+
+concurrency:
+  group: web-grades
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  grades:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+      - name: Download history.db via LFS
+        run: git lfs pull --include="data/history.db"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests beautifulsoup4 numpy
+      - name: Find the last artifact
+        id: last
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          RID=$(gh api "repos/${{ github.repository }}/actions/artifacts?name=web-grades-db&per_page=30" \
+                  --jq '[.artifacts[] | select(.expired == false)] | sort_by(.created_at) | last | .workflow_run.id // ""')
+          echo "run_id=$RID" >> "$GITHUB_OUTPUT"
+      - name: Restore DB
+        if: steps.last.outputs.run_id != ''
+        uses: actions/download-artifact@v4
+        with:
+          name: web-grades-db
+          path: data/private
+          run-id: ${{ steps.last.outputs.run_id }}
+          github-token: ${{ github.token }}
+      - name: Collect
+        run: python3 scripts/collect_web_grades.py --source '${{ inputs.source }}' --budget '${{ inputs.budget }}'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web-grades-db
+          path: data/private/web_grades.db
+          retention-days: 90
+      - name: Measure (1回)
+        if: inputs.measure == 'true'
+        run: python3 websig/eval_web_grades.py --source '${{ inputs.source }}'
+      - name: Push result to a branch (main には入れない)
+        if: inputs.measure == 'true'
+        run: |
+          set -euo pipefail
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          BR="grades/${{ inputs.source }}-${{ github.run_id }}"
+          git checkout -b "$BR"
+          git add websig/grades_*_result.json
+          git commit -m "grades: ${{ inputs.source }} の測定結果（run ${{ github.run_id }}）"
+          git push origin "$BR"
