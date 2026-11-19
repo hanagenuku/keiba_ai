@@ -48,18 +48,34 @@ def load_history():
     return races, t3, bt, by_date
 
 
-def match(blocks, races, by_date):
-    """記事の塊 → race_id。公開日から14日以内で馬名が最も重なるレース。"""
+def _year_of(title):
+    import re
+    import unicodedata
+    m = re.search(r'(20\d{2})', unicodedata.normalize('NFKC', title or ''))
+    return int(m.group(1)) if m else None
+
+
+def match(blocks, races, by_date, titles=None):
+    """記事の塊 → race_id。公開日から14日以内で馬名が最も重なるレース。
+
+    公開日が取れていない記事は、題名の年（例【…２０２４】）の1年間から探す（2026-11-20 追記・カード §データ）。
+    """
     out = {}
+    titles = titles or {}
     for key, b in blocks.items():
         names = {h['horse_name'] for h in b}
+        days = []
         try:
             d0 = dt.date.fromisoformat(b[0]['published'])
+            days = [d0 + dt.timedelta(days=k) for k in range(0, 15)]
         except Exception:
-            continue
+            y = _year_of(titles.get(key[0]))
+            if y:
+                d0 = dt.date(y, 1, 1)
+                days = [d0 + dt.timedelta(days=k) for k in range(0, 366)]
         best, best_n = None, 0
-        for k in range(0, 15):
-            for rid in by_date.get(str(d0 + dt.timedelta(days=k)), []):
+        for day in days:
+            for rid in by_date.get(str(day), []):
                 n = len(names & {h['name'] for h in races[rid]})
                 if n > best_n:
                     best, best_n = rid, n
@@ -79,7 +95,10 @@ def main():
     blocks = defaultdict(list)
     for r in rows:
         blocks[(r['url'], r['block'])].append(r)
-    m = match(blocks, races, by_date)
+    titles = {u: t for u, t in g.execute('SELECT url, title FROM web_grade_articles WHERE source=?', (a.source,))}
+    n_pub = sum(1 for b in blocks.values() if b[0]['published'])
+    print(f'塊 {len(blocks)}（公開日あり {n_pub}）', flush=True)
+    m = match(blocks, races, by_date, titles)
     data = []
     for key, rid in m.items():
         hs = {h['name']: h for h in races[rid]}
@@ -96,7 +115,7 @@ def main():
             data.append(dict(rid=rid, grade=r['grade'], rec=r['recommended'], pop=h['pop'],
                              top3=float(h['place'] <= 3), ex_t3=float(h['place'] <= 3) - t3.get(k, np.nan),
                              ex_beat=beat, fuku=h['fuku']))
-    res = dict(source=a.source, articles_rows=len(rows), blocks=len(blocks), matched_blocks=len(m),
+    res = dict(source=a.source, articles_rows=len(rows), blocks=len(blocks), blocks_with_date=n_pub, matched_blocks=len(m),
                match_rate=round(len(m) / max(len(blocks), 1), 3), horses=len(data),
                period=[min((races[r][0]['date'] for r in m.values()), default=None),
                        max((races[r][0]['date'] for r in m.values()), default=None)])
