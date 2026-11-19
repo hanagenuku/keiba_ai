@@ -1,0 +1,101 @@
+{
+ "source": "rihua-keiba",
+ "articles_rows": 1367,
+ "blocks": 133,
+ "blocks_with_date": 0,
+ "matched_blocks": 91,
+ "match_rate": 0.684,
+ "horses": 991,
+ "period": [
+  "2023-01-29",
+  "2026-02-10"
+ ],
+ "by_grade": {
+  "S": {
+   "n": 0
+  },
+  "A": {
+   "n": 130,
+   "races": 23,
+   "top3": 28.5,
+   "ex_t3": 0.59,
+   "ex_beat": -0.26,
+   "n_beat": 115,
+   "fuku_roi": 81.1,
+   "pop_mean": 6.32
+  },
+  "B": {
+   "n": 133,
+   "races": 23,
+   "top3": 18.8,
+   "ex_t3": -0.15,
+   "ex_beat": 9.73,
+   "n_beat": 127,
+   "fuku_roi": 83.2,
+   "pop_mean": 8.18
+  },
+  "C": {
+   "n": 26,
+   "races": 11,
+   "top3": 3.8,
+   "ex_t3": -2.61,
+   "ex_beat": 11.44,
+   "n_beat": 26,
+   "fuku_roi": 14.6,
+   "pop_mean": 12.88
+  },
+  "null": {
+   "n": 702,
+   "races": 61,
+   "top3": 20.2,
+   "ex_t3": 0.08,
+   "ex_beat": 6.72,
+   "n_beat": 640,
+   "fuku_roi": 62.2,
+   "pop_mean": 8.19
+  }
+ },
+ "by_recommended": {
+  "yes": {
+   "n": 184,
+   "races": 48,
+   "top3": 38.6,
+   "ex_t3": 1.92,
+   "ex_beat": 7.9,
+   "n_beat": 145,
+   "fuku_roi": 79.8,
+   "pop_mean": 4.26
+  },
+  "no": {
+   "n": 807,
+   "races": 70,
+   "top3": 16.6,
+   "ex_t3": -0.38,
+   "ex_beat": 6.11,
+   "n_beat": 763,
+   "fuku_roi": 63.1,
+   "pop_mean": 8.94
+  }
+ },
+ "D": {
+  "value": 3.2,
+  "ci": [
+   -4.97,
+   10.08
+  ],
+  "perm_mean": 0.536,
+  "perm_sd": 8.188,
+  "perm_p95": 12.29,
+  "perm_centered": true
+ },
+ "A_ex_t3_ci": [
+  -3.13,
+  5.07
+ ],
+ "criteria": {
+  "1_D_ci_above_0": false,
+  "2_beats_permutation_p95": false,
+  "3_A_beats_market": false
+ },
+ "verdict": "信号なし"
+}
