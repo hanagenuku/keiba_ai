@@ -1,0 +1,35 @@
+name: Survey web sources (web 情報源の一斉下見・手動)
+
+# scripts/survey_web_sources.py。robots.txt と sitemap だけを見る（中身は取らない）。
+# 🔴 main には push しない。結果は `survey/<run_id>` ブランチに置く。
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  survey:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests
+      - name: Survey
+        run: python3 scripts/survey_web_sources.py --out websig/SURVEY_$(date +%Y-%m-%d)
+      - name: Push result to a branch (main には入れない)
+        run: |
+          set -euo pipefail
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          BR="survey/${{ github.run_id }}"
+          git checkout -b "$BR"
+          git add websig/SURVEY_*.json
+          git commit -m "survey: web 情報源の一斉下見（run ${{ github.run_id }}）"
+          git push origin "$BR"
