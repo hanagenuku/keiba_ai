@@ -25,6 +25,10 @@ UA = 'keiba-ai-research-bot/0.1 (+https://github.com/hanagenuku/keiba_ai)'
 MAX_REQ = 8
 SLEEP = 1.5
 SKIP_STATUS = ('blocked_pending_user',)
+#: 台帳で「robots で Claude を名指し禁止」「到達不可」と記録済みのものは触らない（2026-11-19 の1回目で
+#: sitemap まで取りに行ってしまった。名指しで断っている相手には、UA が違っても取りに行かない）
+SKIP_ACCESS = ('robots_denied', 'unreachable')
+CLAUDE_AGENTS = ('claudebot', 'claude-web', 'claude-user', 'anthropic-ai')
 SKIP_SOURCE = ('netkeiba',)          # 公開リポジトリに netkeiba 由来のものを書かない
 EXTRA = [  # 台帳に出てくるが台帳（source_registry）に無いホスト
     ('jra-official', 'https://www.jra.go.jp'),
@@ -67,6 +71,13 @@ def survey(name, base, sess):
     rp = urllib.robotparser.RobotFileParser()
     text = r.text if (r is not None and r.status_code == 200) else ''
     rp.parse(text.splitlines())
+    low = text.lower()
+    if any(a in low for a in CLAUDE_AGENTS):
+        # Claude 系のエージェントを名指ししている相手は、許可の有無にかかわらずここで止める
+        out['names_claude'] = True
+        out['sitemap'] = None
+        out['requests'] = b.n
+        return out
     out['robots_disallow'] = [l.strip() for l in text.splitlines() if l.lower().startswith('disallow')][:15]
     out['allowed_root'] = rp.can_fetch(UA, host + '/') if text else True
     out['allowed_base'] = rp.can_fetch(UA, base) if text else True
@@ -116,7 +127,8 @@ def main():
     src = reg.get('sources', reg)
     src = src if isinstance(src, list) else list(src.values())
     targets = [(e['source'], e['url']) for e in src if isinstance(e, dict) and e.get('url')
-               and e.get('status') not in SKIP_STATUS and e.get('source') not in SKIP_SOURCE]
+               and e.get('status') not in SKIP_STATUS and e.get('source') not in SKIP_SOURCE
+               and e.get('access') not in SKIP_ACCESS]
     targets += EXTRA
     res = []
     for name, url in targets:
