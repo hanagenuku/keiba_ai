@@ -1,0 +1,58 @@
+{
+ "source": "rihua-keiba",
+ "articles_rows": 1367,
+ "blocks": 133,
+ "matched_blocks": 0,
+ "match_rate": 0.0,
+ "horses": 0,
+ "period": [
+  null,
+  null
+ ],
+ "by_grade": {
+  "S": {
+   "n": 0
+  },
+  "A": {
+   "n": 0
+  },
+  "B": {
+   "n": 0
+  },
+  "C": {
+   "n": 0
+  },
+  "null": {
+   "n": 0
+  }
+ },
+ "by_recommended": {
+  "yes": {
+   "n": 0
+  },
+  "no": {
+   "n": 0
+  }
+ },
+ "D": {
+  "value": NaN,
+  "ci": [
+   NaN,
+   NaN
+  ],
+  "perm_mean": NaN,
+  "perm_sd": NaN,
+  "perm_p95": NaN,
+  "perm_centered": false
+ },
+ "A_ex_t3_ci": [
+  NaN,
+  NaN
+ ],
+ "criteria": {
+  "1_D_ci_above_0": false,
+  "2_beats_permutation_p95": false,
+  "3_A_beats_market": false
+ },
+ "verdict": "信号なし"
+}
