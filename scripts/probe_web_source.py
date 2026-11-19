@@ -129,7 +129,43 @@ def probe(name):
     print(f'requests {f.n}')
 
 
+def detail(name, keyword, k=3):
+    """記事の型 keyword を k 本だけ開き、強調された短い語（馬名・評価記号）の並びを出す（15字まで・本文は出さない）。"""
+    from bs4 import BeautifulSoup
+    base = BASES[name]
+    f = Fetcher(base)
+    idx = f.get(base + '/sitemap.xml') or f.get(base + '/wp-sitemap.xml')
+    children = locs(idx) if idx and '<sitemapindex' in idx else []
+    urls = []
+    for c in children[:12]:
+        x = f.get(c)
+        if x:
+            urls += [u for u in locs(x) if keyword in unquote(u)]
+        if len(urls) > 40:
+            break
+    print(f'\n######## detail {name} [{keyword}] {len(urls)}本')
+    for u in urls[:: max(1, len(urls) // k)][:k]:
+        h = f.get(u)
+        if not h:
+            continue
+        soup = BeautifulSoup(h, 'html.parser')
+        body = soup.find(class_='entry-content') or soup.find('article') or soup
+        seq = []
+        for el in body.find_all(['h2', 'h3', 'h4', 'strong', 'b', 'span']):
+            cls = '.'.join(el.get('class', []))[:20]
+            t = el.get_text(' ', strip=True)
+            if 0 < len(t) <= 15 and (el.name in ('h2', 'h3', 'h4') or cls):
+                seq.append(f'{el.name}.{cls}:{t}')
+        print(f'--- {unquote(urlparse(u).path)[:80]}')
+        print('    ' + ' | '.join(seq[:60]))
+    print(f'requests {f.n}')
+
+
 if __name__ == '__main__':
+    if sys.argv[1:2] == ['--detail']:
+        detail('keibanomiryoku', 'work-out')
+        detail('rihua-keiba', '追い切り')
+        sys.exit(0)
     for n in sys.argv[1:] or list(BASES):
         try:
             probe(n)
