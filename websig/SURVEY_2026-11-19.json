@@ -1,0 +1,877 @@
+[
+ {
+  "source": "kayochinkeiba",
+  "url": "https://kayochinkeiba.com",
+  "robots_status": 200,
+  "robots_disallow": [
+   "Disallow: /wp-admin/"
+  ],
+  "allowed_root": true,
+  "allowed_base": true,
+  "sitemap": null,
+  "requests": 2
+ },
+ {
+  "source": "bloodline-trackbias",
+  "url": "https://www.bloodline-trackbias.work",
+  "robots_status": 200,
+  "robots_disallow": [
+   "Disallow: /api/",
+   "Disallow: /draft/",
+   "Disallow: /preview",
+   "Disallow: /iframe/hatena_bookmark_comment",
+   "Disallow: /draft/",
+   "Disallow: /preview"
+  ],
+  "allowed_root": true,
+  "allowed_base": true,
+  "sitemap": {
+   "url": "https://www.bloodline-trackbias.work/sitemap_index.xml",
+   "is_index": true,
+   "n_children": 93,
+   "children_sample": [
+    "https://www.bloodline-trackbias.work/sitemap_common.xml",
+    "https://www.bloodline-trackbias.work/sitemap_periodical.xml?year=2026&amp;month=11",
+    "https://www.bloodline-trackbias.work/sitemap_periodical.xml?year=2026&amp;month=10",
+    "https://www.bloodline-trackbias.work/sitemap_periodical.xml?year=2026&amp;month=9",
+    "https://www.bloodline-trackbias.work/sitemap_periodical.xml?year=2026&amp;month=8",
+    "https://www.bloodline-trackbias.work/sitemap_periodical.xml?year=2026&amp;month=7",
+    "…",
+    "https://www.bloodline-trackbias.work/sitemap_periodical.xml?year=2019&amp;month=7",
+    "https://www.bloodline-trackbias.work/sitemap_periodical.xml?year=2019&amp;month=6",
+    "https://www.bloodline-trackbias.work/sitemap_periodical.xml?year=2019&amp;month=5",
+    "https://www.bloodline-trackbias.work/sitemap_page.xml"
+   ],
+   "looked": [
+    {
+     "url": "https://www.bloodline-trackbias.work/sitemap_periodical.xml?year=2026&amp;month=11",
+     "n_urls": 7,
+     "lastmod_years": {
+      "2026": 7
+     },
+     "url_sample": [
+      "https://www.bloodline-trackbias.work/entry/2026/11/17/120000",
+      "https://www.bloodline-trackbias.work/entry/2026/11/14/200000",
+      "https://www.bloodline-trackbias.work/entry/2026/11/13/190000",
+      "https://www.bloodline-trackbias.work/entry/2026/11/10/120000"
+     ]
+    },
+    {
+     "url": "https://www.bloodline-trackbias.work/sitemap_periodical.xml?year=2019&amp;month=5",
+     "n_urls": 14,
+     "lastmod_years": {
+      "2019": 13,
+      "2023": 1
+     },
+     "url_sample": [
+      "https://www.bloodline-trackbias.work/entry/2019/05/31/200159",
+      "https://www.bloodline-trackbias.work/entry/2019/05/27/224217",
+      "https://www.bloodline-trackbias.work/entry/2019/05/25/212729",
+      "https://www.bloodline-trackbias.work/entry/2019/05/24/194722"
+     ]
+    }
+   ]
+  },
+  "requests": 4
+ },
+ {
+  "source": "koukakukeiba-jugem",
+  "url": "https://koukakukeiba.jugem.jp",
+  "robots_status": 200,
+  "robots_disallow": [
+   "Disallow: /?month*",
+   "Disallow: /?day*",
+   "Disallow: /?cid*",
+   "Disallow: /?search*",
+   "Disallow: /template*",
+   "Disallow: /jm_style.css",
+   "Disallow: /manage*",
+   "Disallow: /admin*",
+   "Disallow: /manage*",
+   "Disallow: /admin*"
+  ],
+  "allowed_root": true,
+  "allowed_base": true,
+  "sitemap": null,
+  "requests": 4
+ },
+ {
+  "source": "tospo-keiba",
+  "url": "https://tospo-keiba.jp",
+  "robots_status": 200,
+  "robots_disallow": [
+   "Disallow: /",
+   "Disallow: /",
+   "Disallow: /",
+   "Disallow: /",
+   "Disallow: /",
+   "Disallow: /",
+   "Disallow:",
+   "Disallow: /hopefulhorse-2022",
+   "Disallow: /login/",
+   "Disallow: /index.php",
+   "Disallow: /",
+   "Disallow: /",
+   "Disallow: /",
+   "Disallow: /",
+   "Disallow: /"
+  ],
+  "allowed_root": true,
+  "allowed_base": true,
+  "sitemap": {
+   "url": "https://tospo-keiba.jp/sitemap_index.xml",
+   "is_index": true,
+   "n_children": 9,
+   "children_sample": [
+    "https://tospo-keiba.jp/sitemap_image_1.xml",
+    "https://tospo-keiba.jp/sitemap_news_1.xml",
+    "https://tospo-keiba.jp/sitemap_web_main_1.xml",
+    "https://tospo-keiba.jp/sitemap_web_race_1.xml",
+    "https://tospo-keiba.jp/sitemap_web_race_2.xml",
+    "https://tospo-keiba.jp/sitemap_web_race_3.xml"
+   ],
+   "looked": [
+    {
+     "url": "https://tospo-keiba.jp/sitemap_image_1.xml",
+     "n_urls": 103,
+     "lastmod_years": {},
+     "url_sample": [
+      "https://tospo-keiba.jp/deep-special",
+      "https://tospo-keiba.jp/series",
+      "https://tospo-keiba.jp/family-line",
+      "https://tospo-keiba.jp/challenge-fujii-k"
+     ]
+    },
+    {
+     "url": "https://tospo-keiba.jp/sitemap_web_detail_2.xml",
+     "n_urls": 25861,
+     "lastmod_years": {},
+     "url_sample": [
+      "https://tospo-keiba.jp/forecast/51472",
+      "https://tospo-keiba.jp/forecast/51473",
+      "https://tospo-keiba.jp/forecast/51474",
+      "https://tospo-keiba.jp/breaking_news/51475"
+     ]
+    }
+   ]
+  },
+  "requests": 4
+ },
+ {
+  "source": "keibalab",
+  "url": "https://www.keibalab.jp",
+  "robots_status": 200,
+  "robots_disallow": [
+   "Disallow: /",
+   "Disallow: /ad/",
+   "Disallow: /lp/",
+   "Disallow: /app/",
+   "Disallow: /jquery/",
+   "Disallow: /oauth/",
+   "Disallow: /mypage/",
+   "Disallow: /campaign/",
+   "Disallow: /nantenkun/",
+   "Disallow: /login/sample.html",
+   "Disallow: /login/entry_02.html",
+   "Disallow: /login/entry_03.html",
+   "Disallow: /login/entry_04.html",
+   "Disallow: /*?search_string="
+  ],
+  "allowed_root": true,
+  "allowed_base": true,
+  "sitemap": {
+   "url": "https://www.keibalab.jp/sitemap.xml",
+   "is_index": true,
+   "n_children": 3,
+   "children_sample": [
+    "https://www.keibalab.jp/static_sitemap.xml",
+    "https://www.keibalab.jp/rss/column_sitemap.xml",
+    "https://www.keibalab.jp/rss/news_sitemap.xml"
+   ],
+   "looked": [
+    {
+     "url": "https://www.keibalab.jp/static_sitemap.xml",
+     "n_urls": 36,
+     "lastmod_years": {},
+     "url_sample": [
+      "https://www.keibalab.jp/",
+      "https://www.keibalab.jp/yosou/",
+      "https://www.keibalab.jp/yosou/megamori/",
+      "https://www.keibalab.jp/yosou/treasure/"
+     ]
+    },
+    {
+     "url": "https://www.keibalab.jp/rss/news_sitemap.xml",
+     "n_urls": 100,
+     "lastmod_years": {},
+     "url_sample": [
+      "https://www.keibalab.jp/topics/46741/",
+      "https://www.keibalab.jp/topics/46740/",
+      "https://www.keibalab.jp/topics/46739/",
+      "https://www.keibalab.jp/topics/46738/"
+     ]
+    }
+   ]
+  },
+  "requests": 4
+ },
+ {
+  "source": "nikkansports",
+  "url": "https://www.nikkansports.com",
+  "robots_status": 200,
+  "robots_disallow": [
+   "Disallow: /ajaxlib/",
+   "Disallow: /",
+   "Disallow: /",
+   "Disallow: /",
+   "Disallow: /",
+   "Disallow: /",
+   "Disallow: /",
+   "Disallow: /",
+   "Disallow: /",
+   "Disallow: /",
+   "Disallow: /"
+  ],
+  "allowed_root": true,
+  "allowed_base": true,
+  "sitemap": null,
+  "requests": 4
+ },
+ {
+  "source": "sponichi",
+  "url": "https://www.sponichi.co.jp",
+  "robots_status": 200,
+  "robots_disallow": [
+   "Disallow: /sakusaku/",
+   "Disallow: /*/news/2018/",
+   "Disallow: /*/news/2017/",
+   "Disallow: /*/news/2016/",
+   "Disallow: /*/news/2015/",
+   "Disallow: /*/news/2014/",
+   "Disallow: /*/news/2013/",
+   "Disallow: /*/news/2012/",
+   "Disallow: /*/news/2011/",
+   "Disallow: /*/news/2010/",
+   "Disallow: /*/news/2009/",
+   "Disallow: /*/news/2008/",
+   "Disallow: /"
+  ],
+  "allowed_root": true,
+  "allowed_base": true,
+  "sitemap": {
+   "url": "https://www.sponichi.co.jp/sitemap_index.xml",
+   "is_index": true,
+   "n_children": 49,
+   "children_sample": [
+    "https://www.sponichi.co.jp/sitemap_recent.xml",
+    "https://www.sponichi.co.jp/sitemap_202301.xml",
+    "https://www.sponichi.co.jp/sitemap_202302.xml",
+    "https://www.sponichi.co.jp/sitemap_202303.xml",
+    "https://www.sponichi.co.jp/sitemap_202304.xml",
+    "https://www.sponichi.co.jp/sitemap_202305.xml",
+    "…",
+    "https://www.sponichi.co.jp/sitemap_202609.xml",
+    "https://www.sponichi.co.jp/sitemap_202610.xml",
+    "https://www.sponichi.co.jp/sitemap_202611.xml",
+    "https://www.sponichi.co.jp/sitemap_202612.xml"
+   ],
+   "looked": [
+    {
+     "url": "https://www.sponichi.co.jp/sitemap_202301.xml",
+     "n_urls": 27936,
+     "lastmod_years": {
+      "2024": 27894,
+      "2025": 32,
+      "2026": 10
+     },
+     "url_sample": [
+      "https://www.sponichi.co.jp/baseball/news/2023/01/01/kiji/20221227s00001173319000c.html",
+      "https://www.sponichi.co.jp/baseball/news/2023/01/01/articles/20221227s00001173319000c.html",
+      "https://www.sponichi.co.jp/baseball/news/2023/01/01/gazo/20221227s00001173300000p.html",
+      "https://www.sponichi.co.jp/baseball/news/2023/01/01/kiji/20221231s00001173327000c.html"
+     ]
+    },
+    {
+     "url": "https://www.sponichi.co.jp/sitemap_202612.xml",
+     "n_urls": 0,
+     "lastmod_years": {},
+     "url_sample": []
+    }
+   ]
+  },
+  "requests": 4
+ },
+ {
+  "source": "keibabook",
+  "url": "https://p.keibabook.co.jp",
+  "robots_status": 200,
+  "robots_disallow": [
+   "Disallow: /",
+   "Disallow: /chihou/",
+   "Disallow: /news/"
+  ],
+  "allowed_root": false,
+  "allowed_base": false,
+  "sitemap": null,
+  "requests": 1
+ },
+ {
+  "source": "umasiru",
+  "url": "https://umasiru.com",
+  "robots_status": 200,
+  "robots_disallow": [
+   "Disallow: /wp-admin/"
+  ],
+  "allowed_root": true,
+  "allowed_base": true,
+  "sitemap": {
+   "url": "https://umasiru.com/sitemap.xml",
+   "is_index": true,
+   "n_children": 76,
+   "children_sample": [
+    "https://umasiru.com/sitemap-posttype-post.202611.xml",
+    "https://umasiru.com/sitemap-posttype-post.202610.xml",
+    "https://umasiru.com/sitemap-posttype-post.202609.xml",
+    "https://umasiru.com/sitemap-posttype-post.202608.xml",
+    "https://umasiru.com/sitemap-posttype-post.202607.xml",
+    "https://umasiru.com/sitemap-posttype-post.202606.xml",
+    "…",
+    "https://umasiru.com/sitemap-taxonomy-category.xml",
+    "https://umasiru.com/sitemap-taxonomy-post_tag.xml",
+    "https://umasiru.com/sitemap-author.xml",
+    "https://umasiru.com/sitemap-news.xml"
+   ],
+   "looked": [
+    {
+     "url": "https://umasiru.com/sitemap-posttype-post.202611.xml",
+     "n_urls": 21,
+     "lastmod_years": {
+      "2026": 21
+     },
+     "url_sample": [
+      "https://umasiru.com/archives/22395",
+      "https://umasiru.com/archives/22390",
+      "https://umasiru.com/archives/22392",
+      "https://umasiru.com/archives/22386"
+     ]
+    },
+    {
+     "url": "https://umasiru.com/sitemap-taxonomy-post_tag.xml",
+     "n_urls": 25,
+     "lastmod_years": {
+      "2026": 25
+     },
+     "url_sample": [
+      "https://umasiru.com/archives/tag/g3",
+      "https://umasiru.com/archives/tag/oikiri",
+      "https://umasiru.com/archives/tag/g1",
+      "https://umasiru.com/archives/tag/g2"
+     ]
+    }
+   ]
+  },
+  "requests": 4
+ },
+ {
+  "source": "yosounohone",
+  "url": "https://www.yosounohone.com",
+  "robots_status": 200,
+  "robots_disallow": [
+   "Disallow: /api/",
+   "Disallow: /draft/",
+   "Disallow: /preview",
+   "Disallow: /iframe/hatena_bookmark_comment",
+   "Disallow: /draft/",
+   "Disallow: /preview"
+  ],
+  "allowed_root": true,
+  "allowed_base": true,
+  "sitemap": {
+   "url": "https://www.yosounohone.com/sitemap_index.xml",
+   "is_index": true,
+   "n_children": 96,
+   "children_sample": [
+    "https://www.yosounohone.com/sitemap_common.xml",
+    "https://www.yosounohone.com/sitemap_periodical.xml?year=2026&amp;month=11",
+    "https://www.yosounohone.com/sitemap_periodical.xml?year=2026&amp;month=10",
+    "https://www.yosounohone.com/sitemap_periodical.xml?year=2026&amp;month=9",
+    "https://www.yosounohone.com/sitemap_periodical.xml?year=2026&amp;month=8",
+    "https://www.yosounohone.com/sitemap_periodical.xml?year=2026&amp;month=7",
+    "…",
+    "https://www.yosounohone.com/sitemap_periodical.xml?year=2019&amp;month=4",
+    "https://www.yosounohone.com/sitemap_periodical.xml?year=2019&amp;month=3",
+    "https://www.yosounohone.com/sitemap_periodical.xml?year=2019&amp;month=2",
+    "https://www.yosounohone.com/sitemap_page.xml"
+   ],
+   "looked": [
+    {
+     "url": "https://www.yosounohone.com/sitemap_periodical.xml?year=2026&amp;month=11",
+     "n_urls": 23,
+     "lastmod_years": {
+      "2026": 23
+     },
+     "url_sample": [
+      "https://www.yosounohone.com/entry/kaiko-artemis-s-2026",
+      "https://www.yosounohone.com/entry/fukushimakinen-2026",
+      "https://www.yosounohone.com/entry/mile-cs-2026_1",
+      "https://www.yosounohone.com/entry/kaiko-queen-elizabeth-%E2%85%A1-cup-2026"
+     ]
+    },
+    {
+     "url": "https://www.yosounohone.com/sitemap_periodical.xml?year=2019&amp;month=2",
+     "n_urls": 24,
+     "lastmod_years": {
+      "2019": 24
+     },
+     "url_sample": [
+      "https://www.yosounohone.com/entry/hankyuhai2019_2",
+      "https://www.yosounohone.com/entry/kaiko-2019-2-24",
+      "https://www.yosounohone.com/entry/kaiko-nakayamakinen-2019",
+      "https://www.yosounohone.com/entry/nakayamakinen-2019"
+     ]
+    }
+   ]
+  },
+  "requests": 4
+ },
+ {
+  "source": "keibanomiryoku",
+  "url": "https://www.keibanomiryoku.com",
+  "robots_status": 200,
+  "robots_disallow": [
+   "Disallow: /wp-admin/",
+   "Disallow: /wp-content/uploads/wpo/wpo-plugins-tables-list.json"
+  ],
+  "allowed_root": true,
+  "allowed_base": true,
+  "sitemap": {
+   "url": "https://www.keibanomiryoku.com/sitemap.xml",
+   "is_index": true,
+   "n_children": 10,
+   "children_sample": [
+    "https://www.keibanomiryoku.com/sitemap-misc.xml",
+    "https://www.keibanomiryoku.com/category-sitemap.xml",
+    "https://www.keibanomiryoku.com/post-sitemap.xml",
+    "https://www.keibanomiryoku.com/post-sitemap2.xml",
+    "https://www.keibanomiryoku.com/post-sitemap3.xml",
+    "https://www.keibanomiryoku.com/post-sitemap4.xml"
+   ],
+   "looked": [
+    {
+     "url": "https://www.keibanomiryoku.com/post-sitemap.xml",
+     "n_urls": 1000,
+     "lastmod_years": {
+      "2015": 512,
+      "2016": 266,
+      "2017": 1,
+      "2018": 152,
+      "2019": 14,
+      "2020": 4,
+      "2021": 36,
+      "2022": 5,
+      "2023": 5,
+      "2024": 4,
+      "2026": 1
+     },
+     "url_sample": [
+      "https://www.keibanomiryoku.com/article/158137616.html",
+      "https://www.keibanomiryoku.com/article/158878688.html",
+      "https://www.keibanomiryoku.com/article/158878796.html",
+      "https://www.keibanomiryoku.com/article/158945521.html"
+     ]
+    },
+    {
+     "url": "https://www.keibanomiryoku.com/post-sitemap7.xml",
+     "n_urls": 741,
+     "lastmod_years": {
+      "2025": 384,
+      "2026": 357
+     },
+     "url_sample": [
+      "https://www.keibanomiryoku.com/article/american-jockey-club-cup-2025-results.html",
+      "https://www.keibanomiryoku.com/article/silk-road-stakes-2025-work-out.html",
+      "https://www.keibanomiryoku.com/article/negishi-stakes-2025-work-out.html",
+      "https://www.keibanomiryoku.com/article/silk-road-stakes-2025-results.html"
+     ]
+    }
+   ]
+  },
+  "requests": 5
+ },
+ {
+  "source": "muryou-keiba-ai",
+  "url": "https://muryou-keiba-ai.jp",
+  "robots_status": 200,
+  "robots_disallow": [
+   "Disallow: /wp-admin/",
+   "Disallow: /privacy/",
+   "Disallow: /contact/",
+   "Disallow: /api/",
+   "Disallow: /server_test/",
+   "Disallow: /ogp/",
+   "Disallow: /news/",
+   "Disallow: /wp-admin/",
+   "Disallow: /privacy/",
+   "Disallow: /contact/",
+   "Disallow: /api/",
+   "Disallow: /server_test/",
+   "Disallow: /news/",
+   "Disallow: /wp-admin/",
+   "Disallow: /api/"
+  ],
+  "allowed_root": true,
+  "allowed_base": true,
+  "sitemap": {
+   "url": "https://muryou-keiba-ai.jp/sitemap.xml",
+   "is_index": true,
+   "n_children": 9,
+   "children_sample": [
+    "https://muryou-keiba-ai.jp/sitemap-misc.xml",
+    "https://muryou-keiba-ai.jp/externals-sitemap.xml",
+    "https://muryou-keiba-ai.jp/predict-sitemap.xml",
+    "https://muryou-keiba-ai.jp/predict-sitemap2.xml",
+    "https://muryou-keiba-ai.jp/predict-sitemap3.xml",
+    "https://muryou-keiba-ai.jp/predict-sitemap4.xml"
+   ],
+   "looked": [
+    {
+     "url": "https://muryou-keiba-ai.jp/post-sitemap.xml",
+     "n_urls": 29,
+     "lastmod_years": {
+      "2021": 5,
+      "2022": 3,
+      "2025": 1,
+      "2026": 20
+     },
+     "url_sample": [
+      "https://muryou-keiba-ai.jp/sanrenpuku_strategy/",
+      "https://muryou-keiba-ai.jp/wide_strategy/",
+      "https://muryou-keiba-ai.jp/double_strategy/",
+      "https://muryou-keiba-ai.jp/wakuban_research/"
+     ]
+    }
+   ]
+  },
+  "requests": 3
+ },
+ {
+  "source": "jra-baba-archive",
+  "url": "https://www.jra.go.jp/keiba/baba/archive/",
+  "robots_status": 200,
+  "robots_disallow": [
+   "Disallow:"
+  ],
+  "allowed_root": true,
+  "allowed_base": true,
+  "sitemap": null,
+  "requests": 4
+ },
+ {
+  "source": "horse-racing-ai-navi",
+  "url": "https://horse-racing-ai-navi.com",
+  "robots_status": 200,
+  "robots_disallow": [
+   "Disallow: /wp-admin/"
+  ],
+  "allowed_root": true,
+  "allowed_base": true,
+  "sitemap": {
+   "url": "https://horse-racing-ai-navi.com/sitemap.xml",
+   "is_index": true,
+   "n_children": 4,
+   "children_sample": [
+    "https://horse-racing-ai-navi.com/sitemap-misc.xml",
+    "https://horse-racing-ai-navi.com/externals-sitemap.xml",
+    "https://horse-racing-ai-navi.com/post-sitemap.xml",
+    "https://horse-racing-ai-navi.com/page-sitemap.xml"
+   ],
+   "looked": [
+    {
+     "url": "https://horse-racing-ai-navi.com/post-sitemap.xml",
+     "n_urls": 94,
+     "lastmod_years": {
+      "2026": 94
+     },
+     "url_sample": [
+      "https://horse-racing-ai-navi.com/archives/456",
+      "https://horse-racing-ai-navi.com/archives/538",
+      "https://horse-racing-ai-navi.com/archives/706",
+      "https://horse-racing-ai-navi.com/archives/924"
+     ]
+    }
+   ]
+  },
+  "requests": 4
+ },
+ {
+  "source": "rihua-keiba",
+  "url": "https://rihua-keiba.com",
+  "robots_status": 200,
+  "robots_disallow": [
+   "Disallow: /wp-admin/"
+  ],
+  "allowed_root": true,
+  "allowed_base": true,
+  "sitemap": {
+   "url": "https://rihua-keiba.com/sitemap.xml",
+   "is_index": true,
+   "n_children": 4,
+   "children_sample": [
+    "https://rihua-keiba.com/sitemap-misc.xml",
+    "https://rihua-keiba.com/category-sitemap.xml",
+    "https://rihua-keiba.com/post-sitemap.xml",
+    "https://rihua-keiba.com/page-sitemap.xml"
+   ],
+   "looked": [
+    {
+     "url": "https://rihua-keiba.com/post-sitemap.xml",
+     "n_urls": 393,
+     "lastmod_years": {
+      "2022": 17,
+      "2023": 200,
+      "2024": 68,
+      "2025": 55,
+      "2026": 53
+     },
+     "url_sample": [
+      "https://rihua-keiba.com/workout/%e3%80%90%e3%83%9e%e3%82%a4%e3%83%ab%e3%83%81%e3%83%a3%e3%83%b3%e3%83%94%e3%82%aa%e3%83%b3%e3%82%b7%e3%83%83%e3%83%97%ef%bc%92%ef%bc%90%ef%bc%92%ef%bc%96%e3%80%91%ef%bc%91%e9%80%b1%e5%89%8d%e8%bf%bd/",
+      "https://rihua-keiba.com/workout/%e3%80%90%e3%82%a8%e3%83%aa%e3%82%b6%e3%83%99%e3%82%b9%e5%a5%b3%e7%8e%8b%e6%9d%af%ef%bc%92%ef%bc%90%ef%bc%92%ef%bc%96%e3%80%91%ef%bc%91%e9%80%b1%e5%89%8d%e8%bf%bd%e3%81%84%e5%88%87%e3%82%8a%e8%a8%ba/",
+      "https://rihua-keiba.com/workout/%e3%80%90%ef%bd%8a%ef%bd%82%ef%bd%83%ef%bc%92%ef%bc%90%ef%bc%92%ef%bc%96%e3%80%91%e8%bf%bd%e3%81%84%e5%88%87%e3%82%8a%e8%a8%ba%e6%96%ad/",
+      "https://rihua-keiba.com/workout/%e3%80%90%e5%a4%a9%e7%9a%87%e8%b3%9e%e3%83%bb%e7%a7%8b%ef%bc%92%ef%bc%90%ef%bc%92%ef%bc%96%e3%80%91%ef%bc%91%e9%80%b1%e5%89%8d%e8%bf%bd%e3%81%84%e5%88%87%e3%82%8a%e8%a8%ba%e6%96%ad/"
+     ]
+    }
+   ]
+  },
+  "requests": 3
+ },
+ {
+  "source": "maidenkeiba",
+  "url": "https://maidenkeiba.com",
+  "robots_status": 200,
+  "robots_disallow": [
+   "Disallow: /wp-admin/"
+  ],
+  "allowed_root": true,
+  "allowed_base": true,
+  "sitemap": {
+   "url": "https://maidenkeiba.com/sitemap.xml",
+   "is_index": false,
+   "n_children": 0,
+   "children_sample": [],
+   "n_urls": 0,
+   "lastmod_years": {},
+   "url_sample": []
+  },
+  "requests": 2
+ },
+ {
+  "source": "speedkeiba",
+  "url": "https://speedkeiba.com",
+  "robots_status": 200,
+  "robots_disallow": [
+   "Disallow: /wp-admin/"
+  ],
+  "allowed_root": true,
+  "allowed_base": true,
+  "sitemap": {
+   "url": "https://speedkeiba.com/sitemap.xml",
+   "is_index": true,
+   "n_children": 4,
+   "children_sample": [
+    "https://speedkeiba.com/sitemap-misc.xml",
+    "https://speedkeiba.com/category-sitemap.xml",
+    "https://speedkeiba.com/post-sitemap.xml",
+    "https://speedkeiba.com/page-sitemap.xml"
+   ],
+   "looked": [
+    {
+     "url": "https://speedkeiba.com/post-sitemap.xml",
+     "n_urls": 184,
+     "lastmod_years": {
+      "2018": 1,
+      "2019": 1,
+      "2020": 46,
+      "2022": 1,
+      "2025": 18,
+      "2026": 117
+     },
+     "url_sample": [
+      "https://speedkeiba.com/%e8%aa%bf%e6%95%99%e3%82%bf%e3%82%a4%e3%83%a0/%e8%aa%bf%e6%95%99%e3%82%bf%e3%82%a4%e3%83%a0%e3%81%ae%e8%a6%8b%e6%96%b9/",
+      "https://speedkeiba.com/%e4%ba%88%e6%83%b3%e6%96%b9%e6%b3%95%e8%ab%96/%e8%8d%92%e3%82%8c%e3%82%8b%e3%83%ac%e3%83%bc%e3%82%b9/",
+      "https://speedkeiba.com/%e8%aa%bf%e6%95%99%e5%88%86%e6%9e%90/service/",
+      "https://speedkeiba.com/%e8%aa%bf%e6%95%99%e3%82%bf%e3%82%a4%e3%83%a0/%e7%ab%b6%e9%a6%ac-%e8%aa%bf%e6%95%99%e3%81%ae%e5%9f%ba%e6%ba%96%e3%82%bf%e3%82%a4%e3%83%a0/"
+     ]
+    }
+   ]
+  },
+  "requests": 3
+ },
+ {
+  "source": "cakerah",
+  "url": "https://www.cakerah.com",
+  "robots_status": 200,
+  "robots_disallow": [
+   "Disallow: /wp-admin/"
+  ],
+  "allowed_root": true,
+  "allowed_base": true,
+  "sitemap": {
+   "url": "https://www.cakerah.com/wp-sitemap.xml",
+   "is_index": true,
+   "n_children": 4,
+   "children_sample": [
+    "https://www.cakerah.com/wp-sitemap-posts-post-1.xml",
+    "https://www.cakerah.com/wp-sitemap-posts-page-1.xml",
+    "https://www.cakerah.com/wp-sitemap-taxonomies-category-1.xml",
+    "https://www.cakerah.com/wp-sitemap-taxonomies-post_tag-1.xml"
+   ],
+   "looked": [
+    {
+     "url": "https://www.cakerah.com/wp-sitemap-posts-post-1.xml",
+     "n_urls": 303,
+     "lastmod_years": {
+      "2025": 12,
+      "2026": 291
+     },
+     "url_sample": [
+      "https://www.cakerah.com/review_hanshin_juvenile_fillies_2025/",
+      "https://www.cakerah.com/review_hong_kong_international_races_2025/",
+      "https://www.cakerah.com/assessing_training_asahi_hai_futurity_stakes_2025/",
+      "https://www.cakerah.com/race_point_of_20_december_2025/"
+     ]
+    },
+    {
+     "url": "https://www.cakerah.com/wp-sitemap-taxonomies-post_tag-1.xml",
+     "n_urls": 2,
+     "lastmod_years": {},
+     "url_sample": [
+      "https://www.cakerah.com/tag/2%e6%ad%b3%e9%87%8d%e8%b3%9e2026/",
+      "https://www.cakerah.com/tag/%e3%82%b5%e3%83%9e%e3%83%bc%e3%82%b7%e3%83%aa%e3%83%bc%e3%82%ba2026/"
+     ]
+    }
+   ]
+  },
+  "requests": 4
+ },
+ {
+  "source": "normandyoc",
+  "url": "https://www.normandyoc.com",
+  "robots_status": 200,
+  "robots_disallow": [
+   "Disallow: /admin/"
+  ],
+  "allowed_root": true,
+  "allowed_base": true,
+  "sitemap": {
+   "url": "https://www.normandyoc.com/sitemap.xml",
+   "is_index": false,
+   "n_children": 0,
+   "children_sample": [],
+   "n_urls": 74,
+   "lastmod_years": {
+    "2013": 74
+   },
+   "url_sample": [
+    "http://www.normandyoc.com/",
+    "http://www.normandyoc.com/about/company.html",
+    "http://www.normandyoc.com/about/farm.html",
+    "http://www.normandyoc.com/about/index.html",
+    "http://www.normandyoc.com/about/message.html"
+   ]
+  },
+  "requests": 2
+ },
+ {
+  "source": "gaikyu-keiba",
+  "url": "https://xn--jnr19jm38asxz.com",
+  "robots_status": "ConnectionError",
+  "robots_disallow": [],
+  "allowed_root": true,
+  "allowed_base": true,
+  "sitemap": null,
+  "requests": 4
+ },
+ {
+  "source": "umarel-web",
+  "url": "https://umarel-web.com",
+  "robots_status": 200,
+  "robots_disallow": [
+   "Disallow: /api/",
+   "Disallow: /optout",
+   "Disallow: /dashboard-analytics-3d92fb"
+  ],
+  "allowed_root": true,
+  "allowed_base": true,
+  "sitemap": {
+   "url": "https://umarel-web.com/sitemap.xml",
+   "is_index": false,
+   "n_children": 0,
+   "children_sample": [],
+   "n_urls": 14,
+   "lastmod_years": {
+    "2026": 14
+   },
+   "url_sample": [
+    "https://umarel-web.com",
+    "https://umarel-web.com/live",
+    "https://umarel-web.com/picks",
+    "https://umarel-web.com/entries",
+    "https://umarel-web.com/history"
+   ]
+  },
+  "requests": 2
+ },
+ {
+  "source": "jiro8",
+  "url": "https://jiro8.sakura.ne.jp",
+  "robots_status": 404,
+  "robots_disallow": [],
+  "allowed_root": true,
+  "allowed_base": true,
+  "sitemap": null,
+  "requests": 4
+ },
+ {
+  "source": "blogmura-horserace",
+  "url": "https://horserace.blogmura.com",
+  "robots_status": 200,
+  "robots_disallow": [
+   "Disallow: /",
+   "Disallow: /",
+   "Disallow: /",
+   "Disallow: /",
+   "Disallow: /themes/*/posts/",
+   "Disallow: /themes/*/posts/"
+  ],
+  "allowed_root": true,
+  "allowed_base": true,
+  "sitemap": {
+   "url": "https://horserace.blogmura.com/sitemap.xml",
+   "is_index": false,
+   "n_children": 0,
+   "children_sample": [],
+   "n_urls": 551,
+   "lastmod_years": {},
+   "url_sample": [
+    "https://horserace.blogmura.com/",
+    "https://horserace.blogmura.com/categories",
+    "https://horserace.blogmura.com/ranking/in",
+    "https://horserace.blogmura.com/ranking/out",
+    "https://horserace.blogmura.com/ranking/pv"
+   ]
+  },
+  "requests": 2
+ },
+ {
+  "source": "jra-official",
+  "url": "https://www.jra.go.jp",
+  "robots_status": 200,
+  "robots_disallow": [
+   "Disallow:"
+  ],
+  "allowed_root": true,
+  "allowed_base": true,
+  "sitemap": null,
+  "requests": 4
+ }
+]
