@@ -4,6 +4,12 @@ name: Probe web sources (記事の作りの下見・手動)
 
 on:
   workflow_dispatch:
+    inputs:
+      args:
+        description: 'scripts/probe_web_source.py に渡す引数'
+        required: false
+        default: 'keibanomiryoku rihua-keiba speedkeiba'
+        type: string
 
 permissions:
   contents: read
@@ -20,4 +26,4 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install requests beautifulsoup4
-      - run: python3 scripts/probe_web_source.py keibanomiryoku rihua-keiba speedkeiba
+      - run: python3 scripts/probe_web_source.py ${{ inputs.args }}
