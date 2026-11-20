@@ -3,8 +3,8 @@
 
 ## 0. 今日の日付
 `TZ=Asia/Tokyo date +%Y%m%d` を取る。以降これを `TODAY` と呼ぶ。
-最初に `git fetch origin main` して、`CLAUDE.md`（2026-11-09 に約23KBへ作り直した）と
-`docs/claude_web_findings.md`（2026-11-10 に改訂）を origin/main の版で読み直すこと。
+最初に `git fetch origin main` して、`CLAUDE.md` と
+`docs/claude_web_findings.md` を origin/main の版で読み直すこと。
 
 ## 1. 🔴 当日の予想を自分で起動する（ここが2026-10-07に変えた核心）
 `git fetch origin main && git show origin/main:data/latest.json` を見て、
@@ -56,8 +56,7 @@ mcp__github__actions_run_trigger
 ## 3. web 情報を集める（🔴 2026-11-10 にユーザー指示で広げた: 全レース・3次元）
 
 ユーザーの方針: **「いまは web からより多くの情報を取り込む段階。実績が溜まったら
-信頼できる情報源を見極める」。** 2026-11-09 までは 10R/11R・2次元に絞っていたため、
-台帳が1開催日に6レースしか増えていなかった。**今日からは広く集める。**
+信頼できる情報源を見極める」。** 今日も広く集める。
 スキーマ・検証ルール・取得可否は `docs/claude_web_findings.md`（origin/main の版）にある。
 
 ### 時間の使い方
@@ -67,9 +66,8 @@ mcp__github__actions_run_trigger
 
 ### 対象レースと優先順
 **全レース**。時間が足りなければ次の順で切る:
-① 有料記事になるレース（`conf >= 66`・レース番号を問わない）→
-② 無料記事になるレース（9〜11R のうち `conf < 66`）→ ③ それ以外。
-（`conf` は latest.json が出るまで分からないので、待ち時間のうちは 9〜11R と、
+① 記事になるレース（各場の 11R ＋ 11R 以外で `conf` が高い順に2本。`scope.day_selection` が決める）→ ② それ以外。
+（`conf` は latest.json が出るまで分からないので、待ち時間のうちは 11R と、
 1記事で全レースを覆う情報源から先に読む）
 
 ### 集める3つの次元
@@ -106,7 +104,7 @@ mcp__github__actions_run_trigger
   `www.keibanomiryoku.com` / `muryou-keiba-ai.jp` / `www.yosounohone.com` / `umasiru.com` /
   `speedkeiba.com` / `horse-racing-ai-navi.com` / `umarel-web.com` / `www.normandyoc.com` /
   `www.jra.go.jp/keiba/baba/`（馬場情報）
-- 取得しない: `umanity.jp` / `sponichi.co.jp` / `p.keibabook.co.jp` / `s.keibabook.co.jp` / `nikkansports.com`
+- 取得しない: `umanity.jp` / `sponichi.co.jp` / `p.keibabook.co.jp` / `s.keibabook.co.jp` / `nikkansports.com` / `keibalab.jp`
 - `tospo-keiba.jp` と `www.jra.go.jp/sitemap.xml` は 403。**UA を偽装して回避しない**
 - **上に無いホストを使うときは、先にそのサイトの robots.txt を読む。** Claude 系の
   UA か `*` に `Disallow: /` があれば使わない。使ったホストは報告に書く
@@ -115,74 +113,48 @@ mcp__github__actions_run_trigger
 - netkeiba は「入手データは私的利用に限定」。オッズ・タイム・印を findings に書き込まない（公開リポジトリに入る）
 - JBIS は使わない（規約第8条2項。ユーザーの明示判断が必要）
 
-🔴 **集めた情報は、いまは予想に反映されない。** 記事には別枠で載り、◎・印・買い目・確率は
-1つも変わらない（反映の基準はユーザーの判断待ち・2026-11-10）。この Routine の役割は
-**広く集めて、出典つきで正確に残すこと**。取れなければ「取れなかった」と書く。無理に埋めない。
+🔴 **集めた情報は、kayochin 指数を除いて予想に反映されない。** 記事には別枠で載り、◎・印・買い目・確率は
+変わらない。この Routine の役割は**広く集めて、出典つきで正確に残すこと**。取れなければ「取れなかった」と書く。無理に埋めない。
 推測で `grade` や印を作らない。
 
-## 4. 記事を作る（🔴 2026-11-04 の改正で**2本**になった）
+## 4. 記事を作る（🔴 2026-11-21 の博士の決定で**無料1本だけ**になった）
 
-有料と無料で**2回**回す。振り分けは `src/product/scope.py::article_kind()` が決める:
+博士の決定「最初の数ヶ月は、全て無料で良い。各競馬場の平場2レースずつ、重賞は11レース＋自信の有る他の重賞」。
+振り分けは `src/product/scope.py::day_selection()` → `article_kind(race, day)` が決める:
 
-| 記事 | 対象 | |
-|---|---|---|
-| **有料** | `conf >= 66` のレース（**レース番号は問わない**） | 推奨レースだけを売る |
-| **無料** | 9R〜11R のうち `conf < 66`（推奨漏れ） | 注目度が高いので無料で出す |
-| 記事にしない | 平場で `conf < 66` | — |
+| 記事 | 対象 |
+|---|---|
+| **無料** | 各競馬場の **11R** ＋ 11R 以外で **レース信頼度（conf）が高い順に2本** |
+| 記事にしない | それ以外 |
+| 有料 | **当面なし**（`scope.ALL_FREE`） |
 
 ```
-# 有料版（既定）
-python3 scripts/build_product_article.py --comment-marks 2 \
-  --out <scratchpad>/article_<YYYY-MM-DD>_paid.md
-
-# 無料版
 python3 scripts/build_product_article.py --comment-marks 2 --free \
   --out <scratchpad>/article_<YYYY-MM-DD>_free.md
 ```
 
+- 有料版は**作らない**（回しても「該当するレースがありません」で exit 1 になる。それが正しい）
 - `--comment-marks 2` ＝ 根拠の文章は **◎と○だけ**（ユーザー指示 2026-10-05）
-- 有料版の先頭に **推奨度 S / A の一覧**が出る（`conf >= 72` が S・`66〜71` が A）。
-  🔴 **72 は新しく作った閾値ではない**（`confidence_stars()` が ★5 と ★4 を分けるために
-  元から持っていた値に名前を付けただけ）。**S だから回収率が100%を超える根拠は無い**
-- 無料版に S/A は出さない（推奨していないものに等級を付けない）
-- `--all-races` は付けない。`--publish` も付けない（`prediction_archive/` には書かない。
-  上書き禁止の公開記録を中身を見る前に確定させないため。2026-10-05 のユーザー判断）
-- web 見解は `data/claude_web_findings.json` があれば**両方**の記事に自動で入る（`--no-web` で切れる）。
-  2026-11-10 から**レース番号を問わず**入る（平場の推奨レースにも載る）
+- `--all-races` は付けない。`--publish` も付けない（`prediction_archive/` には書かない。2026-10-05 のユーザー判断）
+- web 見解は `data/claude_web_findings.json` があれば自動で入る（`--no-web` で切れる）
+- ⚠ 「自信の有る他の重賞」はまだコードに入っていない（latest.json にクラスの列が無い）。11R 以外の重賞があっても自分で足さない。報告に「11R以外の重賞: あり/なし（名前）」を1行書く
+- 参考: 3場開催なら 9本（11R×3＋平場2本×3）
 
-🔴 **どちらかが0本の日がある。** そのとき `build_product_article.py` は
-stderr に `…に該当するレースがありません` と出して **exit 1** で終わる。
-**これは失敗ではない。その記事だけ作らずに先へ進む**（もう片方は必ず作る）:
-- 推奨が1本も無い日 → 有料版なし・無料版だけ
-- 9〜11Rが全部推奨に入った日 → 無料版なし・有料版だけ
-- 両方0本（開催はあるが対象なし）→ 記事なしと報告して 6 の push を撃って終了
-
-参考（2026-11-01 の実測）: 有料 5本（S 2 / A 3）・無料 5本・記事にしない 13本。
-
-## 5. Google ドキュメントとして Drive に保存する（🔴 記事ごとに1本＝最大2本）
+## 5. Google ドキュメントとして Drive に保存する（1本）
 
 **先に `anthropic-skills:google-workspace` スキルを読む**こと。
-`python3 scripts/md_to_html.py <記事>.md > <記事>.html` で変換してから渡す
-（週ごとに手で HTML を組むと見出しや表が崩れるので、変換は1箇所に固定してある）。
+`python3 scripts/md_to_html.py <記事>.md > <記事>.html` で変換してから渡す。
 保存先はマイドライブの `keiba_ai` フォルダ（folder id `1yP-ZY7zYTLPxmPG9mqJ2_FbodoDTCnSZ`）。
+ファイル名は `AI競馬分析 <YYYY-MM-DD>（無料版・下書き）`。会場ごとに分けず1本にまとめる。
 
-🔴 **会場ごとではなく記事ごとに分ける**（2026-11-05 のユーザー判断 (a)）。
-有料記事に複数会場が入っていても **1本のドキュメントにまとめる**。
-
-| 記事 | ファイル名 |
-|---|---|
-| 有料 | `AI競馬分析 <YYYY-MM-DD>（有料版・下書き）` |
-| 無料 | `AI競馬分析 <YYYY-MM-DD>（無料版・下書き）` |
-
-- 作ったのが1本だけの日は**1本だけ**保存する（存在しない記事のドキュメントを作らない）
 - 同名が既にあれば**上書きせず**、末尾に `(2)` を付けて別ファイルにする
 - 保存後に1回読み返し、見出しと表がドキュメントとして読める形になっているか確認する
 
 ## 6. 報告（短く）＋ 🔴 最後に必ず `PushNotification` を1回撃つ
 報告に入れるもの: 自分で refresh を起動したか / `odds_coverage` の値 /
-**有料N本（S x / A y）・無料M本**と見送り /
+**無料N本（11R x本・平場 y本）**と見送り / 11R以外の重賞の有無 /
 **web 収集の件数（何レース・馬メモ何件・印何件・使ったホスト。新しく使ったホストがあれば明記）** /
-**Drive のリンク（有料・無料それぞれ）** / ⚠「この記事はまだ公開・販売していない」。
+**Drive のリンク** / ⚠「この記事はまだ公開・販売していない」。
 
 push は**成功でも失敗でも開催なしでも省略しない**。この Routine はこのチャットに縛られており、
 サーバー側の push/email 通知を設定できない（`persistent_session_id` の Routine は
@@ -190,8 +162,8 @@ push は**成功でも失敗でも開催なしでも省略しない**。この R
 
 - 開催なし → `本日は開催なし（latest.json は YYYYMMDD）`
 - オッズ未取得で中止 → `odds_coverage=0.0 のため記事を作らず中止。<理由>`
-- 両方0本 → `開催はあるが記事の対象レースが0本`
-- 成功 → `Driveに保存: 有料N本(S x/A y) / 無料M本 / odds_coverage=0.XX / web Rレース・メモH件・印P件`
+- 0本 → `開催はあるが記事の対象レースが0本`
+- 成功 → `Driveに保存: 無料N本(11R x/平場 y) / odds_coverage=0.XX / web Rレース・メモH件・印P件`
 - 失敗 → `失敗: <何がどう失敗したか>`
 
 盛らない。「勝てる」「高回収率」「必ず」「確実」は書かない。失敗したら回避策を発明せず、
