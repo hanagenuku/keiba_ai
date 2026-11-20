@@ -329,7 +329,7 @@ class TestEndToEndThroughCalcAll:
     def test_build_star_picks_one_horse_with_note(self, tmp_path):
         from src.betting.app_json import _build_star
         out = self._run(tmp_path, with_star=True)
-        st = _build_star(out)
+        st = _build_star(out, str(tmp_path))
         assert st is not None and st['n'] != 0
         assert st['prob'] >= star.STAR_TAU
         assert st['tau'] == star.STAR_TAU
@@ -339,14 +339,14 @@ class TestEndToEndThroughCalcAll:
     def test_no_star_when_probabilities_below_tau(self, tmp_path):
         from src.betting.app_json import _build_star
         out = self._run(tmp_path, with_star=True, always_high=False)
-        assert _build_star(out) is None, '閾値未満なのに☆が付いた'
+        assert _build_star(out, str(tmp_path)) is None, '閾値未満なのに☆が付いた'
 
     def test_star_prob_none_without_model(self, tmp_path):
         """☆モデルが無くても予想は通り、star_prob は None になる。"""
         from src.betting.app_json import _build_star
         out = self._run(tmp_path, with_star=False)
         assert all(h['star_prob'] is None for h in out)
-        assert _build_star(out) is None
+        assert _build_star(out, str(tmp_path)) is None
 
     def test_star_does_not_change_ranking(self, tmp_path):
         """☆を出しても rl_rank / ai_rank / total は変わらない（表示専用）。"""

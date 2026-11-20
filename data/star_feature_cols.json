@@ -1,4 +1,5 @@
 {
+ "version": 2,
  "feature_cols": [
   "f_is_debut",
   "f_pos_avg_3",
@@ -89,6 +90,8 @@
   "f_beat_market_rate",
   "f_pl_rating",
   "f_pl_rating_n",
+  "f_ws_kayochinkeiba_rank",
+  "f_ws_kayochinkeiba_z",
   "rl_f_speed_avg_rank",
   "rl_f_speed_avg_vs_field",
   "rl_f_speed_last_rank",
@@ -135,19 +138,21 @@
   "f_rl_rank",
   "f_cl_rank"
  ],
- "star_tau": 0.6,
+ "tau1": 0.39,
+ "tau2": 0.108895,
+ "q_tau": 85,
  "star_fill": 5.0,
- "trained_at": "2026-11-17T23:27:50Z",
+ "trained_at": "2026-11-20T00:29:49Z",
  "rows": 171998,
  "races": 12544,
- "pairs_fit": 154586,
+ "pairs_fit": 151242,
  "pairs_inner": 4868,
  "date_from": "2023-01-07",
  "date_to": "2026-11-15",
  "inner_from": "2026-10-05",
- "best_iteration": 190,
- "n_trees": 241,
- "inner_auc": 0.69224,
+ "best_iteration": 254,
+ "n_trees": 305,
+ "inner_auc": 0.677942,
  "hp": {
   "max_depth": 6,
   "learning_rate": 0.05,
@@ -158,13 +163,11 @@
   "reg_lambda": 1.0
  },
  "seed": 42,
- "drift_seed": 11,
+ "p1": "確定人気1位（ドリフトなし）",
  "criteria": [
-  "hitrate/CRITERIA_C_RERUN.md",
-  "hitrate/CRITERIA_STAR.md"
+  "hitrate/CRITERIA_STAR_V2.md"
  ],
  "results": [
-  "hitrate/RESULTS_C_RERUN.md",
-  "hitrate/RESULTS_STAR.md"
+  "hitrate/RESULTS_STAR_V2.md"
  ]
 }
