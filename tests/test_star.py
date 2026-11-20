@@ -103,6 +103,17 @@ class TestThreshold:
 
 
 class TestNote:
+    def test_note_makes_no_claim_against_the_favorite(self):
+        """2026-11-18: 1番人気との比較・確率の主張は書かない（根拠が無かった）。"""
+        assert '気になる一頭' in star.STAR_NOTE
+        for bad in ('1番人気より', '入りやすい', '傾向がありました', '%'):
+            assert bad not in star.STAR_NOTE
+
+    def test_article_has_no_probability_claim(self):
+        with open(os.path.join(BASE, 'src/product/article.py'), encoding='utf-8') as f:
+            src = f.read()
+        assert '可能性は{' not in src and 'star_prob' not in src.split('### ☆ 気になる一頭')[1][:1200]
+
     def test_note_mentions_roi_not_improved(self):
         assert '回収率は改善していません' in star.STAR_NOTE
 
@@ -146,7 +157,7 @@ class TestDisplayOnly:
     def test_article_emits_note_with_star(self):
         """記事で ☆ の見出しを出す箇所に併記文が必ず付く。"""
         src = self._src('src/product/article.py')
-        i = src.find('1番人気を上回る可能性がある馬')
+        i = src.find('### ☆ 気になる一頭')
         assert i > 0, '☆の見出しが article.py に無い'
         block = src[i:i + 1600]
         assert "_star.get('note')" in block, '併記文を出していない'
@@ -154,7 +165,7 @@ class TestDisplayOnly:
     def test_app_json_exposes_star_without_touching_marks(self):
         import ast
         src = self._src('src/betting/app_json.py')
-        assert '_build_star(scored)' in src
+        assert '_build_star(scored, base_dir)' in src
         # ☆が印（◎○▲△）の割り当てに混ざっていないことを AST で確かめる
         # （文字数で切ると隣の関数の docstring を拾ってしまう）
         tree = ast.parse(src)
@@ -189,7 +200,11 @@ class TestArtifacts:
             pytest.skip('☆モデルの成果物がまだ無い')
         with open(fp, encoding='utf-8') as f:
             meta = json.load(f)
-        assert meta['star_tau'] == star.STAR_TAU
+        v2 = int(meta.get('version', 1)) >= 2
+        if v2:
+            assert 0 < meta['tau1'] < 1 and -1 < meta['tau2'] < 1
+        else:
+            assert meta['star_tau'] == star.STAR_TAU
         assert meta['star_fill'] == star.STAR_FILL
         # 本番 residual モデルの列と一致していること
         rp = os.path.join(BASE, 'data', 'xgb_feature_cols_residual.json')
@@ -198,7 +213,8 @@ class TestArtifacts:
                 prod = list(json.load(f)['feature_cols'])
             # ☆モデルは web 由来の列（2026-11-13 採用）を使わない。事前登録した ☆ を
             # 作り直さないため、本番の列から web 由来の列を除いたものと一致すればよい
-            prod = [c for c in prod if not c.startswith('f_ws_')]
+            if not v2:
+                prod = [c for c in prod if not c.startswith('f_ws_')]
             assert list(meta['feature_cols']) == prod, '列順が本番モデルと違う'
         bst, iso, cols = star.load_star_model(BASE)
         assert bst is not None and iso is not None
@@ -313,7 +329,7 @@ class TestEndToEndThroughCalcAll:
     def test_build_star_picks_one_horse_with_note(self, tmp_path):
         from src.betting.app_json import _build_star
         out = self._run(tmp_path, with_star=True)
-        st = _build_star(out)
+        st = _build_star(out, str(tmp_path))
         assert st is not None and st['n'] != 0
         assert st['prob'] >= star.STAR_TAU
         assert st['tau'] == star.STAR_TAU
@@ -323,14 +339,14 @@ class TestEndToEndThroughCalcAll:
     def test_no_star_when_probabilities_below_tau(self, tmp_path):
         from src.betting.app_json import _build_star
         out = self._run(tmp_path, with_star=True, always_high=False)
-        assert _build_star(out) is None, '閾値未満なのに☆が付いた'
+        assert _build_star(out, str(tmp_path)) is None, '閾値未満なのに☆が付いた'
 
     def test_star_prob_none_without_model(self, tmp_path):
         """☆モデルが無くても予想は通り、star_prob は None になる。"""
         from src.betting.app_json import _build_star
         out = self._run(tmp_path, with_star=False)
         assert all(h['star_prob'] is None for h in out)
-        assert _build_star(out) is None
+        assert _build_star(out, str(tmp_path)) is None
 
     def test_star_does_not_change_ranking(self, tmp_path):
         """☆を出しても rl_rank / ai_rank / total は変わらない（表示専用）。"""
@@ -347,3 +363,11 @@ class TestEndToEndThroughCalcAll:
         key = lambda xs: [(h['num'], h.get('rl_rank'), h.get('ai_rank'),  # noqa: E731
                            round(h['total'], 6)) for h in xs]
         assert key(before) == key(after), '☆を入れたら順位・スコアが動いた'
+
+
+def test_train_star_feature_cols_include_web_columns():
+    """☆ v2（2026-11-20・CRITERIA_STAR_V2）は本番と同じく web 列を含める。市場の列は入れない。"""
+    import pandas as pd
+    from src.tools.train_star import feat_cols
+    df = pd.DataFrame({'race_id': ['a'], 'f_x': [1.0], 'f_ws_kayochinkeiba_rank': [1.0], 'f_popularity': [1.0]})
+    assert feat_cols(df) == ['f_x', 'f_ws_kayochinkeiba_rank']

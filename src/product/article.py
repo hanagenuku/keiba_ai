@@ -20,6 +20,7 @@ from . import commentary as _cm
 from . import marks as _marks
 from . import tickets as _tk
 from . import web_block as _wb
+from . import scope as _scope
 
 
 def _stars(n):
@@ -259,13 +260,12 @@ def build_race_section(race, horses, facts_by_num, *, paid=True,
             parts.append('')
 
         # ── ☆（市場1番人気を着順で上回る可能性）────────────────────────
-        # 🔴 表示だけ。◎○▲△・買い目・確率を1つも変えていない。
+        # ◎○▲△・確率は変えない。買い目は ☆を相手に入れる（2026-11-18・tickets.include_star）。
         #    併記文（star.STAR_NOTE）は**省略不可**（biz/S4_HITRATE_AXIS.md）。
         #    「妙味」「狙い目」「☆の回収率は◯%」は書かない。
         _star = race.get('star') if isinstance(race, dict) else None
         if _star and _star.get('n'):
-            _sp = _star.get('prob')
-            parts.append('### ☆ 1番人気を上回る可能性がある馬')
+            parts.append('### ☆ 気になる一頭')
             parts.append('')
             _sh = next((h for h in marked if h.get('n') == _star['n']), None)
             _bits = []
@@ -277,12 +277,18 @@ def build_race_section(race, horses, facts_by_num, *, paid=True,
             _head = f"- **{_star['n']}{_star.get('name', '')}**"
             if _bits:
                 _head += '（' + '・'.join(_bits) + '）'
-            if isinstance(_sp, (int, float)):
-                # 🔴 宣言値そのものではなく5%刻みで切り下げた値を書く
-                #    （hitrate/CRITERIA_STAR.md §4「記事に書く確率」）
-                _head += f"：1番人気を上回る可能性は{int(_sp * 100 // 5 * 5)}%以上"
+            # 🔴 2026-11-18: 「1番人気を上回る可能性は◯%以上」は書かない。
+            #    確率の較正が作り物の1番人気に対するものだった（biz/RESULTS_HONMEI_STAR.md §2）。
             parts.append(_head + '。')
             parts.append('')
+            # 2026-11-18: ☆を買い目に絡める（tickets.include_star）。どう扱ったかを1行で書く
+            _role = (tickets or {}).get('star_role') if isinstance(tickets, dict) else None
+            if _role == 'honmei':
+                parts.append('☆は◎と同じ馬です。')
+                parts.append('')
+            elif _role == 'partner':
+                parts.append('☆は買い目の相手（ヒモ）に入れています。')
+                parts.append('')
             parts.append(_star.get('note') or '')
             parts.append('')
 
@@ -397,21 +403,34 @@ def build_article(day_label, sections, *, paid=True, has_web_info=False):
         #    （単勝 46.3→17.5 / 複勝 87.8→47.5 / ワイド 61.0→26.3）。
         #    ⚠ ユーザーが例示した「有料版より当たらないという意味ではありません」は
         #      この実測と逆なので**採らない**（書くと嘘になる）。
-        head.append('AIが**推奨しなかった**レースのうち、各競馬場9R〜11Rを'
-                    '無料で公開します。印・根拠・買い目の構成は有料版と同じです。')
-        head.append('')
-        head.append('🔴 ここに載せているのは、レース信頼度（◎が3着以内に来る確率として'
-                    'AIが出した数字）が推奨の基準に届かなかったレースです。'
-                    '9R〜11Rは注目度が高いので無料で出していますが、'
-                    '**推奨レースより当たりにくいと思って読んでください。**'
-                    'この信頼度が「当てやすいレースかどうか」を見分ける力は'
-                    '過去3,560レースで確認しています'
-                    '（判別力 0.6041・市場の指標は 0.5708）。だから推奨していません。')
-        head.append('')
-        head.append('⚠ ただし「当たりにくい」と「回収率が低い」は同じではありません。'
-                    '当たりやすい馬ほど配当が縮むためです。'
-                    'そのうえで、**有料版・無料版のどちらも回収率が100%を超えることは'
-                    '確認できていません。**')
+        if _scope.ALL_FREE:
+            # 🟢 2026-11-21 ユーザー決定「最初の数ヶ月は全て無料。各競馬場の平場2レースずつ、
+            #    重賞は11レース＋自信の有る他の重賞」（scope.day_selection）。
+            head.append('各競馬場の11Rと、それ以外のレースからAIのレース信頼度が高い順に'
+                        '2レースずつを無料で公開します。印・根拠・買い目まで載せています。')
+            head.append('')
+            head.append('レース信頼度は、◎が3着以内に来る確率としてAIが出した数字です。'
+                        '11Rは信頼度に関係なく載せているので、ほかのレースより'
+                        '**当たりにくいことがあります。**')
+            head.append('')
+            head.append('⚠ 当たりやすさと回収率は同じではありません（当たりやすい馬ほど配当が縮みます）。'
+                        '**この予想の回収率が100%を超えることは確認できていません。**')
+        else:
+            head.append('AIが**推奨しなかった**レースのうち、各競馬場9R〜11Rを'
+                        '無料で公開します。印・根拠・買い目の構成は有料版と同じです。')
+            head.append('')
+            head.append('🔴 ここに載せているのは、レース信頼度（◎が3着以内に来る確率として'
+                        'AIが出した数字）が推奨の基準に届かなかったレースです。'
+                        '9R〜11Rは注目度が高いので無料で出していますが、'
+                        '**推奨レースより当たりにくいと思って読んでください。**'
+                        'この信頼度が「当てやすいレースかどうか」を見分ける力は'
+                        '過去3,560レースで確認しています'
+                        '（判別力 0.6041・市場の指標は 0.5708）。だから推奨していません。')
+            head.append('')
+            head.append('⚠ ただし「当たりにくい」と「回収率が低い」は同じではありません。'
+                        '当たりやすい馬ほど配当が縮むためです。'
+                        'そのうえで、**有料版・無料版のどちらも回収率が100%を超えることは'
+                        '確認できていません。**')
     head.append('')
     head.append('---')
     head.append('')

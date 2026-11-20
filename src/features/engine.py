@@ -3188,13 +3188,22 @@ def calc_all(race, bias_data=None):
                                    _BASE_DIR or '.')
             for _o, _p in zip(out, _sp):
                 _o['star_prob'] = round(_p, 4) if _p is not None else None
+            # v2: 3着内の上積み（本番モデルの生マージンと市場の土台から）
+            _rm = [_o.get('rating') if _o.get('ability_margin') is not None else None for _o in out]
+            _bmv = [(_o['rating'] - _o['ability_margin']) if _o.get('ability_margin') is not None else None
+                    for _o in out]
+            _s2 = _star.star_s2(_rm, _bmv, [h_.get('popularity') for h_, _, _, _ in horse_data], _BASE_DIR or '.')
+            for _o, _q in zip(out, _s2):
+                _o['star_s2'] = round(_q, 5) if _q is not None else None
         except Exception as _e:
             print(f'  ⚠ ☆の算出に失敗したので☆なしで続けます: {_e}')
             for _o in out:
                 _o['star_prob'] = None
+                _o['star_s2'] = None
     else:
         for _o in out:
             _o['star_prob'] = None
+            _o['star_s2'] = None
 
     n          = len(out)
     scores     = [h['total'] for h in out]

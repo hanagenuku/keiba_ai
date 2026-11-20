@@ -50,24 +50,54 @@ _COLS = None
 _DIR = None
 
 # 記事・アプリに出すときの併記文（省略不可。`biz/S4_HITRATE_AXIS.md`）
-STAR_NOTE = (
-    '☆は着順で1番人気を上回る可能性についての表示です。'
-    '過去データでは、この表示が出た馬は1番人気より3着内に入りやすい傾向がありました。'
-    '一方で回収率は改善していません（配当が小さくなるため）。'
+# 🔴 2026-11-18 ユーザー指示「(気になる一頭) ぐらいのニュアンスでいい」で書き換えた。
+#    旧文の「1番人気より3着内に入りやすい傾向がありました」は、評価で使った1番人気が
+#    作り物（実際の1番人気と一致 27〜30%）で、実際の1番人気に対しては裏付けが無かった
+#    （biz/RESULTS_HONMEI_STAR.md §2）。成績・確率の主張は書かない。
+STAR_NOTE_V1 = (
+    '☆は、AIが気になる一頭として挙げた馬です。'
+    '当たりやすさや回収率の裏付けがある印ではなく、回収率は改善していません。'
     '買い目の根拠ではありません。☆の本数は週によって変わります。'
+)
+# 🟢 2026-11-20: v2 の測定（hitrate/RESULTS_STAR_V2.md・2025-01〜2026-11 の4窓）で言えることだけを書く。
+#    数字は区間の下端に寄せて丸めた「約」（先着 +5.41pt [3.60, 7.15]・3着内 +3.44pt [1.64, 5.20]）。
+STAR_NOTE_V2 = (
+    '☆は、AIが気になる一頭として挙げた馬です。'
+    '過去の検証（2025年1月〜2026年11月）では、☆の馬は同じ人気の馬と比べて、'
+    '1番人気に先着した割合が約4ポイント、3着内率が約2ポイント高めでした。'
+    'ただし回収率は改善していません。買い目の根拠ではありません。☆の本数は週によって変わります。'
+)
+
+# 2026-11-20 STAR-NARROW（hitrate/RESULTS_STAR_NARROW.md）: 候補を4〜9番人気に限った☆。
+# 書けるのは合格した「先着」だけ（3着内は報告のみの統計量）。数字は対照群Aの平均を引いて切り下げた値。
+STAR_NOTE = (
+    '☆は、AIが4〜9番人気の中から気になる一頭として挙げた馬です。'
+    '過去の検証（2024年3月〜2026年11月）では、☆の馬は同じ人気の馬と比べて、'
+    '1番人気に先着した割合が約3ポイント高めでした。'
+    'ただし回収率は改善していません。買い目の根拠ではありません。☆の本数は週によって変わります。'
 )
 
 
-def _num(v):
-    """特徴量1つを float にする。欠損は STAR_FILL。
+def star_note(meta):
+    """成果物に合った併記文（省略不可）。"""
+    if int(meta.get('version', 1)) < 2:
+        return STAR_NOTE_V1
+    return STAR_NOTE if meta.get('pop_lo') is not None else STAR_NOTE_V2
 
-    🔴 学習側（`df[cols].fillna(STAR_FILL)`）と同じ扱いにすること。
+
+def _num(v, col=''):
+    """特徴量1つを float にする。欠損は STAR_FILL。web 由来の列（f_ws_*）だけは NaN のまま。
+
+    🔴 学習側（`matrix_from_frame`）と同じ扱いにすること（本番の `web_signals.fill_missing` と同じ方針）。
     """
+    web = str(col).startswith('f_ws_')
     try:
         f = float(v)
     except (TypeError, ValueError):
-        return STAR_FILL
-    return STAR_FILL if (f != f) else f          # NaN
+        return float('nan') if web else STAR_FILL
+    if f != f:
+        return float('nan') if web else STAR_FILL
+    return f
 
 
 def to_matrix(feat_dicts, cols):
@@ -76,7 +106,7 @@ def to_matrix(feat_dicts, cols):
     🔴 **学習と推論はこの関数だけを使う**（列順・欠損の埋め方を1か所に閉じる）。
     `src/tools/train_star.py` もこれを import している。
     """
-    return np.array([[_num(d.get(c)) for c in cols] for d in feat_dicts],
+    return np.array([[_num(d.get(c), c) for c in cols] for d in feat_dicts],
                     dtype=np.float32)
 
 
@@ -89,7 +119,10 @@ def matrix_from_frame(df, cols):
     """
     import pandas as pd
     m = df.reindex(columns=list(cols)).apply(pd.to_numeric, errors='coerce')
-    return m.fillna(STAR_FILL).to_numpy(dtype=np.float32)
+    keep = [c for c in m.columns if str(c).startswith('f_ws_')]
+    rest = [c for c in m.columns if c not in keep]
+    m[rest] = m[rest].fillna(STAR_FILL)
+    return m.to_numpy(dtype=np.float32)
 
 
 def p1_index(pops):
@@ -159,7 +192,7 @@ def star_probs(feat_dicts, pops, base_dir):
     # 🔴 木の本数を版の既定に任せない（`tests/test_predict_tree_count.py` と同じ方針）
     raw = bst.predict(xgb.DMatrix(d[others], feature_names=list(cols)),
                       iteration_range=(0, bst.num_boosted_rounds()))
-    cal = iso.predict(raw)
+    cal = (iso['iso1'] if isinstance(iso, dict) else iso).predict(raw)
     out = [None] * n
     for k, i in enumerate(others):
         out[i] = float(cal[k])
@@ -176,3 +209,68 @@ def pick_star(nums, probs, tau=STAR_TAU):
         return None, None
     p, nm = max(cand, key=lambda x: (x[0], -x[1]))
     return nm, round(float(p), 4)
+
+
+# ── v2（2026-11-20・hitrate/CRITERIA_STAR_V2.md）────────────────────────────
+# ☆ = S1（実際の1番人気に先着する較正済み確率）が τ1 以上の馬。いなければ
+#     S2（本番モデルの3着内確率 − 市場だけの3着内確率・どちらも較正済み）が τ2 以上の馬。
+# τ1・τ2 は学習の内側ホールドアウトで「1番人気以外の最大値の85パーセンタイル」（star_feature_cols.json）。
+# v1 の成果物（較正器が1つ・`star_tau`）しか無いときは従来どおり S1 >= STAR_TAU だけで選ぶ。
+
+def load_star_meta(base_dir):
+    """star_feature_cols.json の中身（無ければ {}）。"""
+    fp = os.path.join(base_dir, 'data', 'star_feature_cols.json')
+    try:
+        with open(fp, encoding='utf-8') as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
+def star_s2(raw_margins, base_margins, pops, base_dir):
+    """各馬の S2（3着内の上積み）。1番人気・算出不能な馬・v1 の成果物のときは None。"""
+    n = len(raw_margins)
+    bst, cal, cols = load_star_model(base_dir)
+    if not isinstance(cal, dict) or 'cm' not in cal:
+        return [None] * n
+    i1 = p1_index(pops)
+    sig = lambda z: 1.0 / (1.0 + np.exp(-z))
+    out = [None] * n
+    for i, (r, b) in enumerate(zip(raw_margins, base_margins)):
+        if i == i1 or r is None or b is None:
+            continue
+        pm = float(cal['cm'].predict([sig(float(r))])[0])
+        pk = float(cal['ck'].predict([sig(float(b))])[0])
+        out[i] = pm - pk
+    return out
+
+
+def pick_star_v2(nums, s1, s2, base_dir, pops=None):
+    """v2 の ☆。返り値は (馬番, 種類 'S1'/'S2', S1 の値)。該当なしなら (None, None, None)。
+
+    成果物に `pop_lo`/`pop_hi` があれば（STAR-NARROW・2026-11-20）候補をその人気の馬に限る。
+    人気が分からない馬は候補にしない。
+    """
+    meta = load_star_meta(base_dir)
+    if int(meta.get('version', 1)) < 2:
+        num, p = pick_star(nums, s1)
+        return (num, 'S1', p) if num is not None else (None, None, None)
+    t1, t2 = float(meta['tau1']), float(meta['tau2'])
+    if meta.get('pop_lo') is not None:
+        lo, hi = int(meta['pop_lo']), int(meta['pop_hi'])
+        pops = list(pops) if pops is not None else [None] * len(nums)
+        ok = [pp is not None and lo <= int(pp) <= hi for pp in pops]
+        s1 = [v if o else None for v, o in zip(s1, ok)]
+        s2 = [v if o else None for v, o in zip(s2 or [None] * len(nums), ok)]
+    c1 = [(p, -nm, nm) for nm, p in zip(nums, s1) if p is not None]
+    if c1:
+        p, _, nm = max(c1)
+        if p >= t1:
+            return nm, 'S1', round(float(p), 4)
+    c2 = [(q, -nm, nm) for nm, q in zip(nums, s2 or [None] * len(nums)) if q is not None]
+    if c2:
+        q, _, nm = max(c2)
+        if q >= t2:
+            p = dict(zip(nums, s1)).get(nm)
+            return nm, 'S2', (round(float(p), 4) if p is not None else None)
+    return None, None, None

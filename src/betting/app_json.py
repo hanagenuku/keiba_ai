@@ -93,7 +93,7 @@ def _assign_marks(scored, by_odds):
     return marks
 
 
-def _build_star(scored):
+def _build_star(scored, base_dir=None):
     """レースに1頭だけ付く ☆ を決める。該当なしなら None。
 
     🔴 ☆は**表示専用**。◎○▲△・`rl_rank`・買い目・確率・推奨の範囲
@@ -105,23 +105,30 @@ def _build_star(scored):
     複勝回収 78.82% vs 77.87%（+0.95pt）。🔴 **回収率は改善していない。**
     """
     try:
-        from src.features.star import STAR_NOTE, STAR_TAU, pick_star
+        from src.features.star import STAR_TAU, load_star_meta, pick_star_v2, star_note
     except Exception:
         return None
     probs = [h.get('star_prob') for h in scored]
-    if not any(p is not None for p in probs):
+    s2 = [h.get('star_s2') for h in scored]
+    if not any(p is not None for p in probs) and not any(q is not None for q in s2):
         return None
-    num, prob = pick_star([h['num'] for h in scored], probs)
+    base = base_dir or '.'
+    num, kind, prob = pick_star_v2([h['num'] for h in scored], probs, s2, base,
+                                   pops=[h.get('popularity') for h in scored])
     if num is None:
         return None
+    meta = load_star_meta(base)
+    v2 = int(meta.get('version', 1)) >= 2
     h = next((x for x in scored if x['num'] == num), None)
     return {
         'n': num,
         'name': h['name'] if h else '',
         'prob': prob,
-        # 記事・アプリに出すときの文面（省略不可）
-        'note': STAR_NOTE,
-        'tau': STAR_TAU,
+        'kind': kind,
+        # 記事・アプリに出すときの文面（省略不可）。v2 の成果物のときだけ測定の数字を書く
+        'note': star_note(meta),
+        'tau': meta.get('tau1', STAR_TAU) if v2 else STAR_TAU,
+        'version': 2 if v2 else 1,
     }
 
 
@@ -811,7 +818,7 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
                 'style': top1.get('running_style', '差し'),
             },
             'horses':       _horses_list,
-            'star':         _build_star(scored),
+            'star':         _build_star(scored, base_dir),
             'bets':         _build_bet_list(bets),
             'gumbel_bets':  _gumbel_bets,
             'ai_pair_bets': _build_ai_pair_bets(scored),
@@ -941,7 +948,7 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
                 'style': top1.get('running_style', '差し'),
             },
             'horses':      _horses_list2,
-            'star':         _build_star(scored),
+            'star':         _build_star(scored, base_dir),
             'bets':        _build_bet_list(bets2),
             'gumbel_bets': _gumbel_bets2,
             'ai_pair_bets': _build_ai_pair_bets(scored),

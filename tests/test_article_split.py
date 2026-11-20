@@ -171,7 +171,18 @@ class TestArticleText:
         assert '本日の推奨レース（S 1本 / A 0本）' in md
         assert 'AIが推奨したレースだけをまとめています' in md
 
-    def test_free_article_says_these_are_not_recommended(self):
+    def test_all_free_article_explains_the_selection(self):
+        """2026-11-21〜: 全部無料。各場の11R＋平場の上位2本と書き、回収率の注意を外さない。"""
+        assert scope.ALL_FREE
+        secs = [{'markdown': '## 東京11R', 'grade': None, 'conf': 54, 'heading': '東京11R'}]
+        md = article.build_article('2026-11-21', secs, paid=False)
+        assert '無料版' in md
+        assert '各競馬場の11Rと' in md and '2レースずつ' in md
+        assert '回収率が100%を超えることは確認できていません' in md
+        assert '本日の推奨レース' not in md
+
+    def test_free_article_says_these_are_not_recommended(self, monkeypatch):
+        monkeypatch.setattr(scope, 'ALL_FREE', False)
         """🔴 無料版を「お得な版」と誤読させない。
 
         初版は「有料版より当たりやすいという意味ではありません」という
@@ -248,6 +259,8 @@ class TestEndToEnd:
             out = os.path.join(td, 'a.md')
             rc = bpa.main(['--base-dir', BASE, '--out', out, '--no-web', *extra])
             if rc != 0:
+                if scope.ALL_FREE and '--free' not in extra:
+                    return ''        # 全部無料の期間は有料記事が0本（exit 1）が正しい
                 pytest.skip('この latest.json では該当レースが無い')
             with open(out, encoding='utf-8') as f:
                 return f.read()
@@ -262,19 +275,27 @@ class TestEndToEnd:
             key = h[3:].split('　')[0]
             assert races[key]['conf'] >= tickets.CONF_STRONG, h
 
-    def test_free_contains_only_main_races_without_recommendation(self):
+    def test_free_contains_exactly_the_day_selection(self):
+        """2026-11-21〜: 無料＝各場の11R＋平場の信頼度上位2本（scope.day_selection）。"""
         md = self._run('--free')
-        races = {f"{r['_venue']}{r.get('r')}R": r for r in _real_races()}
-        for h in self._headings(md):
-            r = races[h[3:].split('　')[0]]
-            assert scope.is_main_race(r), h
-            assert (r.get('conf') or 0) < tickets.CONF_STRONG, h
+        real = _real_races()
+        day = scope.day_selection(real)
+        want = {f"{r['_venue']}{r.get('r')}R" for r in real
+                if (r.get('horses') or []) and scope.article_kind(r, day)[0] == scope.FREE}
+        got = {h[3:].split('　')[0] for h in self._headings(md)}
+        assert got == want
+        per_venue = {}
+        for k in got:
+            per_venue.setdefault(k[:2], []).append(k)
+        assert all(len(v) <= 1 + scope.FREE_FLAT_PER_VENUE for v in per_venue.values())
 
     def test_paid_and_free_do_not_overlap(self):
         paid = set(self._headings(self._run()))
         free = set(self._headings(self._run('--free')))
-        assert paid and free
+        assert free
         assert not (paid & free)
+        if scope.ALL_FREE:
+            assert not paid, '全部無料の期間に有料記事が出た'
 
     def test_free_article_is_not_trimmed(self):
         """🔴 ユーザー指示「無料記事も有料と同じ（買い目まで全部）」。
@@ -285,3 +306,18 @@ class TestEndToEnd:
         assert '### 買い目' in md
         assert '### 能力・適性・市場の比較' in md
         assert '買い目・全頭評価・他レースは有料版で公開しています' not in md
+
+
+class TestDaySelection:
+    """2026-11-21 ユーザー決定: 各競馬場の11R＋平場の信頼度上位2本・全部無料。"""
+
+    def test_each_venue_gets_11r_and_top2_flat(self):
+        races = {'東京': [{'race_id': f't{n}', 'r': n, 'conf': c} for n, c in
+                          ((1, 70), (2, 80), (3, 75), (11, 40), (12, 75))],
+                 '京都': [{'race_id': 'k5', 'r': 5, 'conf': None}, {'race_id': 'k11', 'r': 11, 'conf': 90}]}
+        day = scope.day_selection(races)
+        free = sorted(k for k, (kind, _) in day.items() if kind == scope.FREE)
+        assert free == ['k11', 't11', 't2', 't3']   # 同点 75 はレース番号の若い 3R
+        assert day['k5'][0] is None                  # 信頼度が無い平場は選ばない
+        assert scope.article_kind({'race_id': 't12'}, day)[0] is None
+        assert scope.article_kind({'race_id': 'zz'}, day)[0] is None

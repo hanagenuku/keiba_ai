@@ -1,0 +1,93 @@
+name: Retrain production (特徴量の作り方を直したあとにモデル一式を作り直す・手動)
+
+# scripts/retrain_production.py。指数DBは非公開 artifact にしか無いのでランナーで作る。
+# 🔴 main には push しない。結果は `retrain/<run_id>` ブランチに置き、PR → CI → マージで入れる（North Star #2）。
+
+on:
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: '作り直す理由'
+        required: true
+        type: string
+      star_only:
+        description: '☆のモデルだけ作り直す（本番モデルは触らない）'
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: retrain-production
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  retrain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+
+      - name: Download required files via LFS
+        run: git lfs pull --include="data/*.db,data/*.pkl"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Find the run that has the index DB
+        id: last
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          RID=$(gh api "repos/${{ github.repository }}/actions/artifacts?name=web-signals-db&per_page=30" \
+                  --jq '[.artifacts[] | select(.expired == false)] | sort_by(.created_at) | last | .workflow_run.id // ""')
+          if [ -z "$RID" ]; then echo "::error::指数DBの artifact が無い"; exit 1; fi
+          echo "run_id=$RID" >> "$GITHUB_OUTPUT"
+
+      - name: Restore index DB
+        uses: actions/download-artifact@v4
+        with:
+          name: web-signals-db
+          path: data/private
+          run-id: ${{ steps.last.outputs.run_id }}
+          github-token: ${{ github.token }}
+
+      - name: Retrain
+        env:
+          REASON: ${{ inputs.reason }}
+          STAR_ONLY: ${{ inputs.star_only }}
+        run: |
+          if [ "$STAR_ONLY" = "true" ]; then
+            python3 scripts/retrain_production.py --reason "$REASON" --star-only
+          else
+            python3 scripts/retrain_production.py --reason "$REASON"
+          fi
+
+      - name: Push result to a branch (main には入れない)
+        run: |
+          set -euo pipefail
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          BR="retrain/${{ github.run_id }}"
+          git checkout -b "$BR"
+          cat retrain_summary.json
+          git add retrain_summary.json data/speed_index_cache.pkl \
+                  data/xgb_fukusho_model_residual.pkl data/xgb_feature_cols_residual.json \
+                  data/xgb_fukusho_model.pkl data/xgb_feature_cols.json \
+                  data/xgb_calibrator.pkl data/ability_calibrator.pkl \
+                  data/star_model.ubj data/star_calibrator.pkl data/star_feature_cols.json
+          git status --short | head -20
+          git commit -m "retrain: モデル一式を作り直す（run ${{ github.run_id }}）"
+          git push origin "$BR"
+          echo "ブランチ: $BR"
