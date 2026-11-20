@@ -165,7 +165,7 @@ class TestDisplayOnly:
     def test_app_json_exposes_star_without_touching_marks(self):
         import ast
         src = self._src('src/betting/app_json.py')
-        assert '_build_star(scored)' in src
+        assert '_build_star(scored, base_dir)' in src
         # ☆が印（◎○▲△）の割り当てに混ざっていないことを AST で確かめる
         # （文字数で切ると隣の関数の docstring を拾ってしまう）
         tree = ast.parse(src)
@@ -200,7 +200,11 @@ class TestArtifacts:
             pytest.skip('☆モデルの成果物がまだ無い')
         with open(fp, encoding='utf-8') as f:
             meta = json.load(f)
-        assert meta['star_tau'] == star.STAR_TAU
+        v2 = int(meta.get('version', 1)) >= 2
+        if v2:
+            assert 0 < meta['tau1'] < 1 and -1 < meta['tau2'] < 1
+        else:
+            assert meta['star_tau'] == star.STAR_TAU
         assert meta['star_fill'] == star.STAR_FILL
         # 本番 residual モデルの列と一致していること
         rp = os.path.join(BASE, 'data', 'xgb_feature_cols_residual.json')
@@ -209,7 +213,8 @@ class TestArtifacts:
                 prod = list(json.load(f)['feature_cols'])
             # ☆モデルは web 由来の列（2026-11-13 採用）を使わない。事前登録した ☆ を
             # 作り直さないため、本番の列から web 由来の列を除いたものと一致すればよい
-            prod = [c for c in prod if not c.startswith('f_ws_')]
+            if not v2:
+                prod = [c for c in prod if not c.startswith('f_ws_')]
             assert list(meta['feature_cols']) == prod, '列順が本番モデルと違う'
         bst, iso, cols = star.load_star_model(BASE)
         assert bst is not None and iso is not None
@@ -360,9 +365,9 @@ class TestEndToEndThroughCalcAll:
         assert key(before) == key(after), '☆を入れたら順位・スコアが動いた'
 
 
-def test_train_star_feature_cols_exclude_web_columns():
-    """学習データに web 由来の列があっても、☆の学習には使わない（2026-11-18）。"""
+def test_train_star_feature_cols_include_web_columns():
+    """☆ v2（2026-11-20・CRITERIA_STAR_V2）は本番と同じく web 列を含める。市場の列は入れない。"""
     import pandas as pd
     from src.tools.train_star import feat_cols
     df = pd.DataFrame({'race_id': ['a'], 'f_x': [1.0], 'f_ws_kayochinkeiba_rank': [1.0], 'f_popularity': [1.0]})
-    assert feat_cols(df) == ['f_x']
+    assert feat_cols(df) == ['f_x', 'f_ws_kayochinkeiba_rank']

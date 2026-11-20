@@ -10,6 +10,11 @@ on:
         description: '作り直す理由'
         required: true
         type: string
+      star_only:
+        description: '☆のモデルだけ作り直す（本番モデルは触らない）'
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
   group: retrain-production
@@ -59,7 +64,15 @@ jobs:
           github-token: ${{ github.token }}
 
       - name: Retrain
-        run: python3 scripts/retrain_production.py --reason "${{ inputs.reason }}"
+        env:
+          REASON: ${{ inputs.reason }}
+          STAR_ONLY: ${{ inputs.star_only }}
+        run: |
+          if [ "$STAR_ONLY" = "true" ]; then
+            python3 scripts/retrain_production.py --reason "$REASON" --star-only
+          else
+            python3 scripts/retrain_production.py --reason "$REASON"
+          fi
 
       - name: Push result to a branch (main には入れない)
         run: |
