@@ -61,12 +61,28 @@ STAR_NOTE_V1 = (
 )
 # 🟢 2026-11-20: v2 の測定（hitrate/RESULTS_STAR_V2.md・2025-01〜2026-11 の4窓）で言えることだけを書く。
 #    数字は区間の下端に寄せて丸めた「約」（先着 +5.41pt [3.60, 7.15]・3着内 +3.44pt [1.64, 5.20]）。
-STAR_NOTE = (
+STAR_NOTE_V2 = (
     '☆は、AIが気になる一頭として挙げた馬です。'
     '過去の検証（2025年1月〜2026年11月）では、☆の馬は同じ人気の馬と比べて、'
     '1番人気に先着した割合が約4ポイント、3着内率が約2ポイント高めでした。'
     'ただし回収率は改善していません。買い目の根拠ではありません。☆の本数は週によって変わります。'
 )
+
+# 2026-11-20 STAR-NARROW（hitrate/RESULTS_STAR_NARROW.md）: 候補を4〜9番人気に限った☆。
+# 書けるのは合格した「先着」だけ（3着内は報告のみの統計量）。数字は対照群Aの平均を引いて切り下げた値。
+STAR_NOTE = (
+    '☆は、AIが4〜9番人気の中から気になる一頭として挙げた馬です。'
+    '過去の検証（2024年3月〜2026年11月）では、☆の馬は同じ人気の馬と比べて、'
+    '1番人気に先着した割合が約3ポイント高めでした。'
+    'ただし回収率は改善していません。買い目の根拠ではありません。☆の本数は週によって変わります。'
+)
+
+
+def star_note(meta):
+    """成果物に合った併記文（省略不可）。"""
+    if int(meta.get('version', 1)) < 2:
+        return STAR_NOTE_V1
+    return STAR_NOTE if meta.get('pop_lo') is not None else STAR_NOTE_V2
 
 
 def _num(v, col=''):
@@ -229,13 +245,23 @@ def star_s2(raw_margins, base_margins, pops, base_dir):
     return out
 
 
-def pick_star_v2(nums, s1, s2, base_dir):
-    """v2 の ☆。返り値は (馬番, 種類 'S1'/'S2', S1 の値)。該当なしなら (None, None, None)。"""
+def pick_star_v2(nums, s1, s2, base_dir, pops=None):
+    """v2 の ☆。返り値は (馬番, 種類 'S1'/'S2', S1 の値)。該当なしなら (None, None, None)。
+
+    成果物に `pop_lo`/`pop_hi` があれば（STAR-NARROW・2026-11-20）候補をその人気の馬に限る。
+    人気が分からない馬は候補にしない。
+    """
     meta = load_star_meta(base_dir)
     if int(meta.get('version', 1)) < 2:
         num, p = pick_star(nums, s1)
         return (num, 'S1', p) if num is not None else (None, None, None)
     t1, t2 = float(meta['tau1']), float(meta['tau2'])
+    if meta.get('pop_lo') is not None:
+        lo, hi = int(meta['pop_lo']), int(meta['pop_hi'])
+        pops = list(pops) if pops is not None else [None] * len(nums)
+        ok = [pp is not None and lo <= int(pp) <= hi for pp in pops]
+        s1 = [v if o else None for v, o in zip(s1, ok)]
+        s2 = [v if o else None for v, o in zip(s2 or [None] * len(nums), ok)]
     c1 = [(p, -nm, nm) for nm, p in zip(nums, s1) if p is not None]
     if c1:
         p, _, nm = max(c1)

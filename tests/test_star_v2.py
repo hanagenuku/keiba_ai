@@ -68,3 +68,18 @@ def test_v1_artifacts_keep_old_behaviour(tmp_path):
     star._DIR = None
     assert star.pick_star_v2([1, 2], [None, 0.61], [None, 0.9], str(tmp_path)) == (2, 'S1', 0.61)
     assert star.pick_star_v2([1, 2], [None, 0.59], [None, 0.9], str(tmp_path)) == (None, None, None)
+
+
+def test_pop_range_limits_candidates(tmp_path):
+    """STAR-NARROW: 成果物に pop_lo/pop_hi があれば 4〜9番人気からだけ選ぶ。人気不明は候補にしない。"""
+    base = _artifacts(tmp_path, tau1=0.5, tau2=0.05)
+    fp = tmp_path / 'data' / 'star_feature_cols.json'
+    m = json.loads(fp.read_text())
+    m.update(pop_lo=4, pop_hi=9)
+    fp.write_text(json.dumps(m))
+    star._DIR = None
+    nums, s1, s2 = [1, 2, 3, 4], [None, 0.9, 0.6, 0.8], [None, 0.3, 0.1, 0.2]
+    assert star.pick_star_v2(nums, s1, s2, base, pops=[1, 2, 5, None]) == (3, 'S1', 0.6)
+    assert star.pick_star_v2(nums, s1, s2, base) == (None, None, None)
+    assert star.star_note(m) == star.STAR_NOTE and '4〜9番人気' in star.STAR_NOTE
+    assert star.star_note({'version': 2}) == star.STAR_NOTE_V2
