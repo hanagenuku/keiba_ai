@@ -1,0 +1,117 @@
+{
+ "windows": {
+  "W1": {
+   "tau1": 0.3513,
+   "tau2": 0.1147,
+   "races": 1123,
+   "n": 828,
+   "beat": 0.3647,
+   "beat_exp": 0.3366,
+   "ex_beat": 0.0281,
+   "top3": 0.3998,
+   "top3_exp": 0.401,
+   "ex_t3": -0.0013,
+   "fuku_roi": 75.6522,
+   "fav_top3": 0.6171,
+   "by_kind": {
+    "S1": 781,
+    "S2": 47
+   },
+   "freq": 0.7373
+  },
+  "W2": {
+   "tau1": 0.4492,
+   "tau2": 0.10736,
+   "races": 1244,
+   "n": 518,
+   "beat": 0.4093,
+   "beat_exp": 0.3371,
+   "ex_beat": 0.0721,
+   "top3": 0.4691,
+   "top3_exp": 0.4103,
+   "ex_t3": 0.0588,
+   "fuku_roi": 85.5985,
+   "fav_top3": 0.6216,
+   "by_kind": {
+    "S1": 425,
+    "S2": 93
+   },
+   "freq": 0.4164
+  },
+  "W3": {
+   "tau1": 0.3719,
+   "tau2": 0.10616,
+   "races": 1075,
+   "n": 563,
+   "beat": 0.4192,
+   "beat_exp": 0.3398,
+   "ex_beat": 0.0794,
+   "top3": 0.4813,
+   "top3_exp": 0.4073,
+   "ex_t3": 0.074,
+   "fuku_roi": 87.3179,
+   "fav_top3": 0.5915,
+   "by_kind": {
+    "S1": 391,
+    "S2": 172
+   },
+   "freq": 0.5237
+  },
+  "W4": {
+   "tau1": 0.48,
+   "tau2": 0.10062,
+   "races": 2959,
+   "n": 1024,
+   "beat": 0.3877,
+   "beat_exp": 0.3356,
+   "ex_beat": 0.0521,
+   "top3": 0.4297,
+   "top3_exp": 0.4007,
+   "ex_t3": 0.029,
+   "fuku_roi": 79.2676,
+   "fav_top3": 0.6338,
+   "by_kind": {
+    "S1": 644,
+    "S2": 380
+   },
+   "freq": 0.3461
+  }
+ },
+ "pooled": {
+  "n": 2933,
+  "ex_beat": 5.41,
+  "ex_beat_ci": [
+   3.6,
+   7.15
+  ],
+  "windows_beat_pos": 4,
+  "ex_t3": 3.44,
+  "ex_t3_ci": [
+   1.64,
+   5.2
+  ],
+  "windows_t3_pos": 3
+ },
+ "control_A": {
+  "beat_mean": 1.259,
+  "beat_sd": 0.757,
+  "beat_p95": 2.55,
+  "beat_centered": false,
+  "t3_mean": 0.217,
+  "t3_sd": 0.838,
+  "t3_p95": 1.68,
+  "t3_centered": false,
+  "beat_exceeds_p95": true,
+  "t3_exceeds_p95": true
+ },
+ "control_B": {
+  "injected_ex_t3": 58.3,
+  "original_ex_t3": 3.44,
+  "detects": true
+ },
+ "criteria": {
+  "beat_pass": true,
+  "top3_pass": true
+ },
+ "verdict": "合格（先着・3着内）"
+}
