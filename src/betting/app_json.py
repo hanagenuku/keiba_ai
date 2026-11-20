@@ -105,8 +105,7 @@ def _build_star(scored, base_dir=None):
     複勝回収 78.82% vs 77.87%（+0.95pt）。🔴 **回収率は改善していない。**
     """
     try:
-        from src.features.star import (STAR_NOTE, STAR_NOTE_V1, STAR_TAU, load_star_meta,
-                                       pick_star_v2)
+        from src.features.star import STAR_TAU, load_star_meta, pick_star_v2, star_note
     except Exception:
         return None
     probs = [h.get('star_prob') for h in scored]
@@ -114,7 +113,8 @@ def _build_star(scored, base_dir=None):
     if not any(p is not None for p in probs) and not any(q is not None for q in s2):
         return None
     base = base_dir or '.'
-    num, kind, prob = pick_star_v2([h['num'] for h in scored], probs, s2, base)
+    num, kind, prob = pick_star_v2([h['num'] for h in scored], probs, s2, base,
+                                   pops=[h.get('popularity') for h in scored])
     if num is None:
         return None
     meta = load_star_meta(base)
@@ -126,7 +126,7 @@ def _build_star(scored, base_dir=None):
         'prob': prob,
         'kind': kind,
         # 記事・アプリに出すときの文面（省略不可）。v2 の成果物のときだけ測定の数字を書く
-        'note': STAR_NOTE if v2 else STAR_NOTE_V1,
+        'note': star_note(meta),
         'tau': meta.get('tau1', STAR_TAU) if v2 else STAR_TAU,
         'version': 2 if v2 else 1,
     }

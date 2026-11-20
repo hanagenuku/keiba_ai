@@ -48,6 +48,7 @@ HP = dict(max_depth=6, learning_rate=0.05, subsample=0.8, colsample_bytree=0.8,
 N_ROUNDS, ES_ROUNDS = 4000, 50
 SEED = 42
 INNER_DAYS = 42
+POP_LO, POP_HI = 4, 9   # ☆の候補（hitrate/CRITERIA_STAR_NARROW.md・2026-11-20 博士「4〜9人気でよい」）
 Q_TAU = 85          # τ1・τ2 は内側HOのレース内最大値の85パーセンタイル（hitrate/CRITERIA_STAR_V2.md）
 
 
@@ -161,9 +162,10 @@ def main():
     iso = IsotonicRegression(out_of_bounds='clip').fit(raw_in, yi)
     auc = roc_auc_score(yi, raw_in)
 
-    # τ1: 内側HOで「1番人気以外の S1 のレース内最大値」の85パーセンタイル（hitrate/CRITERIA_STAR_V2.md）
+    # τ1: 内側HOで「4〜9番人気の S1 のレース内最大値」の85パーセンタイル（hitrate/CRITERIA_STAR_NARROW.md）
     s1_max = {}
     sub = df[m_in].reset_index(drop=True)
+    mid = lambda pp: POP_LO <= pp <= POP_HI
     Xin = X[m_in]
     for rid, idx in sub.groupby('race_id', sort=False).indices.items():
         idx = np.asarray(idx)
@@ -171,7 +173,7 @@ def main():
         if i1 is None:
             continue
         dd = build_delta(Xin[idx], i1)
-        others = [k for k in range(len(idx)) if k != i1]
+        others = [k for k in range(len(idx)) if k != i1 and mid(sub['_pop'].values[idx][k])]
         if not others:
             continue
         p = iso.predict(bst.predict(xgb.DMatrix(dd[others], feature_names=list(cols)),
@@ -199,7 +201,7 @@ def main():
     s2 = cm.predict(sig(raw_r)) - ck.predict(sig(np.asarray(bm)))
     s2_max = {}
     for i, (rid, pp) in enumerate(zip(sub['race_id'].values, sub['_pop'].values)):
-        if pp == 1 or not okr[i]:
+        if not mid(pp) or not okr[i]:
             continue
         s2_max[rid] = max(s2_max.get(rid, -9.0), float(s2[i]))
     tau2 = float(np.percentile(list(s2_max.values()), Q_TAU))
@@ -216,6 +218,7 @@ def main():
             'version': 2,
             'feature_cols': list(cols),
             'tau1': round(tau1, 6), 'tau2': round(tau2, 6), 'q_tau': Q_TAU,
+            'pop_lo': POP_LO, 'pop_hi': POP_HI,
             'star_fill': STAR_FILL,
             'trained_at': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
             'rows': int(len(df)), 'races': int(df.race_id.nunique()),
@@ -226,8 +229,8 @@ def main():
             'best_iteration': int(bst.best_iteration), 'n_trees': int(ntree),
             'inner_auc': round(float(auc), 6),
             'hp': HP, 'seed': SEED, 'p1': '確定人気1位（ドリフトなし）',
-            'criteria': ['hitrate/CRITERIA_STAR_V2.md'],
-            'results': ['hitrate/RESULTS_STAR_V2.md'],
+            'criteria': ['hitrate/CRITERIA_STAR_V2.md', 'hitrate/CRITERIA_STAR_NARROW.md'],
+            'results': ['hitrate/RESULTS_STAR_V2.md', 'hitrate/RESULTS_STAR_NARROW.md'],
         }, f, ensure_ascii=False, indent=1)
     for p in (out_m, out_c, out_f):
         print(f'  → {p} ({os.path.getsize(p):,} bytes)')
