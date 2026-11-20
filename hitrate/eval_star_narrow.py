@@ -32,6 +32,7 @@ if os.environ.get('STAR_NARROW_SMOKE'):
     # 配管の確認だけ（判定の窓は使わない）。2024年初の1窓・並べ替えを少なく
     WINDOWS = [('S', '2023-12-31', '2024-01-01', '2024-02-29')]
 Q, QS = 85, 95
+POP_LO, POP_HI = 4, 9
 PAID_P = 0.66
 N_BOOT, N_PERM = (200, 5) if os.environ.get('STAR_NARROW_SMOKE') else (2000, 200)
 
@@ -68,6 +69,8 @@ def main():
     bm = _popularity_to_base_margin(pd.Series(np.nan_to_num(pop, nan=nfield / 2)), pd.Series(nfield))
     print(f'行 {len(df):,} / 列 {len(cols)}（web {web}）', flush=True)
 
+    idx_of = {(r, int(n)): i for i, (r, n) in enumerate(zip(rid, hn))}
+    mid = (pop >= POP_LO) & (pop <= POP_HI)
     fav_place = {}
     for r, p, q in zip(rid, place, pop):
         if q == 1:
@@ -96,11 +99,13 @@ def main():
         pi = C.build_pairs(np.flatnonzero(m_in & ok), X, place, rid, hn, np.nan_to_num(pop))
         pv = C.build_pairs(np.flatnonzero(m_va & ok), X, place, rid, hn, np.nan_to_num(pop))
         fp_ = C.fit_pair(pf[0], pf[1], pi[0], pi[1], pv[0], cols, SEED)
-        s1_in = defaultdict(float)
-        for r, p in zip(pi[2], fp_['p_in']):
+        s1_in, s1_in_m = defaultdict(float), {}
+        for r, n_, p in zip(pi[2], pi[3], fp_['p_in']):
             s1_in[r] = max(s1_in[r], p)
+            if mid[idx_of[(r, int(n_))]]:
+                s1_in_m[r] = max(s1_in_m.get(r, 0.0), p)
         tau1 = float(np.percentile(list(s1_in.values()), Q))
-        tau1s = float(np.percentile(list(s1_in.values()), QS))
+        tau1m = {q_: float(np.percentile(list(s1_in_m.values()), q_)) for q_ in (Q, QS)}
         S1 = {(r, int(n)): float(p) for r, n, p in zip(pv[2], pv[3], fp_['p_va'])}
         # S2: 残差モデル − 市場（どちらも較正）
         iF, iI, iV = np.flatnonzero(m_fit & ok), np.flatnonzero(m_in & ok), np.flatnonzero(m_va & ok)
@@ -112,63 +117,55 @@ def main():
         ck = IsotonicRegression(out_of_bounds='clip').fit(sig(bm[iI]), y3[iI])
         s2_in = cm.predict(sig(m_in_)) - ck.predict(sig(bm[iI]))
         s2_va = cm.predict(sig(m_va_)) - ck.predict(sig(bm[iV]))
-        mx = defaultdict(lambda: -9.0)
+        mx, mxm = defaultdict(lambda: -9.0), {}
         for i, v in zip(iI, s2_in):
             if pop[i] != 1:
                 mx[rid[i]] = max(mx[rid[i]], v)
+            if mid[i]:
+                mxm[rid[i]] = max(mxm.get(rid[i], -9.0), v)
         tau2 = float(np.percentile(list(mx.values()), Q))
-        tau2s = float(np.percentile(list(mx.values()), QS))
-        # 有料の判定: 軸（較正済み3着内確率が最大の馬）の確率 >= 0.66
+        tau2m = {q_: float(np.percentile(list(mxm.values()), q_)) for q_ in (Q, QS)}
+        # 本命側（無料に回す案の姿）: 軸＝較正済み3着内確率が最大の馬・その確率 >= 0.66
         pv_ = cm.predict(sig(m_va_))
-        axp = defaultdict(float)
+        axis = {}
         for i, v in zip(iV, pv_):
-            axp[rid[i]] = max(axp[rid[i]], float(v))
-        paid = {r for r, v in axp.items() if v >= PAID_P}
-        share = len(paid) / max(len(axp), 1)
-        paid_rule = 'conf>=0.66'
-        if not (0.20 <= share <= 0.40):
-            cut = float(np.percentile(list(axp.values()), 70))
-            paid = {r for r, v in axp.items() if v >= cut}
-            paid_rule = f'top30% (share {share:.3f} outside 20-40%)'
+            if rid[i] not in axis or v > axis[rid[i]][1]:
+                axis[rid[i]] = (i, float(v))
         # 評価窓のレースごとの候補
         races = defaultdict(list)
         for j, i in enumerate(iV):
             if pop[i] == 1 or not np.isfinite(pop[i]):
                 continue
             races[rid[i]].append((i, S1.get((rid[i], int(hn[i])), np.nan), s2_va[j]))
-        win = dict(tau1=round(tau1, 4), tau2=round(tau2, 5), tau1s=round(tau1s, 4), tau2s=round(tau2s, 5),
-                   races=len({rid[i] for i in iV}), paid_share=round(len(paid) / max(len(axp), 1), 4),
-                   paid_share_conf066=round(share, 4), paid_rule=paid_rule)
+        win = dict(tau1=round(tau1, 4), tau2=round(tau2, 5),
+                   tau1m85=round(tau1m[Q], 4), tau2m85=round(tau2m[Q], 5), tau1m95=round(tau1m[QS], 4), tau2m95=round(tau2m[QS], 5),
+                   races=len({rid[i] for i in iV}), days=len({str(d[i])[:10] for i in iV}))
 
-        def make_pick(mode, t1=tau1, t1s=tau1s, t2=tau2, t2s=tau2s, paid=paid):
-            # mode: 'v2'（全レース85）/ 'P85'（有料85・他95）/ 'Pall'（有料は必ず☆・他95）/ 'S95'（全レース95）
-            def pick(rs, s1sh=None, s2sh=None, only=None):
+        def make_pick(mode):
+            # 'v2'（2番人気以下すべて・85）/ 'M85'（4〜9番人気・85）/ 'M95'（4〜9番人気・95）
+            t1, t2 = (tau1, tau2) if mode == 'v2' else (tau1m[Q], tau2m[Q]) if mode == 'M85' else (tau1m[QS], tau2m[QS])
+
+            def pick(rs, s1sh=None, s2sh=None):
                 out_ = []
                 for r, hs in rs.items():
                     if r not in fav_place:
                         continue
-                    ip = r in paid
-                    if only == 'paid' and not ip:
-                        continue
-                    if mode == 'v2' or (ip and mode in ('P85', 'Pall')):
-                        a_, b_ = t1, t2
-                    else:
-                        a_, b_ = t1s, t2s
                     a1 = [h[1] for h in hs] if s1sh is None else s1sh[r]
                     a2 = [h[2] for h in hs] if s2sh is None else s2sh[r]
+                    ok_ = [True] * len(hs) if mode == 'v2' else [bool(mid[h[0]]) for h in hs]
+                    a1 = [v if o else np.nan for v, o in zip(a1, ok_)]
+                    a2 = [v if o else -9.0 for v, o in zip(a2, ok_)]
+                    if not any(ok_):
+                        continue
                     j1 = int(np.nanargmax(a1)) if np.isfinite(np.nanmax(a1)) else None
-                    if j1 is not None and a1[j1] >= a_:
+                    if j1 is not None and a1[j1] >= t1:
                         out_.append((r, hs[j1][0], 'S1'))
                         continue
                     j2 = int(np.argmax(a2))
-                    if a2[j2] >= b_:
+                    if a2[j2] >= t2:
                         out_.append((r, hs[j2][0], 'S2'))
-                        continue
-                    if ip and mode == 'Pall':
-                        jj = j1 if j1 is not None else j2
-                        out_.append((r, hs[jj][0], 'F'))
                 return out_
-            return pick
+            return pick, t2
 
         def stats(sel):
             if not sel:
@@ -182,32 +179,36 @@ def main():
             return dict(n=len(sel), beat=np.mean(b), beat_exp=np.nanmean(b_e), ex_beat=np.nanmean(np.array(b) - np.array(b_e)),
                         top3=np.mean(t), top3_exp=np.nanmean(t_e), ex_t3=np.nanmean(np.array(t) - np.array(t_e)),
                         fuku_roi=np.sum(f) / len(f), fav_top3=np.mean(f1),
-                        by_kind={kk: sum(1 for x in sel if x[2] == kk) for kk in ('S1', 'S2', 'F')},
+                        by_kind={kk: sum(1 for x in sel if x[2] == kk) for kk in ('S1', 'S2')},
                         _rows=[(r, float(place[i] < fav_place[r]) - EB.get((int(min(pop[i], 12)), fsb(nfield[i])), np.nan),
                                 y3[i] - E3.get((int(min(pop[i], 12)), fsb(nfield[i])), np.nan)) for r, i, _k in sel])
         clean = lambda st: {k: (round(float(v), 4) if isinstance(v, (float, np.floating)) else v)
                             for k, v in st.items() if k != '_rows'}
-        picks = {m: make_pick(m) for m in ('v2', 'P85', 'Pall', 'S95')}
-        for m, pk in picks.items():
+        picks = {m: make_pick(m) for m in ('v2', 'M85', 'M95')}
+        for m, (pk, _t2) in picks.items():
             sel = pk(races)
             st = stats(sel)
             win[m] = clean(st)
             win[m]['freq'] = round(len(sel) / max(win['races'], 1), 4)
-            win[m]['paid_with_star'] = round(sum(1 for x in sel if x[0] in paid) / max(len(paid), 1), 4)
+            win[m]['per_day'] = round(len(sel) / max(win['days'], 1), 2)
+            win[m]['win_rate'] = round(float(np.mean([place[i] == 1 for _r, i, _k in sel])), 4) if sel else None
+            hits = [fuku[i] for _r, i, _k in sel if place[i] <= 3 and fuku[i] > 0]
+            win[m]['fuku_pay_median_hit'] = float(np.median(hits)) if hits else None
             pooled_by[m] += st.get('_rows', [])
-            sp = stats(pk(races, only='paid'))
-            win[m + '_paid'] = clean(sp)
-            pooled_by[m + '_paid'] += sp.get('_rows', [])
+        ax = [(r, i) for r, (i, v) in axis.items() if v >= PAID_P and r in fav_place]
+        hits = [fuku[i] for _r, i in ax if place[i] <= 3 and fuku[i] > 0]
+        win['axis066'] = dict(races=len(ax), per_day=round(len(ax) / max(win['days'], 1), 2),
+                              top3=round(float(np.mean([place[i] <= 3 for _r, i in ax])), 4) if ax else None,
+                              fuku_roi=round(float(np.sum([fuku[i] for _r, i in ax]) / max(len(ax), 1)), 2),
+                              fuku_pay_median_hit=float(np.median(hits)) if hits else None)
         out['windows'][name] = win
-        stars.append((name, races, picks, stats, tau2s, iV))
-        print(name, {m: {k: win[m].get(k) for k in ('n', 'freq', 'ex_beat', 'ex_t3', 'paid_with_star')} for m in picks},
-              win['paid_share'], win['paid_rule'], flush=True)
+        stars.append((name, races, picks, stats, iV))
+        print(name, {m: {k: win[m].get(k) for k in ('n', 'freq', 'per_day', 'ex_beat', 'ex_t3')} for m in picks},
+              win['axis066'], flush=True)
 
     rng = np.random.default_rng(0)
 
     def pool(rows_):
-        if not rows_:
-            return dict(n=0, ex_beat=float('nan'), ex_beat_ci=[float('nan')] * 2, ex_t3=float('nan'), ex_t3_ci=[float('nan')] * 2)
         rows = np.array([(x[1], x[2]) for x in rows_], dtype=float)
         idx_by_r = defaultdict(list)
         for i, x in enumerate(rows_):
@@ -222,33 +223,26 @@ def main():
         return dict(n=len(rows), ex_beat=round(float(np.nanmean(rows[:, 0])) * 100, 2), ex_beat_ci=q(bb),
                     ex_t3=round(float(np.nanmean(rows[:, 1])) * 100, 2), ex_t3_ci=q(bt))
 
-    def crit1(m, pooled):
-        ws = out['windows']
-        pos = sum(1 for w in ws.values() if w[m].get('ex_beat', -1) > 0)
-        w0 = ws.get('W0', {}).get(m, {}).get('ex_beat', -1) > 0
-        return dict(pos_windows=pos, w0_pos=bool(w0), passed=bool(pooled['ex_beat_ci'][0] > 0 and pos >= 4 and w0))
+    out['pooled'] = {m: pool(v) for m, v in pooled_by.items() if v}
+    ws = out['windows']
+    P = 'M85'
+    pos = sum(1 for w in ws.values() if w[P].get('ex_beat', -1) > 0)
+    w0 = ws.get('W0', {}).get(P, {}).get('ex_beat', -1) > 0
+    passed = bool(out['pooled'][P]['ex_beat_ci'][0] > 0 and pos >= 4 and w0)
 
-    out['pooled'] = {m: pool(v) for m, v in pooled_by.items()}
-    c_pall_paid = crit1('Pall_paid', out['pooled']['Pall_paid'])
-    c_p85_paid = crit1('P85_paid', out['pooled']['P85_paid'])
-    chosen = 'Pall' if c_pall_paid['passed'] else ('P85' if c_p85_paid['passed'] else 'S95')
-    c1 = crit1(chosen, out['pooled'][chosen])
-    c2 = bool(out['pooled'][chosen]['ex_beat'] >= out['pooled']['v2']['ex_beat'])
-    c3 = bool(all(w[chosen]['freq'] < w['v2']['freq'] for w in out['windows'].values()))
-
-    # 対照群A（採った規則）
+    # 対照群A（M85）
     perm_b, perm_t = [], []
     for _ in range(N_PERM):
         allrows = []
-        for name, races, picks, stats, tau2s, iV in stars:
+        for name, races, picks, stats, iV in stars:
             s1sh = {r: list(rng.permutation([h[1] for h in hs])) for r, hs in races.items()}
             s2sh = {r: list(rng.permutation([h[2] for h in hs])) for r, hs in races.items()}
-            allrows += stats(picks[chosen](races, s1sh, s2sh)).get('_rows', [])
+            allrows += stats(picks[P][0](races, s1sh, s2sh)).get('_rows', [])
         a = np.array([(x[1], x[2]) for x in allrows], dtype=float)
         perm_b.append(np.nanmean(a[:, 0])); perm_t.append(np.nanmean(a[:, 1]))
     cen = lambda v: bool(abs(np.mean(v)) < 2 * np.std(v) / np.sqrt(N_PERM))
-    ex_b, ex_t = out['pooled'][chosen]['ex_beat'] / 100, out['pooled'][chosen]['ex_t3'] / 100
-    out['control_A'] = dict(rule=chosen, beat_mean=round(float(np.mean(perm_b)) * 100, 3), beat_sd=round(float(np.std(perm_b)) * 100, 3),
+    ex_b, ex_t = out['pooled'][P]['ex_beat'] / 100, out['pooled'][P]['ex_t3'] / 100
+    out['control_A'] = dict(beat_mean=round(float(np.mean(perm_b)) * 100, 3), beat_sd=round(float(np.std(perm_b)) * 100, 3),
                             beat_p95=round(float(np.percentile(perm_b, 95)) * 100, 2), beat_centered=cen(perm_b),
                             t3_mean=round(float(np.mean(perm_t)) * 100, 3), t3_sd=round(float(np.std(perm_t)) * 100, 3),
                             t3_p95=round(float(np.percentile(perm_t, 95)) * 100, 2), t3_centered=cen(perm_t),
@@ -256,21 +250,18 @@ def main():
                             t3_exceeds_p95=bool(ex_t > np.percentile(perm_t, 95)),
                             beat_net=round((ex_b - float(np.mean(perm_b))) * 100, 2),
                             t3_net=round((ex_t - float(np.mean(perm_t))) * 100, 2))
-    # 対照群B（3着内だった馬の半分の S2 に τ2(95) を足す・全レース95の規則）
+    # 対照群B（M85・3着内だった4〜9番人気の馬の半分の S2 に τ2 を足す）
     allrows = []
-    for name, races, picks, stats, tau2s, iV in stars:
-        s2inj = {}
-        for r, hs in races.items():
-            s2inj[r] = [h[2] + (tau2s if (y3[h[0]] == 1 and rng.random() < 0.5) else 0.0) for h in hs]
+    for name, races, picks, stats, iV in stars:
+        pk, t2 = picks[P]
+        s2inj = {r: [h[2] + (t2 if (y3[h[0]] == 1 and rng.random() < 0.5) else 0.0) for h in hs] for r, hs in races.items()}
         s1none = {r: [np.nan] * len(hs) for r, hs in races.items()}
-        allrows += stats(picks['S95'](races, s1none, s2inj)).get('_rows', [])
+        allrows += stats(pk(races, s1none, s2inj)).get('_rows', [])
     a = np.array([(x[1], x[2]) for x in allrows], dtype=float)
-    ex_s95 = out['pooled']['S95']['ex_t3'] / 100
-    out['control_B'] = dict(injected_ex_t3=round(float(np.nanmean(a[:, 1])) * 100, 2), original_ex_t3=round(ex_s95 * 100, 2),
-                            detects=bool(np.nanmean(a[:, 1]) - ex_s95 >= 0.05))
-    out['criteria'] = dict(chosen=chosen, pall_paid=c_pall_paid, p85_paid=c_p85_paid, c1=c1, c2_keeps_effect=c2,
-                           c3_fewer=c3, passed=bool(c1['passed'] and c2 and c3))
-    out['verdict'] = ('合格（' + chosen + '）') if out['criteria']['passed'] else '不合格（v2 のまま）'
+    out['control_B'] = dict(injected_ex_t3=round(float(np.nanmean(a[:, 1])) * 100, 2), original_ex_t3=round(ex_t * 100, 2),
+                            detects=bool(np.nanmean(a[:, 1]) - ex_t >= 0.05))
+    out['criteria'] = dict(rule=P, pos_windows=pos, w0_pos=bool(w0), passed=passed)
+    out['verdict'] = '合格' if passed else '不合格'
     if os.environ.get('STAR_NARROW_SMOKE'):
         print('SMOKE OK', out['verdict'], list(out['pooled']))
         return
