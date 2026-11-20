@@ -81,7 +81,7 @@
         "races": 10
       }
     ],
-    "workflow_run_at": "2026-11-19T10:42:03Z",
+    "workflow_run_at": "2026-11-19T14:07:03Z",
     "workflow_result": "success"
   },
   "web_sources": {
@@ -316,15 +316,15 @@
       {
         "source": "rihua-keiba",
         "label": "リーファの追い切り診断所（元JRA調教助手）",
-        "status": "untested",
-        "access": "unknown",
-        "access_note": "robots 未確認（2026-10-23 時点）。ブログ村「調教理論」ランキング1位",
+        "status": "rejected",
+        "access": "allowed",
+        "access_note": "robots は /wp-admin/ のみ Disallow（2026-11-19 の下見）。sitemap に 2022〜2026 の追い切り診断 236記事（重賞のみ）",
         "prior": "medium",
         "delta_auc_mean": null,
         "fukusho_roi_arm": null,
         "fukusho_roi_base": null,
-        "measured_at": null,
-        "results": null,
+        "measured_at": "2026-11-20",
+        "results": "websig/RESULTS_GRADES_rihua.md",
         "closed_reason": null
       },
       {
@@ -4506,5 +4506,5 @@
       "top3_rate": 16.7
     }
   },
-  "generated_at": "2026-11-19 14:06"
+  "generated_at": "2026-11-20 03:54"
 }
