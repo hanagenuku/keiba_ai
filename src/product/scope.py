@@ -102,7 +102,62 @@ PAID = 'paid'
 FREE = 'free'
 
 
-def article_kind(race):
+# 🟢 2026-11-21 ユーザー決定: 「最初の数ヶ月は、全て無料で良い。各競馬場の平場2レースずつ、
+#    重賞は、11レース＋自信の有る他の重賞」（前日の「無料は上位6本くらいが良い」を受けて）。
+#    → 無料 = 各競馬場の 11R ＋ 11R 以外でレース信頼度が高い順に2本。有料は当面なし。
+#    ⚠ 「自信の有る他の重賞」は未実装: latest.json にクラス（重賞かどうか）の列が無い
+#       （このファイル冒頭の 2026-09-29 の注記）。出馬表でクラスを取れるようにしてから足す。
+FREE_MAIN_NUMS = (11,)
+FREE_FLAT_PER_VENUE = 2
+ALL_FREE = True
+
+
+def race_key(race, venue=None):
+    """日ごとの振り分け表のキー。race_id があればそれ、無ければ 会場+レース番号。"""
+    rid = race.get('race_id') or race.get('id')
+    if rid:
+        return str(rid)
+    return f"{venue if venue is not None else race.get('_venue', '')}{race.get('r')}"
+
+
+def _r(race):
+    try:
+        return int(race.get('r'))
+    except (TypeError, ValueError):
+        return None
+
+
+def day_selection(races):
+    """その日の全レースから {race_key: (記事の種類, 理由)} を作る（2026-11-21 の規則）。
+
+    races: latest.json の `races`（会場名 → レースの list）か、`_venue` 付きのレースの list。
+    各会場で 11R を無料に、11R 以外は `conf` が高い順に2本を無料にする（同点はレース番号の若い順）。
+    `conf` が無いレースは選ばない。それ以外は記事にしない (None)。
+    """
+    if isinstance(races, dict):
+        pairs = [(v, r) for v, rs in races.items() for r in (rs or [])]
+    else:
+        pairs = [(r.get('_venue', ''), r) for r in (races or [])]
+    by_venue = {}
+    for v, r in pairs:
+        by_venue.setdefault(v, []).append(r)
+    out = {}
+    for v, rs in by_venue.items():
+        flats = []
+        for r in rs:
+            k = race_key(r, v)
+            if _r(r) in FREE_MAIN_NUMS:
+                out[k] = (FREE, f"{r.get('r')}R（各競馬場の11Rは無料で出す）")
+                continue
+            out[k] = (None, f"平場で各場の上位{FREE_FLAT_PER_VENUE}本に入らない（レース信頼度{r.get('conf')}）")
+            if r.get('conf') is not None:
+                flats.append((-float(r['conf']), _r(r) or 99, k, r))
+        for rank, (_c, _n, k, r) in enumerate(sorted(flats)[:FREE_FLAT_PER_VENUE], 1):
+            out[k] = (FREE, f"平場で{v}の信頼度{rank}位（レース信頼度{r.get('conf')}）")
+    return out
+
+
+def article_kind(race, day=None):
     """(記事の種類, 理由) を返す。どちらの記事にも載せないなら (None, 理由)。
 
     2026-11-04 のユーザー改正:
@@ -111,7 +166,13 @@ def article_kind(race):
         それ以外 = 記事にしない
 
     🔴 ここで新しい閾値を作らない。推奨の境界は `tickets.CONF_STRONG` 一つだけ。
+
+    🟢 2026-11-21 から本番の記事は `day=day_selection(その日の全レース)` を渡す
+       （各場 11R ＋ 平場の上位2本・全部無料）。`day` を渡さない呼び方は
+       2026-11-04〜11-20 の規則のままで、成績ページの過去の区分にだけ使う。
     """
+    if day is not None:
+        return day.get(race_key(race), (None, 'その日の振り分け表に無い'))
     conf = race.get('conf')
     if conf is not None and conf >= FLAT_MIN_CONF:
         return PAID, f'推奨（レース信頼度{conf}・{FLAT_MIN_CONF}以上）'

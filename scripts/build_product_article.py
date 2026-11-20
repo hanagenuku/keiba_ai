@@ -88,8 +88,8 @@ def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument('--base-dir', default='.')
     ap.add_argument('--free', action='store_true',
-                    help='無料版（9〜11Rのうち推奨でないレース）を作る。'
-                         '既定は有料版（推奨レース＝レース信頼度66以上）')
+                    help='無料版（2026-11-21〜: 各競馬場の11R＋平場の信頼度上位2本）を作る。'
+                         '既定は有料版（当面は対象なし・scope.ALL_FREE）')
     ap.add_argument('--publish', action='store_true',
                     help='公開スナップショットを prediction_archive/ に保存する')
     ap.add_argument('--races', default='', help='例: 中山9,阪神9')
@@ -149,6 +149,8 @@ def main(argv=None):
     published = []
     skipped = []
     out_of_scope = []
+    # 2026-11-21: 振り分けは「その日の全レース」から決める（各場 11R ＋ 平場の上位2本）
+    day = scope.day_selection(_iter_races(data))
     for race in _iter_races(data, wanted):
         horses = race.get('horses') or []
         if not horses:
@@ -159,7 +161,7 @@ def main(argv=None):
         #   どちらでもない = 記事にしない
         # --races で明示指定された場合と --all-races では適用しない。
         if not wanted and not args.all_races:
-            kind, why = scope.article_kind(race)
+            kind, why = scope.article_kind(race, day)
             if kind != (scope.FREE if args.free else scope.PAID):
                 label = {scope.PAID: '有料', scope.FREE: '無料'}.get(kind, '対象外')
                 out_of_scope.append(f"{race['_venue']}{race.get('r')}R({label}:{why})")
@@ -214,7 +216,8 @@ def main(argv=None):
                 print(f'⚠ {e}', file=sys.stderr)
 
     if not sections:
-        kind_label = '無料（9〜11Rの推奨漏れ）' if args.free else '有料（推奨レース）'
+        kind_label = ('無料（各場の11R＋平場の上位2本）' if args.free
+                      else '有料（当面は全レース無料・scope.ALL_FREE）' if scope.ALL_FREE else '有料（推奨レース）')
         print(f'{kind_label}に該当するレースがありません', file=sys.stderr)
         return 1
 

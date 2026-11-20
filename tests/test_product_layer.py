@@ -1506,7 +1506,7 @@ class TestCommentMarkCount:
             r = subprocess.run(
                 [sys.executable, os.path.join(BASE, 'scripts',
                                               'build_product_article.py'),
-                 '--base-dir', d, '--comment-marks', '2', '--out', out],
+                 '--base-dir', d, '--comment-marks', '2', '--free', '--out', out],
                 capture_output=True, text=True)
             assert r.returncode == 0, r.stderr
             text = open(out, encoding='utf-8').read()
