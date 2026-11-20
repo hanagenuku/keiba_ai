@@ -44,8 +44,10 @@ def main():
     ap.add_argument('--train-end', default='2026-06-30')
     ap.add_argument('--val-start', default='2026-07-01')
     ap.add_argument('--val-end', default='2026-08-31')
+    ap.add_argument('--star-only', action='store_true',
+                    help='☆のモデルだけ作り直す（本番モデル・較正器は触らない。2026-11-20 STAR-V2）')
     a = ap.parse_args()
-    print('作り直す理由:', a.reason)
+    print('作り直す理由:', a.reason, '（☆だけ）' if a.star_only else '')
 
     with open(os.path.join(DATA, 'xgb_feature_cols.json'), encoding='utf-8') as f:
         old = json.load(f)
@@ -59,8 +61,11 @@ def main():
         n = sqlite3.connect(db).execute('SELECT COUNT(*) FROM web_signals').fetchone()[0]
         print(f'指数DB: {n:,}頭')
 
-    from src.features.speed_index import rebuild_speed_index_cache
-    calc = rebuild_speed_index_cache(ROOT)
+    if a.star_only:
+        calc = 'unchanged (star-only)'
+    else:
+        from src.features.speed_index import rebuild_speed_index_cache
+        calc = rebuild_speed_index_cache(ROOT)
     print('スピード指数キャッシュ:', calc)
 
     import pandas as pd
@@ -71,6 +76,21 @@ def main():
         cov = df.groupby(df['date'].astype(str).str[:4])['f_ws_kayochinkeiba_rank'].apply(lambda s: round(s.notna().mean(), 3))
         print('指数が付いた行の割合（年別）:', cov.to_dict())
     print('f_speed_fig_last が入った行の割合:', round(df['f_speed_fig_last'].notna().mean(), 3))
+
+    if a.star_only:
+        r = subprocess.run([sys.executable, os.path.join(ROOT, 'src', 'tools', 'train_star.py')], cwd=ROOT)
+        if r.returncode != 0:
+            fail('☆のモデルを作り直せなかった')
+        with open(os.path.join(DATA, 'star_feature_cols.json'), encoding='utf-8') as f:
+            sm = json.load(f)
+        if list(sm['feature_cols']) != old_cols:
+            fail('☆の列が本番モデルと違う')
+        with open(os.path.join(ROOT, 'retrain_summary.json'), 'w', encoding='utf-8') as f:
+            json.dump(dict(reason=a.reason, star_only=True, star_version=sm.get('version'),
+                           tau1=sm.get('tau1'), tau2=sm.get('tau2'), n_cols=len(old_cols)),
+                      f, ensure_ascii=False, indent=1)
+        print('✅ ☆だけ作り直した')
+        return
 
     from src.tools.train_xgb import train_xgb
     m = train_xgb(ROOT, train_end=a.train_end, val_start=a.val_start, val_end=a.val_end,
