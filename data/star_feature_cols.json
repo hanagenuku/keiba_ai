@@ -138,11 +138,13 @@
   "f_rl_rank",
   "f_cl_rank"
  ],
- "tau1": 0.39,
- "tau2": 0.108895,
+ "tau1": 0.291545,
+ "tau2": 0.087377,
  "q_tau": 85,
+ "pop_lo": 4,
+ "pop_hi": 9,
  "star_fill": 5.0,
- "trained_at": "2026-11-20T00:29:49Z",
+ "trained_at": "2026-11-20T04:16:32Z",
  "rows": 171998,
  "races": 12544,
  "pairs_fit": 151242,
@@ -165,9 +167,11 @@
  "seed": 42,
  "p1": "確定人気1位（ドリフトなし）",
  "criteria": [
-  "hitrate/CRITERIA_STAR_V2.md"
+  "hitrate/CRITERIA_STAR_V2.md",
+  "hitrate/CRITERIA_STAR_NARROW.md"
  ],
  "results": [
-  "hitrate/RESULTS_STAR_V2.md"
+  "hitrate/RESULTS_STAR_V2.md",
+  "hitrate/RESULTS_STAR_NARROW.md"
  ]
 }
