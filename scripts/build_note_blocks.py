@@ -55,11 +55,12 @@ def build_blocks(base_dir, *, comment_marks=3):
               file=sys.stderr)
 
     blocks, skipped = {}, 0
+    day = scope.day_selection(_iter_races(data))   # 2026-11-21: その日の全レースから振り分ける
     for race in _iter_races(data):
         horses = race.get('horses') or []
         if not horses:
             continue
-        kind, why = scope.article_kind(race)
+        kind, why = scope.article_kind(race, day)
         if kind not in (scope.PAID, scope.FREE):
             skipped += 1
             continue

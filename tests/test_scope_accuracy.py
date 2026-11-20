@@ -564,7 +564,9 @@ class TestRecommendedIsDayWide:
     def test_cumulative_puts_the_recommended_group_first(self, tmp_path):
         sa = calc_scope_accuracy(self._one_day(tmp_path))
         labels = [g['label'] for g in sa['groups']]
-        assert labels[0].startswith('推奨レース')
+        # 2026-11-21〜 先頭は無料記事の対象（各場11R＋平場上位2本）、その次が推奨
+        assert labels[0].startswith('無料記事の対象')
+        assert labels[1].startswith('推奨レース')
         assert labels.index('9〜11R の推奨漏れ') > 0
         g = {x['label'].strip(): x for x in sa['groups']}
         assert g[f'推奨レース（信頼度{scope.FLAT_MIN_CONF}以上）']['races'] == 2

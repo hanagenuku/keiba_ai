@@ -290,7 +290,19 @@ def calc_scope_accuracy(conn):
     missed = [r for r in main if not _is_rec(r)]
     thr  = scope.FLAT_MIN_CONF
 
+    # 2026-11-21〜 の無料記事（各場 11R ＋ 平場の信頼度上位2本）。振り分けは scope.day_selection の1実装
+    by_day = defaultdict(list)
+    for r in usable:
+        by_day[r['date']].append({'race_id': r['race_id'], 'r': r['race_num'],
+                                  'conf': confs[r['race_id']], '_venue': r['racecourse'] or '不明'})
+    free_ids = set()
+    for _d, rs in by_day.items():
+        day = scope.day_selection(rs)
+        free_ids |= {k for k, (kind, _w) in day.items() if kind == scope.FREE}
+    free_now = [r for r in usable if r['race_id'] in free_ids]
+
     groups = [
+        _group(free_now, divs, '無料記事の対象（各場11R＋平場の信頼度上位2本）'),
         _group(rec, divs, f'推奨レース（信頼度{thr}以上）'),
         _group([r for r in rec if _is_main(r)], divs, '　うち9〜11R'),
         _group([r for r in rec if not _is_main(r)], divs, '　うち平場（9〜11R以外）'),

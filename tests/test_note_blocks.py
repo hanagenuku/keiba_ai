@@ -46,11 +46,12 @@ class TestScope:
         with open(LATEST, encoding='utf-8') as f:
             data = json.load(f)
         want = set()
+        day = scope.day_selection(data.get('races') or {})
         for venue, rs in (data.get('races') or {}).items():
             for r in rs:
                 if not (r.get('horses') or []):
                     continue
-                kind, _ = scope.article_kind(r)
+                kind, _ = scope.article_kind(r, day)
                 if kind in (scope.PAID, scope.FREE):
                     want.add(r.get('race_id'))
         assert set(_races(built)) == want
@@ -60,8 +61,9 @@ class TestScope:
             data = json.load(f)
         by_id = {r.get('race_id'): r
                  for rs in (data.get('races') or {}).values() for r in rs}
+        day = scope.day_selection(data.get('races') or {})
         for rid, b in _races(built).items():
-            kind, _ = scope.article_kind(by_id[rid])
+            kind, _ = scope.article_kind(by_id[rid], day)
             assert b['kind'] == kind
 
     def test_threshold_is_not_rebuilt_in_the_script(self):
