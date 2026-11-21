@@ -81,7 +81,7 @@
         "races": 10
       }
     ],
-    "workflow_run_at": "2026-11-20T10:22:11Z",
+    "workflow_run_at": "2026-11-20T13:49:51Z",
     "workflow_result": "success"
   },
   "web_sources": {
@@ -827,6 +827,74 @@
       "no_conf": 2
     },
     "groups": [
+      {
+        "label": "無料記事の対象（各場11R＋平場の信頼度上位2本）",
+        "races": 339,
+        "bets": [
+          {
+            "type": "単勝",
+            "races": 339,
+            "hit": 112,
+            "hit_rate": 33.0,
+            "roi": 80.4,
+            "roi_cut1": 75.1,
+            "roi_cut3": 70.3,
+            "na": 0,
+            "top_pay": 1780
+          },
+          {
+            "type": "複勝",
+            "races": 339,
+            "hit": 200,
+            "hit_rate": 59.0,
+            "roi": 76.7,
+            "roi_cut1": 75.7,
+            "roi_cut3": 74.0,
+            "na": 0,
+            "top_pay": 360
+          },
+          {
+            "type": "馬連",
+            "races": 339,
+            "hit": 48,
+            "hit_rate": 14.2,
+            "roi": 73.8,
+            "roi_cut1": 65.8,
+            "roi_cut3": 56.9,
+            "na": 0,
+            "top_pay": 2730
+          },
+          {
+            "type": "ワイド",
+            "races": 328,
+            "hit": 95,
+            "hit_rate": 29.0,
+            "roi": 66.0,
+            "roi_cut1": 64.1,
+            "roi_cut3": 60.7,
+            "na": 11,
+            "top_pay": 620
+          },
+          {
+            "type": "三連複",
+            "races": 339,
+            "hit": 33,
+            "hit_rate": 9.7,
+            "roi": 72.9,
+            "roi_cut1": 63.3,
+            "roi_cut3": 48.9,
+            "na": 0,
+            "top_pay": 3240
+          }
+        ],
+        "total": {
+          "type": "累計（全券種）",
+          "races": 1684,
+          "hit": 488,
+          "hit_rate": 29.0,
+          "roi": 74.0
+        }
+      },
       {
         "label": "推奨レース（信頼度66以上）",
         "races": 272,
@@ -4506,5 +4574,5 @@
       "top3_rate": 16.7
     }
   },
-  "generated_at": "2026-11-20 13:49"
+  "generated_at": "2026-11-21 00:07"
 }
