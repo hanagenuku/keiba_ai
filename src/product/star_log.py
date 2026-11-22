@@ -204,7 +204,8 @@ def attach_results(base_dir, hist_conn, keiba_conn, now=None, dry_run=False):
     now = now or datetime.now(JST)
     ledger = load(base_dir)
     out = {'attached': 0, 'already': 0, 'pending': 0,
-           'pending_races': [], 'late': []}
+           'pending_races': [], 'late': [],
+           'unevaluable': 0, 'unevaluable_races': []}
     placings_cache, payouts_cache = {}, {}
     changed = False
 
@@ -224,8 +225,18 @@ def attach_results(base_dir, hist_conn, keiba_conn, now=None, dry_run=False):
         result = build_result(entry, placings_cache[rid], payouts_cache[rid],
                               _post_time(keiba_conn, rid), now=now)
         if result is None:
-            out['pending'] += 1
-            out['pending_races'].append(rid)
+            # 払戻はあるのに着順が無い。レース自体の着順が1件もなければ
+            # （history.db にそのレースが無い等）後から埋まりうるので**結果待ち**、
+            # 他の馬の着順はあるのにこの馬だけ無いなら出走取消・除外で**評価不能**。
+            # 2026-11-22 までは両方を「結果待ち」と数えており、取消馬のぶんだけ
+            # 毎週増えて本当の取りこぼしが埋もれていた。
+            if placings_cache[rid]:
+                out['unevaluable'] += 1
+                if rid not in out['unevaluable_races']:
+                    out['unevaluable_races'].append(rid)
+            else:
+                out['pending'] += 1
+                out['pending_races'].append(rid)
             continue
         if result['before_post'] is False:
             out['late'].append(f"{entry.get('date')} {rid} #{entry['num']}")

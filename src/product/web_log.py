@@ -348,6 +348,23 @@ def _horse_fact(hist_conn, race_id, num):
             'horse_name': row[2]}
 
 
+def unevaluable_reason(entry, payouts):
+    """結果が取れているのに埋められない理由。待てば付くなら None（＝結果待ち）。
+
+    🔴 「待てば付く（結果待ち）」と「待っても付かない（評価不能）」を分ける。
+       2026-11-22 までは両方を「結果待ち」と数えていたため、出走取消の馬のぶんだけ
+       毎週件数が増え、本当の取りこぼしが埋もれていた（実測: 台帳1,166件のうち
+       保留6件は**全部 出走取消・除外の馬**で、レースの結果は6件とも取れていた）。
+    🔑 判定は払戻表の有無で行う（star_log / danger_log と同じ基準）。払戻が1行も
+       無ければ、まだ結果を取っていない＝待てば付く。
+    """
+    if payouts is None:
+        return None
+    if entry.get('kind') == 'going':
+        return '確定馬場を取得できていない'
+    return '出走取消・除外（結果にこの馬番の着順が無い）'
+
+
 def build_result(entry, hist_conn, keiba_conn, payouts, now=None):
     """1エントリぶんの結果を組み立てる。確定していなければ None（保留）。"""
     from . import results as _results
@@ -402,7 +419,8 @@ def attach_results(base_dir, hist_conn, keiba_conn, now=None, dry_run=False):
 
     now = now or datetime.now(JST)
     ledger = load(base_dir)
-    out = {'attached': 0, 'already': 0, 'pending': 0, 'pending_races': []}
+    out = {'attached': 0, 'already': 0, 'pending': 0, 'pending_races': [],
+           'unevaluable': 0, 'unevaluable_races': [], 'unevaluable_reasons': {}}
     pay_cache = {}
     changed = False
 
@@ -415,9 +433,18 @@ def attach_results(base_dir, hist_conn, keiba_conn, now=None, dry_run=False):
             pay_cache[rid] = _results.load_payouts(keiba_conn, rid)
         res = build_result(entry, hist_conn, keiba_conn, pay_cache[rid], now=now)
         if res is None:
-            out['pending'] += 1
-            if rid not in out['pending_races']:
-                out['pending_races'].append(rid)
+            # 待てば付くのか、待っても付かないのかを分ける（2026-11-22）
+            reason = unevaluable_reason(entry, pay_cache[rid])
+            if reason:
+                out['unevaluable'] += 1
+                out['unevaluable_reasons'][reason] = \
+                    out['unevaluable_reasons'].get(reason, 0) + 1
+                if rid not in out['unevaluable_races']:
+                    out['unevaluable_races'].append(rid)
+            else:
+                out['pending'] += 1
+                if rid not in out['pending_races']:
+                    out['pending_races'].append(rid)
             continue
         if not dry_run:
             entry['result'] = res

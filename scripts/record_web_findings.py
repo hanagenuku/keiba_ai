@@ -80,10 +80,17 @@ def main(argv=None):
             return 0
         r = web_log.attach_results(base_dir, hist, keiba, dry_run=args.dry_run)
         print(f'結果追記 {r["attached"]}件 / 既存 {r["already"]}件 / '
-              f'結果待ち {r["pending"]}件', file=sys.stderr)
+              f'結果待ち {r["pending"]}件 / 評価不能 {r["unevaluable"]}件',
+              file=sys.stderr)
         if r['pending_races']:
             print('結果待ちのレース: ' + ', '.join(sorted(r['pending_races'])),
                   file=sys.stderr)
+        if r['unevaluable']:
+            # 待っても埋まらない行（出走取消・除外など）。結果待ちと混ぜない
+            for why, n in sorted(r['unevaluable_reasons'].items()):
+                print(f'評価不能 {n}件: {why}', file=sys.stderr)
+            print('評価不能のレース: '
+                  + ', '.join(sorted(r['unevaluable_races'])), file=sys.stderr)
         return 0
 
     findings = web_log.load_findings_raw(base_dir)

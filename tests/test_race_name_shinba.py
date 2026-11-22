@@ -58,3 +58,54 @@ class TestNoDuplicatedRegex:
         hits = [f for f in glob.glob('src/**/*.py', recursive=True)
                 if pat.search(open(f, encoding='utf-8').read())]
         assert hits == ['src/scraper/parser.py'], f'複製が残っている: {hits}'
+
+
+# ── 2026-11-22: マイルチャンピオンシップが「R11」になっていた ──────────────
+#
+# 実測: 2026-09 以降の11Rで race_name が空なのは 20261122_08_11（マイルCS）だけ。
+# エリザベス女王杯・天皇賞は「杯」「賞」で拾えていた。末尾の語の一覧に
+# 「チャンピオンシップ」が無く、ヘッダの条件表記（サラ系3歳以上 オープン）は
+# 間が空いていて総称にも一致せず、rn のフォールバックまで落ちていた。
+
+class TestRaceNamesWithoutTheUsualSuffix:
+    def test_mile_championship(self):
+        h = ('マイルチャンピオンシップ（ＧⅠ） サラ系3歳以上 オープン（国際）(指定) '
+             'コース： 1,600 メートル 芝')
+        assert parse_rname(h, 11) == 'マイルチャンピオンシップ'
+
+    def test_other_names_with_the_same_shape(self):
+        """同じ形で落ちる名前をまとめて拾う（オークス・ダービー・マイル等）。"""
+        for header, want in [
+            ('優駿牝馬（オークス）（ＧⅠ） サラ系3歳 オープン コース： 2,400 メートル 芝',
+             '優駿牝馬'),
+            ('ヴィクトリアマイル（ＧⅠ） サラ系4歳以上 オープン コース： 1,600 メートル 芝',
+             'ヴィクトリアマイル'),
+            ('阪神ジュベナイルフィリーズ（ＧⅠ） サラ系2歳 オープン コース： 1,600 メートル 芝',
+             '阪神ジュベナイルフィリーズ'),
+            ('中山グランドジャンプ（Ｊ・ＧⅠ） サラ系4歳以上 オープン コース： 4,250 メートル',
+             '中山グランドジャンプ'),
+        ]:
+            assert parse_rname(header, 11) == want
+
+    def test_names_that_already_worked_do_not_change(self):
+        """🔴 これまで拾えていた名前を壊さない。"""
+        for header, want in [
+            ('エリザベス女王杯（ＧⅠ） サラ系3歳以上 オープン コース： 2,200 メートル 芝',
+             'エリザベス女王杯'),
+            ('天皇賞（秋）（ＧⅠ） サラ系3歳以上 オープン コース： 2,000 メートル 芝',
+             '天皇賞'),
+            ('武蔵野ステークス（ＧⅢ） サラ系3歳以上 オープン コース： 1,600 メートル ダート',
+             '武蔵野ステークス'),
+            ('北辰特別 3歳以上1勝クラス コース： 1,700 メートル', '北辰特別'),
+        ]:
+            assert parse_rname(header, 11) == want
+
+    def test_class_header_with_a_space_is_not_an_r_number(self):
+        """特別名が無いレースでも「R11」に落とさない（条件表記の空白を許す）。"""
+        h = 'サラ系3歳以上 1勝クラス コース： 1,800 メートル ダート'
+        assert parse_rname(h, 7) == '3歳以上1勝クラス'
+
+    def test_still_falls_back_when_there_is_nothing_to_read(self):
+        """本当に何も読めないときだけ R番号にする（推測で名前を作らない）。"""
+        assert parse_rname('コース： 1,600 メートル 芝', 11) == 'R11'
+        assert parse_rname('コース： 1,600 メートル 芝') == ''
