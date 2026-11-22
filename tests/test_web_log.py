@@ -408,3 +408,62 @@ def test_summary_counts_picks_per_source_and_treats_the_mark_as_a_grade(base, tm
     assert (a['n'], a['with_result'], a['top3'], a['top3_of']) == (2, 2, 1, 2)
     assert a['with_grade'] == 2
     assert s['tipster-b.example.com']['pick']['n'] == 1
+
+
+# ──────────── 結果待ち と 評価不能 を分ける（2026-11-22） ────────────
+#
+# 2026-11-22 までは「待てば付く」と「待っても付かない」を両方 `pending` に数えて
+# いた。実測（台帳1,166件）では保留6件が**全部 出走取消・除外の馬**で、レース自体の
+# 結果は6件とも取れていた。毎週この種の行だけが積み上がり、本当の取りこぼし
+# （結果をまだ取れていないレース）が埋もれる。
+
+def test_scratched_horse_is_unevaluable_not_pending(base, tmp_path):
+    """払戻があるのにこの馬だけ着順が無い＝出走取消・除外。待っても埋まらない。"""
+    web_log.record(base)
+    hist, keiba = _hist(tmp_path, place_9=None), _keiba(tmp_path)
+    out = web_log.attach_results(base, hist, keiba)
+    assert out['unevaluable'] == 1
+    assert out['unevaluable_races'] == ['20261018_08_11']
+    assert out['pending'] == 0
+    assert '出走取消・除外' in ''.join(out['unevaluable_reasons'])
+
+
+def test_missing_payouts_stay_pending_not_unevaluable(base, tmp_path):
+    """払戻が1行も無い＝まだ結果を取っていない。これは待てば付く。"""
+    web_log.record(base)
+    hist = _hist(tmp_path, place_9=3)
+    keiba = _keiba(tmp_path, with_payouts=False)
+    out = web_log.attach_results(base, hist, keiba)
+    assert out['unevaluable'] == 0
+    assert out['pending'] > 0
+
+
+def test_the_two_counts_never_overlap(base, tmp_path):
+    """同じ行を二重に数えない（合計は未確定の行数と一致する）。"""
+    web_log.record(base)
+    hist, keiba = _hist(tmp_path, place_9=None), _keiba(tmp_path)
+    out = web_log.attach_results(base, hist, keiba)
+    led = web_log.load(base)
+    unresolved = [e for e in led['entries'] if e.get('result') is None]
+    assert out['pending'] + out['unevaluable'] == len(unresolved)
+
+
+def test_unevaluable_rows_are_not_filled_in(base, tmp_path):
+    """🔴 評価不能でも台帳に空の結果を書かない（推測で埋めない）。"""
+    web_log.record(base)
+    hist, keiba = _hist(tmp_path, place_9=None), _keiba(tmp_path)
+    web_log.attach_results(base, hist, keiba)
+    led = web_log.load(base)
+    e9 = [e for e in led['entries']
+          if e['kind'] == 'horse' and e['key'] == '9'][0]
+    assert e9['result'] is None
+
+
+def test_reason_is_decided_by_the_payout_table(base, tmp_path):
+    """判定の根拠は払戻表の有無（star_log / danger_log と同じ基準）。"""
+    going = {'kind': 'going'}
+    horse = {'kind': 'horse', 'num': '9'}
+    assert web_log.unevaluable_reason(going, None) is None
+    assert web_log.unevaluable_reason(horse, None) is None
+    assert '馬場' in web_log.unevaluable_reason(going, {})
+    assert '出走取消' in web_log.unevaluable_reason(horse, {})

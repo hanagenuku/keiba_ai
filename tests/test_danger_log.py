@@ -421,3 +421,17 @@ def test_summary_splits_by_whether_the_flagged_horse_is_the_axis(tmp_path):
     # 内訳の和が全体と一致する（取りこぼしを作らない）
     assert s['axis_n'] + s['other_n'] == s['with_result']
     assert s['axis_top3'] + s['other_top3'] == s['top3']
+
+
+def test_three_ledgers_report_pending_the_same_way():
+    """🔴 3つの台帳（web・☆・危険な人気馬）で数え方を揃える。
+
+    範囲や定義を変えたら読む側を全部そろえる（CLAUDE.md）。どれか1つだけ
+    「結果待ち」と「評価不能」を分けていない状態を作らない。
+    """
+    import inspect
+    from src.product import danger_log as d, star_log as s, web_log as w
+    for mod in (d, s, w):
+        src = inspect.getsource(mod.attach_results)
+        assert "'unevaluable'" in src, mod.__name__
+        assert "'unevaluable_races'" in src, mod.__name__

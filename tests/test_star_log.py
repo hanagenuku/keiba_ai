@@ -287,3 +287,41 @@ def test_summarize_has_no_roi():
     s = star_log.summarize('.')
     for k in s:
         assert 'roi' not in k and '回収' not in k
+
+
+# ── 結果待ち と 評価不能 を分ける（2026-11-22） ──────────────────────────
+#
+# 実例: 2026-11-14 東京12R の☆ #11 エーデルヴェーグ は出走取消で着順が無く、
+# 1週間「結果待ち」のまま残って毎晩報告に出ていた。待っても埋まらない行は
+# 「評価不能」として分けて数える（本当の取りこぼしを埋もれさせないため）。
+
+def test_scratched_star_is_unevaluable_not_pending(tmp_path):
+    """☆の馬だけ着順が無い（出走取消）＝評価不能。結果待ちに数えない。"""
+    d = str(tmp_path)
+    star_log.record(d, _latest())
+    # ☆は #7。その馬の着順だけ無い（他の馬は着順あり＝レースは終わっている）
+    _dbs(d, {2: 1, 5: 3}, {'fukusho': [{'num': 2, 'payout': 120},
+                                       {'num': 5, 'payout': 150}]})
+    r = _attach(d)
+    assert (r['attached'], r['pending'], r['unevaluable']) == (0, 0, 1)
+    assert r['unevaluable_races'] == [RID]
+    assert star_log.load(d)['entries'][0]['result'] is None
+
+
+def test_race_without_results_stays_pending(tmp_path):
+    """払戻が1行も無い＝まだ結果を取っていない。これは待てば付く。"""
+    d = str(tmp_path)
+    star_log.record(d, _latest())
+    _dbs(d, {7: 2, 2: 5, 5: 9}, None)
+    r = _attach(d)
+    assert (r['attached'], r['pending'], r['unevaluable']) == (0, 1, 0)
+
+
+def test_counts_do_not_overlap(tmp_path):
+    d = str(tmp_path)
+    star_log.record(d, _latest())
+    _dbs(d, {2: 1, 5: 3}, {'fukusho': [{'num': 2, 'payout': 120}]})
+    r = _attach(d)
+    unresolved = [e for e in star_log.load(d)['entries']
+                  if e.get('result') is None]
+    assert r['pending'] + r['unevaluable'] == len(unresolved)

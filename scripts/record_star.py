@@ -68,10 +68,15 @@ def main(argv=None):
             return 0
         r = star_log.attach_results(base_dir, hist, keiba, dry_run=args.dry_run)
         print(f'☆の結果追記 {r["attached"]}件 / 既存 {r["already"]}件 / '
-              f'結果待ち {r["pending"]}件', file=sys.stderr)
+              f'結果待ち {r["pending"]}件 / 評価不能 {r["unevaluable"]}件',
+              file=sys.stderr)
         if r['pending_races']:
             print('結果待ちのレース: '
                   + ', '.join(sorted(set(r['pending_races']))), file=sys.stderr)
+        if r['unevaluable']:
+            print('評価不能（出走取消・除外）のレース: '
+                  + ', '.join(sorted(set(r['unevaluable_races']))),
+                  file=sys.stderr)
         if r['late']:
             print('🔴 発走後に記録された☆（集計から除くこと）: '
                   + ', '.join(r['late']), file=sys.stderr)
