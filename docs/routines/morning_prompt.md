@@ -129,12 +129,12 @@ mcp__github__actions_run_trigger
 | 有料 | **当面なし**（`scope.ALL_FREE`） |
 
 ```
-python3 scripts/build_product_article.py --comment-marks 2 --free \
+python3 scripts/build_product_article.py --comment-marks 3 --free \
   --out <scratchpad>/article_<YYYY-MM-DD>_free.md
 ```
 
 - 有料版は**作らない**（回しても「該当するレースがありません」で exit 1 になる。それが正しい）
-- `--comment-marks 2` ＝ 根拠の文章は **◎と○だけ**（ユーザー指示 2026-10-05）
+- `--comment-marks 3` ＝ 根拠の文章は **◎○▲**（2026-11-23 のユーザー添削の形。2026-10-05 の「◎と○だけ」から戻した）
 - `--all-races` は付けない。`--publish` も付けない（`prediction_archive/` には書かない。2026-10-05 のユーザー判断）
 - web 見解は `data/claude_web_findings.json` があれば自動で入る（`--no-web` で切れる）
 - ⚠ 「自信の有る他の重賞」はまだコードに入っていない（latest.json にクラスの列が無い）。11R 以外の重賞があっても自分で足さない。報告に「11R以外の重賞: あり/なし（名前）」を1行書く
@@ -143,12 +143,18 @@ python3 scripts/build_product_article.py --comment-marks 2 --free \
 ## 5. Google ドキュメントとして Drive に保存する（1本）
 
 **先に `anthropic-skills:google-workspace` スキルを読む**こと。
-`python3 scripts/md_to_html.py <記事>.md > <記事>.html` で変換してから渡す。
+```
+python3 scripts/md_to_html.py --table-images <記事>.md > <記事>.html
+```
+🔴 **`--table-images` を必ず付ける**（2026-11-23 ユーザー添削「表が見難い。アプリのような表を貼り付けられないか」）。
+比較表がアプリ風の PNG になってドキュメントに埋め込まれる。付け忘れると折り返した読めない表に戻る。
+⚠ 描画に失敗した表は HTML の表のまま出る（記事は必ず出る）。標準エラーに `⚠ 表を画像にできませんでした` が出たら報告に書く。
 保存先はマイドライブの `keiba_ai` フォルダ（folder id `1yP-ZY7zYTLPxmPG9mqJ2_FbodoDTCnSZ`）。
 ファイル名は `AI競馬分析 <YYYY-MM-DD>（無料版・下書き）`。会場ごとに分けず1本にまとめる。
 
 - 同名が既にあれば**上書きせず**、末尾に `(2)` を付けて別ファイルにする
-- 保存後に1回読み返し、見出しと表がドキュメントとして読める形になっているか確認する
+- 保存後に1回読み返し、見出しと**表の画像**がドキュメントとして読める形になっているか確認する
+  （`read_file_content` では画像は見えない。`get_file_metadata` の `fileSize` が数万バイト以上なら画像は入っている）
 
 ## 6. 報告（短く）＋ 🔴 最後に必ず `PushNotification` を1回撃つ
 報告に入れるもの: 自分で refresh を起動したか / `odds_coverage` の値 /
