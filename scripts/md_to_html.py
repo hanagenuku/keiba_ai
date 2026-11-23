@@ -11,9 +11,16 @@
 
 使い方:
     python3 scripts/md_to_html.py article.md > article.html
+    python3 scripts/md_to_html.py --table-images article.md > article.html
+
+🟢 2026-11-23 ユーザー添削「表が見難い。別で作った見やすい表（アプリの表のような）を
+   貼り付ける形にできないか？」→ `--table-images` を付けると比較表を
+   **アプリ風の画像**（`src/product/table_image.py`）にして埋め込む。
+   表の中身は1つも変えない。描画できなかった表は HTML の表のまま出す。
 """
 
 import html
+import os
 import re
 import sys
 
@@ -71,7 +78,11 @@ def _table_html(rows):
     return '\n'.join(out)
 
 
-def md_to_html(text):
+def md_to_html(text, table_renderer=None):
+    """`table_renderer` を渡すと、表を渡して返り値（HTML）で置き換える。
+
+    返り値が偽なら従来どおり `<table>` を出す（記事が出なくなることはない）。
+    """
     lines = text.split('\n')
     out = []
     i = 0
@@ -108,7 +119,10 @@ def md_to_html(text):
             while i < n and lines[i].lstrip().startswith('|'):
                 rows.append(_split_row(lines[i]))
                 i += 1
-            out.append(_table_html(rows))
+            rendered = None
+            if table_renderer is not None:
+                rendered = table_renderer(rows)
+            out.append(rendered or _table_html(rows))
             continue
 
         # 箇条書き
@@ -136,13 +150,37 @@ def md_to_html(text):
             f'<body>\n{body}\n</body></html>\n')
 
 
+def _image_renderer():
+    """比較表を画像にする関数を返す。Playwright が無ければ None を返す。"""
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(
+        os.path.abspath(__file__)))))
+    from src.product import table_image
+
+    def render(rows):
+        try:
+            uri = table_image.data_uri(rows)
+        except Exception as e:          # 画像にできなくても記事は出す
+            print(f'⚠ 表を画像にできませんでした（HTMLの表で出します）: {e}',
+                  file=sys.stderr)
+            return None
+        return f'<p><img src="{uri}"></p>'
+
+    return render
+
+
 def main(argv=None):
     argv = list(sys.argv[1:] if argv is None else argv)
+    images = False
+    if '--table-images' in argv:
+        images = True
+        argv.remove('--table-images')
     if not argv:
-        print('使い方: python3 scripts/md_to_html.py <file.md>', file=sys.stderr)
+        print('使い方: python3 scripts/md_to_html.py [--table-images] <file.md>',
+              file=sys.stderr)
         return 1
+    renderer = _image_renderer() if images else None
     with open(argv[0], encoding='utf-8') as f:
-        sys.stdout.write(md_to_html(f.read()))
+        sys.stdout.write(md_to_html(f.read(), table_renderer=renderer))
     return 0
 
 

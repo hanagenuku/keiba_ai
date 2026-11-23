@@ -53,6 +53,51 @@ def _fmt_odds(v):
         return None
 
 
+#: 内訳のカテゴリ名のうち、そのままでは読者に通じないものだけ言い換える。
+#: 🔴 中身は変えない（列の対応を変えたら記事と本番がずれる）。
+_ABILITY_LABEL = {
+    'web指数': 'web公開の能力指数',
+}
+
+
+def ability_note(horse):
+    """AI単独評価（市場を見ない能力評価）の内訳を1文にする。
+
+    読むのは `latest.json` の `ability_breakdown`（カテゴリ別の寄与）。
+    すでに本番が出している値をそのまま並べるだけで、新しい計算はしない。
+
+    🔴 寄与はモデル内部の値（対数オッズの足し引き）で、確率でも配当でもない。
+       「このカテゴリがプラスだから儲かる」とは書かない。
+    🔴 カテゴリ名はレース前に手に入るものだけ（騎手・厩舎・血統・枠順・
+       過去走の成績）。調教・パドック・陣営の話は元データに無いので出てこない。
+    """
+    bd = (horse or {}).get('ability_breakdown') or []
+    items = []
+    for b in bd:
+        if not isinstance(b, dict):
+            continue
+        cat, con = b.get('category'), b.get('contrib')
+        if cat == '基準値' or not isinstance(con, (int, float)):
+            continue
+        items.append((str(cat), float(con)))
+    if not items:
+        return ''
+    items = [(_ABILITY_LABEL.get(c, c), v) for c, v in items]
+    items.sort(key=lambda x: -x[1])
+    plus = [x for x in items if x[1] >= 0.01][:3]
+    minus = [x for x in items if x[1] <= -0.01][-2:]
+    bits = []
+    if plus:
+        bits.append('評価を押し上げているのは'
+                    + '・'.join(f'{c}（+{v:.2f}）' for c, v in plus))
+    if minus:
+        bits.append('差し引かれているのは'
+                    + '・'.join(f'{c}（{v:.2f}）' for c, v in sorted(minus, key=lambda x: x[1])))
+    if not bits:
+        return ''
+    return '評価の内訳では、' + '、'.join(bits) + '。'
+
+
 def horse_comment(horse, facts, race):
     """1頭ぶんの見解。事実のある節だけを連ねる。"""
     parts = []
@@ -76,6 +121,12 @@ def horse_comment(horse, facts, race):
         rank_bits.append(f'市場は{pop}番人気に置いている')
     if rank_bits:
         parts.append('、'.join(rank_bits) + '。')
+
+    # 🟢 2026-11-23 ユーザー添削「全般に評価の文章が薄すぎる」。
+    #    すでに本番が持っているカテゴリ別の寄与を1文足す（新しい計算はしない）。
+    _ab = ability_note(horse)
+    if _ab:
+        parts.append(_ab)
 
     # 市場を見ないAIと市場のズレ。
     # 🔴 「AIが市場より高く評価している馬を狙う」方向は3回測って否定されている
@@ -343,6 +394,136 @@ def _join(parts, names=()):
 #      自分の記録が否定したものを商品の文章で断定しない
 _CMT_DROP = ('信頼度', '0.0倍', '期待値')
 
+#: engine の `cmt` のうち「展開」の節で扱う文（馬場・ペース想定・メンバー構成）。
+#: 🔴 `race_comment()`（最終結論）と `pace_comment()`（展開）で同じ文を
+#:    二度書かないための振り分け。どちらにも出さない文は作らない。
+_CMT_PACE = ('馬場', '想定', 'ペース', 'メンバー')
+
+
+def _split_cmt(cmt):
+    """engine の `cmt` を (展開の話, それ以外) に分ける。"""
+    pace, rest = [], []
+    for sent in str(cmt or '').split('。'):
+        sent = sent.strip()
+        if not sent:
+            continue
+        if any(w in sent for w in _CMT_DROP):
+            continue
+        (pace if any(w in sent for w in _CMT_PACE) else rest).append(sent)
+    fin = lambda xs: ('。'.join(xs) + '。') if xs else ''
+    return fin(pace), fin(rest)
+
+
+#: 展開の見立てに必ず添える注意。
+#: 🔴 「前が有利／後ろが有利」と結論しない。脚質・隊列から買い目を組み替える案は
+#:    測って不採用（相手の中穴を「前に行けそうな馬」から選ぶ＝3着内率 30.18→27.65%・
+#:    2026-11-13 `tenkai/RESULTS_PARTNER_FRONT.md`）。
+#: 🔴 「逃げ・先行が来やすい」は後知恵（実際の脚質で集計すると逃げ 22.95% だが、
+#:    レース前に使える過去走の傾向では 11.79%・複勝回収 80.5%・2026-11-10）。
+PACE_NOTE = (
+    '⚠ 脚質は過去5走の傾向から推定したもので、当日の出方で変わります。'
+    '**AIの印と買い目はこの展開の見立てから作っていません。**'
+    '脚質や隊列で相手を選び直す方法は過去データで測って採用していません'
+    '（前に行けそうな馬から相手を選ぶと3着内率は 30.18% → 27.65% に下がりました）。'
+)
+
+_PACE_STYLE_ORDER = ('逃げ', '先行', '差し', '追込')
+
+
+def pace_comment(race, horses, facts_by_num=None):
+    """展開の見立て。
+
+    🟢 2026-11-23 ユーザー添削「展開予想の文章が薄すぎる」で新設。
+
+    使うのは**レース前に手に入る値だけ**:
+      - 各馬の `style`（engine `_estimate_style`＝直近5走の最頻値）
+      - 無ければ `facts['style']`（`facts.build_facts` の同じ推定）
+      - engine が既に出している `cmt` の馬場・ペース想定・メンバー構成
+    🔴 `horse_history.running_style`（そのレースの実位置）は後知恵なので使わない。
+    """
+    horses = list(horses or [])
+    facts_by_num = facts_by_num or {}
+    parts = []
+
+    pace_cmt, _ = _split_cmt(race.get('cmt') if isinstance(race, dict) else None)
+    if pace_cmt:
+        parts.append(pace_cmt)
+
+    def _style(h):
+        st = h.get('style')
+        if not st:
+            st = (facts_by_num.get(h.get('n')) or {}).get('style')
+        return st if st in _PACE_STYLE_ORDER else None
+
+    counts = {k: 0 for k in _PACE_STYLE_ORDER}
+    known = 0
+    for h in horses:
+        st = _style(h)
+        if st:
+            counts[st] += 1
+            known += 1
+    if known >= 3:
+        detail = '・'.join(f'{k}{counts[k]}頭' for k in _PACE_STYLE_ORDER if counts[k])
+        head = f'出走{len(horses)}頭'
+        if known < len(horses):
+            head += f'のうち過去走から脚質が読める{known}頭は'
+        else:
+            head += 'の脚質は'
+        parts.append(head + detail + '。')
+
+        nige, senko = counts['逃げ'], counts['先行']
+        if nige >= 3:
+            parts.append(f'ハナを主張できる逃げ型が{nige}頭いるため、'
+                         '序盤で先手争いが起きやすい形。')
+        elif nige == 1:
+            parts.append('逃げ型は1頭だけで、すんなり隊列が決まる形。')
+        elif nige == 0:
+            parts.append('明確な逃げ型が不在で、先行型の出入りで隊列が決まる形。')
+        if nige + senko >= max(4, int(known * 0.5)):
+            parts.append(f'前に行きたい馬（逃げ・先行）が{nige + senko}頭で、'
+                         '隊列は前が厚い。')
+        elif counts['差し'] + counts['追込'] >= max(4, int(known * 0.6)):
+            parts.append(f'後ろから運ぶ馬（差し・追込）が'
+                         f'{counts["差し"] + counts["追込"]}頭で、'
+                         '直線勝負になりやすい組み合わせ。')
+
+    # ◎ と上位の印の脚質
+    marked = [(h.get('product_mark'), h) for h in horses if h.get('product_mark')]
+    mark_bits = []
+    for mk in ('◎', '○', '▲'):
+        h = next((x for m, x in marked if m == mk), None)
+        if h is None:
+            continue
+        st = _style(h)
+        if st:
+            mark_bits.append(f'{mk}{h.get("n")}{h.get("name")}＝{st}')
+    if mark_bits:
+        parts.append('印の馬の脚質は、' + '、'.join(mark_bits) + '。')
+
+    axis = next((x for m, x in marked if m == '◎'), None)
+    if axis is not None:
+        st = _style(axis)
+        if st:
+            same = counts.get(st, 0) - 1
+            note = _STYLE_NOTE.get(st)
+            line = f'◎は{st}型で、同じ脚質の馬が{same}頭。'
+            # 🔴 「前を取れれば力を出せる」と「位置取り争いで持ち味を出しにくい」を
+            #    同じ文に並べない（読み手にはどちらとも取れる）。同型の数で分ける。
+            if st in ('逃げ', '先行') and same >= 3:
+                line += '同型が多いぶん位置取り争いになりやすく、'
+                line += '前を取れるかどうかで結果が変わりやすい。'
+            elif st in ('差し', '追込') and counts['逃げ'] + counts['先行'] <= 2:
+                line += '前が流れないと差し届かない形。'
+            elif note:
+                line += note + '形。'
+            parts.append(line)
+
+    if not parts:
+        return ''
+    # ⚠ の注意は段落を分ける（本文と地続きだと読み飛ばされる）
+    body = _join(parts, names=[h.get('name') for h in horses])
+    return body + '\n\n' + PACE_NOTE
+
 
 def _clean_cmt(cmt):
     """アプリ用コメントから、有料記事に載せられない文を落とす。"""
@@ -370,7 +551,9 @@ def _ensure_period(text):
 def race_comment(race, horses, tickets, dangers):
     """レース全体の見解。AI が既に出している `cmt` を使い、判断だけ足す。"""
     parts = []
-    cmt = _clean_cmt(race.get('cmt'))
+    # 🟢 2026-11-23: 馬場・ペース想定・メンバー構成は「展開」の節
+    #    （`pace_comment`）に移したので、ここでは残りだけを使う。
+    _, cmt = _split_cmt(race.get('cmt'))
     if cmt:
         parts.append(cmt)
 
@@ -430,9 +613,14 @@ def disclaimer():
 
 def sources_note(has_web_info=False):
     """出典の明示（§12）。Web情報を使っていない場合はそう書く。"""
+    # 🔴 2026-11-23: 各馬の「内訳」に `web公開の能力指数` が出るので、
+    #    出典にも書く（本文に出ているのに出典が JRA だけ、という状態にしない）。
     base = ('データ出典：JRA公式（出馬表・レース結果）。'
             '各馬の記述は過去走の実データ（着順・上がり3F・距離・コース・脚質・'
-            '馬場状態・人気）から機械的に抽出したものです。')
+            '馬場状態・人気）から機械的に抽出したものです。'
+            'AIの能力評価には、web上で公開されている能力指数を1項目として'
+            '使っています（本文の「内訳」に出る「web公開の能力指数」）。'
+            '取得できなかったレース・馬では、この項目は空のまま扱っています。')
     if has_web_info:
         return base + '\nWebから取得した情報は本文中に出典を明記しています。'
     return base + '\n本記事では陣営コメント・調教・パドックの情報は使用していません。'

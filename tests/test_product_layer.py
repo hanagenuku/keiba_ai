@@ -528,19 +528,33 @@ class TestAllocationIsNotAsserted:
         assert t['bet_type_reasons'] == []
 
     def test_article_frames_amounts_as_conversion_not_recommendation(self):
-        """円の表は「換算例」であって推奨額ではない、と本文に書く。"""
-        md = article._bets_md(tickets.build_tickets({'conf': 70}, self._horses()))
+        """円の表を出すときは「換算例」であって推奨額ではない、と書く。
+
+        🟢 2026-11-23 ユーザー添削で、換算例はレースごとには出さなくなった
+           （`examples=True` のときだけ出す）。文面の縛りは残す。
+        """
+        t = tickets.build_tickets({'conf': 70}, self._horses())
+        course = t['courses'][0]
+        md = article._course_md(course, examples=True)
         assert '換算例' in md
         assert '推奨額ではありません' in md
-        assert '各自調整' in md
         # 断定形（旧文面）が復活していないこと
         assert '金額の目安' not in md
+
+    def test_amount_examples_are_not_repeated_in_every_race(self):
+        """🟢 2026-11-23 ユーザー添削「今後はこの程度にまとめてください」。"""
+        md = article._bets_md(tickets.build_tickets({'conf': 70}, self._horses()))
+        assert '換算例' not in md
+        assert '推奨額ではありません' not in md
 
     def test_full_reason_appears_once_per_article_not_per_race(self):
         """期待値が動かない理由の全文は記事末尾に1回だけ（7回くり返さない）。"""
         md = article._bets_md(tickets.build_tickets({'conf': 70}, self._horses()))
-        assert tickets.ALLOCATION_NOTE_SHORT in md
-        assert '加重平均' not in md                       # レースごとには出さない
+        foot = article.bets_footer_md([{'tickets': tickets.build_tickets(
+            {'conf': 70}, self._horses())}])
+        assert tickets.ALLOCATION_NOTE_SHORT not in md   # レースごとには出さない
+        assert tickets.ALLOCATION_NOTE_SHORT in foot     # 記事末尾に1回だけ
+        assert '加重平均' not in md
         assert '加重平均' in commentary.disclaimer()       # 記事末尾には出す
         assert '各自調整' in commentary.disclaimer()
 
@@ -580,6 +594,25 @@ class TestStakeAllocation:
     def _steady(self, t):
         return next(c for c in t['courses'] if c['key'] == 'steady')
 
+    def _steady_two_types(self, fukusho_odds, conf=70, win_odds=3.0):
+        """単勝・複勝だけの堅実コース。
+
+        🟢 2026-11-23 ユーザー添削でワイドが堅実コースに入ったため、
+           (A) の保証（複勝だけ当たっても元本を割らない）が成り立つのは
+           **ワイドの行が作れなかったレース**だけになった。
+           その形を `build_courses` に直接作らせて測る。
+        """
+        axis = {'n': 11, 'odds': win_odds, 'fukusho_odds': fukusho_odds}
+        bets = [
+            {'type': '単勝', 'group': '単勝', 'axis': 11, 'combos': [[11]],
+             'points': 1, 'line': '単勝\u300011'},
+            {'type': '複勝', 'group': '複勝', 'axis': 11, 'combos': [[11]],
+             'points': 1, 'line': '複勝\u300011'},
+        ]
+        base = tickets.ALLOC_STRONG if conf >= tickets.CONF_STRONG else tickets.ALLOC_LIGHT
+        courses, _ = tickets.build_courses(bets, base, axis=axis)
+        return next(c for c in courses if c['key'] == 'steady')
+
     def test_win_share_cap_is_one_minus_inverse_fukusho_odds(self):
         assert tickets.win_share_cap(1.1) == pytest.approx(1 - 1 / 1.1)
         assert tickets.win_share_cap(1.4) == pytest.approx(1 - 1 / 1.4)
@@ -597,8 +630,7 @@ class TestStakeAllocation:
         seen = 0
         for fo in (1.0, 1.05, 1.1, 1.2, 1.4, 1.8, 2.9, 5.0):
             for conf in (60, 70):
-                t = tickets.build_tickets({'conf': conf}, self._field(fo))
-                st = self._steady(t)
+                st = self._steady_two_types(fo, conf=conf)
                 for amt, oc in st['outcomes'].items():
                     assert oc['total'] == amt
                     assert oc['place'] >= oc['total'], (fo, conf, amt, oc)
@@ -609,8 +641,7 @@ class TestStakeAllocation:
     def test_place_bet_stays_the_heavier_side_of_the_steady_course(self):
         """堅実コースは「固く当てにいきたい人向け」。単勝へ寄せ切らない。"""
         for fo in (1.1, 1.4, 2.9, 5.0):
-            t = tickets.build_tickets({'conf': 70}, self._field(fo))
-            st = self._steady(t)
+            st = self._steady_two_types(fo)
             assert st['allocation_ratio']['複勝'] >= st['allocation_ratio']['単勝']
             for detail in st['allocation_examples'].values():
                 assert detail['複勝'] >= detail.get('単勝', 0)
@@ -620,11 +651,25 @@ class TestStakeAllocation:
         base = (tickets.ALLOC_STRONG['単勝']
                 / (tickets.ALLOC_STRONG['単勝'] + tickets.ALLOC_STRONG['複勝']))
         # 複勝5.0倍なら上限は0.8だが、基準の0.29を超えて寄せない
-        st = self._steady(tickets.build_tickets({'conf': 70}, self._field(5.0)))
+        st = self._steady_two_types(5.0)
         assert st['allocation_ratio']['単勝'] == pytest.approx(round(base, 2))
         # 複勝1.1倍なら上限0.0909が効いて基準より下がる
-        st = self._steady(tickets.build_tickets({'conf': 70}, self._field(1.1)))
+        st = self._steady_two_types(1.1)
         assert st['allocation_ratio']['単勝'] < base
+
+    def test_wide_in_the_steady_course_drops_the_no_loss_claim(self):
+        """🔴 ワイドが入ったコースで「複勝だけ当たれば元本は割らない」と言わない。
+
+        ワイドは◎が3着以内でも相手次第で外れるので、配分では守れない。
+        配分を作らず 1点100円に揃え、戻りの計算（outcomes）も出さない。
+        """
+        t = tickets.build_tickets({'conf': 70}, self._field(1.4))
+        st = self._steady(t)
+        assert 'ワイド' in st['types']
+        assert st['outcomes'] == {}
+        md = article._course_md(st, examples=True)
+        assert '元本を割らない' not in md
+        assert '元本割れ' not in md
 
     def test_no_win_bet_when_the_place_odds_cannot_cover_one_unit(self):
         """複勝1.1倍・1,000円では単勝を混ぜると必ず元本割れになる（単位の算数）。"""
@@ -667,7 +712,8 @@ class TestStakeAllocation:
         for text in (tickets.REASON_ALLOC, commentary.disclaimer()):
             for bad in ('勝てる', '儲か', '必ず', '確実'):
                 assert bad not in text
-        md = article._bets_md(tickets.build_tickets({'conf': 70}, self._field(1.4)))
+        st = self._steady(tickets.build_tickets({'conf': 70}, self._field(1.4)))
+        md = article._course_md(st, examples=True)
         assert '換算例' in md
         assert '推奨額ではありません' in md
 
@@ -699,8 +745,9 @@ class TestRecommendedCourses:
         t = tickets.build_tickets({'conf': 70}, self._field())
         assert [c['key'] for c in t['courses']] == ['steady', 'aggressive']
         steady, agg = t['courses']
-        assert steady['types'] == ['単勝', '複勝']
-        assert agg['types'] == ['馬連', 'ワイド', '三連複', '三連単']
+        # 🟢 2026-11-23 ユーザー決定: ワイドは堅実コース（3着までで当たる券種）
+        assert steady['types'] == ['単勝', '複勝', 'ワイド']
+        assert agg['types'] == ['馬連', '三連複', '三連単']
 
     def test_each_group_appears_once_per_course(self):
         """同じ券種の別の組み方をコースに重ねて入れない。"""
@@ -751,16 +798,26 @@ class TestRecommendedCourses:
         assert '全部を1点100円で買うと' not in md
         assert 'この中から好きな券種を選んでください' not in md
 
-    def test_article_warns_that_alternatives_overlap(self):
-        md = article._bets_md(tickets.build_tickets({'conf': 70}, self._field()))
-        assert '上のコースと重ねて買うものではありません' in md
-        assert '完全に含まれ' in md
+    def test_alternatives_are_not_printed_in_the_race_section(self):
+        """🟢 2026-11-23 ユーザー添削で「参考：点数を絞って買う場合」が消えた。
+
+        🔴 重ねて買われる危険は、**行そのものを出さない**ことで消す。
+           出すなら重複の注意（ALTERNATIVE_NOTE）も一緒でなければならない。
+        """
+        t = tickets.build_tickets({'conf': 70}, self._field())
+        md = article._bets_md(t)
+        assert '参考' not in md
+        assert '上のコースと重ねて買うものではありません' not in md
+        for b in t.get('alternatives') or []:
+            assert b['line'] not in md
+        # 文面自体は残す（出すときは必ずこの注意と一緒に出す）
+        assert '完全に含まれ' in tickets.ALTERNATIVE_NOTE
 
     def test_light_course_has_no_trifecta(self):
         t = tickets.build_tickets({'conf': 60}, self._field())
         agg = [c for c in t['courses'] if c['key'] == 'aggressive'][0]
         assert '三連単' not in agg['types']
-        assert agg['types'] == ['馬連', 'ワイド', '三連複']
+        assert agg['types'] == ['馬連', '三連複']
 
     def test_single_course_does_not_say_choose_one_of_two(self):
         """相手が取れずコースが1つしか組めないとき「どちらか一方」と書かない。"""
@@ -775,7 +832,6 @@ class TestRecommendedCourses:
         assert t['course_note'] is None
         md = article._bets_md(t)
         assert 'どちらか一方を選ぶ' not in md
-        assert '各自調整' in md
 
     def test_courses_never_claim_an_edge(self):
         """コース分けを「勝てる」根拠として書かない。"""
@@ -860,8 +916,13 @@ class TestBetTypeReason:
             assert commentary.find_forbidden(r) is None
 
     def test_article_contains_reason_section(self):
-        md = article._bets_md(tickets.build_tickets({'conf': 70}, self._horses()))
-        assert 'なぜこの券種か' in md
+        """🟢 2026-11-23 ユーザー添削で、券種の理由は記事末尾に1回だけになった。"""
+        t = tickets.build_tickets({'conf': 70}, self._horses())
+        assert 'なぜこの券種か' not in article._bets_md(t)
+        foot = article.bets_footer_md([{'tickets': t}])
+        assert 'なぜこの券種か' in foot
+        for r in t['bet_type_reasons']:
+            assert r in foot
 
     def test_single_bet_type_shows_no_allocation_table(self):
         """券種1つなら自明な比率表を載せず、各自調整だけを書く。
@@ -877,7 +938,6 @@ class TestBetTypeReason:
             'allocation_ratio': {'複勝': 1.0}, 'allocation_examples': {},
             'bet_type_reasons': [],
         })
-        assert '各自調整' in md
         assert '換算例' not in md
         assert '配分の目安' not in md
 
@@ -905,12 +965,20 @@ class TestBetTypeReason:
             {'n': 3, 'name': 'C', 'rl_rank': 3, 'pop': 6, 'solo_rank': 3,
              'odds': 11.0},
         ])
-        md = article._bets_md(tickets.build_tickets({'conf': 70}, hs))
-        assert '相手の内訳' in md
-        assert '固め 2' in md and '中穴 3' in md
+        t = tickets.build_tickets({'conf': 70}, hs)
+        # 🟢 2026-11-23 ユーザー添削で、内訳はレースごとの本文から外れた。
+        #    データは残すので、記事に戻すときは同じ並びで書ける。
+        assert '相手の内訳' not in article._bets_md(t)
+        assert t['solid_partners'] == [2] and t['ana_partners'] == [3]
 
-    def test_partner_breakdown_is_sorted(self):
-        """内訳も馬番の昇順で書く（実データで「中穴 7・4・10」と出ていた）。"""
+    def test_partner_lists_keep_the_rank_order_not_the_number_order(self):
+        """🔴 相手の並びは**AIの順位**で、馬番順ではない。
+
+        2026-11-23 の添削で「相手の内訳」を記事から外したので、
+        馬番昇順に直していたのは表示側だけ（上のテスト）。データ側を
+        馬番で並べ替えてはいけない——ワイドの相手は `solid_partners[0]`
+        ＝AI順位が上の馬で決まるので、並べ替えると買い目が変わる。
+        """
         hs = marks.assign_marks([
             {'n': 5, 'name': 'A', 'rl_rank': 1, 'pop': 1, 'solo_rank': 1,
              'odds': 2.5},
@@ -923,9 +991,9 @@ class TestBetTypeReason:
             {'n': 10, 'name': 'E', 'rl_rank': 5, 'pop': 6, 'solo_rank': 5,
              'odds': 20.0},
         ])
-        md = article._bets_md(tickets.build_tickets({'conf': 70}, hs))
-        assert '固め 2・9' in md, md
-        assert '中穴 7・10' in md, md
+        t = tickets.build_tickets({'conf': 70}, hs)
+        assert t['solid_partners'] == [9, 2], t['solid_partners']   # rl_rank 2,3
+        assert t['ana_partners'] == [7, 10], t['ana_partners']       # rl_rank 4,5
 
     def test_published_text_is_frozen_in_archive(self):
         """記事に載せた文面もアーカイブで凍結する（§18 後から変えない）。"""
@@ -1684,14 +1752,19 @@ class TestAxisAndDangerBasis:
     # --- ◎ の根拠 --------------------------------------------------------
     def test_axis_section_states_why_it_is_the_axis(self):
         race, horses = self._danger_axis_race()
+        # 🟢 2026-11-23 ユーザー添削で、◎の根拠は記事の先頭に1回だけになった。
         md = article.build_race_section(race, horses, {}, paid=True)['markdown']
-        assert '◎にした根拠' in md
-        assert 'レース信頼度（このレースは70）' in md
+        assert '◎にした根拠' not in md
+        head = '\n'.join(article.basis_md())
+        assert '◎にした根拠' in head
+        assert 'レース信頼度' in head
 
-    def test_only_the_axis_gets_the_basis(self):
-        """○▲ に同じ根拠文を繰り返さない（◎ の根拠だから1回だけ）。"""
+    def test_the_basis_appears_once_in_the_whole_article(self):
+        """記事全体で1回だけ（レースごとに繰り返さない）。"""
         race, horses = self._danger_axis_race()
-        md = article.build_race_section(race, horses, {}, paid=True)['markdown']
+        secs = [article.build_race_section(race, horses, {}, paid=True),
+                article.build_race_section(race, horses, {}, paid=True)]
+        md = article.build_article('2026-01-01', secs, paid=True)
         assert md.count('◎にした根拠') == 1
 
     def test_axis_basis_does_not_overstate(self):
@@ -1829,3 +1902,169 @@ class TestAxisAndDangerBasis:
                 continue
             md = article.build_race_section(race, horses, {}, paid=True)['markdown']
             assert '期待値十分' not in md
+
+
+# ───────────────────────────────────────────────────────────────────────────
+# 2026-11-23 ユーザー添削:
+#   「⭐︎印の馬の評価内容も書いて」「全般に評価と展開予想の文章が薄すぎる」
+#   「今後は、この程度にまとめてください」（＝定型文はレースごとに繰り返さない）
+# ───────────────────────────────────────────────────────────────────────────
+class TestAbilityNote:
+    """AI単独評価の内訳（latest.json の ability_breakdown）を1文にする。"""
+
+    def _horse(self):
+        return {
+            'n': 1, 'name': 'A', 'rl_rank': 1, 'solo_rank': 1, 'pop': 1,
+            'ability_breakdown': [
+                {'category': '基準値', 'contrib': 2.6651},
+                {'category': 'web指数', 'contrib': 0.357},
+                {'category': '騎手', 'contrib': 0.1274},
+                {'category': '厩舎', 'contrib': 0.0306},
+                {'category': '血統', 'contrib': 0.0043},     # 0.01未満
+                {'category': 'スピード能力', 'contrib': -0.086},
+                {'category': '実力レーティング', 'contrib': -0.0857},
+            ],
+        }
+
+    def test_lists_the_biggest_contributors(self):
+        note = commentary.ability_note(self._horse())
+        assert 'web公開の能力指数（+0.36）' in note     # 読める名前に置き換える
+        assert '騎手（+0.13）' in note
+        assert 'スピード能力（-0.09）' in note
+
+    def test_drops_the_baseline_and_the_noise(self):
+        """基準値（全馬共通の土台）と 0.01 未満は書かない。"""
+        note = commentary.ability_note(self._horse())
+        assert '基準値' not in note
+        assert '血統' not in note
+
+    def test_empty_when_there_is_no_breakdown(self):
+        assert commentary.ability_note({'n': 1}) == ''
+        assert commentary.ability_note({'n': 1, 'ability_breakdown': []}) == ''
+        assert commentary.ability_note(None) == ''
+
+    def test_no_forbidden_expressions(self):
+        """🔴 調教・パドック・陣営の話はカテゴリ名にも無い。"""
+        note = commentary.ability_note(self._horse())
+        assert commentary.find_forbidden(note) is None
+        for bad in ('儲か', '勝てる', '必ず', '確実', '妙味', '狙い目'):
+            assert bad not in note
+
+    def test_horse_comment_uses_it(self):
+        body = commentary.horse_comment(self._horse(), {}, {'conf': 70})
+        assert '評価の内訳では' in body
+
+
+class TestPaceComment:
+    """### 展開。🔴 脚質から「有利不利」を結論しない。"""
+
+    def _race(self):
+        return {'_venue': '東京', 'r': 11, 'name': 'テストS', 'dist': '1800m芝',
+                'conf': 59,
+                'cmt': '馬場はフラット。ミドル想定(42%)。やや拮抗したメンバー構成。'
+                       '◎Aが最有力。信頼度高い。'}
+
+    def _horses(self):
+        styles = ['先行', '先行', '差し', '差し', '逃げ', '追込', '先行', '差し']
+        return marks.assign_marks([
+            {'n': i + 1, 'name': chr(ord('A') + i), 'rl_rank': i + 1,
+             'pop': i + 1, 'solo_rank': i + 1, 'odds': 2.0 + i,
+             'style': styles[i]} for i in range(8)
+        ])
+
+    def test_counts_the_styles(self):
+        md = commentary.pace_comment(self._race(), self._horses())
+        assert '逃げ1頭・先行3頭・差し3頭・追込1頭' in md
+
+    def test_names_the_marked_horses_styles(self):
+        md = commentary.pace_comment(self._race(), self._horses())
+        assert '◎1A＝先行' in md
+
+    def test_always_carries_the_warning(self):
+        """🔴 省略不可。印・買い目はこの見立てから作っていない。"""
+        md = commentary.pace_comment(self._race(), self._horses())
+        assert commentary.PACE_NOTE in md
+        assert 'AIの印と買い目はこの展開の見立てから作っていません' in md
+
+    def test_never_claims_front_runners_are_favoured(self):
+        """🔴 2026-11-10/11-13 で測って否定された方向を書かない。"""
+        md = commentary.pace_comment(self._race(), self._horses())
+        for bad in ('有利', '狙い目', '妙味', '儲か', '勝てる', '確実'):
+            assert bad not in md.replace(commentary.PACE_NOTE, '')
+        assert commentary.find_forbidden(
+            md, names=[h['name'] for h in self._horses()]) is None
+
+    def test_uses_the_pre_race_style_only(self):
+        """🔴 後知恵の running_style は読まない（リークになる）。"""
+        hs = self._horses()
+        for h in hs:
+            h['running_style'] = '逃げ'          # 後知恵の列を混ぜる
+        md = commentary.pace_comment(self._race(), self._horses())
+        assert '逃げ1頭' in md                   # style の方を数えている
+        assert '逃げ8頭' not in md
+
+    def test_falls_back_to_facts_style(self):
+        hs = [dict(h) for h in self._horses()]
+        for h in hs:
+            h.pop('style', None)
+        facts = {h['n']: {'style': '差し'} for h in hs}
+        md = commentary.pace_comment(self._race(), hs, facts)
+        assert '差し8頭' in md
+
+    def test_empty_when_nothing_is_known(self):
+        hs = [{'n': 1, 'name': 'A', 'rl_rank': 1}]
+        assert commentary.pace_comment({'cmt': ''}, hs) == ''
+
+    def test_the_race_comment_does_not_repeat_the_pace_sentences(self):
+        """同じ文を「展開」と「最終結論」の両方に出さない。"""
+        race, hs = self._race(), self._horses()
+        t = tickets.build_tickets(race, hs)
+        pace = commentary.pace_comment(race, hs)
+        final = commentary.race_comment(race, hs, t, [])
+        assert 'ミドル想定' in pace
+        assert 'ミドル想定' not in final
+        assert '馬場はフラット' not in final
+        assert '最有力' in final                 # 残りはこちらに出る
+
+
+class TestStarSectionHasItsOwnComment:
+    """🟢 2026-11-23「⭐︎印の馬の評価内容も書いて」。"""
+
+    def _race_and_horses(self):
+        race = {'_venue': '東京', 'r': 11, 'name': 'テストS', 'dist': '1800m芝',
+                'conf': 70, 'cmt': '',
+                'star': {'n': 3, 'name': 'C', 'note': '☆の併記文'}}
+        horses = marks.assign_marks([
+            {'n': 1, 'name': 'A', 'rl_rank': 1, 'pop': 1, 'solo_rank': 1,
+             'fit_rank': 1, 'odds': 2.0},
+            {'n': 2, 'name': 'B', 'rl_rank': 2, 'pop': 2, 'solo_rank': 2,
+             'fit_rank': 2, 'odds': 4.0},
+            {'n': 3, 'name': 'C', 'rl_rank': 5, 'pop': 6, 'solo_rank': 2,
+             'fit_rank': 1, 'odds': 12.0},
+        ])
+        return race, horses
+
+    def test_star_gets_the_same_kind_of_comment_as_the_marks(self):
+        race, horses = self._race_and_horses()
+        md = article.build_race_section(race, horses, {}, paid=True)['markdown']
+        star = md.split('### ☆ 気になる一頭')[1]
+        assert 'AI評価（市場を含む）は5位' in star
+        assert '市場を見ないAI単独の評価では2位' in star
+
+    def test_the_mandatory_note_is_still_there(self):
+        """🔴 併記文は省略不可（biz/S4_HITRATE_AXIS.md）。"""
+        race, horses = self._race_and_horses()
+        md = article.build_race_section(race, horses, {}, paid=True)['markdown']
+        assert '☆の併記文' in md
+
+    def test_star_comment_does_not_claim_an_edge(self):
+        race, horses = self._race_and_horses()
+        md = article.build_race_section(race, horses, {}, paid=True)['markdown']
+        star = md.split('### ☆ 気になる一頭')[1]
+        # ⚠ 既存の見解文には「狙い目としては扱わない」という**否定文**がある
+        #    （AIが市場より高く評価した側に賭けても回収率は改善しなかった）。
+        #    その1文を外したうえで、肯定形が入っていないことを見る。
+        rest = star.replace('狙い目としては扱わない', '')
+        for bad in ('妙味', '狙い目', '儲か', '勝てる', '必ず', '確実'):
+            assert bad not in rest
+        assert '狙い目としては扱わない' in star

@@ -79,8 +79,13 @@ def _marks_line(rows):
     return '\n'.join(lines)
 
 
-def _course_md(course):
-    """1コースぶんの本文。点数・総額・配分はコースの中で閉じる。"""
+def _course_md(course, *, examples=False):
+    """1コースぶんの本文。点数・総額・配分はコースの中で閉じる。
+
+    🟢 2026-11-23 ユーザー添削「今後はこの程度にまとめてください」。
+       掛け金の換算例は添削で消えていたので、既定では出さない（`examples=True`
+       で従来どおり）。**買い目そのもの・点数・1点100円の合計は変えていない。**
+    """
     head = (f"**【{course['name']}】{course['lead']}**　"
             f"{course['points']}点"
             f"（1点100円で{course['flat_unit_total']:,}円）")
@@ -93,7 +98,7 @@ def _course_md(course):
     ex = course.get('allocation_examples') or {}
     outcomes = course.get('outcomes') or {}
     ratio = course.get('allocation_ratio') or {}
-    if len(ratio) >= 2 and ex:
+    if examples and len(ratio) >= 2 and ex:
         body.append('')
         if outcomes:
             # 単勝・複勝（各1点）。金額の自由度があるので円で示す。
@@ -134,56 +139,69 @@ def _course_md(course):
 
 
 def _bets_md(tickets):
+    """1レースぶんの買い目。
+
+    🟢 2026-11-23 ユーザー添削「今後はこの程度にまとめてください」。
+       各レースに載せるのは**2つのコースと、コースの扱いの1文**だけにした。
+       掛け金の換算例・相手の内訳・絞り込み版・券種を選んだ理由は、
+       毎レース同じ長文が並んで読み通せなくなっていたので、記事末尾に
+       1回だけ出す（`bets_footer_md`）。買い目そのものは1行も変えていない。
+    """
     if tickets.get('verdict') == 'skip':
         return '**今回は見送り。**\n\n' + (tickets.get('skip_reason') or '')
 
-    # 🟢 2026-10-26 ユーザー指示「全部の買い目は推奨しない。2種程度を推奨する」。
-    #    9行を1つの塊として出すのをやめ、コース単位で出す。
-    #    🔴 コースをまたいだ合計点数・合計金額・配分は出さない。出すと
-    #       「全部買う」形に戻るうえ、重複する行を二重に数えることになる
-    #       （三連複(2頭軸) ⊂ 三連複、三連単フォーメーション ⊂ 三連単）。
     blocks = []
-    courses = tickets.get('courses') or []
-    for c in courses:
+    for c in (tickets.get('courses') or []):
         blocks.append(_course_md(c))
     if not blocks:
-        # コースが組めないとき（相手が取れない等）は行をそのまま出す
         blocks.append('\n'.join(b['line'] for b in tickets.get('bets', [])))
     body = '\n\n'.join(blocks)
 
     if tickets.get('course_note'):
-        body += '\n\n' + tickets['course_note']
-    # §10「資金配分は各自調整」。コースが組めなかった場合でも落とさない。
-    body += '\n\n' + _tk.ALLOCATION_NOTE_SHORT
-
-    # 🟢 固めと中穴がどれなのかを読者に見せる（2026-10-15 ユーザー指示の実体）。
-    solid = tickets.get('solid_partners') or []
-    ana = tickets.get('ana_partners') or []
-    if solid or ana:
-        bits = []
-        # 馬番の昇順で書く（買い目の行と同じ規約。選んだ順そのままだと読めない）
-        if solid:
-            bits.append('固め ' + '・'.join(str(n) for n in sorted(solid)))
-        if ana:
-            bits.append('中穴 ' + '・'.join(str(n) for n in sorted(ana)))
-        body += (f'\n\n相手の内訳：{" ／ ".join(bits)}'
-                 f'（固めは単勝{_tk.ANA_ODDS_MIN:.0f}倍未満、'
-                 f'中穴は{_tk.ANA_ODDS_MIN:.0f}〜{_tk.ANA_ODDS_MAX:.0f}倍）')
-
-    # 参考：同じ券種の絞り込み版。コースと重ねて買うものではない。
-    alts = tickets.get('alternatives') or []
-    if alts:
-        body += '\n\n**参考：同じ券種を点数を絞って買う場合**\n\n'
-        body += (tickets.get('alternative_note') or '') + '\n\n'
-        body += '\n'.join(b['line'] for b in alts)
-
+        body += '\n\n' + _tk.COURSE_NOTE_SHORT
     if tickets.get('downgrade_reason'):
         body = '⚠ ' + tickets['downgrade_reason'] + '。\n\n' + body
-    # §11「この予想なら、なぜこの券種なのか」まで書く
-    reasons = tickets.get('bet_type_reasons') or []
-    if reasons:
-        body += '\n\n**なぜこの券種か**\n\n' + '\n\n'.join(reasons)
     return body
+
+
+def bets_footer_md(sections):
+    """記事末尾に1回だけ出す、買い目の読み方。
+
+    レースごとに繰り返していた長文（券種を選んだ理由・控除率・配分の注意）を
+    ここにまとめる。内容は変えていない。
+    """
+    out = ['### 買い目の読み方（全レース共通）', '']
+    out.append(_tk.COURSE_NOTE)
+    out.append('')
+    reasons = []
+    for sec in sections:
+        for r in ((sec.get('tickets') or {}).get('bet_type_reasons') or []):
+            if r not in reasons:
+                reasons.append(r)
+    if reasons:
+        out.append('**なぜこの券種か**')
+        out.append('')
+        out.append('\n\n'.join(reasons))
+        out.append('')
+    out.append(_tk.ALLOCATION_NOTE_SHORT)
+    out.append('')
+    return '\n'.join(out)
+
+
+def basis_md():
+    """◎の根拠と、表・内訳の読み方。記事の先頭に1回だけ出す。
+
+    🟢 2026-11-23 ユーザー添削で、レースごとに繰り返していた長文をここへ移した。
+       🔴 文面は変えていない（`commentary.axis_basis()` のまま）。
+    """
+    return [_cm.axis_basis(), '',
+            'このあと各レースの「能力・適性・市場の比較」に出る順位は、'
+            '**AI+市場**＝市場のオッズを土台にしたAIの総合評価、'
+            '**AI単独**＝市場を一切見ないAIの能力評価、'
+            '**適性**＝今回の条件（距離・馬場・コース）への向き、'
+            '**市場人気**＝記事作成時点のオッズ順です。'
+            '各馬の評価に出てくる「内訳」の数字はAI単独評価の内部の寄与で、'
+            '確率でも配当でもありません。', '']
 
 
 def build_race_section(race, horses, facts_by_num, *, paid=True,
@@ -243,11 +261,9 @@ def build_race_section(race, horses, facts_by_num, *, paid=True,
                      f"（単勝{_odds_text(h.get('odds') or h.get('tansho_odds'))}）")
         parts.append('')
         parts.append(body or '（書ける事実がありません）')
-        # 🔴 ◎ だけ「なぜ軸にしたか」を必ず書く（2026-10-15 ユーザー指示。
-        #    読者が最も欲しい情報は印そのものではなく根拠）。
-        if mark == _marks.MARKS[0]:
-            parts.append('')
-            parts.append(_cm.axis_basis(race.get('conf')))
+        # 🔴 ◎ の「なぜ軸にしたか」は 2026-10-15 ユーザー指示で毎レース書いていたが、
+        #    2026-11-23 の添削で毎レース同じ長文が消されたので、記事の先頭に
+        #    1回だけ出す（`basis_md()`）。**根拠を書くこと自体はやめていない。**
         parts.append('')
 
     if paid:
@@ -257,6 +273,15 @@ def build_race_section(race, horses, facts_by_num, *, paid=True,
         parts.append('')
         if not show_fit:
             parts.append('※適性順位はこの日の生成には含まれていません。')
+            parts.append('')
+
+        # ── 展開（2026-11-23 ユーザー添削「展開予想の文章が薄すぎる」）──────
+        # 🔴 印・買い目はこの節を見ていない（`pace_comment` は計算に渡らない）。
+        _pace = _cm.pace_comment(race, marked, facts_by_num)
+        if _pace:
+            parts.append('### 展開')
+            parts.append('')
+            parts.append(_pace)
             parts.append('')
 
         # ── ☆（市場1番人気を着順で上回る可能性）────────────────────────
@@ -281,6 +306,13 @@ def build_race_section(race, horses, facts_by_num, *, paid=True,
             #    確率の較正が作り物の1番人気に対するものだった（biz/RESULTS_HONMEI_STAR.md §2）。
             parts.append(_head + '。')
             parts.append('')
+            # 🟢 2026-11-23 ユーザー添削「☆印の馬の評価内容も書いて」。
+            #    ◎○▲と同じ `horse_comment` を使う（☆用の別の根拠は作らない）。
+            if _sh is not None:
+                _sc = _cm.horse_comment(_sh, facts_by_num.get(_sh.get('n'), {}), race)
+                if _sc:
+                    parts.append(_sc)
+                    parts.append('')
             # 2026-11-18: ☆を買い目に絡める（tickets.include_star）。どう扱ったかを1行で書く
             _role = (tickets or {}).get('star_role') if isinstance(tickets, dict) else None
             if _role == 'honmei':
@@ -432,9 +464,12 @@ def build_article(day_label, sections, *, paid=True, has_web_info=False):
                         'そのうえで、**有料版・無料版のどちらも回収率が100%を超えることは'
                         '確認できていません。**')
     head.append('')
+    # 🟢 2026-11-23: ◎の根拠と表の読み方は、レースごとではなくここに1回だけ。
+    head += basis_md()
     head.append('---')
     head.append('')
     body = ('\n---\n\n').join(s['markdown'] for s in sections)
-    tail = ['', '---', '', '### データ出典', '', _cm.sources_note(has_web_info),
+    tail = ['', '---', '', bets_footer_md(sections),
+            '---', '', '### データ出典', '', _cm.sources_note(has_web_info),
             '', '### 注意事項', '', _cm.disclaimer()]
     return '\n'.join(head) + body + '\n'.join(tail) + '\n'
