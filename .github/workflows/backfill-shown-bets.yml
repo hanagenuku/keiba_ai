@@ -11,6 +11,10 @@ on:
         description: 'この日以降の履歴を見る'
         default: '2026-07-25'
         type: string
+      reset:
+        description: '朝の版を消してから入れ直す'
+        type: boolean
+        default: false
 
 concurrency:
   group: keiba-weekly
@@ -48,7 +52,13 @@ jobs:
       - name: Backfill
         env:
           SINCE: ${{ inputs.since }}
-        run: python scripts/backfill_morning_bets.py --since "$SINCE"
+          RESET: ${{ inputs.reset }}
+        run: |
+          if [ "$RESET" = "true" ]; then
+            python scripts/backfill_morning_bets.py --since "$SINCE" --reset
+          else
+            python scripts/backfill_morning_bets.py --since "$SINCE"
+          fi
 
       - name: Generate stats
         run: python scripts/generate_stats.py
