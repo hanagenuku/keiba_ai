@@ -754,7 +754,7 @@ def save_dividends_db(all_results, base_dir=None, db_path=None):
     return {'races': races, 'rows': rows}
 
 
-def save_displayed_bets(rows, base_dir=None, db_path=None):
+def save_displayed_bets(rows, base_dir=None, db_path=None, keep_first=False):
     """画面に出した買い目を保存する。同一 (race_id, snapshot, 券種, 組番) は上書き。
 
     再実行・リトライで点数が二重に積み上がらないよう UNIQUE で潰す。
@@ -766,7 +766,19 @@ def save_displayed_bets(rows, base_dir=None, db_path=None):
     path = db_path or get_db_path(base_dir)
     conn = _connect(path)
     n = 0
+    # keep_first=True（2026-11-24）: そのレース×スナップショットの行が既にあれば
+    # **1行も足さない・上書きしない**。「朝に出した版」を後の更新で混ぜないため。
+    # （'refresh' は更新のたびに組番が足されて、その日に出した全版の和になっていた）
+    seen = {}
     for r in rows:
+        if keep_first:
+            k = (r['race_id'], r.get('snapshot', 'initial'))
+            if k not in seen:
+                seen[k] = conn.execute(
+                    'SELECT 1 FROM displayed_bets WHERE race_id=? AND snapshot=? LIMIT 1', k
+                ).fetchone() is not None
+            if seen[k]:
+                continue
         conn.execute(
             """INSERT INTO displayed_bets
                (date, race_id, racecourse, race_num, is_recommended,
@@ -851,6 +863,9 @@ def settle_displayed_bets(base_dir=None, db_path=None, hist_db_path=None):
             won = set(nums) <= set(t[:2])
         elif bt == 'sanrenpuku':
             won = set(nums) == set(t)
+        elif bt == 'sanrentan':
+            # 三連単だけは組番を着順どおりに持つ（昇順に並べ替えない）
+            won = nums == list(t[:3])
         else:
             continue
 
