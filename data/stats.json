@@ -77,7 +77,7 @@
         "races": 11
       }
     ],
-    "workflow_run_at": "2026-11-23T15:40:27Z",
+    "workflow_run_at": "2026-11-24T06:16:31Z",
     "workflow_result": "success"
   },
   "web_sources": {
@@ -2243,6 +2243,74 @@
       "settled": true,
       "groups": [
         {
+          "label": "無料記事の対象（各場11R＋平場の信頼度上位2本）",
+          "races": 6,
+          "bets": [
+            {
+              "type": "単勝",
+              "races": 6,
+              "hit": 2,
+              "hit_rate": 33.3,
+              "roi": 86.7,
+              "roi_cut1": 31.7,
+              "roi_cut3": 0.0,
+              "na": 0,
+              "top_pay": 330
+            },
+            {
+              "type": "複勝",
+              "races": 6,
+              "hit": 5,
+              "hit_rate": 83.3,
+              "roi": 101.7,
+              "roi_cut1": 78.3,
+              "roi_cut3": 36.7,
+              "na": 0,
+              "top_pay": 140
+            },
+            {
+              "type": "馬連",
+              "races": 6,
+              "hit": 2,
+              "hit_rate": 33.3,
+              "roi": 141.7,
+              "roi_cut1": 35.0,
+              "roi_cut3": 0.0,
+              "na": 0,
+              "top_pay": 640
+            },
+            {
+              "type": "ワイド",
+              "races": 6,
+              "hit": 2,
+              "hit_rate": 33.3,
+              "roi": 68.3,
+              "roi_cut1": 21.7,
+              "roi_cut3": 0.0,
+              "na": 0,
+              "top_pay": 280
+            },
+            {
+              "type": "三連複",
+              "races": 6,
+              "hit": 1,
+              "hit_rate": 16.7,
+              "roi": 63.3,
+              "roi_cut1": 0.0,
+              "roi_cut3": 0.0,
+              "na": 0,
+              "top_pay": 380
+            }
+          ],
+          "total": {
+            "type": "累計（全券種）",
+            "races": 30,
+            "hit": 12,
+            "hit_rate": 40.0,
+            "roi": 92.3
+          }
+        },
+        {
           "label": "推奨レース（信頼度66以上）",
           "races": 0,
           "bets": [
@@ -4102,6 +4170,600 @@
       }
     ]
   },
+  "shown_bets": {
+    "period": {
+      "from": "2026-07-26",
+      "to": "2026-11-23"
+    },
+    "days": 35,
+    "sources": [
+      {
+        "key": "morning",
+        "label": "アプリの買い目（軸1頭ベース）",
+        "groups": [
+          {
+            "label": "全レース",
+            "races": 980,
+            "hit": 499,
+            "hit_rate": 50.9,
+            "invest": 2016200,
+            "payout": 1417650,
+            "roi": 70.3,
+            "roi_cut3": 66.9,
+            "bets": [
+              {
+                "type": "単勝",
+                "races": 898,
+                "hit": 302,
+                "hit_rate": 33.6,
+                "points_per_race": 1.0,
+                "invest": 89800,
+                "payout": 78190,
+                "roi": 87.1
+              },
+              {
+                "type": "複勝",
+                "races": 33,
+                "hit": 6,
+                "hit_rate": 18.2,
+                "points_per_race": 1.2,
+                "invest": 4000,
+                "payout": 1250,
+                "roi": 31.2
+              },
+              {
+                "type": "ワイド",
+                "races": 873,
+                "hit": 342,
+                "hit_rate": 39.2,
+                "points_per_race": 2.9,
+                "invest": 257100,
+                "payout": 186850,
+                "roi": 72.7
+              },
+              {
+                "type": "馬連",
+                "races": 870,
+                "hit": 190,
+                "hit_rate": 21.8,
+                "points_per_race": 5.3,
+                "invest": 456800,
+                "payout": 359240,
+                "roi": 78.6
+              },
+              {
+                "type": "三連複",
+                "races": 970,
+                "hit": 265,
+                "hit_rate": 27.3,
+                "points_per_race": 12.5,
+                "invest": 1208500,
+                "payout": 792120,
+                "roi": 65.5
+              }
+            ]
+          },
+          {
+            "label": "記事の対象（各場11R＋平場の信頼度上位2本）",
+            "races": 255,
+            "hit": 130,
+            "hit_rate": 51.0,
+            "invest": 493600,
+            "payout": 329710,
+            "roi": 66.8,
+            "roi_cut3": 55.7,
+            "bets": [
+              {
+                "type": "単勝",
+                "races": 237,
+                "hit": 74,
+                "hit_rate": 31.2,
+                "points_per_race": 1.0,
+                "invest": 23700,
+                "payout": 18260,
+                "roi": 77.0
+              },
+              {
+                "type": "複勝",
+                "races": 11,
+                "hit": 3,
+                "hit_rate": 27.3,
+                "points_per_race": 1.3,
+                "invest": 1400,
+                "payout": 620,
+                "roi": 44.3
+              },
+              {
+                "type": "ワイド",
+                "races": 227,
+                "hit": 94,
+                "hit_rate": 41.4,
+                "points_per_race": 2.9,
+                "invest": 65200,
+                "payout": 46510,
+                "roi": 71.3
+              },
+              {
+                "type": "馬連",
+                "races": 224,
+                "hit": 43,
+                "hit_rate": 19.2,
+                "points_per_race": 4.6,
+                "invest": 103500,
+                "payout": 94920,
+                "roi": 91.7
+              },
+              {
+                "type": "三連複",
+                "races": 249,
+                "hit": 70,
+                "hit_rate": 28.1,
+                "points_per_race": 12.0,
+                "invest": 299800,
+                "payout": 169400,
+                "roi": 56.5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "article_steady",
+        "label": "記事の堅実コース",
+        "groups": [
+          {
+            "label": "全レース",
+            "races": 783,
+            "hit": 529,
+            "hit_rate": 67.6,
+            "invest": 312900,
+            "payout": 258490,
+            "roi": 82.6,
+            "roi_cut3": 80.5,
+            "bets": [
+              {
+                "type": "単勝",
+                "races": 783,
+                "hit": 278,
+                "hit_rate": 35.5,
+                "points_per_race": 1.0,
+                "invest": 78300,
+                "payout": 64610,
+                "roi": 82.5
+              },
+              {
+                "type": "複勝",
+                "races": 783,
+                "hit": 523,
+                "hit_rate": 66.8,
+                "points_per_race": 1.0,
+                "invest": 78300,
+                "payout": 67760,
+                "roi": 86.5
+              },
+              {
+                "type": "ワイド",
+                "races": 782,
+                "hit": 346,
+                "hit_rate": 44.2,
+                "points_per_race": 2.0,
+                "invest": 156300,
+                "payout": 126120,
+                "roi": 80.7
+              }
+            ]
+          },
+          {
+            "label": "記事の対象（各場11R＋平場の信頼度上位2本）",
+            "races": 218,
+            "hit": 152,
+            "hit_rate": 69.7,
+            "invest": 87100,
+            "payout": 63260,
+            "roi": 72.6,
+            "roi_cut3": 68.4,
+            "bets": [
+              {
+                "type": "単勝",
+                "races": 218,
+                "hit": 74,
+                "hit_rate": 33.9,
+                "points_per_race": 1.0,
+                "invest": 21800,
+                "payout": 15740,
+                "roi": 72.2
+              },
+              {
+                "type": "複勝",
+                "races": 218,
+                "hit": 146,
+                "hit_rate": 67.0,
+                "points_per_race": 1.0,
+                "invest": 21800,
+                "payout": 18290,
+                "roi": 83.9
+              },
+              {
+                "type": "ワイド",
+                "races": 218,
+                "hit": 101,
+                "hit_rate": 46.3,
+                "points_per_race": 2.0,
+                "invest": 43500,
+                "payout": 29230,
+                "roi": 67.2
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "key": "article_aggr",
+        "label": "記事の勝負コース",
+        "groups": [
+          {
+            "label": "全レース",
+            "races": 782,
+            "hit": 321,
+            "hit_rate": 41.0,
+            "invest": 1076900,
+            "payout": 712870,
+            "roi": 66.2,
+            "roi_cut3": 60.0,
+            "bets": [
+              {
+                "type": "馬連",
+                "races": 782,
+                "hit": 281,
+                "hit_rate": 35.9,
+                "points_per_race": 3.5,
+                "invest": 275900,
+                "payout": 218610,
+                "roi": 79.2
+              },
+              {
+                "type": "三連複",
+                "races": 781,
+                "hit": 198,
+                "hit_rate": 25.4,
+                "points_per_race": 4.8,
+                "invest": 378600,
+                "payout": 259620,
+                "roi": 68.6
+              },
+              {
+                "type": "三連単",
+                "races": 223,
+                "hit": 55,
+                "hit_rate": 24.7,
+                "points_per_race": 18.9,
+                "invest": 422400,
+                "payout": 234640,
+                "roi": 55.5
+              }
+            ]
+          },
+          {
+            "label": "記事の対象（各場11R＋平場の信頼度上位2本）",
+            "races": 218,
+            "hit": 113,
+            "hit_rate": 51.8,
+            "invest": 453700,
+            "payout": 338460,
+            "roi": 74.6,
+            "roi_cut3": 60.6,
+            "bets": [
+              {
+                "type": "馬連",
+                "races": 218,
+                "hit": 97,
+                "hit_rate": 44.5,
+                "points_per_race": 4.0,
+                "invest": 87100,
+                "payout": 80650,
+                "roi": 92.6
+              },
+              {
+                "type": "三連複",
+                "races": 217,
+                "hit": 84,
+                "hit_rate": 38.7,
+                "points_per_race": 6.5,
+                "invest": 141000,
+                "payout": 111760,
+                "roi": 79.3
+              },
+              {
+                "type": "三連単",
+                "races": 123,
+                "hit": 35,
+                "hit_rate": 28.5,
+                "points_per_race": 18.3,
+                "invest": 225600,
+                "payout": 146050,
+                "roi": 64.7
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "latest_day": {
+      "date": "2026-11-23",
+      "sources": [
+        {
+          "key": "morning",
+          "label": "アプリの買い目（軸1頭ベース）",
+          "groups": [
+            {
+              "label": "全レース",
+              "races": 23,
+              "hit": 12,
+              "hit_rate": 52.2,
+              "invest": 51500,
+              "payout": 48660,
+              "roi": 94.5,
+              "roi_cut3": 29.0,
+              "bets": [
+                {
+                  "type": "単勝",
+                  "races": 23,
+                  "hit": 6,
+                  "hit_rate": 26.1,
+                  "points_per_race": 1.0,
+                  "invest": 2300,
+                  "payout": 1290,
+                  "roi": 56.1
+                },
+                {
+                  "type": "ワイド",
+                  "races": 23,
+                  "hit": 8,
+                  "hit_rate": 34.8,
+                  "points_per_race": 3.0,
+                  "invest": 6900,
+                  "payout": 5600,
+                  "roi": 81.2
+                },
+                {
+                  "type": "馬連",
+                  "races": 23,
+                  "hit": 6,
+                  "hit_rate": 26.1,
+                  "points_per_race": 5.4,
+                  "invest": 12400,
+                  "payout": 23660,
+                  "roi": 190.8
+                },
+                {
+                  "type": "三連複",
+                  "races": 23,
+                  "hit": 5,
+                  "hit_rate": 21.7,
+                  "points_per_race": 13.0,
+                  "invest": 29900,
+                  "payout": 18110,
+                  "roi": 60.6
+                }
+              ]
+            },
+            {
+              "label": "記事の対象（各場11R＋平場の信頼度上位2本）",
+              "races": 6,
+              "hit": 4,
+              "hit_rate": 66.7,
+              "invest": 12500,
+              "payout": 7450,
+              "roi": 59.6,
+              "roi_cut3": 1.5,
+              "bets": [
+                {
+                  "type": "単勝",
+                  "races": 6,
+                  "hit": 2,
+                  "hit_rate": 33.3,
+                  "points_per_race": 1.0,
+                  "invest": 600,
+                  "payout": 520,
+                  "roi": 86.7
+                },
+                {
+                  "type": "ワイド",
+                  "races": 6,
+                  "hit": 2,
+                  "hit_rate": 33.3,
+                  "points_per_race": 3.0,
+                  "invest": 1800,
+                  "payout": 900,
+                  "roi": 50.0
+                },
+                {
+                  "type": "馬連",
+                  "races": 6,
+                  "hit": 1,
+                  "hit_rate": 16.7,
+                  "points_per_race": 3.8,
+                  "invest": 2300,
+                  "payout": 1150,
+                  "roi": 50.0
+                },
+                {
+                  "type": "三連複",
+                  "races": 6,
+                  "hit": 1,
+                  "hit_rate": 16.7,
+                  "points_per_race": 13.0,
+                  "invest": 7800,
+                  "payout": 4880,
+                  "roi": 62.6
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "article_steady",
+          "label": "記事の堅実コース",
+          "groups": [
+            {
+              "label": "全レース",
+              "races": 17,
+              "hit": 13,
+              "hit_rate": 76.5,
+              "invest": 6800,
+              "payout": 4160,
+              "roi": 61.2,
+              "roi_cut3": 36.9,
+              "bets": [
+                {
+                  "type": "単勝",
+                  "races": 17,
+                  "hit": 4,
+                  "hit_rate": 23.5,
+                  "points_per_race": 1.0,
+                  "invest": 1700,
+                  "payout": 700,
+                  "roi": 41.2
+                },
+                {
+                  "type": "複勝",
+                  "races": 17,
+                  "hit": 13,
+                  "hit_rate": 76.5,
+                  "points_per_race": 1.0,
+                  "invest": 1700,
+                  "payout": 1630,
+                  "roi": 95.9
+                },
+                {
+                  "type": "ワイド",
+                  "races": 17,
+                  "hit": 8,
+                  "hit_rate": 47.1,
+                  "points_per_race": 2.0,
+                  "invest": 3400,
+                  "payout": 1830,
+                  "roi": 53.8
+                }
+              ]
+            },
+            {
+              "label": "記事の対象（各場11R＋平場の信頼度上位2本）",
+              "races": 5,
+              "hit": 4,
+              "hit_rate": 80.0,
+              "invest": 2000,
+              "payout": 790,
+              "roi": 39.5,
+              "roi_cut3": 5.5,
+              "bets": [
+                {
+                  "type": "単勝",
+                  "races": 5,
+                  "hit": 1,
+                  "hit_rate": 20.0,
+                  "points_per_race": 1.0,
+                  "invest": 500,
+                  "payout": 190,
+                  "roi": 38.0
+                },
+                {
+                  "type": "複勝",
+                  "races": 5,
+                  "hit": 4,
+                  "hit_rate": 80.0,
+                  "points_per_race": 1.0,
+                  "invest": 500,
+                  "payout": 470,
+                  "roi": 94.0
+                },
+                {
+                  "type": "ワイド",
+                  "races": 5,
+                  "hit": 1,
+                  "hit_rate": 20.0,
+                  "points_per_race": 2.0,
+                  "invest": 1000,
+                  "payout": 130,
+                  "roi": 13.0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "article_aggr",
+          "label": "記事の勝負コース",
+          "groups": [
+            {
+              "label": "全レース",
+              "races": 17,
+              "hit": 5,
+              "hit_rate": 29.4,
+              "invest": 10200,
+              "payout": 4580,
+              "roi": 44.9,
+              "roi_cut3": 10.9,
+              "bets": [
+                {
+                  "type": "馬連",
+                  "races": 17,
+                  "hit": 5,
+                  "hit_rate": 29.4,
+                  "points_per_race": 3.0,
+                  "invest": 5100,
+                  "payout": 4200,
+                  "roi": 82.4
+                },
+                {
+                  "type": "三連複",
+                  "races": 17,
+                  "hit": 1,
+                  "hit_rate": 5.9,
+                  "points_per_race": 3.0,
+                  "invest": 5100,
+                  "payout": 380,
+                  "roi": 7.5
+                }
+              ]
+            },
+            {
+              "label": "記事の対象（各場11R＋平場の信頼度上位2本）",
+              "races": 5,
+              "hit": 2,
+              "hit_rate": 40.0,
+              "invest": 3000,
+              "payout": 1740,
+              "roi": 58.0,
+              "roi_cut3": 0.0,
+              "bets": [
+                {
+                  "type": "馬連",
+                  "races": 5,
+                  "hit": 2,
+                  "hit_rate": 40.0,
+                  "points_per_race": 3.0,
+                  "invest": 1500,
+                  "payout": 1360,
+                  "roi": 90.7
+                },
+                {
+                  "type": "三連複",
+                  "races": 5,
+                  "hit": 1,
+                  "hit_rate": 20.0,
+                  "points_per_race": 3.0,
+                  "invest": 1500,
+                  "payout": 380,
+                  "roi": 25.3
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
   "odds_movement": {
     "total_horses": 9914,
     "bucket_stats": [
@@ -4368,5 +5030,5 @@
       "top3_rate": 16.8
     }
   },
-  "generated_at": "2026-11-23 22:54"
+  "generated_at": "2026-11-24 06:33"
 }
