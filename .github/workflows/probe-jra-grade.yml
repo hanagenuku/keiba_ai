@@ -1,0 +1,30 @@
+name: Probe JRA grade markup (重賞の格付けの書かれ方・手動・調査用)
+
+on:
+  workflow_dispatch:
+    inputs:
+      date: {description: 'YYYYMMDD', default: '20261123', type: string}
+      place: {description: '場コード（05=東京）', default: '05', type: string}
+      race: {description: 'レース番号', default: '11', type: string}
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - run: pip install -r requirements.txt
+      - env:
+          D: ${{ inputs.date }}
+          P: ${{ inputs.place }}
+          R: ${{ inputs.race }}
+        run: python3 scripts/probe_jra_grade.py "$D" "$P" "$R"
