@@ -7,7 +7,7 @@ Routine の指示文は、その Routine が動いているチャットからし
 
 | ファイル | Routine | 最後に Routine へ反映した日 |
 |---|---|---|
-| `morning_prompt.md` | 開催日の朝 08:50（`trig_01ErX4dpJUxkPKdT61w6hefi`） | **2026-11-20**（全部無料・1本版。`scope.day_selection`） |
+| `morning_prompt.md` | 開催日の朝 08:50（`trig_01ErX4dpJUxkPKdT61w6hefi`） | **2026-11-20**（全部無料・1本版）。⚠ 2026-11-25 版（推奨上位＋重賞＋9〜11R の推奨）は**未反映** |
 
 ⚠ **正本は `morning_prompt.md` の1本だけにする。** 2026-11-21 版は
 `morning_2026-11-21.md` という別ファイルの下書きとして入った（#389）が、

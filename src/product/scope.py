@@ -102,13 +102,19 @@ PAID = 'paid'
 FREE = 'free'
 
 
-# 🟢 2026-11-21 ユーザー決定: 「最初の数ヶ月は、全て無料で良い。各競馬場の平場2レースずつ、
-#    重賞は、11レース＋自信の有る他の重賞」（前日の「無料は上位6本くらいが良い」を受けて）。
-#    → 無料 = 各競馬場の 11R ＋ 11R 以外でレース信頼度が高い順に2本。有料は当面なし。
-#    ⚠ 「自信の有る他の重賞」は未実装: latest.json にクラス（重賞かどうか）の列が無い
-#       （このファイル冒頭の 2026-09-29 の注記）。出馬表でクラスを取れるようにしてから足す。
-FREE_MAIN_NUMS = (11,)
+# 🟢 2026-11-25 博士の決定（11-21 の「各場11R＋平場2本」を置き換え）:
+#    「アプリの自信度が高いものはもれなく推奨レースとし、さらに上位6レース（2会場なら4レース）を
+#      note記事にする。各場のメインレースがＧ３以上の重賞のみ自信度が低くてもnote記事を出す。
+#      ９Ｒから11Ｒで66％以上があればそれも記事にする」
+#    → 記事（全部無料・ALL_FREE）＝ 次の和集合:
+#      ① 推奨（conf >= 66）のうち信頼度の高い順に「2 × 会場数」本
+#      ② G1〜G3 の重賞（信頼度に関係なく）。格付けは出馬表の格付けアイコン（race['grade']）
+#      ③ 9〜11R で conf >= 66
+#    ⚠ ② は 2026-11-25 以降の予想にしか格付けが入っていない（それより前の日は ① と ③ だけになる）。
+FREE_TOP_PER_VENUE = 2
+FREE_MAIN_NUMS = (11,)          # 2026-11-21〜11-27 の規則（day_selection_1121）
 FREE_FLAT_PER_VENUE = 2
+GRADED = ('G1', 'G2', 'G3')
 ALL_FREE = True
 
 
@@ -128,7 +134,43 @@ def _r(race):
 
 
 def day_selection(races):
-    """その日の全レースから {race_key: (記事の種類, 理由)} を作る（2026-11-21 の規則）。
+    """その日の全レースから {race_key: (記事の種類, 理由)} を作る（2026-11-25 の規則）。
+
+    races: latest.json の `races`（会場名 → レースの list）か、`_venue` 付きのレースの list。
+    ① 推奨（conf >= FLAT_MIN_CONF）を信頼度の高い順に 2×会場数 本（同点は会場名・レース番号順）
+    ② G1〜G3（`race['grade']`）は信頼度に関係なく
+    ③ 9〜11R で推奨
+    の和集合を無料にする。それ以外は記事にしない (None)。
+    """
+    if isinstance(races, dict):
+        pairs = [(v, r) for v, rs in races.items() for r in (rs or [])]
+    else:
+        pairs = [(r.get('_venue', ''), r) for r in (races or [])]
+    venues = {v for v, _r in pairs}
+    out, rec = {}, []
+    for v, r in pairs:
+        k = race_key(r, v)
+        conf = r.get('conf')
+        out[k] = (None, f"推奨の上位にも重賞にも入らない（レース信頼度{conf}）")
+        if conf is not None and conf >= FLAT_MIN_CONF:
+            rec.append((-float(conf), v, _r(r) or 99, k, r))
+    n_top = FREE_TOP_PER_VENUE * len(venues)
+    for rank, (_c, v, _n, k, r) in enumerate(sorted(rec)[:n_top], 1):
+        out[k] = (FREE, f"推奨（レース信頼度{r.get('conf')}）の上位{rank}位")
+    for v, r in pairs:
+        k = race_key(r, v)
+        if out[k][0] == FREE:
+            continue
+        g = str(r.get('grade') or '').upper()
+        if g in GRADED:
+            out[k] = (FREE, f"重賞（{g}）は信頼度に関係なく載せる")
+        elif _r(r) in MAIN_RACE_NUMS and r.get('conf') is not None and r['conf'] >= FLAT_MIN_CONF:
+            out[k] = (FREE, f"{r.get('r')}Rで推奨（レース信頼度{r.get('conf')}）")
+    return out
+
+
+def day_selection_1121(races):
+    """2026-11-21〜11-27 の規則（各場 11R ＋ 平場の上位2本）。過去の開催日の区分にだけ使う。
 
     races: latest.json の `races`（会場名 → レースの list）か、`_venue` 付きのレースの list。
     各会場で 11R を無料に、11R 以外は `conf` が高い順に2本を無料にする（同点はレース番号の若い順）。
@@ -157,11 +199,14 @@ def day_selection(races):
     return out
 
 
-#: `day_selection()` の規則（各場11R＋平場の上位2本・全部無料）が本番に入った開催日。
+#: `day_selection_1121()` の規則（各場11R＋平場の上位2本・全部無料）が本番に入った開催日。
 #: これより前の開催日は `article_kind(race)`（2026-11-04〜11-20 の規則）で区分する。
 #: 🔴 過去の開催日を**今日の規則で塗り替えない**ため。成績ページが「この日はどの
 #:    レースを記事に出したか」を数えるときは、必ず `article_ids_for_day()` を通す。
 DAY_RULE_FROM = '2026-11-21'
+#: `day_selection()`（2026-11-25 の規則: 推奨の上位 2×会場数 ＋ G1〜G3 ＋ 9〜11R の推奨）が
+#: 本番に入る開催日（決定の後の最初の開催日）。
+DAY_RULE_2_FROM = '2026-11-28'
 
 
 def article_ids_for_day(date, races):
@@ -179,11 +224,15 @@ def article_ids_for_day(date, races):
         pairs = [(v, r) for v, rs in races.items() for r in (rs or [])]
     else:
         pairs = [(r.get('_venue', ''), r) for r in (races or [])]
-    if date and str(date) >= DAY_RULE_FROM:
+    if date and str(date) >= DAY_RULE_2_FROM:
         day = day_selection(races)
+        return {k for k, (kind, _why) in day.items() if kind in (PAID, FREE)}
+    if date and str(date) >= DAY_RULE_FROM:
+        day = day_selection_1121(races)
         return {k for k, (kind, _why) in day.items() if kind in (PAID, FREE)}
     return {race_key(r, v) for v, r in pairs
             if article_kind(r)[0] in (PAID, FREE)}
+
 
 
 def article_kind(race, day=None):
@@ -197,7 +246,7 @@ def article_kind(race, day=None):
     🔴 ここで新しい閾値を作らない。推奨の境界は `tickets.CONF_STRONG` 一つだけ。
 
     🟢 2026-11-21 から本番の記事は `day=day_selection(その日の全レース)` を渡す
-       （各場 11R ＋ 平場の上位2本・全部無料）。`day` を渡さない呼び方は
+       （2026-11-25〜: 推奨の上位 2×会場数 本 ＋ G1〜G3 ＋ 9〜11R の推奨・全部無料）。`day` を渡さない呼び方は
        2026-11-04〜11-20 の規則のままで、成績ページの過去の区分にだけ使う。
     """
     if day is not None:

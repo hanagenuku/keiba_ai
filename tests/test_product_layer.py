@@ -1566,10 +1566,13 @@ class TestCommentMarkCount:
         with tempfile.TemporaryDirectory() as d:
             os.makedirs(os.path.join(d, 'data'))
             with open(LATEST, encoding='utf-8') as f:
-                raw = f.read()
+                data = json.load(f)
+            # 記事の対象が必ず1本あるようにする（2026-11-25〜: 重賞は信頼度に関係なく載る）
+            first = next(r for rs in data['races'].values() for r in rs if r.get('horses'))
+            first['grade'] = 'G3'
             with open(os.path.join(d, 'data', 'latest.json'), 'w',
                       encoding='utf-8') as f:
-                f.write(raw)
+                json.dump(data, f, ensure_ascii=False)
             out = os.path.join(d, 'out.md')
             r = subprocess.run(
                 [sys.executable, os.path.join(BASE, 'scripts',

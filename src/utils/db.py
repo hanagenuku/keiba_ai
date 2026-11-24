@@ -196,6 +196,12 @@ def init_db(base_dir=None, db_path=None):
         -- 画面に実際に出した買い目（gumbel_bets = 軸1頭ベース）。
         -- `bets` は旧 make_bets() の出力・推奨レースのみで、画面とは別物だった
         -- （2026-08-31 の棚卸しで判明。詳細は src/betting/displayed_bets.py）。
+        -- レースの格付け（'G1'/'G2'/'G3'/'L'/''）。出馬表の格付けアイコンから（2026-11-25〜）。
+        -- 記事の振り分け（重賞は信頼度に関係なく載せる）を成績ページで再現するためだけに持つ。
+        CREATE TABLE IF NOT EXISTS race_grades (
+            race_id TEXT PRIMARY KEY,
+            grade   TEXT
+        );
         CREATE TABLE IF NOT EXISTS displayed_bets (
             id             INTEGER PRIMARY KEY AUTOINCREMENT,
             date           TEXT NOT NULL,
@@ -1842,3 +1848,26 @@ def recalc_all_handicaps(base_dir=None, db_path=None, schema_path=None):
     conn.commit()
     conn.close()
     return n
+
+
+def save_race_grades(app_json, base_dir=None, db_path=None):
+    """latest.json と同じ形のデータから race_id → grade を保存する（空の格付けは書かない）。"""
+    raw = (app_json or {}).get('races') or {}
+    races = [r for rs in raw.values() for r in rs] if isinstance(raw, dict) else list(raw)
+    rows = [(r['race_id'], str(r.get('grade') or '').upper()) for r in races
+            if r.get('race_id') and r.get('grade')]
+    if not rows:
+        return 0
+    conn = _connect(db_path or get_db_path(base_dir))
+    conn.executemany('INSERT OR REPLACE INTO race_grades (race_id, grade) VALUES (?, ?)', rows)
+    conn.commit()
+    conn.close()
+    return len(rows)
+
+
+def load_race_grades(conn):
+    """{race_id: grade}。テーブルが無ければ空。"""
+    try:
+        return {r[0]: r[1] for r in conn.execute('SELECT race_id, grade FROM race_grades')}
+    except Exception:
+        return {}

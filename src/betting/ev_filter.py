@@ -266,6 +266,7 @@ def ability_first_loose(races, bias_data=None, top_n=6):
 #   +0.194 と弱く、上位半分・下位半分とも軸オッズの中央値は 3.4倍で同じ。
 #   市場の値付けではなく AI 自身の確信度を見ている。
 MIN_AXIS_FUKU_PROB = 0.55
+REC_MIN_CONF = 66      # 🔴 tickets.CONF_STRONG と同じ値（tests で一致を固定）
 
 
 def _axis_win_prob(scored, fallback):
@@ -283,11 +284,20 @@ def select_quality_races(races, bias_data=None,
                          min_gap=None,
                          min_win_prob=None,
                          odds_range=None,
-                         max_races=6,
+                         max_races=None,
                          min_races=0,
                          min_axis_fuku_prob=MIN_AXIS_FUKU_PROB,
-                         skip_classes=False):
+                         skip_classes=False,
+                         min_conf=REC_MIN_CONF):
     """品質閾値を満たすレースだけを推奨する。
+
+    🟢 **2026-11-25 博士の決定「アプリの自信度が高いものはもれなく推奨レースとする」。**
+       推奨（アプリの★）＝ **レース信頼度（`app_json.race_confidence` と同じ式）が
+       `REC_MIN_CONF`（= `tickets.CONF_STRONG` = 66）以上のレースすべて**。
+       上限（旧 `max_races=6`）は外した。これで成績ページの「推奨レース（信頼度66以上）」と
+       アプリの★推奨が同じ集合になる（2026-11-14 から「推奨」が2つの意味で出ていた件の解消）。
+       ⚠ 旧来の「軸の3着内確率>=0.55・その日の上位6本」は 55 の足切りとしては残る
+         （66 の方が厳しいので実質は効かない）。
 
     ⚠ 2026-08-24に**6本あったゲートのうち5本を既定でOFFにした**。
     3,969レース（2025-07-05〜2026-08-23・完全out-of-sample）で1本ずつ外して
@@ -360,6 +370,13 @@ def select_quality_races(races, bias_data=None,
         win_prob = pn1
         if min_win_prob is not None and win_prob < min_win_prob:
             continue
+
+        # 2026-11-25: 推奨＝レース信頼度 >= 66（博士の決定）。式は app_json.race_confidence と同じ
+        if min_conf is not None:
+            _ax = next((h for h in scored if h.get('rl_rank') == 1), scored[0])
+            _p = _ax.get('top3_prob')
+            if _p is None or min(99, max(0, int(round(float(_p) * 100)))) < min_conf:
+                continue
 
         # 軸の確度が低いレースは買わない（実測: 下位半分はワイド53.4% /
         # 三連複44.1%で、前後半とも一貫して悪い）。

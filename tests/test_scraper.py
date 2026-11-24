@@ -1436,3 +1436,26 @@ class TestRescrapeRepairsPopularityAndTrainer:
         fixed_h = {'name': 'イチバンウマ', 'horse_num': 1,
                    'popularity': pop, 'history': []}
         assert calc_features_for_xgb(fixed_h, race)['f_popularity'] == 3.0
+
+
+def test_extract_grade_reads_the_grade_icon():
+    """2026-11-25: 格付けは画像（実機 2026-11-23 東京11R の結果ページと同じタグ）。"""
+    from bs4 import BeautifulSoup
+    from src.scraper.jra_scraper import extract_grade
+    html = ('<div><img alt="11レース" src="/JRADB/img/race_number_main/race_num_11.png">'
+            '<img alt="GⅡ" src="/JRADB/img/grade/icon_grade_g2.png"></div>')
+    assert extract_grade(BeautifulSoup(html, 'lxml')) == 'G2'
+    assert extract_grade(BeautifulSoup('<div><img src="/JRADB/img/waku/8.png"></div>', 'lxml')) == ''
+    assert extract_grade(None) == ''
+
+
+def test_race_grades_roundtrip(tmp_path):
+    import sqlite3
+    from src.utils.db import init_db, load_race_grades, save_race_grades
+    (tmp_path / 'data').mkdir()
+    init_db(str(tmp_path))
+    n = save_race_grades({'races': {'東京': [{'race_id': 'a', 'grade': 'G1'}, {'race_id': 'b', 'grade': ''}]}},
+                         str(tmp_path))
+    assert n == 1
+    c = sqlite3.connect(str(tmp_path / 'data' / 'keiba.db'))
+    assert load_race_grades(c) == {'a': 'G1'}

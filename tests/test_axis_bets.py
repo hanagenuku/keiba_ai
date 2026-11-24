@@ -217,7 +217,15 @@ class TestRaceSelectionByAxisConfidence:
 
     def test_can_be_disabled(self, monkeypatch):
         """Noneで従来挙動に戻せること（切り戻し手段を必ず残す）。"""
-        assert len(self._run(monkeypatch, 0.40, min_axis_fuku_prob=None)) == 1
+        assert len(self._run(monkeypatch, 0.40, min_axis_fuku_prob=None, min_conf=None)) == 1
+
+    def test_recommended_means_conf_66_or_more_without_a_cap(self, monkeypatch):
+        """2026-11-25 博士「自信度が高いものはもれなく推奨」: 66 以上はすべて・未満は入らない。"""
+        from src.betting.ev_filter import REC_MIN_CONF
+        from src.product.tickets import CONF_STRONG
+        assert REC_MIN_CONF == CONF_STRONG
+        assert len(self._run(monkeypatch, 0.66)) == 1
+        assert len(self._run(monkeypatch, 0.64)) == 0
 
 
 class TestDisplayGrouping:

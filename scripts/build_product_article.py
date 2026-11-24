@@ -88,7 +88,7 @@ def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument('--base-dir', default='.')
     ap.add_argument('--free', action='store_true',
-                    help='無料版（2026-11-21〜: 各競馬場の11R＋平場の信頼度上位2本）を作る。'
+                    help='無料版（2026-11-25〜: 推奨の上位 2×会場数 本＋G1〜G3＋9〜11Rの推奨）を作る。'
                          '既定は有料版（当面は対象なし・scope.ALL_FREE）')
     ap.add_argument('--publish', action='store_true',
                     help='公開スナップショットを prediction_archive/ に保存する')
