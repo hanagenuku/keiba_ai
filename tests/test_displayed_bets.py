@@ -194,3 +194,42 @@ class TestRealLatestJson(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class TestMorningAndArticle(TestSaveAndSettle):
+    """2026-11-24: 朝の版（keep_first）・記事の2コース・三連単の決済。"""
+
+    def test_keep_first_never_adds_or_overwrites(self):
+        first = rows_from_app_json(APP_JSON, snapshot='morning')
+        n1 = save_displayed_bets(first, self.tmp, keep_first=True)
+        later = [dict(r, combo='1-2-3', amount=999) for r in first]
+        n2 = save_displayed_bets(later, self.tmp, keep_first=True)
+        assert n1 == len(first) and n2 == 0
+        got = self._rows("WHERE snapshot='morning'")
+        assert len(got) == len(first) and all(r['amount'] != 999 for r in got)
+
+    def test_trifecta_is_settled_in_finishing_order(self):
+        from src.betting.displayed_bets import article_rows
+        race = {'race_id': '20260830_04_03', 'r': 3}
+        courses = [{'key': 'aggressive', 'lines': [
+            {'type': '三連単', 'combos': [[5, 7, 2], [7, 5, 2]]}]}]
+        rows = article_rows(race, '新潟', courses)
+        assert [r['combo'] for r in rows] == ['5-7-2', '7-5-2']    # 並べ替えない
+        c = sqlite3.connect(self.db)
+        c.execute("INSERT INTO race_dividends (race_id,bet_type,combo,payout) VALUES (?,?,?,?)",
+                  ('20260830_04_03', 'sanrentan', '5-7-2', 9990))
+        c.commit(); c.close()
+        save_displayed_bets(rows, self.tmp, keep_first=True)
+        settle_displayed_bets(self.tmp, hist_db_path=self.hist)
+        got = {r['combo']: (r['is_hit'], r['payout']) for r in self._rows("WHERE snapshot='article_aggr'")}
+        assert got == {'5-7-2': (1, 9990.0), '7-5-2': (0, 0.0)}
+
+    def test_article_rows_come_from_the_article_builder(self):
+        import json
+        from src.betting.displayed_bets import article_rows_from_app_json
+        with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                               'data', 'latest.json'), encoding='utf-8') as f:
+            data = json.load(f)
+        rows = article_rows_from_app_json(data)
+        assert rows and {r['snapshot'] for r in rows} <= {'article_steady', 'article_aggr'}
+        assert all(r['amount'] == 100 for r in rows)
