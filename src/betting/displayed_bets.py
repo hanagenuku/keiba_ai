@@ -115,3 +115,65 @@ def rows_from_app_json(app_json, snapshot='initial'):
                 'amount': round(amt, 1),
             })
     return rows
+
+
+# ---------------------------------------------------------------------------
+# 記事の2コース（2026-11-24 博士「推奨買い目の的中率と思って見ていた」）
+# ---------------------------------------------------------------------------
+_TYPE = {'単勝': 'tansho', '複勝': 'fukusho', 'ワイド': 'wide', '馬連': 'umaren',
+         '三連複': 'sanrenpuku', '三連単': 'sanrentan'}
+ARTICLE_SNAPSHOT = {'steady': 'article_steady', 'aggressive': 'article_aggr'}
+ARTICLE_UNIT = 100     # 1点100円で数える（記事の「1点100円で◯円」と同じ）
+
+
+def article_rows(race, venue, courses):
+    """記事のコース（`tickets.build_tickets()['courses']`）を displayed_bets の行にする。
+
+    三連単は着順どおりの組番、それ以外は昇順。1点100円。
+    """
+    rid = race.get('race_id')
+    if not rid:
+        return []
+    d = f'{rid[:4]}-{rid[4:6]}-{rid[6:8]}'
+    rows = []
+    for c in courses or []:
+        snap = ARTICLE_SNAPSHOT.get(c.get('key'))
+        if not snap:
+            continue
+        for line in c.get('lines') or []:
+            bt = _TYPE.get(line.get('type')) or _TYPE.get(line.get('group'))
+            if not bt:
+                continue
+            for cb in line.get('combos') or []:
+                nums = [int(x) for x in cb]
+                combo = ('-'.join(str(n) for n in nums) if bt == 'sanrentan'
+                         else _combo(nums))
+                rows.append({'date': d, 'race_id': rid, 'racecourse': venue,
+                             'race_num': race.get('r', 0),
+                             'is_recommended': 1 if race.get('rec') else 0,
+                             'snapshot': snap, 'bet_type': bt, 'combo': combo,
+                             'amount': ARTICLE_UNIT})
+    return rows
+
+
+def article_rows_from_app_json(app_json):
+    """latest.json と同じ形のデータから、全レースの記事コースの行を作る。
+
+    記事と同じ `article.build_race_section()` を通す（買い目の作り方を2つにしない）。
+    1レースが壊れていても他のレースは続ける。
+    """
+    from src.product import article
+    raw = app_json.get('races') or {}
+    pairs = ([(v, r) for v, rs in raw.items() for r in rs] if isinstance(raw, dict)
+             else [(r.get('racecourse', ''), r) for r in raw])
+    rows = []
+    for venue, r in pairs:
+        horses = r.get('horses') or []
+        if not horses or not r.get('race_id'):
+            continue
+        try:
+            sec = article.build_race_section(r, horses, {}, paid=True)
+        except Exception:
+            continue
+        rows += article_rows(r, venue, (sec.get('tickets') or {}).get('courses'))
+    return rows

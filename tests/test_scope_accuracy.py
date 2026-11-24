@@ -336,7 +336,7 @@ class TestAppRendering:
     @staticmethod
     def _card():
         html = open(os.path.join(BASE, 'index.html'), encoding='utf-8').read()
-        i = html.index('的中実績（軸1頭ベース・全券種）')
+        i = html.index('参考：AI上位の馬を各券種1点ずつ買った場合')
         return html[i:html.index('// ── 直前オッズの変動', i)]
 
     def test_card_is_in_the_page(self):
@@ -802,8 +802,8 @@ class TestArticleScopeFollowsTheRuleOfThatDay:
         src = open(os.path.join(BASE, 'scripts', 'generate_stats.py'),
                    encoding='utf-8').read()
         assert 'article_ids_for_day' in src
-        assert scope.DAY_RULE_FROM not in src
-        assert 'day_selection' not in src
+        assert scope.DAY_RULE_FROM not in src   # 閾値日を2箇所に書かない
+        assert 'day_selection(' not in src      # 規則そのものを呼び直さない
 
     def test_recent_list_follows_the_same_rule(self, tmp_path):
         conn = self._day(tmp_path, '2026-11-21')
@@ -815,3 +815,39 @@ class TestArticleScopeFollowsTheRuleOfThatDay:
         got = {(r['date'], r['num']) for r in sa['recent']}
         assert got == {('2026-11-21', 2), ('2026-11-21', 11), ('2026-11-21', 12),
                        ('2026-11-20', 10), ('2026-11-20', 11)}
+
+
+class TestShownBets:
+    """実際に出した買い目（朝の版）の集計（2026-11-24）。"""
+
+    def _db(self, tmp_path):
+        import sqlite3
+        c = _db(tmp_path)
+        c.row_factory = None
+        rows = [
+            # 1レース目: 三連複13点のうち1点だけ当たり 4,470円
+            *[('2026-11-23', 'R1', '東京', 11, 'morning', 'sanrenpuku', f'1-2-{n}', 100, 1 if n == 3 else 0,
+               4470 if n == 3 else 0) for n in range(3, 16)],
+            ('2026-11-23', 'R1', '東京', 11, 'morning', 'tansho', '1', 100, 0, 0),
+            # 2レース目: 全部外れ
+            ('2026-11-23', 'R2', '東京', 5, 'morning', 'tansho', '4', 100, 0, 0),
+            # 未決済は数えない
+            ('2026-11-23', 'R3', '東京', 6, 'morning', 'tansho', '4', 100, -1, 0),
+            ('2026-11-23', 'R1', '東京', 11, 'article_aggr', 'sanrentan', '2-1-3', 100, 1, 9000),
+        ]
+        c.executemany('INSERT INTO displayed_bets (date, race_id, racecourse, race_num, snapshot, bet_type, combo, '
+                      'amount, is_hit, payout) VALUES (?,?,?,?,?,?,?,?,?,?)', rows)
+        c.commit()
+        c.row_factory = sqlite3.Row
+        return c
+
+    def test_race_level_hit_and_real_money(self, tmp_path):
+        from scripts.generate_stats import calc_shown_bets
+        sb = calc_shown_bets(self._db(tmp_path))
+        app = [s for s in sb['sources'] if s['key'] == 'morning'][0]['groups'][0]
+        assert app['races'] == 2 and app['hit'] == 1          # R3 は未決済で数えない
+        assert app['invest'] == 1500 and app['payout'] == 4470
+        trio = [b for b in app['bets'] if b['type'] == '三連複'][0]
+        assert trio['hit'] == 1 and trio['races'] == 1 and trio['points_per_race'] == 13
+        aggr = [s for s in sb['sources'] if s['key'] == 'article_aggr'][0]['groups'][0]
+        assert aggr['hit'] == 1 and aggr['bets'][0]['type'] == '三連単'

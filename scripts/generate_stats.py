@@ -205,6 +205,120 @@ def _race_row(r, conf, is_rec, is_main, divs, axis):
     }
 
 
+SHOWN_SOURCES = (
+    ('morning', 'アプリの買い目（軸1頭ベース）'),
+    ('article_steady', '記事の堅実コース'),
+    ('article_aggr', '記事の勝負コース'),
+)
+_JP = {'tansho': '単勝', 'fukusho': '複勝', 'wide': 'ワイド', 'umaren': '馬連',
+       'sanrenpuku': '三連複', 'sanrentan': '三連単'}
+
+
+def _shown_group(label, races):
+    """races: {race_id: [行]}。レース単位の的中（どれか1点でも当たり）と、実額の回収率。"""
+    if not races:
+        return {'label': label, 'races': 0}
+    inv = sum(r['amount'] or 0 for rs in races.values() for r in rs)
+    pay_by_race = {k: sum(r['payout'] or 0 for r in rs) for k, rs in races.items()}
+    pay = sum(pay_by_race.values())
+    hit = sum(1 for rs in races.values() if any(r['is_hit'] == 1 for r in rs))
+    cut = sorted(pay_by_race.values(), reverse=True)[3:]
+    by_type = []
+    for bt, jp in _JP.items():
+        sub = {k: [r for r in rs if r['bet_type'] == bt] for k, rs in races.items()}
+        sub = {k: v for k, v in sub.items() if v}
+        if not sub:
+            continue
+        ti = sum(r['amount'] or 0 for rs in sub.values() for r in rs)
+        tp = sum(r['payout'] or 0 for rs in sub.values() for r in rs)
+        th = sum(1 for rs in sub.values() if any(r['is_hit'] == 1 for r in rs))
+        pts = sum(len(rs) for rs in sub.values())
+        by_type.append({'type': jp, 'races': len(sub), 'hit': th,
+                        'hit_rate': round(th / len(sub) * 100, 1),
+                        'points_per_race': round(pts / len(sub), 1),
+                        'invest': int(ti), 'payout': int(tp),
+                        'roi': round(tp / ti * 100, 1) if ti else None})
+    return {'label': label, 'races': len(races), 'hit': hit,
+            'hit_rate': round(hit / len(races) * 100, 1),
+            'invest': int(inv), 'payout': int(pay),
+            'roi': round(pay / inv * 100, 1) if inv else None,
+            'roi_cut3': round(sum(cut) / inv * 100, 1) if inv and len(pay_by_race) > 3 else None,
+            'bets': by_type}
+
+
+def calc_shown_bets(conn):
+    """実際に出した買い目（朝の版）の的中と回収率（2026-11-24）。
+
+    博士「今まで、推奨買い目の的中率と思って見てたよ」。`scope_accuracy` は
+    AI上位馬を各券種1点ずつ買った**参考値**で、画面の軸1頭ベース買い目とも
+    記事の2コースとも別物だった。こちらは displayed_bets の
+    'morning'（アプリ）/ 'article_steady' / 'article_aggr'（記事）を、
+    **出した点数・金額どおり**に race_dividends で決済した値を集める。
+
+    - 的中はレース単位（そのレースで出した券種のどれか1点でも当たれば的中）
+    - 回収率は実額（アプリは画面の金額、記事は1点100円）。必ず「3本抜き」と並べる
+    - 決済が済んでいないレース（is_hit=-1 が1行でもある）は数えない
+    - 「記事の対象」は今の振り分け（各場11R＋平場の信頼度上位2本）を過去日にも当てたもの
+    """
+    try:
+        from src.product import scope
+    except Exception:
+        scope = None
+    try:
+        rows = conn.execute(
+            "SELECT date, race_id, racecourse, race_num, snapshot, bet_type, amount, is_hit, payout "
+            "FROM displayed_bets WHERE snapshot IN ('morning','article_steady','article_aggr')"
+        ).fetchall()
+    except Exception:
+        return None
+    if not rows:
+        return None
+    confs = _axis_conf_map(conn)
+    by_src = defaultdict(lambda: defaultdict(list))
+    meta = {}
+    for r in rows:
+        by_src[r['snapshot']][r['race_id']].append(r)
+        meta[r['race_id']] = (r['date'], r['racecourse'], r['race_num'])
+    # 決済済みのレースだけ
+    for src in by_src:
+        by_src[src] = {k: v for k, v in by_src[src].items() if all(x['is_hit'] in (0, 1) for x in v)}
+
+    target = set()
+    if scope is not None:
+        by_day = defaultdict(list)
+        for rid, (d, v, n) in meta.items():
+            by_day[d].append({'race_id': rid, 'r': n, 'conf': confs.get(rid), '_venue': v or '不明'})
+        # 🔴 規則は開催日で切り替える（`scope.article_ids_for_day`）。
+        #    ここで `day_selection` を直に呼ぶと、2026-11-20 以前の買い目まで
+        #    今日の規則で「記事の対象」に数えてしまう（2026-11-24）。
+        for d, rs in by_day.items():
+            target |= scope.article_ids_for_day(d, rs)
+
+    def _sources(filter_ids=None):
+        out = []
+        for key, label in SHOWN_SOURCES:
+            races = by_src.get(key) or {}
+            if filter_ids is not None:
+                races = {k: v for k, v in races.items() if k in filter_ids}
+            out.append({'key': key, 'label': label,
+                        'groups': [_shown_group('全レース', races),
+                                   _shown_group('記事に載せたレース（その日の規則で判定）',
+                                                {k: v for k, v in races.items() if k in target})]})
+        return out
+
+    settled = {k for src in by_src.values() for k in src}
+    if not settled:
+        return None
+    dates = sorted({meta[k][0] for k in settled})
+    last = dates[-1]
+    return {
+        'period': {'from': dates[0], 'to': last},
+        'days': len(dates),
+        'sources': _sources(),
+        'latest_day': {'date': last, 'sources': _sources({k for k in settled if meta[k][0] == last})},
+    }
+
+
 def calc_scope_accuracy(conn):
     """商品の対象範囲（推奨レース ＋ 9〜11R）の的中実績。
 
@@ -1149,6 +1263,14 @@ def generate_stats(base_dir=None):
             stats['scope_accuracy'] = sa
     except Exception as e:
         print(f'⚠ scope_accuracy 生成失敗（表示のみ・他の集計は続行）: {e}')
+
+    # ── 実際に出した買い目（朝の版）の実績（2026-11-24）──────────────────────
+    try:
+        sb = calc_shown_bets(conn)
+        if sb:
+            stats['shown_bets'] = sb
+    except Exception as e:
+        print(f'⚠ shown_bets 生成失敗（表示のみ・他の集計は続行）: {e}')
 
     # ── AI vs 市場 乖離分析 ──────────────────────────────────────────────
     # 🔴 **stats.json には出さない**（＝画面に出さない）。

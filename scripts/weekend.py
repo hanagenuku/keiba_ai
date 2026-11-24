@@ -443,6 +443,19 @@ def refresh_today(sess, hist_path, avg_bias, jst_now):
     except Exception as e:
         print(f'⚠ 表示買い目の記録に失敗（予想には影響なし）: {e}')
 
+    # 2026-11-24: 「朝に出した版」を固定で残す（成績ページの「実際に出した買い目」の元）。
+    #   'morning'          … アプリの軸1頭ベース買い目。その日最初の refresh の版だけ（keep_first）
+    #   'article_steady' / 'article_aggr' … 記事の堅実・勝負コース。同じく最初の版だけ
+    #   🔴 'refresh' はレースごとに組番が足されていく（その日に出した全版の和）ので集計に使わない。
+    try:
+        from src.betting.displayed_bets import article_rows_from_app_json, rows_from_app_json
+        from src.utils.db import save_displayed_bets
+        _n1 = save_displayed_bets(rows_from_app_json(app_data, snapshot='morning'), ROOT, keep_first=True)
+        _n2 = save_displayed_bets(article_rows_from_app_json(app_data), ROOT, keep_first=True)
+        print(f'✅ 朝の版を記録: アプリ {_n1}点・記事 {_n2}点（既に記録済みのレースは触らない）')
+    except Exception as e:
+        print(f'⚠ 朝の版の記録に失敗（予想には影響なし）: {e}')
+
 
 def _keep_started_races(app_data, path, started_ids):
     """発走済みレースの表示内容を、既存 latest.json のものに差し戻す。

@@ -2868,14 +2868,75 @@ function renderStats(S) {
   //    見つかったので使っていない（複勝の2着まで・三連複の払戻欠損・ワイド欠落）。
   // 🔴 回収率は必ず「3本抜き」と並べて出す。100%超のセルは例外なく
   //    高配当1〜2本で出来ている、というのがこれまでの実測。
+  // ── 実際に出した買い目の実績（2026-11-24）──────────────────────────
+  // 博士「今まで、推奨買い目の的中率と思って見てたよ」。下の「AI上位を1点ずつ」は
+  // 参考値で、画面の軸1頭ベース買い目とも記事の2コースとも別物だった。
+  // こちらは朝に出した版を、出した点数・金額どおりに race_dividends で決済した値。
+  const sb = S.shown_bets || {};
+  if ((sb.sources || []).length) {
+    const _p = v => (v == null ? '—' : v + '%');
+    const _yen = v => (v == null ? '—' : '¥' + Number(v).toLocaleString());
+    const _src = (src) => {
+      let t = `<div style="font-size:12px;font-weight:700;margin:8px 0 4px">${src.label}</div>`;
+      t += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px">';
+      t += '<tr style="color:var(--sub)"><th style="text-align:left;padding:2px 4px">対象</th>'
+         + '<th style="padding:2px 4px">的中</th><th style="padding:2px 4px">的中率</th>'
+         + '<th style="padding:2px 4px">投資</th><th style="padding:2px 4px">払戻</th>'
+         + '<th style="padding:2px 4px">回収率</th><th style="padding:2px 4px">3本抜き</th></tr>';
+      for (const g of (src.groups || [])) {
+        if (!g.races) continue;
+        t += `<tr style="border-top:1px solid var(--line);font-weight:700">`
+           + `<td style="padding:3px 4px">${g.label}</td>`
+           + `<td style="padding:3px 4px;text-align:center">${g.hit}/${g.races}</td>`
+           + `<td style="padding:3px 4px;text-align:center">${_p(g.hit_rate)}</td>`
+           + `<td style="padding:3px 4px;text-align:center;color:var(--sub)">${_yen(g.invest)}</td>`
+           + `<td style="padding:3px 4px;text-align:center;color:var(--sub)">${_yen(g.payout)}</td>`
+           + `<td style="padding:3px 4px;text-align:center;color:var(--sub)">${_p(g.roi)}</td>`
+           + `<td style="padding:3px 4px;text-align:center;color:var(--sub)">${_p(g.roi_cut3)}</td></tr>`;
+        for (const b of (g.bets || [])) {
+          t += `<tr><td style="padding:2px 4px 2px 14px;color:var(--sub)">${b.type}`
+             + `<span style="font-size:9px">（1R平均${b.points_per_race}点）</span></td>`
+             + `<td style="padding:2px 4px;text-align:center">${b.hit}/${b.races}</td>`
+             + `<td style="padding:2px 4px;text-align:center">${_p(b.hit_rate)}</td>`
+             + `<td style="padding:2px 4px;text-align:center;color:var(--sub)">${_yen(b.invest)}</td>`
+             + `<td style="padding:2px 4px;text-align:center;color:var(--sub)">${_yen(b.payout)}</td>`
+             + `<td style="padding:2px 4px;text-align:center;color:var(--sub)">${_p(b.roi)}</td>`
+             + '<td></td></tr>';
+        }
+      }
+      return t + '</table></div>';
+    };
+    h += '<div class="stat-card"><div class="stat-title">🎫 実際に出した買い目の実績（朝の版）</div>';
+    h += `<div style="font-size:11px;color:var(--sub);margin-bottom:8px;line-height:1.6">`
+       + `アプリの軸1頭ベース買い目と記事の2コースを、<b>朝に出した点数・金額どおり</b>に結果と照合したもの。`
+       + `的中＝そのレースで出したどれか1点でも当たり。アプリは画面の金額、記事は1点100円で数えています。</div>`;
+    const ld2 = sb.latest_day;
+    if (ld2 && (ld2.sources || []).length) {
+      h += '<div style="border:2px solid #117a65;border-radius:8px;padding:8px 10px;margin-bottom:12px">';
+      h += `<div style="font-size:13px;font-weight:700;color:#117a65">📅 ${ld2.date}</div>`;
+      for (const src of ld2.sources) h += _src(src);
+      h += '</div>';
+    }
+    h += `<div style="font-size:13px;font-weight:700;margin-bottom:2px">📊 累計</div>`
+       + `<div style="font-size:11px;color:var(--sub)">${(sb.period || {}).from || '?'} 〜 ${(sb.period || {}).to || '?'}（${sb.days || 0}開催日）</div>`;
+    for (const src of sb.sources) h += _src(src);
+    h += '<div style="font-size:10px;color:var(--sub);margin-top:6px;line-height:1.6">'
+       + '⚠ <b>的中率と回収率は別物です</b>。点数を増やすほど的中率は上がりますが、回収率は上がりません。<br>'
+       + '⚠ 「3本抜き」＝払戻の大きい3レースを除いた回収率。<br>'
+       + '⚠ 記事の買い目は、2026-11-21 より前の日は今の作り方で朝の予想から作り直した値です（その頃は記事を公開していません）。<br>'
+       + '⚠ 「記事の対象」は今の振り分け（各場11R＋平場の信頼度上位2本）を過去の日にも当てたものです。</div>';
+    h += '</div>';
+  }
+
   const sa = S.scope_accuracy || {};
-  h += '<div class="stat-card"><div class="stat-title">🎯 的中実績（軸1頭ベース・全券種）</div>';
+  h += '<div class="stat-card"><div class="stat-title">🧪 参考：AI上位の馬を各券種1点ずつ買った場合</div>';
   if ((sa.groups || []).length) {
     const thr = sa.conf_strong;
     const pf = (sa.period || {}).from, pt = (sa.period || {}).to;
     h += `<div style="font-size:11px;color:var(--sub);margin-bottom:10px;line-height:1.6">`
        + `${pf || '?'}〜${pt || '?'} の ${sa.races}レース（朝の予想を発走前に記録したもの）<br>`
-       + `単勝・複勝＝AI1位 ／ 馬連・ワイド＝AI1位-2位 ／ 三連複＝AI1〜3位。<b>すべて1点買い</b>`;
+       + `単勝・複勝＝AI1位 ／ 馬連・ワイド＝AI1位-2位 ／ 三連複＝AI1〜3位。<b>すべて1点買い</b><br>`
+       + `<b>⚠ アプリや記事に出した買い目の成績ではありません</b>（それは上の「実際に出した買い目の実績」）。AIの順位そのものの当たり具合を見るための参考値です。`;
     const ex = sa.excluded || {};
     if ((ex.no_axis || 0) + (ex.no_conf || 0) > 0) {
       h += `<br>評価不能として除外: 軸なし${ex.no_axis || 0}R / 信頼度なし${ex.no_conf || 0}R`;
