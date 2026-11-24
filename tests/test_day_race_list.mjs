@@ -1,4 +1,4 @@
-// 当日分カードの「レースごとの結果」を検証する。
+// 当日分カードの「記事に載せたレースの結果」を検証する。
 //
 // 経緯: 2026-11-14 ユーザー指摘「何度もお願いしているが、その日の全ての推奨レースを
 // まとめた結果表示をしてくれ」。成績ページは券種ごとの集計（的中率・回収率）しか
@@ -72,14 +72,14 @@ const t = (name, fn) => { fn(); console.log('  ✅', name); pass++; };
 
 t('当日分カードの中に出る（累計より前）', () => {
   const h = render(stats());
-  const i = h.indexOf('レースごとの結果');
+  const i = h.indexOf('記事に載せたレースの結果');
   assert.ok(i > 0, '表が出ていない');
   assert.ok(i < h.indexOf('📊 累計'), '累計より後ろに出ている');
 });
 
-t('推奨レースに★が付き、推奨漏れには付かない', () => {
+t('信頼度66以上の行に★が付き、それ以外には付かない', () => {
   const h = render(stats());
-  const seg = h.slice(h.indexOf('レースごとの結果'));
+  const seg = h.slice(h.indexOf('記事に載せたレースの結果'));
   const table = seg.slice(0, seg.indexOf('</table>'));   // 脚注の★を拾わないため
   const rows = table.split('<tr').slice(2, 4);           // ヘッダ行を除いた2行
   assert.ok(rows[0].includes('★'), '推奨レースに★が無い');
@@ -95,26 +95,29 @@ t('◎の馬番・馬名・人気・着順を出す', () => {
 
 t('払戻・不的中・評価不能を区別する', () => {
   const h = render(stats());
-  const seg = h.slice(h.indexOf('レースごとの結果'));
+  const seg = h.slice(h.indexOf('記事に載せたレースの結果'));
   assert.ok(seg.includes('¥270'), '払戻が出ていない');
   assert.ok(seg.includes('×'), '不的中が × になっていない');
   assert.ok(seg.includes('—'), '評価不能が — になっていない');
 });
 
-t('★の本数と対象レース数を見出しに出す', () => {
+t('本数を見出しに出す（★は信頼度66以上の本数）', () => {
+  // 🟢 2026-11-24 ユーザー指示「記事の対象レースに合わせて」。
+  //    並ぶのは記事に載せたレースなので、見出しは「計 N R」が主。
   const h = render(stats());
-  assert.ok(/★=推奨 1R \/ 計 2R/.test(h), '見出しの本数が違う: ' + h.match(/★=推奨[^<]*/));
+  assert.ok(/計 2R/.test(h), '見出しの本数が違う: ' + h.match(/計 [^<]*/));
+  assert.ok(/★=信頼度66以上 1R/.test(h), '★の本数が出ていない: ' + h.match(/★=[^<]*/));
 });
 
 t('結果がまだ無い日には出さない', () => {
   const h = render(stats({ settled: false }));
-  assert.ok(!h.includes('レースごとの結果'), '結果待ちの日に表を出している');
+  assert.ok(!h.includes('記事に載せたレースの結果'), '結果待ちの日に表を出している');
   assert.ok(h.includes('結果待ち'), '結果待ちの表示が消えている');
 });
 
 t('一覧が空なら表そのものを出さない', () => {
   const h = render(stats({ race_list: [] }));
-  assert.ok(!h.includes('レースごとの結果'), '空の表を出している');
+  assert.ok(!h.includes('記事に載せたレースの結果'), '空の表を出している');
 });
 
 t('閾値はデータ側の conf_strong を出す（画面で作らない）', () => {

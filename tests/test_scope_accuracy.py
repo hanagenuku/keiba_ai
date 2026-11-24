@@ -408,7 +408,7 @@ class TestLatestDayIsSeparateFromCumulative:
         """当日分に前の開催日の的中が混ざらないこと（この取り違えが一番こわい）。"""
         sa = calc_scope_accuracy(self._two_days(tmp_path))
         top = sa['latest_day']['groups'][0]
-        assert top['label'].startswith('推奨レース')
+        assert top['label'] == '記事に載せたレース'
         fuku = [b for b in top['bets'] if b['type'] == '複勝'][0]
         assert fuku['races'] == 2
         assert fuku['hit'] == 0, '10-24 の的中が 10-31 に混ざっている'
@@ -535,24 +535,26 @@ class TestRecommendedIsDayWide:
               pays=_all_pays(rl, fukusho=160), date=d)
         return conn
 
-    def test_latest_day_recommended_group_covers_the_whole_day(self, tmp_path):
-        """当日分の先頭が「推奨レース」で、平場の推奨も入っていること。"""
+    def test_latest_day_group_covers_the_whole_day(self, tmp_path):
+        """🟢 2026-11-24 ユーザー指示「記事の対象レースに合わせて」。
+
+        当日分の先頭は**記事に載せたレース**。平場（9〜11R以外）も落とさない。
+        """
         sa = calc_scope_accuracy(self._one_day(tmp_path))
         g0 = sa['latest_day']['groups'][0]
-        assert g0['label'] == f'推奨レース（信頼度{scope.FLAT_MIN_CONF}以上）'
-        assert g0['races'] == 2, '9〜11R の中だけを数えている（入れ子のまま）'
+        assert g0['label'] == '記事に載せたレース'
+        # 2026-11-08 は旧規則なので 推奨2本（9R・平場3R）＋ 9〜11R の推奨漏れ1本
+        assert g0['races'] == 3
 
-        # 単勝の払戻を持つのは平場3Rだけ。ここが 1 なら平場の推奨が入っている
+        # 単勝の払戻を持つのは平場3Rだけ。ここが 1 なら平場が入っている
         tan = [b for b in g0['bets'] if b['type'] == '単勝'][0]
         assert tan['hit'] == 1 and tan['races'] == 1
 
-    def test_latest_day_shows_the_missed_main_races_separately(self, tmp_path):
+    def test_latest_day_only_has_the_article_and_the_whole_day(self, tmp_path):
         sa = calc_scope_accuracy(self._one_day(tmp_path))
         labels = [g['label'] for g in sa['latest_day']['groups']]
-        assert labels == [f'推奨レース（信頼度{scope.FLAT_MIN_CONF}以上）',
-                          '9〜11R の推奨漏れ', '全レース']
+        assert labels == ['記事に載せたレース', '全レース']
         g = {x['label']: x for x in sa['latest_day']['groups']}
-        assert g['9〜11R の推奨漏れ']['races'] == 1
         assert g['全レース']['races'] == 4
 
     def test_no_group_is_nested_under_the_main_races_any_more(self, tmp_path):
@@ -564,8 +566,8 @@ class TestRecommendedIsDayWide:
     def test_cumulative_puts_the_recommended_group_first(self, tmp_path):
         sa = calc_scope_accuracy(self._one_day(tmp_path))
         labels = [g['label'] for g in sa['groups']]
-        # 2026-11-21〜 先頭は無料記事の対象（各場11R＋平場上位2本）、その次が推奨
-        assert labels[0].startswith('無料記事の対象')
+        # 2026-11-24〜 先頭は「記事に載せたレース」（その日の規則で判定）、その次が推奨
+        assert labels[0].startswith('記事に載せたレース')
         assert labels[1].startswith('推奨レース')
         assert labels.index('9〜11R の推奨漏れ') > 0
         g = {x['label'].strip(): x for x in sa['groups']}
@@ -594,17 +596,18 @@ class TestRecommendedIsDayWide:
         assert paid == {9, 3} and free == {10}
 
         g = {x['label']: x for x in calc_scope_accuracy(conn)['latest_day']['groups']}
-        assert g[f'推奨レース（信頼度{scope.FLAT_MIN_CONF}以上）']['races'] == len(paid)
-        assert g['9〜11R の推奨漏れ']['races'] == len(free)
+        assert g['記事に載せたレース']['races'] == len(paid) + len(free)
+        # 累計側の推奨グループは従来どおり conf>=66 だけを数える
+        cum = {x['label'].strip(): x for x in calc_scope_accuracy(conn)['groups']}
+        assert cum[f'推奨レース（信頼度{scope.FLAT_MIN_CONF}以上）']['races'] == len(paid)
 
-    def test_scope_races_is_unchanged(self, tmp_path):
-        """⚠ 対象 = 推奨 ∪ 9〜11R は改正前後で同じ集合。ここは動かさない。"""
+    def test_scope_races_counts_the_article_races(self, tmp_path):
+        """🟢 2026-11-24: 「対象」は記事に載せたレースの本数。"""
         sa = calc_scope_accuracy(self._one_day(tmp_path))
-        assert sa['latest_day']['scope_races'] == 3      # 9R・3R・10R
+        assert sa['latest_day']['scope_races'] == 3      # 9R・3R・10R（旧規則）
         g = {x['label']: x for x in sa['latest_day']['groups']}
-        assert (g[f'推奨レース（信頼度{scope.FLAT_MIN_CONF}以上）']['races']
-                + g['9〜11R の推奨漏れ']['races']
-                == sa['latest_day']['scope_races'])
+        assert g['記事に載せたレース']['races'] == sa['latest_day']['scope_races']
+        assert sa['daily'][0]['scope_races'] == sa['latest_day']['scope_races']
 
     def test_page_explains_that_recommended_is_day_wide(self):
         html = open(os.path.join(BASE, 'index.html'), encoding='utf-8').read()
@@ -670,14 +673,15 @@ class TestDayRaceList:
 
     def test_lists_every_recommended_race_of_the_day(self, tmp_path):
         races = calc_scope_accuracy(self._day(tmp_path))['latest_day']['race_list']
-        assert [(r['venue'], r['num']) for r in races if r['rec']] \
+        assert sorted((r['venue'], r['num']) for r in races if r['rec']) \
             == [('京都', 9), ('東京', 3)]
         assert len(races) == 3          # 推奨2本 ＋ 推奨漏れ1本
 
-    def test_recommended_rows_come_first(self, tmp_path):
+    def test_rows_are_in_venue_and_race_order(self, tmp_path):
+        """🟢 2026-11-24: 記事の対象だけが並ぶので、会場・レース番号の順にする。"""
         races = calc_scope_accuracy(self._day(tmp_path))['latest_day']['race_list']
-        assert [r['rec'] for r in races] == sorted(
-            [r['rec'] for r in races], reverse=True)
+        keys = [(r['venue'], r['num']) for r in races]
+        assert keys == sorted(keys)
 
     def test_flat_race_below_the_threshold_is_not_listed(self, tmp_path):
         races = calc_scope_accuracy(self._day(tmp_path))['latest_day']['race_list']
@@ -701,9 +705,9 @@ class TestDayRaceList:
         sa = calc_scope_accuracy(self._day(tmp_path))
         ld = sa['latest_day']
         g = {x['label']: x for x in ld['groups']}
-        rec_group = g[f'推奨レース（信頼度{scope.FLAT_MIN_CONF}以上）']
-        rows = [r for r in ld['race_list'] if r['rec']]
-        for b in rec_group['bets']:
+        art = g['記事に載せたレース']
+        rows = list(ld['race_list'])
+        for b in art['bets']:
             paid = [r['pays'][b['type']] for r in rows]
             assert b['hit'] == sum(1 for p in paid if p)
             assert b['na'] == sum(1 for p in paid if p is None)
@@ -752,6 +756,62 @@ class TestDayRaceList:
 
     def test_page_renders_the_per_race_table(self):
         html = open(os.path.join(BASE, 'index.html'), encoding='utf-8').read()
-        assert 'レースごとの結果' in html
+        assert '記事に載せたレースの結果' in html
         assert 'ld.race_list' in html
-        assert '★=推奨' in html
+        assert 'ld.scope_races' in html
+
+
+class TestArticleScopeFollowsTheRuleOfThatDay:
+    """🟢 2026-11-24 ユーザー指示「記事の対象レースに合わせて」。
+
+    当日分カード・日別・直近一覧の「対象」は**記事に載せたレース**。
+    🔴 規則は開催日で切り替える（`scope.article_ids_for_day`）。
+       2026-11-21 以降 = 各場11R ＋ 平場の信頼度上位2本（`day_selection`）
+       それより前      = 推奨（conf>=66）∪ 9〜11R（`article_kind(race)`）
+    過去の開催日を今日の規則で塗り替えると「この日はどのレースを出したか」が嘘になる。
+    """
+
+    @staticmethod
+    def _day(tmp_path, date):
+        """同じ構成の1開催日を、日付だけ変えて作る。
+
+            11R 信頼度50 → 新規則では無料（11Rは必ず出す）/ 旧規則でも 9〜11R
+            12R 信頼度64 → 新規則では平場1位で無料 / 旧規則では対象外
+            10R 信頼度40 → 新規則では平場に入れず対象外 / 旧規則では 9〜11R
+            2R  信頼度62 → 新規則では平場2位で無料 / 旧規則では対象外
+        """
+        conn = _db(tmp_path)
+        rl = (1, 2, 3)
+        for num, conf in ((11, 0.50), (12, 0.64), (10, 0.40), (2, 0.62)):
+            _race(conn, f"{date.replace('-', '')}_05_{num:02d}", '東京', num,
+                  conf, rl=rl, pays=_all_pays(rl, fukusho=130), date=date)
+        return conn
+
+    def test_new_rule_from_2026_11_21(self, tmp_path):
+        ld = calc_scope_accuracy(self._day(tmp_path, '2026-11-21'))['latest_day']
+        assert sorted(r['num'] for r in ld['race_list']) == [2, 11, 12]
+        assert ld['scope_races'] == 3
+
+    def test_old_rule_before_that(self, tmp_path):
+        ld = calc_scope_accuracy(self._day(tmp_path, '2026-11-20'))['latest_day']
+        assert sorted(r['num'] for r in ld['race_list']) == [10, 11]
+        assert ld['scope_races'] == 2
+
+    def test_the_cutoff_lives_in_scope_not_in_stats(self):
+        """🔴 判定を2箇所に書かない（記事と成績が静かに食い違う）。"""
+        src = open(os.path.join(BASE, 'scripts', 'generate_stats.py'),
+                   encoding='utf-8').read()
+        assert 'article_ids_for_day' in src
+        assert scope.DAY_RULE_FROM not in src
+        assert 'day_selection' not in src
+
+    def test_recent_list_follows_the_same_rule(self, tmp_path):
+        conn = self._day(tmp_path, '2026-11-21')
+        for num, conf in ((11, 0.50), (12, 0.64), (10, 0.40), (2, 0.62)):
+            _race(conn, f'20261120_05_{num:02d}', '東京', num, conf,
+                  rl=(1, 2, 3), pays=_all_pays((1, 2, 3), fukusho=130),
+                  date='2026-11-20')
+        sa = calc_scope_accuracy(conn)
+        got = {(r['date'], r['num']) for r in sa['recent']}
+        assert got == {('2026-11-21', 2), ('2026-11-21', 11), ('2026-11-21', 12),
+                       ('2026-11-20', 10), ('2026-11-20', 11)}

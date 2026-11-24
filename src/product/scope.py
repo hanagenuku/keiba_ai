@@ -157,6 +157,35 @@ def day_selection(races):
     return out
 
 
+#: `day_selection()` の規則（各場11R＋平場の上位2本・全部無料）が本番に入った開催日。
+#: これより前の開催日は `article_kind(race)`（2026-11-04〜11-20 の規則）で区分する。
+#: 🔴 過去の開催日を**今日の規則で塗り替えない**ため。成績ページが「この日はどの
+#:    レースを記事に出したか」を数えるときは、必ず `article_ids_for_day()` を通す。
+DAY_RULE_FROM = '2026-11-21'
+
+
+def article_ids_for_day(date, races):
+    """その開催日に記事へ載せたレースの `race_key` 集合を返す。
+
+    date  : 'YYYY-MM-DD'（None や空なら旧規則で区分する）
+    races : その日の**全レース**（`_venue` と `conf` を持つ dict の list、
+            または 会場名 → list の dict）
+
+    🔴 規則を日付で切り替える。`DAY_RULE_FROM` 以降は `day_selection()`、
+       それより前は `article_kind(race)`（day なし＝2026-11-04〜11-20 の規則）。
+       判定を呼ぶ側で書き直さない（記事と成績ページが静かに食い違うため）。
+    """
+    if isinstance(races, dict):
+        pairs = [(v, r) for v, rs in races.items() for r in (rs or [])]
+    else:
+        pairs = [(r.get('_venue', ''), r) for r in (races or [])]
+    if date and str(date) >= DAY_RULE_FROM:
+        day = day_selection(races)
+        return {k for k, (kind, _why) in day.items() if kind in (PAID, FREE)}
+    return {race_key(r, v) for v, r in pairs
+            if article_kind(r)[0] in (PAID, FREE)}
+
+
 def article_kind(race, day=None):
     """(記事の種類, 理由) を返す。どちらの記事にも載せないなら (None, 理由)。
 
