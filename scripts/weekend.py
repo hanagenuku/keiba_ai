@@ -452,6 +452,8 @@ def refresh_today(sess, hist_path, avg_bias, jst_now):
         from src.utils.db import save_displayed_bets
         _n1 = save_displayed_bets(rows_from_app_json(app_data, snapshot='morning'), ROOT, keep_first=True)
         _n2 = save_displayed_bets(article_rows_from_app_json(app_data), ROOT, keep_first=True)
+        from src.utils.db import save_race_grades
+        save_race_grades(app_data, ROOT)
         print(f'✅ 朝の版を記録: アプリ {_n1}点・記事 {_n2}点（既に記録済みのレースは触らない）')
     except Exception as e:
         print(f'⚠ 朝の版の記録に失敗（予想には影響なし）: {e}')

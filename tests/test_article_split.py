@@ -177,7 +177,7 @@ class TestArticleText:
         secs = [{'markdown': '## 東京11R', 'grade': None, 'conf': 54, 'heading': '東京11R'}]
         md = article.build_article('2026-11-21', secs, paid=False)
         assert '無料版' in md
-        assert '各競馬場の11Rと' in md and '2レースずつ' in md
+        assert '1会場あたり2レース分' in md and '重賞（G3以上）' in md
         assert '回収率が100%を超えることは確認できていません' in md
         assert '本日の推奨レース' not in md
 
@@ -309,15 +309,28 @@ class TestEndToEnd:
 
 
 class TestDaySelection:
-    """2026-11-21 ユーザー決定: 各競馬場の11R＋平場の信頼度上位2本・全部無料。"""
+    """2026-11-25 博士の決定: 推奨（66以上）の上位 2×会場数 ＋ G1〜G3 ＋ 9〜11R の推奨・全部無料。"""
 
-    def test_each_venue_gets_11r_and_top2_flat(self):
-        races = {'東京': [{'race_id': f't{n}', 'r': n, 'conf': c} for n, c in
-                          ((1, 70), (2, 80), (3, 75), (11, 40), (12, 75))],
-                 '京都': [{'race_id': 'k5', 'r': 5, 'conf': None}, {'race_id': 'k11', 'r': 11, 'conf': 90}]}
-        day = scope.day_selection(races)
+    def _races(self):
+        return {'東京': [{'race_id': f't{n}', 'r': n, 'conf': c, 'grade': g} for n, c, g in
+                         ((1, 80, ''), (2, 75, ''), (3, 70, ''), (5, 68, ''), (9, 66, ''),
+                          (10, 60, ''), (11, 40, 'G2'), (12, 90, ''))],
+                '京都': [{'race_id': 'k5', 'r': 5, 'conf': None},
+                         {'race_id': 'k11', 'r': 11, 'conf': 50, 'grade': 'L'}]}
+
+    def test_rule(self):
+        day = scope.day_selection(self._races())
         free = sorted(k for k, (kind, _) in day.items() if kind == scope.FREE)
-        assert free == ['k11', 't11', 't2', 't3']   # 同点 75 はレース番号の若い 3R
-        assert day['k5'][0] is None                  # 信頼度が無い平場は選ばない
-        assert scope.article_kind({'race_id': 't12'}, day)[0] is None
-        assert scope.article_kind({'race_id': 'zz'}, day)[0] is None
+        # 上位 2×2会場=4本（90,80,75,70）＋ 重賞 t11（G2・信頼度40）＋ 9〜11R の66以上 t9
+        assert free == ['t1', 't11', 't12', 't2', 't3', 't9']
+        assert day['t5'][0] is None                  # 66以上だが上位4本に入らず9〜11Rでもない
+        assert day['k11'][0] is None                 # リステッドは重賞ではない
+        assert day['t10'][0] is None                 # 9〜11R でも 66 未満は載せない
+
+    def test_dates_switch_rules(self):
+        rs = [dict(r, _venue=v) for v, rr in self._races().items() for r in rr]
+        new = scope.article_ids_for_day('2026-11-28', rs)
+        old = scope.article_ids_for_day('2026-11-22', rs)
+        assert 't11' in new and 't12' in new
+        assert old == {k for k, (kind, _) in scope.day_selection_1121(rs).items() if kind == scope.FREE}
+        assert 'k11' in old                          # 11-21〜27 は各場の 11R を載せていた
