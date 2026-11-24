@@ -288,9 +288,11 @@ def calc_shown_bets(conn):
         by_day = defaultdict(list)
         for rid, (d, v, n) in meta.items():
             by_day[d].append({'race_id': rid, 'r': n, 'conf': confs.get(rid), '_venue': v or '不明'})
+        # 🔴 規則は開催日で切り替える（`scope.article_ids_for_day`）。
+        #    ここで `day_selection` を直に呼ぶと、2026-11-20 以前の買い目まで
+        #    今日の規則で「記事の対象」に数えてしまう（2026-11-24）。
         for d, rs in by_day.items():
-            day = scope.day_selection(rs)
-            target |= {k for k, (kind, _w) in day.items() if kind == scope.FREE}
+            target |= scope.article_ids_for_day(d, rs)
 
     def _sources(filter_ids=None):
         out = []
@@ -300,7 +302,7 @@ def calc_shown_bets(conn):
                 races = {k: v for k, v in races.items() if k in filter_ids}
             out.append({'key': key, 'label': label,
                         'groups': [_shown_group('全レース', races),
-                                   _shown_group('記事の対象（各場11R＋平場の信頼度上位2本）',
+                                   _shown_group('記事に載せたレース（その日の規則で判定）',
                                                 {k: v for k, v in races.items() if k in target})]})
         return out
 
@@ -402,19 +404,27 @@ def calc_scope_accuracy(conn):
     missed = [r for r in main if not _is_rec(r)]
     thr  = scope.FLAT_MIN_CONF
 
-    # 2026-11-21〜 の無料記事（各場 11R ＋ 平場の信頼度上位2本）。振り分けは scope.day_selection の1実装
+    # ── 記事に載せたレース（＝商品の対象）────────────────────────────
+    # 🟢 2026-11-24 ユーザー指示「記事の対象レースに合わせて」。
+    #    それまで当日分カード・日別・直近一覧は「推奨 ∪ 9〜11R」を対象にしており、
+    #    記事に出した6本（各場11R＋平場の上位2本）と別物が並んでいた。
+    # 🔴 規則は日付で切り替える（`scope.article_ids_for_day`）。過去の開催日を
+    #    今日の規則で塗り替えると、「この日はどのレースを出したか」が嘘になる。
     by_day = defaultdict(list)
     for r in usable:
         by_day[r['date']].append({'race_id': r['race_id'], 'r': r['race_num'],
                                   'conf': confs[r['race_id']], '_venue': r['racecourse'] or '不明'})
-    free_ids = set()
-    for _d, rs in by_day.items():
-        day = scope.day_selection(rs)
-        free_ids |= {k for k, (kind, _w) in day.items() if kind == scope.FREE}
-    free_now = [r for r in usable if r['race_id'] in free_ids]
+    article_ids_by_day = {d: scope.article_ids_for_day(d, rs)
+                          for d, rs in by_day.items()}
+    article_ids = set().union(*article_ids_by_day.values()) if article_ids_by_day else set()
+
+    def _is_article(r):
+        return r['race_id'] in article_ids
+
+    article_rows = [r for r in usable if _is_article(r)]
 
     groups = [
-        _group(free_now, divs, '無料記事の対象（各場11R＋平場の信頼度上位2本）'),
+        _group(article_rows, divs, '記事に載せたレース（その日の規則で判定）'),
         _group(rec, divs, f'推奨レース（信頼度{thr}以上）'),
         _group([r for r in rec if _is_main(r)], divs, '　うち9〜11R'),
         _group([r for r in rec if not _is_main(r)], divs, '　うち平場（9〜11R以外）'),
@@ -493,7 +503,7 @@ def calc_scope_accuracy(conn):
             'date':        d,
             'venues':      _venues_of(rs),
             'races':       len(rs),
-            'scope_races': len([r for r in rs if _is_main(r) or _is_rec(r)]),
+            'scope_races': len([r for r in rs if _is_article(r)]),
             'bets':        gt['races'],
             'hit':         gt['hit'],
             'hit_rate':    gt['hit_rate'],
@@ -509,32 +519,26 @@ def calc_scope_accuracy(conn):
             'date':        d,
             'venues':      _venues_of(rs),
             'races':       len(rs),
-            'scope_races': len([r for r in rs if _is_main(r) or _is_rec(r)]),
+            'scope_races': len([r for r in rs if _is_article(r)]),
             'settled':     _settled(rs),
             'groups': [
-                _group([r for r in rs if r['race_id'] in free_ids], divs,
-                       '無料記事の対象（各場11R＋平場の信頼度上位2本）'),
-                _group([r for r in rs if _is_rec(r)], divs,
-                       f'推奨レース（信頼度{thr}以上）'),
-                _group([r for r in rs if _is_main(r) and not _is_rec(r)], divs,
-                       '9〜11R の推奨漏れ'),
+                _group([r for r in rs if _is_article(r)], divs, '記事に載せたレース'),
                 _group(rs, divs, '全レース'),
             ],
             # ユーザー依頼（2026-11-14）:「その日の全ての推奨レースをまとめた
-            # 結果表示をしてくれ」。券種ごとの集計だけでは**どのレースが
-            # どうなったか**が分からず、同じ依頼を何度も受けていた。
-            # 推奨（★）を先に、そのあと 9〜11R の推奨漏れを会場・R順に並べる。
+            # 結果表示をしてくれ」→ 2026-11-24「記事の対象レースに合わせて」。
+            # **記事に出したレースだけ**を会場・R順に並べる。
             'race_list': sorted(
                 [_race_row(r, confs[r['race_id']], _is_rec(r), _is_main(r),
                            divs, axis)
-                 for r in rs if _is_rec(r) or _is_main(r)],
-                key=lambda d: (-d['rec'], d['venue'] or '', d['num'] or 0)),
+                 for r in rs if _is_article(r)],
+                key=lambda d: (d['venue'] or '', d['num'] or 0)),
         }
 
-    # 直近の対象レース一覧（9〜11R か 推奨）。★が付いた行が推奨レース。
+    # 直近の対象レース一覧（記事に載せたレース）。★が付いた行は信頼度66以上。
     recent = []
     for r in reversed(usable):
-        if not (_is_main(r) or _is_rec(r)):
+        if not _is_article(r):
             continue
         recent.append(_race_row(r, confs[r['race_id']], _is_rec(r), _is_main(r),
                                 divs, axis))

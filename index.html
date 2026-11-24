@@ -2997,7 +2997,7 @@ function renderStats(S) {
          + `${_isToday ? '' : '<span style="font-weight:400;font-size:11px;color:var(--sub)">（本日はまだ結果が入っていません）</span>'}</div>`;
       h += `<div style="font-size:11px;color:var(--sub);margin-bottom:8px">`
          + `${(ld.venues || []).join('・')}　${ld.races}レース`
-         + `（うち商品の対象 ${ld.scope_races}R）</div>`;
+         + `（うち記事に載せた ${ld.scope_races}R）</div>`;
       if (!ld.settled) {
         // 🔴 払戻がまだ無い日に 0% を並べない。外れたと誤読させる
         h += '<div style="font-size:11px;color:#b9770e;font-weight:700;padding:6px 0">'
@@ -3014,14 +3014,15 @@ function renderStats(S) {
         }
         // ── その日のレースごとの結果 ─────────────────────────────
         // ユーザー依頼（2026-11-14）:「その日の全ての推奨レースをまとめた
-        // 結果表示をしてくれ」。券種ごとの集計だけでは、どのレースが当たって
-        // どのレースが外れたのかが読めなかった。★が推奨レース。
+        // 結果表示をしてくれ」→ 2026-11-24「記事の対象レースに合わせて」。
+        // 並ぶのは**記事に載せたレースだけ**（会場・R順）。★は信頼度66以上。
         if ((ld.race_list || []).length) {
           const types = sa.bet_types || [];
           const nrec = ld.race_list.filter(r => r.rec).length;
           h += '<div style="font-size:12px;font-weight:700;margin:12px 0 4px">'
-             + 'レースごとの結果'
-             + `<span style="font-weight:400;color:var(--sub)">　★=推奨 ${nrec}R / 計 ${ld.race_list.length}R</span></div>`;
+             + '記事に載せたレースの結果'
+             + `<span style="font-weight:400;color:var(--sub)">　計 ${ld.race_list.length}R`
+             + `${nrec ? ` / ★=信頼度${sa.conf_strong ?? 66}以上 ${nrec}R` : ''}</span></div>`;
           h += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px">';
           h += '<tr style="color:var(--sub)"><th style="text-align:left;padding:2px 4px">レース</th>'
              + '<th style="padding:2px 4px">信頼度</th>'
@@ -3054,7 +3055,8 @@ function renderStats(S) {
           }
           h += '</table></div>';
           h += '<div style="font-size:10px;color:var(--sub);margin-top:4px;line-height:1.6">'
-             + '★＝推奨レース（信頼度 ' + (sa.conf_strong ?? 66) + ' 以上）。★の付かない行は 9〜11R の推奨漏れです。'
+             + 'この日に記事へ載せたレースです（2026-11-21 以降は各競馬場の11R＋平場の信頼度上位2本、'
+             + 'それ以前は推奨 ∪ 9〜11R）。★＝レース信頼度 ' + (sa.conf_strong ?? 66) + ' 以上。'
              + '「◎」は軸1頭、金額はその券種を1点買ったときの払戻、× は不的中、'
              + '— は「発売が無い／払戻を取得できていない」＝評価不能。</div>';
         }
@@ -3102,7 +3104,7 @@ function renderStats(S) {
       h += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px">';
       h += '<tr style="color:var(--sub)"><th style="text-align:left;padding:2px 4px">開催日</th>'
          + '<th style="text-align:left;padding:2px 4px">会場</th>'
-         + '<th style="padding:2px 4px">R数</th><th style="padding:2px 4px">対象</th>'
+         + '<th style="padding:2px 4px">R数</th><th style="padding:2px 4px" title="その日に記事へ載せたレースの本数">記事</th>'
          + '<th style="padding:2px 4px">的中率</th><th style="padding:2px 4px">回収率</th></tr>';
       for (const d of sa.daily) {
         const top = (d === sa.daily[0]);
