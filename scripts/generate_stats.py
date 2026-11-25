@@ -258,7 +258,7 @@ def calc_shown_bets(conn):
     - 的中はレース単位（そのレースで出した券種のどれか1点でも当たれば的中）
     - 回収率は実額（アプリは画面の金額、記事は1点100円）。必ず「3本抜き」と並べる
     - 決済が済んでいないレース（is_hit=-1 が1行でもある）は数えない
-    - 「記事の対象」は今の振り分け（各場11R＋平場の信頼度上位2本）を過去日にも当てたもの
+    - 「記事の対象」はその日の規則（scope.article_ids_for_day）で数える
     """
     try:
         from src.product import scope
@@ -284,10 +284,13 @@ def calc_shown_bets(conn):
         by_src[src] = {k: v for k, v in by_src[src].items() if all(x['is_hit'] in (0, 1) for x in v)}
 
     target = set()
+    from src.utils.db import load_race_grades
+    grades = load_race_grades(conn)
     if scope is not None:
         by_day = defaultdict(list)
         for rid, (d, v, n) in meta.items():
-            by_day[d].append({'race_id': rid, 'r': n, 'conf': confs.get(rid), '_venue': v or '不明'})
+            by_day[d].append({'race_id': rid, 'r': n, 'conf': confs.get(rid), '_venue': v or '不明',
+                              'grade': grades.get(rid, '')})
         # 🔴 規則は開催日で切り替える（`scope.article_ids_for_day`）。
         #    ここで `day_selection` を直に呼ぶと、2026-11-20 以前の買い目まで
         #    今日の規則で「記事の対象」に数えてしまう（2026-11-24）。
@@ -410,10 +413,13 @@ def calc_scope_accuracy(conn):
     #    記事に出した6本（各場11R＋平場の上位2本）と別物が並んでいた。
     # 🔴 規則は日付で切り替える（`scope.article_ids_for_day`）。過去の開催日を
     #    今日の規則で塗り替えると、「この日はどのレースを出したか」が嘘になる。
+    from src.utils.db import load_race_grades
+    grades = load_race_grades(conn)       # 重賞（2026-11-25〜）は信頼度に関係なく記事に載る
     by_day = defaultdict(list)
     for r in usable:
         by_day[r['date']].append({'race_id': r['race_id'], 'r': r['race_num'],
-                                  'conf': confs[r['race_id']], '_venue': r['racecourse'] or '不明'})
+                                  'conf': confs[r['race_id']], '_venue': r['racecourse'] or '不明',
+                                  'grade': grades.get(r['race_id'], '')})
     article_ids_by_day = {d: scope.article_ids_for_day(d, rs)
                           for d, rs in by_day.items()}
     article_ids = set().union(*article_ids_by_day.values()) if article_ids_by_day else set()

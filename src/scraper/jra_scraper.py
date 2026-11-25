@@ -759,6 +759,7 @@ def _parse_shutuba(soup, racecourse, race_num, date, place_code, hist_db_path):
         info['racecourse'] = racecourse
         info['race_name'] = parse_rname(header_text, race_num)
         info['id'] = f"{date}_{place_code}_{race_num:02d}"
+        info['grade'] = extract_grade(soup)   # 記事の振り分け用（2026-11-25）
         surf = info.get('surface', '芝')
         horses = []
         for row in tables[0].find_all('tr'):
@@ -1040,6 +1041,27 @@ def parse_dividends(soup):
                                  'payout': int(stm[0][3].replace(',', ''))}
     return divs
 
+
+
+_GRADE_SRC = re.compile(r'/img/grade/icon_grade_(g[1-3]|jg[1-3]|l)\.png', re.I)
+
+
+def extract_grade(soup):
+    """ページの格付けアイコンから 'G1'/'G2'/'G3'/'L'（障害は 'JG1' など）を返す。無ければ ''。
+
+    2026-11-25: 格付けは文字ではなく画像で出ている（実機の結果ページ・2026-11-23 東京11R:
+    `<img alt="GⅡ" src="/JRADB/img/grade/icon_grade_g2.png">`。`scripts/probe_jra_grade.py`）。
+    ヘッダ文字列を見る `_extract_class` では取れず、history.db の race_class は重賞でも 'OP'。
+    🔴 ここで取った値は**記事の振り分けにだけ**使う。race_class（特徴量の元）は変えない
+       （学習データと推論で値の作り方がずれるため・North Star #3）。
+    """
+    if soup is None:
+        return ''
+    for im in soup.find_all('img'):
+        m = _GRADE_SRC.search(im.get('src') or '')
+        if m:
+            return m.group(1).upper()
+    return ''
 
 
 def _extract_class(header_text):

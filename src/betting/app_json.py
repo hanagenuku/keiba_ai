@@ -808,6 +808,7 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
             'odds_cn': _build_odds_cn(race),
             'name': race['race_name'],
             'dist': f'{race["distance"]}m{race["surface"]}',
+            'grade': race.get('grade') or '',   # 'G1'/'G2'/'G3'/'L'/''（記事の振り分け用・2026-11-25）
             'rec':  True,
             'conf': conf,
             'honmei': {
@@ -933,6 +934,7 @@ def to_app_json(selected, races_all, bias_data, jst_now, day_type='friday', mark
             'odds_cn':     _build_odds_cn(race),
             'name':        race['race_name'],
             'dist':        f'{race["distance"]}m{race["surface"]}',
+            'grade':       race.get('grade') or '',
             'rec':         False,
             'conf':        conf,
             'chaos_level': _grade2,
