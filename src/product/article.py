@@ -138,6 +138,13 @@ def _course_md(course, *, examples=False):
     return '\n'.join(body)
 
 
+#: 買い目を出さないレースの1行（2026-11-25 ユーザー決定）。
+#: 🔴 「見送り（買うな）」ではなく「このレースは印だけを出す」と書く。
+#:    印・比較表・展開・☆・最終結論はこれまでどおり出る。
+SKIP_NOTE = ('**このレースは印だけです。買い目は出しません。**'
+             '（レース信頼度が買い目を出す基準に届いていないため）')
+
+
 def _bets_md(tickets):
     """1レースぶんの買い目。
 
@@ -148,7 +155,13 @@ def _bets_md(tickets):
        1回だけ出す（`bets_footer_md`）。買い目そのものは1行も変えていない。
     """
     if tickets.get('verdict') == 'skip':
-        return '**今回は見送り。**\n\n' + (tickets.get('skip_reason') or '')
+        # 🟢 2026-11-25 ユーザー決定「55以下の重賞レースは、◎○▲△☆など印だけで
+        #    買い目を出さない。55以上は買い目を出す」。
+        #    どのレースが該当するか（`verdict`）は1つも変えていない。変えたのは
+        #    **文面だけ**で、「今回は見送り。＋長い理由」をやめ、記事の節としては
+        #    印だけを残す形にした。理由は「最終結論」の節が既に書いている
+        #    （`commentary.race_comment` が `skip_reason` を出す）ので重ねない。
+        return SKIP_NOTE
 
     blocks = []
     for c in (tickets.get('courses') or []):

@@ -2071,3 +2071,70 @@ class TestStarSectionHasItsOwnComment:
         for bad in ('妙味', '狙い目', '儲か', '勝てる', '必ず', '確実'):
             assert bad not in rest
         assert '狙い目としては扱わない' in star
+
+
+class TestMarksOnlyForLowConfidence:
+    """🟢 2026-11-25 ユーザー決定「55以下の重賞レースは、◎○▲△☆など印だけで
+    買い目を出さない。55以上は買い目を出す」。
+
+    🔴 守るのは2つ。
+      (1) `conf < CONF_LIGHT` のレースに買い目の行を1つも出さない
+      (2) それでも**印・比較表・最終結論は出す**（記事から消さない）
+    どのレースが該当するか（`tickets.verdict`）は変えていない。
+    """
+
+    def _race(self, conf):
+        return {'_venue': '東京', 'r': 11, 'name': 'テスト記念', 'dist': '2000m芝',
+                'conf': conf, 'cmt': ''}
+
+    def _horses(self):
+        return marks.assign_marks([
+            {'n': 1, 'name': 'A', 'rl_rank': 1, 'pop': 1, 'solo_rank': 1,
+             'fit_rank': 1, 'odds': 3.0, 'fukusho_odds': 1.4},
+            {'n': 2, 'name': 'B', 'rl_rank': 2, 'pop': 2, 'solo_rank': 2,
+             'fit_rank': 2, 'odds': 5.0},
+            {'n': 3, 'name': 'C', 'rl_rank': 3, 'pop': 3, 'solo_rank': 3,
+             'fit_rank': 3, 'odds': 9.0},
+        ])
+
+    def test_below_the_line_shows_no_bets(self):
+        t = tickets.build_tickets(self._race(50), self._horses())
+        assert t['verdict'] == 'skip'
+        md = article._bets_md(t)
+        assert md == article.SKIP_NOTE
+        assert '買い目は出しません' in md
+        for word in ('単勝', '複勝', 'ワイド', '馬連', '三連複', '三連単'):
+            assert word not in md
+
+    def test_at_the_line_still_shows_bets(self):
+        """55 ちょうどは買い目を出す側（`CONF_LIGHT` は「これ以上」）。"""
+        t = tickets.build_tickets(self._race(tickets.CONF_LIGHT), self._horses())
+        assert t['verdict'] != 'skip'
+        md = article._bets_md(t)
+        assert '単勝' in md and '複勝' in md
+
+    def test_marks_and_table_survive(self):
+        """🔴 買い目を出さないだけで、印・比較表・最終結論は消さない。"""
+        race, hs = self._race(50), self._horses()
+        md = article.build_race_section(race, hs, {}, paid=True)['markdown']
+        assert '### 印' in md
+        assert '◎ 1A' in md
+        assert '### 能力・適性・市場の比較' in md
+        assert '### 最終結論' in md
+        assert '### 買い目' in md                     # 見出しは残す
+        assert article.SKIP_NOTE in md
+
+    def test_the_reason_is_not_repeated_twice(self):
+        """理由は「最終結論」が書く。買い目の節で同じ説明を繰り返さない。"""
+        race, hs = self._race(50), self._horses()
+        t = tickets.build_tickets(race, hs)
+        md = article.build_race_section(race, hs, {}, paid=True)['markdown']
+        assert t['skip_reason']
+        assert md.count(t['skip_reason']) == 1
+        assert '今回は見送り。**' not in md            # 旧文面に戻さない
+
+    def test_skip_set_is_unchanged(self):
+        """🔴 どのレースが該当するかは1つも変えていない（文面だけの変更）。"""
+        for conf, want in ((None, 'skip'), (30, 'skip'), (54, 'skip'),
+                           (55, 'light'), (65, 'light'), (66, 'strong')):
+            assert tickets.verdict(conf) == want, conf
