@@ -1,6 +1,14 @@
 #!/usr/bin/env python3
 """「1番人気なのに◎が付いていない馬」は消せるか。
 
+🔴 **2026-11-26: この計測器は本番の `rl_rank` を再現していない。そのまま使い回さない。**
+   本番は `engine.calc_all` で
+       total = 残差モデル × (1-RELATIVE_WEIGHT) + f_relative_score × RELATIVE_WEIGHT
+       win_prob = softmax(total, 3.5) → rl_rank = win_prob の降順
+   だが、ここは `rl_rank = 残差モデル margin の降順` にしていた。そのため
+   対象（1番人気 かつ rl_rank>=2）が本番 11.6% に対し **0.47%（14頭）**しか出ず、
+   測定不能で終わった。経緯は danger/RESULTS_NOHONMEI.md。
+
 事前登録カード: danger/CRITERIA_NOHONMEI.md（コミット済み）
 
 🔴 **測定は1回**。窓・指標・合格線はカードのとおりで、結果を見てから変えない。
@@ -177,13 +185,19 @@ def main(argv):
     thirds = []
     for p1 in frames:
         d = p1.sort_values('date_obj')
-        cut = np.array_split(d, 3)
+        # ⚠ np.array_split は DataFrame を ndarray にする（2026-11-26 に踏んだ）。
+        #    期間を**時系列で**3等分する（間引きではない）。
+        e = np.linspace(0, len(d), 4).astype(int)
+        cut = [d.iloc[e[k]:e[k + 1]] for k in range(3)]
         thirds.append([rate(x[x['rl_rank'] >= 2]) for x in cut])
     for k in range(3):
         vals = [t[k] for t in thirds if t[k] is not None]
-        ns_k = [len(p1.sort_values('date_obj').pipe(
-            lambda d: np.array_split(d, 3)[k]).pipe(
-            lambda d: d[d['rl_rank'] >= 2])) for p1 in frames]
+        ns_k = []
+        for p1 in frames:
+            d = p1.sort_values('date_obj')
+            e = np.linspace(0, len(d), 4).astype(int)
+            part = d.iloc[e[k]:e[k + 1]]
+            ns_k.append(len(part[part['rl_rank'] >= 2]))
         print(f'  U{k + 1}: 3着内率 {np.mean(vals):.2f}%  (N {int(np.mean(ns_k))})')
     u_rates = [float(np.mean([t[k] for t in thirds if t[k] is not None]))
                for k in range(3)]
