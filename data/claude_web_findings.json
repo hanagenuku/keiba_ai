@@ -1,724 +1,187 @@
 {
- "schema_version": 1,
- "date": "20261123",
- "collected_at": "2026-11-23T05:50:15+09:00",
- "races": {
-  "20261123_05_01": {
-   "venue": "東京",
-   "race_num": 1,
-   "sources": [
-    "https://www.bloodline-trackbias.work/entry/2026/11/22/200000",
-    "https://muryou-keiba-ai.jp/predict/2026/11/19/25707/"
-   ],
-   "going": {
-    "surface": "ダート",
-    "state": "",
-    "expected": "日曜夜時点は良（含水率5〜6%台）。枠はフラット〜外（良馬場ではバイアスが出にくいが稀に外枠有利）。直線の伸びはフラット。脚質は展開次第〜差し（今開催は良馬場だと差し有利が多い）。時計は約-1.2〜-0.7秒想定。"
-   },
-   "picks": [
-    {
-     "source": "https://muryou-keiba-ai.jp/predict/2026/11/19/25707/",
-     "tipster": "無料競馬AI",
-     "marks": {
-      "7": "◎",
-      "4": "○",
-      "12": "▲",
-      "9": "△",
-      "13": "☆",
-      "8": "消"
-     }
-    }
-   ]
-  },
-  "20261123_05_02": {
-   "venue": "東京",
-   "race_num": 2,
-   "sources": [
-    "https://www.bloodline-trackbias.work/entry/2026/11/22/200000",
-    "https://muryou-keiba-ai.jp/predict/2026/11/19/25708/"
-   ],
-   "going": {
-    "surface": "芝",
-    "state": "",
-    "expected": "想定は良（日曜夜時点）。開催8週目で今週から B→C コース替わり。月曜は晴れ予報だが霜で表面が緩む可能性。枠はフラット〜外（内ラチ沿いの傷みが広がれば外枠有利）。直線の伸びはフラット〜やや外。脚質は展開次第〜差し。時計は約-2.5〜-2.2秒想定。"
-   },
-   "picks": [
-    {
-     "source": "https://muryou-keiba-ai.jp/predict/2026/11/19/25708/",
-     "tipster": "無料競馬AI",
-     "marks": {
-      "12": "◎",
-      "7": "○",
-      "1": "▲",
-      "3": "△",
-      "11": "☆",
-      "14": "消"
-     }
-    }
-   ]
-  },
-  "20261123_05_03": {
-   "venue": "東京",
-   "race_num": 3,
-   "sources": [
-    "https://www.bloodline-trackbias.work/entry/2026/11/22/200000",
-    "https://muryou-keiba-ai.jp/predict/2026/11/19/25709/"
-   ],
-   "going": {
-    "surface": "芝",
-    "state": "",
-    "expected": "想定は良（日曜夜時点）。開催8週目で今週から B→C コース替わり。月曜は晴れ予報だが霜で表面が緩む可能性。枠はフラット〜外（内ラチ沿いの傷みが広がれば外枠有利）。直線の伸びはフラット〜やや外。脚質は展開次第〜差し。時計は約-2.5〜-2.2秒想定。"
-   },
-   "picks": [
-    {
-     "source": "https://muryou-keiba-ai.jp/predict/2026/11/19/25709/",
-     "tipster": "無料競馬AI",
-     "marks": {
-      "2": "◎",
-      "10": "○",
-      "9": "▲",
-      "8": "△",
-      "3": "☆",
-      "11": "消",
-      "4": "消"
-     }
-    }
-   ]
-  },
-  "20261123_05_04": {
-   "venue": "東京",
-   "race_num": 4,
-   "sources": [
-    "https://www.bloodline-trackbias.work/entry/2026/11/22/200000",
-    "https://muryou-keiba-ai.jp/predict/2026/11/19/25710/"
-   ],
-   "going": {
-    "surface": "ダート",
-    "state": "",
-    "expected": "日曜夜時点は良（含水率5〜6%台）。枠はフラット〜外（良馬場ではバイアスが出にくいが稀に外枠有利）。直線の伸びはフラット。脚質は展開次第〜差し（今開催は良馬場だと差し有利が多い）。時計は約-1.2〜-0.7秒想定。"
-   },
-   "picks": [
-    {
-     "source": "https://muryou-keiba-ai.jp/predict/2026/11/19/25710/",
-     "tipster": "無料競馬AI",
-     "marks": {
-      "5": "◎",
-      "4": "○",
-      "8": "▲",
-      "9": "△",
-      "3": "☆",
-      "11": "消"
-     }
-    }
-   ]
-  },
-  "20261123_05_05": {
-   "venue": "東京",
-   "race_num": 5,
-   "sources": [
-    "https://www.bloodline-trackbias.work/entry/2026/11/22/200000",
-    "https://muryou-keiba-ai.jp/predict/2026/11/19/25711/"
-   ],
-   "going": {
-    "surface": "芝",
-    "state": "",
-    "expected": "想定は良（日曜夜時点）。開催8週目で今週から B→C コース替わり。月曜は晴れ予報だが霜で表面が緩む可能性。枠はフラット〜外（内ラチ沿いの傷みが広がれば外枠有利）。直線の伸びはフラット〜やや外。脚質は展開次第〜差し。時計は約-2.5〜-2.2秒想定。"
-   },
-   "picks": [
-    {
-     "source": "https://muryou-keiba-ai.jp/predict/2026/11/19/25711/",
-     "tipster": "無料競馬AI",
-     "marks": {
-      "8": "◎",
-      "12": "○",
-      "14": "▲",
-      "6": "△",
-      "4": "☆"
-     }
-    }
-   ]
-  },
-  "20261123_05_06": {
-   "venue": "東京",
-   "race_num": 6,
-   "sources": [
-    "https://www.bloodline-trackbias.work/entry/2026/11/22/200000",
-    "https://muryou-keiba-ai.jp/predict/2026/11/19/25712/"
-   ],
-   "going": {
-    "surface": "芝",
-    "state": "",
-    "expected": "想定は良（日曜夜時点）。開催8週目で今週から B→C コース替わり。月曜は晴れ予報だが霜で表面が緩む可能性。枠はフラット〜外（内ラチ沿いの傷みが広がれば外枠有利）。直線の伸びはフラット〜やや外。脚質は展開次第〜差し。時計は約-2.5〜-2.2秒想定。"
-   },
-   "picks": [
-    {
-     "source": "https://muryou-keiba-ai.jp/predict/2026/11/19/25712/",
-     "tipster": "無料競馬AI",
-     "marks": {
-      "3": "◎",
-      "5": "○",
-      "4": "▲",
-      "12": "△",
-      "11": "☆"
-     }
-    }
-   ]
-  },
-  "20261123_05_07": {
-   "venue": "東京",
-   "race_num": 7,
-   "sources": [
-    "https://www.bloodline-trackbias.work/entry/2026/11/22/200000",
-    "https://muryou-keiba-ai.jp/predict/2026/11/19/25713/"
-   ],
-   "going": {
-    "surface": "ダート",
-    "state": "",
-    "expected": "日曜夜時点は良（含水率5〜6%台）。枠はフラット〜外（良馬場ではバイアスが出にくいが稀に外枠有利）。直線の伸びはフラット。脚質は展開次第〜差し（今開催は良馬場だと差し有利が多い）。時計は約-1.2〜-0.7秒想定。"
-   },
-   "picks": [
-    {
-     "source": "https://muryou-keiba-ai.jp/predict/2026/11/19/25713/",
-     "tipster": "無料競馬AI",
-     "marks": {
-      "15": "◎",
-      "6": "○",
-      "14": "▲",
-      "9": "△",
-      "12": "☆",
-      "3": "消",
-      "7": "消",
-      "8": "消"
-     }
-    }
-   ]
-  },
-  "20261123_05_08": {
-   "venue": "東京",
-   "race_num": 8,
-   "sources": [
-    "https://www.bloodline-trackbias.work/entry/2026/11/22/200000",
-    "https://muryou-keiba-ai.jp/predict/2026/11/19/25714/"
-   ],
-   "going": {
-    "surface": "ダート",
-    "state": "",
-    "expected": "日曜夜時点は良（含水率5〜6%台）。枠はフラット〜外（良馬場ではバイアスが出にくいが稀に外枠有利）。直線の伸びはフラット。脚質は展開次第〜差し（今開催は良馬場だと差し有利が多い）。時計は約-1.2〜-0.7秒想定。"
-   },
-   "picks": [
-    {
-     "source": "https://muryou-keiba-ai.jp/predict/2026/11/19/25714/",
-     "tipster": "無料競馬AI",
-     "marks": {
-      "15": "◎",
-      "3": "○",
-      "2": "▲",
-      "16": "△",
-      "12": "☆",
-      "6": "消"
-     }
-    }
-   ]
-  },
-  "20261123_05_09": {
-   "venue": "東京",
-   "race_num": 9,
-   "sources": [
-    "https://www.bloodline-trackbias.work/entry/2026/11/22/200000",
-    "https://muryou-keiba-ai.jp/predict/2026/11/19/25715/"
-   ],
-   "going": {
-    "surface": "芝",
-    "state": "",
-    "expected": "想定は良（日曜夜時点）。開催8週目で今週から B→C コース替わり。月曜は晴れ予報だが霜で表面が緩む可能性。枠はフラット〜外（内ラチ沿いの傷みが広がれば外枠有利）。直線の伸びはフラット〜やや外。脚質は展開次第〜差し。時計は約-2.5〜-2.2秒想定。"
-   },
-   "picks": [
-    {
-     "source": "https://muryou-keiba-ai.jp/predict/2026/11/19/25715/",
-     "tipster": "無料競馬AI",
-     "marks": {
-      "2": "◎",
-      "5": "○",
-      "6": "▲",
-      "7": "△",
-      "4": "☆",
-      "10": "消"
-     }
-    }
-   ]
-  },
-  "20261123_05_10": {
-   "venue": "東京",
-   "race_num": 10,
-   "sources": [
-    "https://www.bloodline-trackbias.work/entry/2026/11/22/200000",
-    "https://muryou-keiba-ai.jp/predict/2026/11/19/25716/"
-   ],
-   "going": {
-    "surface": "ダート",
-    "state": "",
-    "expected": "日曜夜時点は良（含水率5〜6%台）。枠はフラット〜外（良馬場ではバイアスが出にくいが稀に外枠有利）。直線の伸びはフラット。脚質は展開次第〜差し（今開催は良馬場だと差し有利が多い）。時計は約-1.2〜-0.7秒想定。"
-   },
-   "picks": [
-    {
-     "source": "https://muryou-keiba-ai.jp/predict/2026/11/19/25716/",
-     "tipster": "無料競馬AI",
-     "marks": {
-      "14": "◎",
-      "1": "○",
-      "6": "▲",
-      "13": "△",
-      "15": "☆",
-      "12": "消"
-     }
-    }
-   ]
-  },
-  "20261123_05_11": {
-   "venue": "東京",
-   "race_num": 11,
-   "sources": [
-    "https://www.bloodline-trackbias.work/entry/2026/11/22/200000",
-    "https://umasiru.com/archives/22395",
-    "https://muryou-keiba-ai.jp/predict/2026/11/19/25717/"
-   ],
-   "going": {
-    "surface": "芝",
-    "state": "",
-    "expected": "想定は良（日曜夜時点）。開催8週目で今週から B→C コース替わり。月曜は晴れ予報だが霜で表面が緩む可能性。枠はフラット〜外（内ラチ沿いの傷みが広がれば外枠有利）。直線の伸びはフラット〜やや外。脚質は展開次第〜差し。時計は約-2.5〜-2.2秒想定。"
-   },
-   "horses": {
-    "10": {
-     "sources": [
-      "https://umasiru.com/archives/22395"
-     ],
-     "note": "ウマシル追切評価 S(6段階S-E)",
-     "grade": "S"
+  "schema_version": 1,
+  "date": "20261128",
+  "collected_at": "2026-11-28T09:08:41+09:00",
+  "races": {
+    "20261128_05_04": {
+      "venue": "東京",
+      "race_num": 4,
+      "going": {
+        "surface": "芝",
+        "state": "良",
+        "expected": "良〜不良（土曜の想定雨量1〜40mm）"
+      },
+      "summary": "金曜昼時点は芝ダートとも良。開催9週目でB→Cコース替わり2週目、内ラチ沿いに傷みが出てきた。土曜は雨のち晴れ予報で想定雨量1〜40mm、雨量次第で時計は−2.5〜+3.0秒以上まで振れる想定。枠は内〜外、直線の伸びはやや内〜やや外、前後は展開次第〜差しと予想されている。",
+      "horses": {},
+      "sources": [
+        "https://www.bloodline-trackbias.work/entry/2026/11/27/190000"
+      ]
     },
-    "5": {
-     "sources": [
-      "https://umasiru.com/archives/22395"
-     ],
-     "note": "ウマシル追切評価 S(6段階S-E)",
-     "grade": "S"
+    "20261128_05_06": {
+      "venue": "東京",
+      "race_num": 6,
+      "going": {
+        "surface": "芝",
+        "state": "良",
+        "expected": "良〜不良（土曜の想定雨量1〜40mm）"
+      },
+      "summary": "金曜昼時点は芝ダートとも良。開催9週目でB→Cコース替わり2週目、内ラチ沿いに傷みが出てきた。土曜は雨のち晴れ予報で想定雨量1〜40mm、雨量次第で時計は−2.5〜+3.0秒以上まで振れる想定。枠は内〜外、直線の伸びはやや内〜やや外、前後は展開次第〜差しと予想されている。",
+      "horses": {},
+      "sources": [
+        "https://www.bloodline-trackbias.work/entry/2026/11/27/190000"
+      ]
     },
-    "11": {
-     "sources": [
-      "https://umasiru.com/archives/22395"
-     ],
-     "note": "ウマシル追切評価 A(6段階S-E)",
-     "grade": "A"
+    "20261128_08_11": {
+      "venue": "京都",
+      "race_num": 11,
+      "going": {
+        "surface": "芝",
+        "state": "良",
+        "expected": "良〜（金曜午後〜土曜午前に雨予報）"
+      },
+      "summary": "火曜に26.5mmの雨。金曜昼時点は芝ダートとも良だが、京都市は金曜午後から土曜午前にかけて雨予報。",
+      "horses": {
+        "2": {
+          "note": "栗東CW 最終追い切りの評価★★（5つ星中）",
+          "grade": "★2",
+          "sources": [
+            "https://www.yosounohone.com/entry/kyoto-2026-11-28"
+          ]
+        }
+      },
+      "sources": [
+        "https://www.bloodline-trackbias.work/entry/2026/11/27/190000",
+        "https://www.yosounohone.com/entry/kyoto-2026-11-28"
+      ]
     },
-    "12": {
-     "sources": [
-      "https://umasiru.com/archives/22395"
-     ],
-     "note": "ウマシル追切評価 B(6段階S-E)",
-     "grade": "B"
+    "20261128_08_02": {
+      "venue": "京都",
+      "race_num": 2,
+      "going": {
+        "surface": "芝",
+        "state": "良",
+        "expected": "良〜（金曜午後〜土曜午前に雨予報）"
+      },
+      "summary": "火曜に26.5mmの雨。金曜昼時点は芝ダートとも良だが、京都市は金曜午後から土曜午前にかけて雨予報。",
+      "horses": {
+        "7": {
+          "note": "栗東坂路 最終追い切りの評価★★（5つ星中）",
+          "grade": "★2",
+          "sources": [
+            "https://www.yosounohone.com/entry/kyoto-2026-11-28"
+          ]
+        }
+      },
+      "sources": [
+        "https://www.bloodline-trackbias.work/entry/2026/11/27/190000",
+        "https://www.yosounohone.com/entry/kyoto-2026-11-28"
+      ]
     },
-    "4": {
-     "sources": [
-      "https://umasiru.com/archives/22395"
-     ],
-     "note": "ウマシル追切評価 B(6段階S-E)",
-     "grade": "B"
+    "20261128_08_03": {
+      "venue": "京都",
+      "race_num": 3,
+      "going": {
+        "surface": "芝",
+        "state": "良",
+        "expected": "良〜（金曜午後〜土曜午前に雨予報）"
+      },
+      "summary": "火曜に26.5mmの雨。金曜昼時点は芝ダートとも良だが、京都市は金曜午後から土曜午前にかけて雨予報。",
+      "horses": {
+        "10": {
+          "note": "栗東坂路 最終追い切りの評価★★（5つ星中）",
+          "grade": "★2",
+          "sources": [
+            "https://www.yosounohone.com/entry/kyoto-2026-11-28"
+          ]
+        }
+      },
+      "sources": [
+        "https://www.bloodline-trackbias.work/entry/2026/11/27/190000",
+        "https://www.yosounohone.com/entry/kyoto-2026-11-28"
+      ]
     },
-    "8": {
-     "sources": [
-      "https://umasiru.com/archives/22395"
-     ],
-     "note": "ウマシル追切評価 B(6段階S-E)",
-     "grade": "B"
+    "20261128_08_08": {
+      "venue": "京都",
+      "race_num": 8,
+      "going": {
+        "surface": "芝",
+        "state": "良",
+        "expected": "良〜（金曜午後〜土曜午前に雨予報）"
+      },
+      "summary": "火曜に26.5mmの雨。金曜昼時点は芝ダートとも良だが、京都市は金曜午後から土曜午前にかけて雨予報。",
+      "horses": {
+        "9": {
+          "note": "栗東坂路 最終追い切りの評価★★（5つ星中）",
+          "grade": "★2",
+          "sources": [
+            "https://www.yosounohone.com/entry/kyoto-2026-11-28"
+          ]
+        }
+      },
+      "sources": [
+        "https://www.bloodline-trackbias.work/entry/2026/11/27/190000",
+        "https://www.yosounohone.com/entry/kyoto-2026-11-28"
+      ]
     },
-    "2": {
-     "sources": [
-      "https://umasiru.com/archives/22395"
-     ],
-     "note": "ウマシル追切評価 B(6段階S-E)",
-     "grade": "B"
+    "20261128_08_10": {
+      "venue": "京都",
+      "race_num": 10,
+      "going": {
+        "surface": "芝",
+        "state": "良",
+        "expected": "良〜（金曜午後〜土曜午前に雨予報）"
+      },
+      "summary": "火曜に26.5mmの雨。金曜昼時点は芝ダートとも良だが、京都市は金曜午後から土曜午前にかけて雨予報。",
+      "horses": {
+        "13": {
+          "note": "栗東CW 最終追い切りの評価★★（5つ星中）",
+          "grade": "★2",
+          "sources": [
+            "https://www.yosounohone.com/entry/kyoto-2026-11-28"
+          ]
+        }
+      },
+      "sources": [
+        "https://www.bloodline-trackbias.work/entry/2026/11/27/190000",
+        "https://www.yosounohone.com/entry/kyoto-2026-11-28"
+      ]
     },
-    "7": {
-     "sources": [
-      "https://umasiru.com/archives/22395"
-     ],
-     "note": "ウマシル追切評価 B(6段階S-E)",
-     "grade": "B"
-    },
-    "1": {
-     "sources": [
-      "https://umasiru.com/archives/22395"
-     ],
-     "note": "ウマシル追切評価 B(6段階S-E)",
-     "grade": "B"
-    },
-    "6": {
-     "sources": [
-      "https://umasiru.com/archives/22395"
-     ],
-     "note": "ウマシル追切評価 B(6段階S-E)",
-     "grade": "B"
-    },
-    "3": {
-     "sources": [
-      "https://umasiru.com/archives/22395"
-     ],
-     "note": "ウマシル追切評価 B(6段階S-E)",
-     "grade": "B"
-    },
-    "9": {
-     "sources": [
-      "https://umasiru.com/archives/22395"
-     ],
-     "note": "ウマシル追切評価 B(6段階S-E)",
-     "grade": "B"
+    "20261128_08_07": {
+      "venue": "京都",
+      "race_num": 7,
+      "going": {
+        "surface": "芝",
+        "state": "良",
+        "expected": "良〜（金曜午後〜土曜午前に雨予報）"
+      },
+      "summary": "火曜に26.5mmの雨。金曜昼時点は芝ダートとも良だが、京都市は金曜午後から土曜午前にかけて雨予報。",
+      "horses": {
+        "2": {
+          "note": "栗東坂路 最終追い切りの評価★★（5つ星中）",
+          "grade": "★2",
+          "sources": [
+            "https://www.yosounohone.com/entry/kyoto-2026-11-28"
+          ]
+        },
+        "4": {
+          "note": "美浦坂路 最終追い切りの評価★★（5つ星中）",
+          "grade": "★2",
+          "sources": [
+            "https://www.yosounohone.com/entry/kyoto-2026-11-28"
+          ]
+        },
+        "16": {
+          "note": "美浦坂路 最終追い切りの評価★★（5つ星中）",
+          "grade": "★2",
+          "sources": [
+            "https://www.yosounohone.com/entry/kyoto-2026-11-28"
+          ]
+        }
+      },
+      "sources": [
+        "https://www.bloodline-trackbias.work/entry/2026/11/27/190000",
+        "https://www.yosounohone.com/entry/kyoto-2026-11-28"
+      ]
     }
-   },
-   "picks": [
-    {
-     "source": "https://muryou-keiba-ai.jp/predict/2026/11/19/25717/",
-     "tipster": "無料競馬AI",
-     "marks": {
-      "1": "◎",
-      "10": "○",
-      "8": "▲",
-      "4": "△",
-      "11": "☆",
-      "3": "消"
-     }
-    }
-   ]
-  },
-  "20261123_05_12": {
-   "venue": "東京",
-   "race_num": 12,
-   "sources": [
-    "https://www.bloodline-trackbias.work/entry/2026/11/22/200000",
-    "https://muryou-keiba-ai.jp/predict/2026/11/19/25718/"
-   ],
-   "going": {
-    "surface": "芝",
-    "state": "",
-    "expected": "想定は良（日曜夜時点）。開催8週目で今週から B→C コース替わり。月曜は晴れ予報だが霜で表面が緩む可能性。枠はフラット〜外（内ラチ沿いの傷みが広がれば外枠有利）。直線の伸びはフラット〜やや外。脚質は展開次第〜差し。時計は約-2.5〜-2.2秒想定。"
-   },
-   "picks": [
-    {
-     "source": "https://muryou-keiba-ai.jp/predict/2026/11/19/25718/",
-     "tipster": "無料競馬AI",
-     "marks": {
-      "1": "◎",
-      "4": "○",
-      "18": "▲",
-      "6": "△",
-      "17": "☆",
-      "15": "消",
-      "3": "消",
-      "16": "消",
-      "11": "消",
-      "13": "消"
-     }
-    }
-   ]
-  },
-  "20261123_03_01": {
-   "venue": "福島",
-   "race_num": 1,
-   "sources": [
-    "https://www.bloodline-trackbias.work/entry/2026/11/22/200000",
-    "https://muryou-keiba-ai.jp/predict/2026/11/19/25695/"
-   ],
-   "going": {
-    "surface": "ダート",
-    "state": "",
-    "expected": "想定は良〜やや重（日曜朝時点はやや重）。枠はフラット〜外（乾く過程でキックバックが多いと外枠有利の可能性。道悪でも近年は外枠有利になることがある）。直線の伸びはフラット。脚質は前〜展開次第（今開催は馬場状態に関わらず前有利になることがある）。時計は約-2.0〜-0.7秒想定。"
-   },
-   "picks": [
-    {
-     "source": "https://muryou-keiba-ai.jp/predict/2026/11/19/25695/",
-     "tipster": "無料競馬AI",
-     "marks": {
-      "12": "◎",
-      "5": "○",
-      "13": "▲",
-      "3": "△",
-      "1": "☆",
-      "14": "消"
-     }
-    }
-   ]
-  },
-  "20261123_03_02": {
-   "venue": "福島",
-   "race_num": 2,
-   "sources": [
-    "https://www.bloodline-trackbias.work/entry/2026/11/22/200000",
-    "https://muryou-keiba-ai.jp/predict/2026/11/19/25696/"
-   ],
-   "going": {
-    "surface": "ダート",
-    "state": "",
-    "expected": "想定は良〜やや重（日曜朝時点はやや重）。枠はフラット〜外（乾く過程でキックバックが多いと外枠有利の可能性。道悪でも近年は外枠有利になることがある）。直線の伸びはフラット。脚質は前〜展開次第（今開催は馬場状態に関わらず前有利になることがある）。時計は約-2.0〜-0.7秒想定。"
-   },
-   "picks": [
-    {
-     "source": "https://muryou-keiba-ai.jp/predict/2026/11/19/25696/",
-     "tipster": "無料競馬AI",
-     "marks": {
-      "5": "◎",
-      "7": "○",
-      "11": "▲",
-      "10": "△",
-      "4": "☆"
-     }
-    }
-   ]
-  },
-  "20261123_03_03": {
-   "venue": "福島",
-   "race_num": 3,
-   "sources": [
-    "https://www.bloodline-trackbias.work/entry/2026/11/22/200000",
-    "https://muryou-keiba-ai.jp/predict/2026/11/19/25697/"
-   ],
-   "going": {
-    "surface": "ダート",
-    "state": "",
-    "expected": "想定は良〜やや重（日曜朝時点はやや重）。枠はフラット〜外（乾く過程でキックバックが多いと外枠有利の可能性。道悪でも近年は外枠有利になることがある）。直線の伸びはフラット。脚質は前〜展開次第（今開催は馬場状態に関わらず前有利になることがある）。時計は約-2.0〜-0.7秒想定。"
-   },
-   "picks": [
-    {
-     "source": "https://muryou-keiba-ai.jp/predict/2026/11/19/25697/",
-     "tipster": "無料競馬AI",
-     "marks": {
-      "11": "◎",
-      "9": "○",
-      "5": "▲",
-      "1": "△",
-      "12": "☆",
-      "3": "消"
-     }
-    }
-   ]
-  },
-  "20261123_03_05": {
-   "venue": "福島",
-   "race_num": 5,
-   "sources": [
-    "https://www.bloodline-trackbias.work/entry/2026/11/22/200000",
-    "https://muryou-keiba-ai.jp/predict/2026/11/19/25699/"
-   ],
-   "going": {
-    "surface": "芝",
-    "state": "",
-    "expected": "想定は良（日曜夜時点）。開催3週目で今週から A→B コース替わり。月曜は晴れ予報だが霜の可能性が高く、水はけが悪いためタフなままと想定。枠はフラット〜外（内ラチ沿いに傷みが出れば外枠有利）。直線の伸びはフラット〜やや外。脚質は展開次第〜差し。時計は+0.5〜+2.5秒想定。"
-   },
-   "picks": [
-    {
-     "source": "https://muryou-keiba-ai.jp/predict/2026/11/19/25699/",
-     "tipster": "無料競馬AI",
-     "marks": {
-      "16": "◎",
-      "8": "○",
-      "3": "▲",
-      "6": "△",
-      "10": "☆"
-     }
-    }
-   ]
-  },
-  "20261123_03_06": {
-   "venue": "福島",
-   "race_num": 6,
-   "sources": [
-    "https://www.bloodline-trackbias.work/entry/2026/11/22/200000",
-    "https://muryou-keiba-ai.jp/predict/2026/11/19/25700/"
-   ],
-   "going": {
-    "surface": "芝",
-    "state": "",
-    "expected": "想定は良（日曜夜時点）。開催3週目で今週から A→B コース替わり。月曜は晴れ予報だが霜の可能性が高く、水はけが悪いためタフなままと想定。枠はフラット〜外（内ラチ沿いに傷みが出れば外枠有利）。直線の伸びはフラット〜やや外。脚質は展開次第〜差し。時計は+0.5〜+2.5秒想定。"
-   },
-   "picks": [
-    {
-     "source": "https://muryou-keiba-ai.jp/predict/2026/11/19/25700/",
-     "tipster": "無料競馬AI",
-     "marks": {
-      "3": "◎",
-      "11": "○",
-      "12": "▲",
-      "15": "△",
-      "4": "☆",
-      "7": "消",
-      "5": "消"
-     }
-    }
-   ]
-  },
-  "20261123_03_07": {
-   "venue": "福島",
-   "race_num": 7,
-   "sources": [
-    "https://www.bloodline-trackbias.work/entry/2026/11/22/200000",
-    "https://muryou-keiba-ai.jp/predict/2026/11/19/25701/"
-   ],
-   "going": {
-    "surface": "ダート",
-    "state": "",
-    "expected": "想定は良〜やや重（日曜朝時点はやや重）。枠はフラット〜外（乾く過程でキックバックが多いと外枠有利の可能性。道悪でも近年は外枠有利になることがある）。直線の伸びはフラット。脚質は前〜展開次第（今開催は馬場状態に関わらず前有利になることがある）。時計は約-2.0〜-0.7秒想定。"
-   },
-   "picks": [
-    {
-     "source": "https://muryou-keiba-ai.jp/predict/2026/11/19/25701/",
-     "tipster": "無料競馬AI",
-     "marks": {
-      "12": "◎",
-      "8": "○",
-      "13": "▲",
-      "10": "△",
-      "6": "☆",
-      "5": "消"
-     }
-    }
-   ]
-  },
-  "20261123_03_08": {
-   "venue": "福島",
-   "race_num": 8,
-   "sources": [
-    "https://www.bloodline-trackbias.work/entry/2026/11/22/200000",
-    "https://muryou-keiba-ai.jp/predict/2026/11/19/25702/"
-   ],
-   "going": {
-    "surface": "芝",
-    "state": "",
-    "expected": "想定は良（日曜夜時点）。開催3週目で今週から A→B コース替わり。月曜は晴れ予報だが霜の可能性が高く、水はけが悪いためタフなままと想定。枠はフラット〜外（内ラチ沿いに傷みが出れば外枠有利）。直線の伸びはフラット〜やや外。脚質は展開次第〜差し。時計は+0.5〜+2.5秒想定。"
-   },
-   "picks": [
-    {
-     "source": "https://muryou-keiba-ai.jp/predict/2026/11/19/25702/",
-     "tipster": "無料競馬AI",
-     "marks": {
-      "9": "◎",
-      "14": "○",
-      "11": "▲",
-      "1": "△",
-      "15": "☆",
-      "12": "消"
-     }
-    }
-   ]
-  },
-  "20261123_03_09": {
-   "venue": "福島",
-   "race_num": 9,
-   "sources": [
-    "https://www.bloodline-trackbias.work/entry/2026/11/22/200000",
-    "https://muryou-keiba-ai.jp/predict/2026/11/19/25703/"
-   ],
-   "going": {
-    "surface": "芝",
-    "state": "",
-    "expected": "想定は良（日曜夜時点）。開催3週目で今週から A→B コース替わり。月曜は晴れ予報だが霜の可能性が高く、水はけが悪いためタフなままと想定。枠はフラット〜外（内ラチ沿いに傷みが出れば外枠有利）。直線の伸びはフラット〜やや外。脚質は展開次第〜差し。時計は+0.5〜+2.5秒想定。"
-   },
-   "picks": [
-    {
-     "source": "https://muryou-keiba-ai.jp/predict/2026/11/19/25703/",
-     "tipster": "無料競馬AI",
-     "marks": {
-      "15": "◎",
-      "7": "○",
-      "10": "▲",
-      "13": "△",
-      "2": "☆",
-      "3": "消",
-      "16": "消",
-      "9": "消"
-     }
-    }
-   ]
-  },
-  "20261123_03_10": {
-   "venue": "福島",
-   "race_num": 10,
-   "sources": [
-    "https://www.bloodline-trackbias.work/entry/2026/11/22/200000",
-    "https://muryou-keiba-ai.jp/predict/2026/11/19/25704/"
-   ],
-   "going": {
-    "surface": "芝",
-    "state": "",
-    "expected": "想定は良（日曜夜時点）。開催3週目で今週から A→B コース替わり。月曜は晴れ予報だが霜の可能性が高く、水はけが悪いためタフなままと想定。枠はフラット〜外（内ラチ沿いに傷みが出れば外枠有利）。直線の伸びはフラット〜やや外。脚質は展開次第〜差し。時計は+0.5〜+2.5秒想定。"
-   },
-   "picks": [
-    {
-     "source": "https://muryou-keiba-ai.jp/predict/2026/11/19/25704/",
-     "tipster": "無料競馬AI",
-     "marks": {
-      "3": "◎",
-      "15": "○",
-      "9": "▲",
-      "8": "△",
-      "4": "☆",
-      "7": "消",
-      "2": "消"
-     }
-    }
-   ]
-  },
-  "20261123_03_11": {
-   "venue": "福島",
-   "race_num": 11,
-   "sources": [
-    "https://www.bloodline-trackbias.work/entry/2026/11/22/200000",
-    "https://muryou-keiba-ai.jp/predict/2026/11/19/25705/"
-   ],
-   "going": {
-    "surface": "ダート",
-    "state": "",
-    "expected": "想定は良〜やや重（日曜朝時点はやや重）。枠はフラット〜外（乾く過程でキックバックが多いと外枠有利の可能性。道悪でも近年は外枠有利になることがある）。直線の伸びはフラット。脚質は前〜展開次第（今開催は馬場状態に関わらず前有利になることがある）。時計は約-2.0〜-0.7秒想定。"
-   },
-   "picks": [
-    {
-     "source": "https://muryou-keiba-ai.jp/predict/2026/11/19/25705/",
-     "tipster": "無料競馬AI",
-     "marks": {
-      "8": "◎",
-      "3": "○",
-      "4": "▲",
-      "12": "△",
-      "11": "☆",
-      "1": "消"
-     }
-    }
-   ]
-  },
-  "20261123_03_12": {
-   "venue": "福島",
-   "race_num": 12,
-   "sources": [
-    "https://www.bloodline-trackbias.work/entry/2026/11/22/200000",
-    "https://muryou-keiba-ai.jp/predict/2026/11/19/25706/"
-   ],
-   "going": {
-    "surface": "芝",
-    "state": "",
-    "expected": "想定は良（日曜夜時点）。開催3週目で今週から A→B コース替わり。月曜は晴れ予報だが霜の可能性が高く、水はけが悪いためタフなままと想定。枠はフラット〜外（内ラチ沿いに傷みが出れば外枠有利）。直線の伸びはフラット〜やや外。脚質は展開次第〜差し。時計は+0.5〜+2.5秒想定。"
-   },
-   "picks": [
-    {
-     "source": "https://muryou-keiba-ai.jp/predict/2026/11/19/25706/",
-     "tipster": "無料競馬AI",
-     "marks": {
-      "4": "◎",
-      "7": "○",
-      "3": "▲",
-      "14": "△",
-      "8": "☆",
-      "5": "消",
-      "15": "消",
-      "2": "消"
-     }
-    }
-   ]
   }
- }
 }
