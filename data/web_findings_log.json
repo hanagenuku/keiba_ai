@@ -1,6 +1,6 @@
 {
  "schema_version": 2,
- "updated_at": "2026-11-24T07:54:02.283514+09:00",
+ "updated_at": "2026-11-28T13:50:47.685112+09:00",
  "entries": [
   {
    "date": "2026-10-10",
@@ -47315,6 +47315,432 @@
     "fukusho_payout": 170,
     "fukusho_sold": true
    }
+  },
+  {
+   "date": "2026-11-28",
+   "race_id": "20261128_05_04",
+   "venue": "東京",
+   "race_num": 4,
+   "collected_at": "2026-11-28T09:08:41+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/27/190000"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": "良",
+    "expected": "良〜不良（土曜の想定雨量1〜40mm）",
+    "expected_state": "不良",
+    "summary": "金曜昼時点は芝ダートとも良。開催9週目でB→Cコース替わり2週目、内ラチ沿いに傷みが出てきた。土曜は雨のち晴れ予報で想定雨量1〜40mm、雨量次第で時計は−2.5〜+3.0秒以上まで振れる想定。枠は内〜外、直線の伸びはやや内〜やや外、前後は展開次第〜差しと予想されている。"
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/27/190000"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-28",
+   "race_id": "20261128_05_06",
+   "venue": "東京",
+   "race_num": 6,
+   "collected_at": "2026-11-28T09:08:41+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/27/190000"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": "良",
+    "expected": "良〜不良（土曜の想定雨量1〜40mm）",
+    "expected_state": "不良",
+    "summary": "金曜昼時点は芝ダートとも良。開催9週目でB→Cコース替わり2週目、内ラチ沿いに傷みが出てきた。土曜は雨のち晴れ予報で想定雨量1〜40mm、雨量次第で時計は−2.5〜+3.0秒以上まで振れる想定。枠は内〜外、直線の伸びはやや内〜やや外、前後は展開次第〜差しと予想されている。"
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/27/190000"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-28",
+   "race_id": "20261128_08_02",
+   "venue": "京都",
+   "race_num": 2,
+   "collected_at": "2026-11-28T09:08:41+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/27/190000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-28"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": "良",
+    "expected": "良〜（金曜午後〜土曜午前に雨予報）",
+    "expected_state": "良",
+    "summary": "火曜に26.5mmの雨。金曜昼時点は芝ダートとも良だが、京都市は金曜午後から土曜午前にかけて雨予報。"
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/27/190000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-28"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "yosounohone.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-28",
+   "race_id": "20261128_08_02",
+   "venue": "京都",
+   "race_num": 2,
+   "collected_at": "2026-11-28T09:08:41+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/27/190000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-28"
+   ],
+   "kind": "horse",
+   "key": "7",
+   "said": {
+    "note": "栗東坂路 最終追い切りの評価★★（5つ星中）",
+    "direction": null,
+    "grade": "★2"
+   },
+   "sources": [
+    "https://www.yosounohone.com/entry/kyoto-2026-11-28"
+   ],
+   "hosts": [
+    "yosounohone.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-28",
+   "race_id": "20261128_08_03",
+   "venue": "京都",
+   "race_num": 3,
+   "collected_at": "2026-11-28T09:08:41+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/27/190000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-28"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": "良",
+    "expected": "良〜（金曜午後〜土曜午前に雨予報）",
+    "expected_state": "良",
+    "summary": "火曜に26.5mmの雨。金曜昼時点は芝ダートとも良だが、京都市は金曜午後から土曜午前にかけて雨予報。"
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/27/190000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-28"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "yosounohone.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-28",
+   "race_id": "20261128_08_03",
+   "venue": "京都",
+   "race_num": 3,
+   "collected_at": "2026-11-28T09:08:41+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/27/190000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-28"
+   ],
+   "kind": "horse",
+   "key": "10",
+   "said": {
+    "note": "栗東坂路 最終追い切りの評価★★（5つ星中）",
+    "direction": null,
+    "grade": "★2"
+   },
+   "sources": [
+    "https://www.yosounohone.com/entry/kyoto-2026-11-28"
+   ],
+   "hosts": [
+    "yosounohone.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-28",
+   "race_id": "20261128_08_07",
+   "venue": "京都",
+   "race_num": 7,
+   "collected_at": "2026-11-28T09:08:41+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/27/190000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-28"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": "良",
+    "expected": "良〜（金曜午後〜土曜午前に雨予報）",
+    "expected_state": "良",
+    "summary": "火曜に26.5mmの雨。金曜昼時点は芝ダートとも良だが、京都市は金曜午後から土曜午前にかけて雨予報。"
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/27/190000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-28"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "yosounohone.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-28",
+   "race_id": "20261128_08_07",
+   "venue": "京都",
+   "race_num": 7,
+   "collected_at": "2026-11-28T09:08:41+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/27/190000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-28"
+   ],
+   "kind": "horse",
+   "key": "16",
+   "said": {
+    "note": "美浦坂路 最終追い切りの評価★★（5つ星中）",
+    "direction": null,
+    "grade": "★2"
+   },
+   "sources": [
+    "https://www.yosounohone.com/entry/kyoto-2026-11-28"
+   ],
+   "hosts": [
+    "yosounohone.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-28",
+   "race_id": "20261128_08_07",
+   "venue": "京都",
+   "race_num": 7,
+   "collected_at": "2026-11-28T09:08:41+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/27/190000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-28"
+   ],
+   "kind": "horse",
+   "key": "2",
+   "said": {
+    "note": "栗東坂路 最終追い切りの評価★★（5つ星中）",
+    "direction": null,
+    "grade": "★2"
+   },
+   "sources": [
+    "https://www.yosounohone.com/entry/kyoto-2026-11-28"
+   ],
+   "hosts": [
+    "yosounohone.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-28",
+   "race_id": "20261128_08_07",
+   "venue": "京都",
+   "race_num": 7,
+   "collected_at": "2026-11-28T09:08:41+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/27/190000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-28"
+   ],
+   "kind": "horse",
+   "key": "4",
+   "said": {
+    "note": "美浦坂路 最終追い切りの評価★★（5つ星中）",
+    "direction": null,
+    "grade": "★2"
+   },
+   "sources": [
+    "https://www.yosounohone.com/entry/kyoto-2026-11-28"
+   ],
+   "hosts": [
+    "yosounohone.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-28",
+   "race_id": "20261128_08_08",
+   "venue": "京都",
+   "race_num": 8,
+   "collected_at": "2026-11-28T09:08:41+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/27/190000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-28"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": "良",
+    "expected": "良〜（金曜午後〜土曜午前に雨予報）",
+    "expected_state": "良",
+    "summary": "火曜に26.5mmの雨。金曜昼時点は芝ダートとも良だが、京都市は金曜午後から土曜午前にかけて雨予報。"
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/27/190000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-28"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "yosounohone.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-28",
+   "race_id": "20261128_08_08",
+   "venue": "京都",
+   "race_num": 8,
+   "collected_at": "2026-11-28T09:08:41+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/27/190000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-28"
+   ],
+   "kind": "horse",
+   "key": "9",
+   "said": {
+    "note": "栗東坂路 最終追い切りの評価★★（5つ星中）",
+    "direction": null,
+    "grade": "★2"
+   },
+   "sources": [
+    "https://www.yosounohone.com/entry/kyoto-2026-11-28"
+   ],
+   "hosts": [
+    "yosounohone.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-28",
+   "race_id": "20261128_08_10",
+   "venue": "京都",
+   "race_num": 10,
+   "collected_at": "2026-11-28T09:08:41+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/27/190000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-28"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": "良",
+    "expected": "良〜（金曜午後〜土曜午前に雨予報）",
+    "expected_state": "良",
+    "summary": "火曜に26.5mmの雨。金曜昼時点は芝ダートとも良だが、京都市は金曜午後から土曜午前にかけて雨予報。"
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/27/190000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-28"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "yosounohone.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-28",
+   "race_id": "20261128_08_10",
+   "venue": "京都",
+   "race_num": 10,
+   "collected_at": "2026-11-28T09:08:41+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/27/190000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-28"
+   ],
+   "kind": "horse",
+   "key": "13",
+   "said": {
+    "note": "栗東CW 最終追い切りの評価★★（5つ星中）",
+    "direction": null,
+    "grade": "★2"
+   },
+   "sources": [
+    "https://www.yosounohone.com/entry/kyoto-2026-11-28"
+   ],
+   "hosts": [
+    "yosounohone.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-28",
+   "race_id": "20261128_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-11-28T09:08:41+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/27/190000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-28"
+   ],
+   "kind": "going",
+   "key": "芝",
+   "said": {
+    "surface": "芝",
+    "state": "良",
+    "expected": "良〜（金曜午後〜土曜午前に雨予報）",
+    "expected_state": "良",
+    "summary": "火曜に26.5mmの雨。金曜昼時点は芝ダートとも良だが、京都市は金曜午後から土曜午前にかけて雨予報。"
+   },
+   "sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/27/190000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-28"
+   ],
+   "hosts": [
+    "bloodline-trackbias.work",
+    "yosounohone.com"
+   ],
+   "result": null
+  },
+  {
+   "date": "2026-11-28",
+   "race_id": "20261128_08_11",
+   "venue": "京都",
+   "race_num": 11,
+   "collected_at": "2026-11-28T09:08:41+09:00",
+   "race_sources": [
+    "https://www.bloodline-trackbias.work/entry/2026/11/27/190000",
+    "https://www.yosounohone.com/entry/kyoto-2026-11-28"
+   ],
+   "kind": "horse",
+   "key": "2",
+   "said": {
+    "note": "栗東CW 最終追い切りの評価★★（5つ星中）",
+    "direction": null,
+    "grade": "★2"
+   },
+   "sources": [
+    "https://www.yosounohone.com/entry/kyoto-2026-11-28"
+   ],
+   "hosts": [
+    "yosounohone.com"
+   ],
+   "result": null
   }
  ]
 }
